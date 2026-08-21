@@ -39,16 +39,23 @@ impl Gpt {
     ) -> Result<ForwardOutput, ModelError> {
         crate::request::validate(self, &request)?;
         let sequence_length = request.token_ids.len();
-        let embedding = self.embed(request.token_ids)?;
+        let embeddings = self.embed(request.token_ids)?;
         if request.trace_mode == TraceMode::Summary {
-            trace.tensor(TraceTensor {
-                operation: OperationId::Embedding,
-                layer: None,
-                name: "embedding",
-                tensor: &embedding,
-            });
+            for (name, tensor) in [
+                ("token_embeddings", &embeddings.token),
+                ("position_embeddings", &embeddings.position),
+                ("embedding_sum", &embeddings.sum),
+                ("embedding", &embeddings.sum),
+            ] {
+                trace.tensor(TraceTensor {
+                    operation: OperationId::Embedding,
+                    layer: None,
+                    name,
+                    tensor,
+                });
+            }
         }
-        let hidden = self.forward_blocks(embedding, request.trace_mode, trace)?;
+        let hidden = self.forward_blocks(embeddings.sum, request.trace_mode, trace)?;
         let normalized = self.ln_f.forward(&hidden)?;
         if request.trace_mode == TraceMode::Summary {
             trace.tensor(TraceTensor {
@@ -63,7 +70,8 @@ impl Gpt {
         let final_logits = logits
             .narrow(1, sequence_length - 1, 1)?
             .squeeze(1)?
-            .squeeze(0)?;
+            .squeeze(0)?
+            .force_contiguous()?;
         let probabilities = candle_nn::ops::softmax(&final_logits, candle_core::D::Minus1)?;
         let top_k = Self::rank_candidates(&final_logits, &probabilities, request.top_k)?;
         Ok(ForwardOutput {
@@ -73,7 +81,7 @@ impl Gpt {
         })
     }
 
-    fn embed(&self, token_ids: &[TokenId]) -> Result<Tensor, ModelError> {
+    fn embed(&self, token_ids: &[TokenId]) -> Result<Embeddings, ModelError> {
         let sequence_length = token_ids.len();
         let token_values = token_ids.iter().map(|token| token.0).collect::<Vec<_>>();
         let token_ids = Tensor::from_vec(token_values, (1, sequence_length), self.device())?;
@@ -82,9 +90,14 @@ impl Gpt {
             .collect::<Result<Vec<_>, _>>()
             .map_err(|_| ModelError::DimensionOverflow)?;
         let positions = Tensor::from_vec(position_values, sequence_length, self.device())?;
-        let token_embedding = self.wte.forward(&token_ids)?;
-        let position_embedding = self.wpe.forward(&positions)?;
-        Ok(token_embedding.broadcast_add(&position_embedding)?)
+        let token = self.wte.forward(&token_ids)?;
+        let position = self.wpe.forward(&positions)?;
+        let sum = token.broadcast_add(&position)?;
+        Ok(Embeddings {
+            token,
+            position,
+            sum,
+        })
     }
 
     fn forward_blocks(
@@ -155,6 +168,12 @@ impl Gpt {
     fn device(&self) -> &Device {
         self.wte.embeddings().device()
     }
+}
+
+struct Embeddings {
+    token: Tensor,
+    position: Tensor,
+    sum: Tensor,
 }
 
 fn capture_logits(

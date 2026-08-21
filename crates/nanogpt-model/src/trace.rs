@@ -67,6 +67,11 @@ pub(crate) fn capture_block(
         ),
         (
             OperationId::Attention,
+            "attention_output",
+            &block.attention.attended,
+        ),
+        (
+            OperationId::Attention,
             "attention_merged",
             &block.attention.merged,
         ),
