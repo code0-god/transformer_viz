@@ -14,6 +14,7 @@
     </style>
   </head>
   <body>
+    <link data-trunk rel="copy-dir" href="public/models" />
     <link data-trunk rel="rust" href="Cargo.toml" data-bin="app" data-type="main" data-wasm-opt="z" />
     <link data-trunk rel="rust" href="Cargo.toml" data-bin="worker" data-type="worker" data-loader-shim data-bindgen-target="web" data-wasm-opt="z" />
   </body>

@@ -36,6 +36,7 @@ fn App() -> impl IntoView {
     options.set_type(WorkerType::Module);
     let worker = match Worker::new_with_options("./worker_loader.js", &options) {
         Ok(worker) => {
+            let event_worker = worker.clone();
             let on_message = Closure::<dyn FnMut(MessageEvent)>::new(move |event: MessageEvent| {
                 match serde_wasm_bindgen::from_value::<WorkerResponse>(event.data()) {
                     Ok(WorkerResponse::Ready { .. }) => set_state.set(UiState::Ready),
@@ -46,7 +47,19 @@ fn App() -> impl IntoView {
                         set_state.set(UiState::Error(message));
                     }
                     Ok(WorkerResponse::Initializing { phase }) => {
-                        set_state.set(UiState::Error(format!("초기화 중: {phase}")));
+                        set_state.set(UiState::Initializing);
+                        if phase == "Worker 시작됨" {
+                            match serde_wasm_bindgen::to_value(&WorkerRequest::Initialize {
+                                manifest_url: "./models/edu/manifest.json".to_owned(),
+                            }) {
+                                Ok(request) => {
+                                    if let Err(error) = event_worker.post_message(&request) {
+                                        set_state.set(UiState::Error(js_error(&error)));
+                                    }
+                                }
+                                Err(error) => set_state.set(UiState::Error(error.to_string())),
+                            }
+                        }
                     }
                     Ok(
                         WorkerResponse::BlockTrace { .. }
@@ -79,7 +92,7 @@ fn App() -> impl IntoView {
         set_state.set(UiState::Running);
         match serde_wasm_bindgen::to_value(&WorkerRequest::Run {
             request_id: 1,
-            text: "phase-b-candle".to_owned(),
+            text: "the cat sat on the".to_owned(),
         }) {
             Ok(request) => {
                 if let Err(error) = worker.post_message(&request) {
@@ -106,7 +119,7 @@ fn App() -> impl IntoView {
                             <p>{format!("Run ID: {}", result.run_id)}</p>
                             <p>{format!("Tokens: {}", result.tokens.len())}</p>
                             <p>{format!("Layers: {}", result.layers.len())}</p>
-                            <p>{format!("Exact GELU: {:?}", result.logits.logits.values)}</p>
+                            <p>{format!("Top-10: {:?}", result.logits.top_k)}</p>
                         </div>
                     }.into_any(),
                 }}

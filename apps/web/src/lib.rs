@@ -1,5 +1,11 @@
 //! Browser application protocol and Candle spike.
 
+pub mod runtime;
+#[doc(hidden)]
+pub mod runtime_assets;
+pub mod runtime_error;
+#[doc(hidden)]
+pub mod runtime_trace;
 pub mod spike;
 
 use thiserror::Error;

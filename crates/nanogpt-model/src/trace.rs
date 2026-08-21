@@ -18,6 +18,7 @@ pub(crate) struct TokenSelection {
 
 pub(crate) fn capture_summary(trace: &mut impl TraceSink, layer: usize, block: &BlockOutput) {
     for (operation, name, tensor) in [
+        (OperationId::AttentionLayerNorm, "block_input", &block.input),
         (
             OperationId::AttentionResidual,
             "attention_projected",
