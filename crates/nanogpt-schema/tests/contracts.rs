@@ -71,8 +71,8 @@ fn tensor_snapshot_mask_and_source_preserve_finite_explicit_fields()
     let mask = MaskSnapshot::new(2, 2, vec![true, false, true, true])?;
     let source = SourceReference {
         file: "model.py".to_owned(),
-        line_start: 52,
-        line_end: 55,
+        start_line: 52,
+        end_line: 55,
         symbol: "CausalSelfAttention.forward".to_owned(),
     };
     // When: the three contracts serialize to JSON.
@@ -81,7 +81,7 @@ fn tensor_snapshot_mask_and_source_preserve_finite_explicit_fields()
     assert_eq!(value["tensor"]["values"], json!([0.0, 1.0]));
     assert_eq!(value["tensor"]["stats"]["mean"], json!(0.5));
     assert_eq!(value["mask"]["allowed"], json!([true, false, true, true]));
-    assert_eq!(value["source"]["line_start"], 52);
+    assert_eq!(value["source"]["start_line"], 52);
     assert_eq!(TRACE_SCHEMA_VERSION, "1.0.0");
     Ok(())
 }

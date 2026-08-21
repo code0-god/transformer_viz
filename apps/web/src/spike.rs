@@ -106,8 +106,8 @@ pub fn handle_worker_request(request: WorkerRequest) -> Result<WorkerResponse, S
             let spike = run_candle_spike()?;
             let source = SourceReference {
                 file: "reference/nanoGPT/model.py".to_owned(),
-                line_start: 52,
-                line_end: 76,
+                start_line: 52,
+                end_line: 76,
                 symbol: "CausalSelfAttention.forward".to_owned(),
             };
             let summary = RunSummary {
@@ -121,6 +121,7 @@ pub fn handle_worker_request(request: WorkerRequest) -> Result<WorkerResponse, S
                     mlp: spike.gelu.stats.clone(),
                     output: spike.layer_norm.stats.clone(),
                 }],
+                duration_ms: FiniteF32::new(0.0)?,
                 logits: LogitsTrace {
                     logits: spike.gelu,
                     top_k: Vec::new(),

@@ -21,6 +21,7 @@ struct CapturedTensor {
 #[derive(Debug, Default)]
 pub struct TraceCapture {
     tensors: Vec<CapturedTensor>,
+    layer_inputs: Vec<(usize, Tensor)>,
     mask: Option<MaskSnapshot>,
     error: Option<RuntimeError>,
 }
@@ -29,6 +30,11 @@ impl TraceSink for TraceCapture {
     fn tensor(&mut self, trace: TraceTensor<'_>) {
         if self.error.is_some() {
             return;
+        }
+        if trace.name == "block_input"
+            && let Some(layer) = trace.layer
+        {
+            self.layer_inputs.push((layer, trace.tensor.clone()));
         }
         match snapshot(trace.name, trace.tensor) {
             Ok(snapshot) => self.tensors.push(CapturedTensor {
@@ -56,6 +62,7 @@ impl TraceCapture {
         run_id: u64,
         tokens: Vec<TokenInfo>,
         output: &ForwardOutput,
+        duration_ms: FiniteF32,
     ) -> Result<RunSummary, RuntimeError> {
         self.finish()?;
         self.named("embedding_sum")?;
@@ -78,6 +85,7 @@ impl TraceCapture {
             run_id,
             tokens,
             layers,
+            duration_ms,
             logits: logits_trace(output)?,
         })
     }
@@ -160,6 +168,13 @@ impl TraceCapture {
         })
     }
 
+    pub(crate) fn cached_layer_inputs(&self) -> Vec<Tensor> {
+        self.layer_inputs
+            .iter()
+            .map(|(_, tensor)| tensor.clone())
+            .collect()
+    }
+
     fn finish(&mut self) -> Result<(), RuntimeError> {
         self.error.take().map_or_else(|| Ok(()), Err)
     }
@@ -167,7 +182,7 @@ impl TraceCapture {
     fn named(&self, name: &str) -> Result<&TensorSnapshot, RuntimeError> {
         self.tensors
             .iter()
-            .find(|item| item.snapshot.name == name)
+            .find(|item| item.snapshot.id == name)
             .map(|item| &item.snapshot)
             .ok_or(RuntimeError::InvalidSelector)
     }
@@ -175,7 +190,7 @@ impl TraceCapture {
     fn layer_named(&self, layer: usize, name: &str) -> Result<&TensorSnapshot, RuntimeError> {
         self.tensors
             .iter()
-            .find(|item| item.layer == Some(layer) && item.snapshot.name == name)
+            .find(|item| item.layer == Some(layer) && item.snapshot.id == name)
             .map(|item| &item.snapshot)
             .ok_or(RuntimeError::InvalidSelector)
     }
@@ -252,8 +267,8 @@ fn token_display(id: u32) -> String {
 fn source(operation: nanogpt_schema::OperationId) -> SourceReference {
     SourceReference {
         file: "reference/nanoGPT/model.py".to_owned(),
-        line_start: 1,
-        line_end: 1,
         symbol: format!("{operation:?}"),
+        start_line: 1,
+        end_line: 1,
     }
 }

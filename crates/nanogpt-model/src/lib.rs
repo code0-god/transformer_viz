@@ -96,6 +96,19 @@ pub struct ForwardRequest<'a> {
     pub trace_mode: TraceMode,
 }
 
+/// Typed request for replay beginning at a cached Transformer layer input.
+#[derive(Debug, Clone, Copy)]
+pub struct LayerReplayRequest<'a> {
+    /// Cached `[1, sequence, embedding]` input for `layer`.
+    pub layer_input: &'a Tensor,
+    /// Zero-based layer where replay begins.
+    pub layer: usize,
+    /// Number of ranked candidates to return.
+    pub top_k: usize,
+    /// Detail selector for the replayed layer.
+    pub trace_mode: TraceMode,
+}
+
 /// A tensor made available at an explicit nanoGPT operation boundary.
 #[derive(Debug)]
 pub struct TraceTensor<'a> {

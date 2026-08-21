@@ -2,21 +2,27 @@
 
 use std::collections::HashSet;
 
-use nanogpt_model::ForwardRequest;
-use nanogpt_schema::{TokenId, TokenInfo, TraceMode, WorkerRequest, WorkerResponse};
+use candle_core::Tensor;
+use nanogpt_model::{ForwardRequest, LayerReplayRequest};
+use nanogpt_schema::{FiniteF32, TokenInfo, TraceMode, WorkerRequest, WorkerResponse};
 
 pub use crate::runtime_assets::AssetBundle;
 use crate::runtime_assets::{LoadedModel, asset_names, load_assets};
 use crate::runtime_error::RuntimeError;
+use crate::runtime_timer::InferenceTimer;
 use crate::runtime_trace::{TokenSelection, TraceCapture};
 
 const TOP_K: usize = 10;
+
+#[cfg(test)]
+#[path = "runtime_replay_tests.rs"]
+mod tests;
 
 #[derive(Debug)]
 struct CachedRun {
     run_id: u64,
     tokens: Vec<TokenInfo>,
-    token_ids: Vec<TokenId>,
+    layer_inputs: Vec<Tensor>,
 }
 
 /// Stateful request processor retaining one model and one recent run.
@@ -99,6 +105,7 @@ impl WorkerRuntime {
             .map(|token| token.id)
             .collect::<Vec<_>>();
         let run_id = self.next_run_id.saturating_add(1);
+        let timer = InferenceTimer::start();
         let mut capture = TraceCapture::default();
         let output = loaded.model.forward(
             ForwardRequest {
@@ -108,12 +115,14 @@ impl WorkerRuntime {
             },
             &mut capture,
         )?;
-        let summary = capture.summary(run_id, encoded.tokens.clone(), &output)?;
+        let duration_ms = FiniteF32::new(timer.elapsed_ms())?;
+        let layer_inputs = capture.cached_layer_inputs();
+        let summary = capture.summary(run_id, encoded.tokens.clone(), &output, duration_ms)?;
         self.next_run_id = run_id;
         self.cached = Some(CachedRun {
             run_id,
             tokens: encoded.tokens,
-            token_ids,
+            layer_inputs,
         });
         Ok(WorkerResponse::RunComplete {
             request_id,
@@ -186,9 +195,15 @@ impl WorkerRuntime {
         let loaded = self.loaded.as_ref().ok_or(RuntimeError::NotInitialized)?;
         let cached = self.cached_run(run_id)?;
         let mut capture = TraceCapture::default();
-        let output = loaded.model.forward(
-            ForwardRequest {
-                token_ids: &cached.token_ids,
+        let layer = trace_layer(mode).ok_or(RuntimeError::InvalidSelector)?;
+        let layer_input = cached
+            .layer_inputs
+            .get(layer)
+            .ok_or(RuntimeError::InvalidSelector)?;
+        let output = loaded.model.replay_from_layer(
+            LayerReplayRequest {
+                layer_input,
+                layer,
                 top_k: TOP_K,
                 trace_mode: mode,
             },
@@ -238,5 +253,14 @@ pub fn error_response(request_id: Option<u64>, error: &RuntimeError) -> WorkerRe
         request_id,
         code: error.code(),
         message: error.to_string(),
+    }
+}
+
+const fn trace_layer(mode: TraceMode) -> Option<usize> {
+    match mode {
+        TraceMode::Block { layer }
+        | TraceMode::AttentionHead { layer, .. }
+        | TraceMode::Token { layer, .. } => Some(layer),
+        TraceMode::Off | TraceMode::Summary => None,
     }
 }

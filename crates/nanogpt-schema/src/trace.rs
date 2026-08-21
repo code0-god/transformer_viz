@@ -66,12 +66,12 @@ pub enum OperationId {
 pub struct SourceReference {
     /// Repository-relative source file.
     pub file: String,
-    /// First one-based line.
-    pub line_start: usize,
-    /// Last one-based line.
-    pub line_end: usize,
     /// Function or expression label.
     pub symbol: String,
+    /// First one-based line.
+    pub start_line: usize,
+    /// Last one-based line.
+    pub end_line: usize,
 }
 
 /// Source-linked operation summary.
@@ -186,6 +186,8 @@ pub struct RunSummary {
     pub tokens: Vec<TokenInfo>,
     /// Per-layer summaries.
     pub layers: Vec<LayerSummary>,
+    /// Measured model inference duration in milliseconds.
+    pub duration_ms: FiniteF32,
     /// Final output distribution.
     pub logits: LogitsTrace,
 }

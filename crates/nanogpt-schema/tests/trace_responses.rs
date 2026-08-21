@@ -10,9 +10,11 @@ use serde_json::json;
 fn stats() -> Result<TensorStats, SchemaError> {
     let zero = FiniteF32::new(0.0)?;
     Ok(TensorStats {
-        minimum: zero,
-        maximum: zero,
+        min: zero,
+        max: zero,
         mean: zero,
+        std: zero,
+        l2_norm: zero,
     })
 }
 
@@ -23,8 +25,8 @@ fn snapshot(name: &str) -> Result<TensorSnapshot, SchemaError> {
 fn source() -> SourceReference {
     SourceReference {
         file: "model.py".to_owned(),
-        line_start: 1,
-        line_end: 1,
+        start_line: 1,
+        end_line: 1,
         symbol: "forward".to_owned(),
     }
 }
@@ -102,6 +104,7 @@ fn trace_worker_response_contains_every_exact_variant() -> Result<(), Box<dyn st
         run_id: 8,
         tokens: vec![token_info()],
         layers: Vec::new(),
+        duration_ms: FiniteF32::new(0.0)?,
         logits: logits()?,
     };
     let responses = [

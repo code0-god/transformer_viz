@@ -8,7 +8,8 @@ use crate::trace::{
     capture_token,
 };
 use crate::{
-    ForwardOutput, ForwardRequest, ModelError, TiedLmHead, TopKCandidate, TraceSink, TraceTensor,
+    ForwardOutput, ForwardRequest, LayerReplayRequest, ModelError, TiedLmHead, TopKCandidate,
+    TraceSink, TraceTensor,
 };
 
 /// Explicit nanoGPT-compatible inference model.
@@ -55,30 +56,58 @@ impl Gpt {
                 });
             }
         }
-        let hidden = self.forward_blocks(embeddings.sum, request.trace_mode, trace)?;
-        let normalized = self.ln_f.forward(&hidden)?;
-        if request.trace_mode == TraceMode::Summary {
-            trace.tensor(TraceTensor {
-                operation: OperationId::FinalLayerNorm,
-                layer: None,
-                name: "final_layer_norm",
-                tensor: &normalized,
-            });
+        let hidden = self.forward_blocks_from(
+            embeddings.sum,
+            BlockExecution {
+                start_layer: 0,
+                mode: request.trace_mode,
+            },
+            trace,
+        )?;
+        self.finish_forward(
+            &hidden,
+            FinishRequest {
+                sequence_length,
+                top_k: request.top_k,
+                mode: request.trace_mode,
+            },
+            trace,
+        )
+    }
+
+    /// Replays inference beginning at one cached Transformer layer input.
+    ///
+    /// # Errors
+    /// Returns [`ModelError`] for an invalid layer/input shape or tensor evaluation failure.
+    pub fn replay_from_layer(
+        &self,
+        request: LayerReplayRequest<'_>,
+        trace: &mut impl TraceSink,
+    ) -> Result<ForwardOutput, ModelError> {
+        if request.layer >= self.blocks.len() {
+            return Err(ModelError::InvalidTraceSelector);
         }
-        let logits = self.lm_head.forward(&normalized, &self.wte)?;
-        capture_logits(trace, request.trace_mode, &logits)?;
-        let final_logits = logits
-            .narrow(1, sequence_length - 1, 1)?
-            .squeeze(1)?
-            .squeeze(0)?
-            .force_contiguous()?;
-        let probabilities = candle_nn::ops::softmax(&final_logits, candle_core::D::Minus1)?;
-        let top_k = Self::rank_candidates(&final_logits, &probabilities, request.top_k)?;
-        Ok(ForwardOutput {
-            logits,
-            probabilities,
-            top_k,
-        })
+        let (batch, sequence_length, embedding) = request.layer_input.dims3()?;
+        if batch != 1 || embedding != self.wte.embeddings().dim(1)? || sequence_length == 0 {
+            return Err(ModelError::InvalidTraceSelector);
+        }
+        let hidden = self.forward_blocks_from(
+            request.layer_input.clone(),
+            BlockExecution {
+                start_layer: request.layer,
+                mode: request.trace_mode,
+            },
+            trace,
+        )?;
+        self.finish_forward(
+            &hidden,
+            FinishRequest {
+                sequence_length,
+                top_k: request.top_k,
+                mode: request.trace_mode,
+            },
+            trace,
+        )
     }
 
     fn embed(&self, token_ids: &[TokenId]) -> Result<Embeddings, ModelError> {
@@ -100,16 +129,16 @@ impl Gpt {
         })
     }
 
-    fn forward_blocks(
+    fn forward_blocks_from(
         &self,
         initial_hidden: Tensor,
-        mode: TraceMode,
+        execution: BlockExecution,
         trace: &mut impl TraceSink,
     ) -> Result<Tensor, ModelError> {
         let mut hidden = initial_hidden;
-        for (layer, block) in self.blocks.iter().enumerate() {
+        for (layer, block) in self.blocks.iter().enumerate().skip(execution.start_layer) {
             let output = block.forward(&hidden)?;
-            match mode {
+            match execution.mode {
                 TraceMode::Summary => capture_summary(trace, layer, &output),
                 TraceMode::Block { layer: selected } if selected == layer => {
                     capture_block(trace, layer, &output)?;
@@ -135,6 +164,37 @@ impl Gpt {
             hidden = output.output;
         }
         Ok(hidden)
+    }
+
+    fn finish_forward(
+        &self,
+        hidden: &Tensor,
+        request: FinishRequest,
+        trace: &mut impl TraceSink,
+    ) -> Result<ForwardOutput, ModelError> {
+        let normalized = self.ln_f.forward(hidden)?;
+        if request.mode == TraceMode::Summary {
+            trace.tensor(TraceTensor {
+                operation: OperationId::FinalLayerNorm,
+                layer: None,
+                name: "final_layer_norm",
+                tensor: &normalized,
+            });
+        }
+        let logits = self.lm_head.forward(&normalized, &self.wte)?;
+        capture_logits(trace, request.mode, &logits)?;
+        let final_logits = logits
+            .narrow(1, request.sequence_length - 1, 1)?
+            .squeeze(1)?
+            .squeeze(0)?
+            .force_contiguous()?;
+        let probabilities = candle_nn::ops::softmax(&final_logits, candle_core::D::Minus1)?;
+        let top_k = Self::rank_candidates(&final_logits, &probabilities, request.top_k)?;
+        Ok(ForwardOutput {
+            logits,
+            probabilities,
+            top_k,
+        })
     }
 
     fn rank_candidates(
@@ -174,6 +234,19 @@ struct Embeddings {
     token: Tensor,
     position: Tensor,
     sum: Tensor,
+}
+
+#[derive(Clone, Copy)]
+struct BlockExecution {
+    start_layer: usize,
+    mode: TraceMode,
+}
+
+#[derive(Clone, Copy)]
+struct FinishRequest {
+    sequence_length: usize,
+    top_k: usize,
+    mode: TraceMode,
 }
 
 fn capture_logits(

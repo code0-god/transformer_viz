@@ -119,6 +119,7 @@ fn App() -> impl IntoView {
                             <p>{format!("Run ID: {}", result.run_id)}</p>
                             <p>{format!("Tokens: {}", result.tokens.len())}</p>
                             <p>{format!("Layers: {}", result.layers.len())}</p>
+                            <p>{format!("Inference: {:.2} ms", result.duration_ms.get())}</p>
                             <p>{format!("Top-10: {:?}", result.logits.top_k)}</p>
                         </div>
                     }.into_any(),

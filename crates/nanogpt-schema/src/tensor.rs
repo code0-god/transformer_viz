@@ -45,19 +45,25 @@ impl From<FiniteF32> for f32 {
 #[serde(deny_unknown_fields)]
 pub struct TensorStats {
     /// Minimum value.
-    pub minimum: FiniteF32,
+    pub min: FiniteF32,
     /// Maximum value.
-    pub maximum: FiniteF32,
+    pub max: FiniteF32,
     /// Arithmetic mean.
     pub mean: FiniteF32,
+    /// Population standard deviation.
+    pub std: FiniteF32,
+    /// Euclidean norm.
+    pub l2_norm: FiniteF32,
 }
 
 /// Named row-major tensor values with dimensions and summary statistics.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TensorSnapshot {
-    /// Educational tensor name.
-    pub name: String,
+    /// Stable machine-consumed tensor identifier.
+    pub id: String,
+    /// Human-readable tensor label.
+    pub label: String,
     /// Tensor dimensions.
     pub shape: Vec<usize>,
     /// Finite row-major values.
@@ -71,11 +77,7 @@ impl TensorSnapshot {
     ///
     /// # Errors
     /// Returns [`SchemaError::TensorLength`] on length mismatch.
-    pub fn new(
-        name: String,
-        shape: Vec<usize>,
-        values: Vec<FiniteF32>,
-    ) -> Result<Self, SchemaError> {
+    pub fn new(id: String, shape: Vec<usize>, values: Vec<FiniteF32>) -> Result<Self, SchemaError> {
         let expected = shape.iter().product();
         if expected != values.len() {
             return Err(SchemaError::TensorLength {
@@ -97,13 +99,24 @@ impl TensorSnapshot {
             count += 1.0;
             mean += (value - mean) / count;
         }
+        let mut squared_deviation_sum = 0.0_f32;
+        let mut l2_norm = 0.0_f32;
+        for value in &values {
+            let value = value.get();
+            squared_deviation_sum += (value - mean).powi(2);
+            l2_norm = l2_norm.hypot(value);
+        }
+        let std = (squared_deviation_sum / count).sqrt();
         let stats = TensorStats {
-            minimum: FiniteF32::new(minimum)?,
-            maximum: FiniteF32::new(maximum)?,
+            min: FiniteF32::new(minimum)?,
+            max: FiniteF32::new(maximum)?,
             mean: FiniteF32::new(mean)?,
+            std: FiniteF32::new(std)?,
+            l2_norm: FiniteF32::new(l2_norm)?,
         };
         Ok(Self {
-            name,
+            label: id.clone(),
+            id,
             shape,
             values,
             stats,
@@ -118,7 +131,7 @@ pub struct MaskSnapshot {
     /// Query row count.
     pub rows: usize,
     /// Key column count.
-    pub columns: usize,
+    pub cols: usize,
     /// Row-major cells; `true` means attention is allowed.
     pub allowed: Vec<bool>,
 }
@@ -128,8 +141,8 @@ impl MaskSnapshot {
     ///
     /// # Errors
     /// Returns [`SchemaError::MaskLength`] on length mismatch.
-    pub fn new(rows: usize, columns: usize, allowed: Vec<bool>) -> Result<Self, SchemaError> {
-        let expected = rows.saturating_mul(columns);
+    pub fn new(rows: usize, cols: usize, allowed: Vec<bool>) -> Result<Self, SchemaError> {
+        let expected = rows.saturating_mul(cols);
         if expected != allowed.len() {
             return Err(SchemaError::MaskLength {
                 expected,
@@ -138,7 +151,7 @@ impl MaskSnapshot {
         }
         Ok(Self {
             rows,
-            columns,
+            cols,
             allowed,
         })
     }
