@@ -1460,6 +1460,8 @@ dependencies = [
 name = "nanogpt-schema"
 version = "0.1.0"
 dependencies = [
+ "serde",
+ "serde_json",
  "thiserror 2.0.16",
 ]
 
@@ -1467,6 +1469,8 @@ dependencies = [
 name = "nanogpt-tokenizer"
 version = "0.1.0"
 dependencies = [
+ "nanogpt-schema",
+ "serde_json",
  "thiserror 2.0.16",
 ]
 
@@ -2487,6 +2491,7 @@ dependencies = [
  "nanogpt-trace",
  "serde",
  "serde-wasm-bindgen",
+ "serde_json",
  "thiserror 2.0.16",
  "wasm-bindgen",
  "web-sys",

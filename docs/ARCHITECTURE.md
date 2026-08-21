@@ -9,8 +9,8 @@ from inference so tensor work cannot block the browser's main thread.
 - `nanogpt-tokenizer`: deterministic browser-side tokenization.
 - `nanogpt-model`: nanoGPT-compatible model and asset loading.
 - `nanogpt-trace`: intermediate tensor and execution trace contracts.
-- `transformer-viz-web`: Leptos CSR application; a later phase adds its Worker binary at
-  `apps/web/src/bin/worker.rs`.
+- `transformer-viz-web`: Leptos CSR application and Worker binary. Both deserialize the versioned
+  `nanogpt-schema` protocol; native tests invoke the same handler compiled into Worker WASM.
 
 Dependencies will point inward from the web application to the four responsibility crates. The
 pinned `reference/nanoGPT` submodule remains outside the Cargo graph and is used only to establish

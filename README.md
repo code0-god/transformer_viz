@@ -1,9 +1,8 @@
 # Transformer Viz
 
-Transformer Viz is a planned static Rust/WASM teaching application that will expose the
-intermediate tensors of a small nanoGPT-compatible Transformer in the browser. Phase A only
-establishes the reproducible workspace and source-reference baseline; inference and UI behavior
-belong to later phases.
+Transformer Viz is a static Rust/WASM teaching application that exposes the intermediate tensors
+of a small nanoGPT-compatible Transformer in the browser. Its app and dedicated Worker share a
+versioned serde trace protocol and deterministic educational byte tokenizer.
 
 ## Bootstrap
 
@@ -15,9 +14,10 @@ Prerequisites are `rustup`, Cargo, and Git. The repository pins Rust **1.94.0**,
 cargo test --workspace
 ```
 
-The web application lives in `apps/web`. Schema, tokenizer, model, and trace responsibilities live
-in four separate crates under `crates/`; the Worker binary belongs to the web package in a later
-phase. See [the architecture](docs/ARCHITECTURE.md).
+The web application and Worker live in `apps/web`. Schema, tokenizer, model, and trace
+responsibilities live in four separate crates under `crates/`. See
+[the architecture](docs/ARCHITECTURE.md) and the
+[schema/tokenizer decision](docs/adr/0003-schema-and-tokenizer.md).
 
 ## Reference implementation
 

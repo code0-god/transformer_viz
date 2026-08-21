@@ -1,7 +1,9 @@
 //! Dedicated Web Worker entry point for Candle CPU operations.
 
 #[cfg(target_arch = "wasm32")]
-use transformer_viz_web::spike::{WorkerRequest, WorkerResponse, run_candle_spike};
+use transformer_viz_web::spike::{
+    WorkerRequest, WorkerResponse, handle_worker_request, worker_error,
+};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::{JsCast as _, JsValue, closure::Closure};
 #[cfg(target_arch = "wasm32")]
@@ -26,21 +28,29 @@ fn main() {
     let message_scope = scope.clone();
     let on_message = Closure::<dyn FnMut(MessageEvent)>::new(move |event: MessageEvent| {
         let response = match serde_wasm_bindgen::from_value::<WorkerRequest>(event.data()) {
-            Ok(request) => match run_candle_spike(request) {
+            Ok(request) => match handle_worker_request(request) {
                 Ok(response) => response,
-                Err(error) => WorkerResponse::Error {
-                    message: error.to_string(),
-                },
+                Err(error) => worker_error(&error),
             },
             Err(error) => WorkerResponse::Error {
-                message: error.to_string(),
+                schema_version: nanogpt_schema::SchemaVersion::current(),
+                error: nanogpt_schema::WorkerError {
+                    code: nanogpt_schema::WorkerErrorCode::InvalidRequest,
+                    request_id: None,
+                    message: error.to_string(),
+                },
             },
         };
         post(&message_scope, &response);
     });
     scope.set_onmessage(Some(on_message.as_ref().unchecked_ref()));
     on_message.forget();
-    post(&scope, &WorkerResponse::Ready);
+    post(
+        &scope,
+        &WorkerResponse::Ready {
+            schema_version: nanogpt_schema::SchemaVersion::current(),
+        },
+    );
 }
 
 #[cfg(not(target_arch = "wasm32"))]

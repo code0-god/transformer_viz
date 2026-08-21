@@ -3,7 +3,9 @@
 #[cfg(target_arch = "wasm32")]
 use leptos::{mount::mount_to_body, prelude::*};
 #[cfg(target_arch = "wasm32")]
-use transformer_viz_web::spike::{SpikeResult, WorkerRequest, WorkerResponse};
+use nanogpt_schema::{OperationResult, SchemaVersion};
+#[cfg(target_arch = "wasm32")]
+use transformer_viz_web::spike::{WorkerRequest, WorkerResponse};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::{JsCast as _, JsValue, closure::Closure};
 #[cfg(target_arch = "wasm32")]
@@ -15,7 +17,7 @@ enum UiState {
     Initializing,
     Ready,
     Running,
-    Result(SpikeResult),
+    Result(OperationResult),
     Error(String),
 }
 
@@ -36,12 +38,19 @@ fn App() -> impl IntoView {
         Ok(worker) => {
             let on_message = Closure::<dyn FnMut(MessageEvent)>::new(move |event: MessageEvent| {
                 match serde_wasm_bindgen::from_value::<WorkerResponse>(event.data()) {
-                    Ok(WorkerResponse::Ready) => set_state.set(UiState::Ready),
-                    Ok(WorkerResponse::Result { result, .. }) => {
+                    Ok(WorkerResponse::Ready { .. }) => set_state.set(UiState::Ready),
+                    Ok(WorkerResponse::OperationResult { result, .. }) => {
                         set_state.set(UiState::Result(*result));
                     }
-                    Ok(WorkerResponse::Error { message }) => {
-                        set_state.set(UiState::Error(message));
+                    Ok(WorkerResponse::Error { error, .. }) => {
+                        set_state.set(UiState::Error(error.message));
+                    }
+                    Ok(
+                        WorkerResponse::Initialized { .. }
+                        | WorkerResponse::Tokens { .. }
+                        | WorkerResponse::Trace { .. },
+                    ) => {
+                        set_state.set(UiState::Error("예상하지 못한 Worker 응답".to_owned()));
                     }
                     Err(error) => set_state.set(UiState::Error(error.to_string())),
                 }
@@ -67,7 +76,10 @@ fn App() -> impl IntoView {
             return;
         };
         set_state.set(UiState::Running);
-        match serde_wasm_bindgen::to_value(&WorkerRequest::Run { request_id: 1 }) {
+        match serde_wasm_bindgen::to_value(&WorkerRequest::RunOperations {
+            schema_version: SchemaVersion::current(),
+            request_id: 1,
+        }) {
             Ok(request) => {
                 if let Err(error) = worker.post_message(&request) {
                     set_state.set(UiState::Error(js_error(&error)));

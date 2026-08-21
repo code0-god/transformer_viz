@@ -1,25 +1,34 @@
-//! Phase B Candle operation contract.
+//! Phase B Candle operation contract retained through the shared schema.
 
-use transformer_viz_web::spike::{WorkerRequest, WorkerResponse, run_candle_spike};
+use nanogpt_schema::{FiniteF32, SchemaVersion};
+use transformer_viz_web::spike::{WorkerRequest, WorkerResponse, handle_worker_request};
 
-fn assert_close(actual: &[f32], expected: &[f32]) {
+fn assert_close(actual: &[FiniteF32], expected: &[f32]) {
     assert_eq!(actual.len(), expected.len());
     for (actual, expected) in actual.iter().zip(expected) {
-        assert!((actual - expected).abs() < 1e-5, "{actual} != {expected}");
+        assert!(
+            (actual.get() - expected).abs() < 1e-5,
+            "{} != {expected}",
+            actual.get()
+        );
     }
 }
 
 #[test]
 fn candle_results_are_typed_when_worker_runs_cpu_spike() -> Result<(), Box<dyn std::error::Error>> {
-    // Given: the typed request sent across the browser Worker boundary.
-    let request = WorkerRequest::Run { request_id: 7 };
-
+    // Given: a shared request sent across the browser Worker boundary.
+    let request = WorkerRequest::RunOperations {
+        schema_version: SchemaVersion::current(),
+        request_id: 7,
+    };
     // When: Candle evaluates the Phase B CPU operation graph.
-    let response = run_candle_spike(request)?;
-
-    // Then: every required operation is returned as typed tensor data.
-    let WorkerResponse::Result { request_id, result } = response else {
-        return Err("expected a result response".into());
+    let response = handle_worker_request(request)?;
+    // Then: every required operation is returned as finite typed tensor data.
+    let WorkerResponse::OperationResult {
+        request_id, result, ..
+    } = response
+    else {
+        return Err("expected an operation result response".into());
     };
     assert_eq!(request_id, 7);
     assert_eq!(result.backend, "Candle CPU");
