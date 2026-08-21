@@ -1,4 +1,4 @@
-use crate::{EncodedTokens, SchemaVersion, TensorData, Trace, TraceMode};
+use crate::{AttentionHeadTrace, BlockTrace, ModelMetadata, RunSummary, TokenTrace};
 use serde::{Deserialize, Serialize};
 
 /// Request accepted by the inference Worker.
@@ -7,151 +7,133 @@ use serde::{Deserialize, Serialize};
 pub enum WorkerRequest {
     /// Load and verify model assets.
     Initialize {
-        /// Contract version.
-        schema_version: SchemaVersion,
-        /// Correlated request.
-        request_id: u32,
-        /// Base-relative manifest URL.
+        /// Base-relative model manifest URL.
         manifest_url: String,
     },
-    /// Tokenize text without inference.
-    Tokenize {
-        /// Contract version.
-        schema_version: SchemaVersion,
-        /// Correlated request.
-        request_id: u32,
-        /// UTF-8 input.
+    /// Run inference for UTF-8 text.
+    Run {
+        /// Correlates the response with this request.
+        request_id: u64,
+        /// UTF-8 prompt text.
         text: String,
     },
-    /// Run inference and capture selected detail.
-    Run {
-        /// Contract version.
-        schema_version: SchemaVersion,
-        /// Correlated request.
-        request_id: u32,
-        /// UTF-8 prompt.
-        prompt: String,
-        /// Requested detail.
-        trace_mode: TraceMode,
+    /// Inspect one cached Transformer block.
+    InspectBlock {
+        /// Correlates the response with this request.
+        request_id: u64,
+        /// Completed run to inspect.
+        run_id: u64,
+        /// Zero-based layer index.
+        layer: usize,
     },
-    /// Run the Phase B Candle operation proof.
-    RunOperations {
-        /// Contract version.
-        schema_version: SchemaVersion,
-        /// Correlated request.
-        request_id: u32,
+    /// Inspect one cached causal-attention head.
+    InspectAttentionHead {
+        /// Correlates the response with this request.
+        request_id: u64,
+        /// Completed run to inspect.
+        run_id: u64,
+        /// Zero-based layer index.
+        layer: usize,
+        /// Zero-based head index.
+        head: usize,
     },
-    /// Cancel active inference.
+    /// Inspect one token within a cached attention head.
+    InspectToken {
+        /// Correlates the response with this request.
+        request_id: u64,
+        /// Completed run to inspect.
+        run_id: u64,
+        /// Zero-based layer index.
+        layer: usize,
+        /// Zero-based head index.
+        head: usize,
+        /// Zero-based token position.
+        token: usize,
+    },
+    /// Cancel an active request.
     Cancel {
-        /// Contract version.
-        schema_version: SchemaVersion,
         /// Request to cancel.
-        request_id: u32,
+        request_id: u64,
     },
-}
-
-/// Serializable Candle operation smoke-test values.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct OperationResult {
-    /// Backend name.
-    pub backend: String,
-    /// Matrix multiplication.
-    pub matmul: TensorData,
-    /// Flattened output.
-    pub reshape: TensorData,
-    /// Transposed output.
-    pub transpose: TensorData,
-    /// Softmax output.
-    pub softmax: TensorData,
-    /// `LayerNorm` output.
-    pub layer_norm: TensorData,
-    /// Exact GELU output.
-    pub gelu: TensorData,
 }
 
 /// Stable machine-readable Worker failure category.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkerErrorCode {
-    /// Unsupported contract.
+    /// Unsupported serialized contract.
     UnsupportedVersion,
-    /// Invalid message or config.
+    /// Invalid message or selector.
     InvalidRequest,
-    /// Model not loaded.
+    /// Model assets have not loaded.
     NotInitialized,
     /// Asset fetch failed.
     AssetUnavailable,
-    /// Integrity check failed.
+    /// Asset integrity check failed.
     ChecksumMismatch,
     /// Tokenization failed.
     Tokenization,
     /// Inference failed.
     Inference,
-    /// Request cancelled.
+    /// Request was cancelled.
     Cancelled,
-}
-
-/// User-readable Worker boundary error.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct WorkerError {
-    /// Stable category.
-    pub code: WorkerErrorCode,
-    /// Correlated request if known.
-    pub request_id: Option<u32>,
-    /// UI-safe detail.
-    pub message: String,
 }
 
 /// Response emitted by the inference Worker.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum WorkerResponse {
-    /// Worker WASM loaded.
+    /// Model initialization is advancing through a user-visible phase.
+    Initializing {
+        /// Human-readable loading phase.
+        phase: String,
+    },
+    /// Model assets loaded and the Worker can run inference.
     Ready {
-        /// Contract version.
-        schema_version: SchemaVersion,
+        /// Loaded model identity and provenance.
+        model: ModelMetadata,
     },
-    /// Model assets loaded.
-    Initialized {
-        /// Contract version.
-        schema_version: SchemaVersion,
+    /// Inference completed and can be inspected by run ID.
+    RunComplete {
         /// Correlated request.
-        request_id: u32,
+        request_id: u64,
+        /// Run summary and stable run ID.
+        summary: Box<RunSummary>,
     },
-    /// Tokenization completed.
-    Tokens {
-        /// Contract version.
-        schema_version: SchemaVersion,
+    /// One cached block inspection completed.
+    BlockTrace {
         /// Correlated request.
-        request_id: u32,
-        /// Encoded sequence.
-        encoded: EncodedTokens,
+        request_id: u64,
+        /// Inspected run.
+        run_id: u64,
+        /// Detailed block trace.
+        trace: Box<BlockTrace>,
     },
-    /// Inference and trace completed.
-    Trace {
-        /// Contract version.
-        schema_version: SchemaVersion,
+    /// One cached attention-head inspection completed.
+    AttentionHeadTrace {
         /// Correlated request.
-        request_id: u32,
-        /// Requested trace.
-        trace: Box<Trace>,
+        request_id: u64,
+        /// Inspected run.
+        run_id: u64,
+        /// Detailed head trace.
+        trace: Box<AttentionHeadTrace>,
     },
-    /// Candle operation proof completed.
-    OperationResult {
-        /// Contract version.
-        schema_version: SchemaVersion,
+    /// One cached token inspection completed.
+    TokenTrace {
         /// Correlated request.
-        request_id: u32,
-        /// Typed finite tensors.
-        result: Box<OperationResult>,
+        request_id: u64,
+        /// Inspected run.
+        run_id: u64,
+        /// Detailed token trace.
+        trace: Box<TokenTrace>,
     },
-    /// Request failed.
+    /// Request decoding or execution failed.
     Error {
-        /// Contract version.
-        schema_version: SchemaVersion,
-        /// Typed error.
-        error: WorkerError,
+        /// Correlated request when available.
+        request_id: Option<u64>,
+        /// Stable failure category.
+        code: WorkerErrorCode,
+        /// User-readable detail safe to show in the UI.
+        message: String,
     },
 }

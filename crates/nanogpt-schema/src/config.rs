@@ -13,25 +13,25 @@ pub struct AssetDescriptor {
     pub size_bytes: u64,
 }
 
-/// nanoGPT architecture parameters required for inference.
+/// nanoGPT architecture parameters using upstream configuration names.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct ModelConfig {
+pub struct GptConfig {
     /// Maximum sequence length.
     pub block_size: usize,
     /// Vocabulary size.
     pub vocab_size: usize,
     /// Transformer block count.
-    pub layer_count: usize,
+    pub n_layer: usize,
     /// Attention head count.
-    pub head_count: usize,
-    /// Residual width.
-    pub embedding_size: usize,
-    /// Whether layers include bias.
-    pub has_bias: bool,
+    pub n_head: usize,
+    /// Residual embedding width.
+    pub n_embd: usize,
+    /// Whether linear and normalization layers include bias.
+    pub bias: bool,
 }
 
-impl ModelConfig {
+impl GptConfig {
     /// Checks dimensions needed for tensor construction.
     ///
     /// # Errors
@@ -40,18 +40,18 @@ impl ModelConfig {
         for (field, value) in [
             ("block_size", self.block_size),
             ("vocab_size", self.vocab_size),
-            ("layer_count", self.layer_count),
-            ("head_count", self.head_count),
-            ("embedding_size", self.embedding_size),
+            ("n_layer", self.n_layer),
+            ("n_head", self.n_head),
+            ("n_embd", self.n_embd),
         ] {
             if value == 0 {
                 return Err(SchemaError::ZeroValue { field });
             }
         }
-        if !self.embedding_size.is_multiple_of(self.head_count) {
+        if !self.n_embd.is_multiple_of(self.n_head) {
             return Err(SchemaError::EmbeddingNotDivisible {
-                embedding_size: self.embedding_size,
-                head_count: self.head_count,
+                embedding_size: self.n_embd,
+                head_count: self.n_head,
             });
         }
         Ok(())
@@ -147,7 +147,7 @@ pub struct ModelManifest {
     /// Model identity.
     pub metadata: ModelMetadata,
     /// Architecture.
-    pub model: ModelConfig,
+    pub model: GptConfig,
     /// Tokenizer asset.
     pub tokenizer: AssetDescriptor,
     /// Safetensors asset.

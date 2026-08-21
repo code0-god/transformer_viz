@@ -3,7 +3,7 @@
 #[cfg(target_arch = "wasm32")]
 use leptos::{mount::mount_to_body, prelude::*};
 #[cfg(target_arch = "wasm32")]
-use nanogpt_schema::{OperationResult, SchemaVersion};
+use nanogpt_schema::RunSummary;
 #[cfg(target_arch = "wasm32")]
 use transformer_viz_web::spike::{WorkerRequest, WorkerResponse};
 #[cfg(target_arch = "wasm32")]
@@ -17,7 +17,7 @@ enum UiState {
     Initializing,
     Ready,
     Running,
-    Result(OperationResult),
+    Result(RunSummary),
     Error(String),
 }
 
@@ -39,19 +39,20 @@ fn App() -> impl IntoView {
             let on_message = Closure::<dyn FnMut(MessageEvent)>::new(move |event: MessageEvent| {
                 match serde_wasm_bindgen::from_value::<WorkerResponse>(event.data()) {
                     Ok(WorkerResponse::Ready { .. }) => set_state.set(UiState::Ready),
-                    Ok(WorkerResponse::OperationResult { result, .. }) => {
-                        set_state.set(UiState::Result(*result));
+                    Ok(WorkerResponse::RunComplete { summary, .. }) => {
+                        set_state.set(UiState::Result(*summary));
                     }
-                    Ok(WorkerResponse::Error { error, .. }) => {
-                        set_state.set(UiState::Error(error.message));
+                    Ok(WorkerResponse::Error { message, .. }) => {
+                        set_state.set(UiState::Error(message));
+                    }
+                    Ok(WorkerResponse::Initializing { phase }) => {
+                        set_state.set(UiState::Error(format!("초기화 중: {phase}")));
                     }
                     Ok(
-                        WorkerResponse::Initialized { .. }
-                        | WorkerResponse::Tokens { .. }
-                        | WorkerResponse::Trace { .. },
-                    ) => {
-                        set_state.set(UiState::Error("예상하지 못한 Worker 응답".to_owned()));
-                    }
+                        WorkerResponse::BlockTrace { .. }
+                        | WorkerResponse::AttentionHeadTrace { .. }
+                        | WorkerResponse::TokenTrace { .. },
+                    ) => set_state.set(UiState::Error("예상하지 못한 Worker 응답".to_owned())),
                     Err(error) => set_state.set(UiState::Error(error.to_string())),
                 }
             });
@@ -76,9 +77,9 @@ fn App() -> impl IntoView {
             return;
         };
         set_state.set(UiState::Running);
-        match serde_wasm_bindgen::to_value(&WorkerRequest::RunOperations {
-            schema_version: SchemaVersion::current(),
+        match serde_wasm_bindgen::to_value(&WorkerRequest::Run {
             request_id: 1,
+            text: "phase-b-candle".to_owned(),
         }) {
             Ok(request) => {
                 if let Err(error) = worker.post_message(&request) {
@@ -102,13 +103,10 @@ fn App() -> impl IntoView {
                     UiState::Result(result) => view! {
                         <div id="result">
                             <p id="status">"결과 완료"</p>
-                            <p>{format!("Backend: {}", result.backend)}</p>
-                            <p>{format!("Matmul: {:?}", result.matmul.values)}</p>
-                            <p>{format!("Reshape: {:?}", result.reshape.values)}</p>
-                            <p>{format!("Transpose: {:?}", result.transpose.values)}</p>
-                            <p>{format!("Softmax: {:?}", result.softmax.values)}</p>
-                            <p>{format!("LayerNorm ε=1e-5: {:?}", result.layer_norm.values)}</p>
-                            <p>{format!("Exact GELU: {:?}", result.gelu.values)}</p>
+                            <p>{format!("Run ID: {}", result.run_id)}</p>
+                            <p>{format!("Tokens: {}", result.tokens.len())}</p>
+                            <p>{format!("Layers: {}", result.layers.len())}</p>
+                            <p>{format!("Exact GELU: {:?}", result.logits.logits.values)}</p>
                         </div>
                     }.into_any(),
                 }}

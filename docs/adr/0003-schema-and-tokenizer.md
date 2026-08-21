@@ -12,11 +12,16 @@ WASM builds, preserve arbitrary UTF-8, expose original pieces, and stay small en
 
 ## Decision
 
-`nanogpt-schema` owns protocol version `1.0.0`. Serde messages are explicitly tagged and reject
-unknown fields or unsupported versions. Model manifests carry config, provenance, relative assets,
-checksums, and sizes. Tensor values use `FiniteF32`; attention masks serialize every cell as an
-explicit `allowed` boolean. Trace modes select summary, block, attention head, token, or full detail,
-and source locations accompany operation summaries.
+`nanogpt-schema` owns trace schema version `1.0.0`; manifests, run summaries, block traces, and
+token traces carry a checked `SchemaVersion`. Worker request and response enums are explicitly
+tagged, reject unknown fields, and use `u64` request/run IDs. Their public variants match the browser
+binding directly rather than routing through compatibility aliases.
+
+The public model and trace contracts are `GptConfig`, `TokenInfo`, `RunSummary`, `LayerSummary`,
+`AttentionHeadTrace`, `MlpTrace`, `LogitsTrace`, `TensorStats`, `TensorSnapshot`, `MaskSnapshot`,
+`OperationId`, `SourceReference`, `BlockTrace`, and `TokenTrace`. `FiniteF32` prevents NaN or infinity
+from entering snapshots; `MaskSnapshot` serializes every cell as an explicit `allowed` boolean.
+`TraceMode` is exactly off, summary, block, attention-head, or layer/head/token detail.
 
 Use a UTF-8 byte-fallback tokenizer. IDs are fixed as BOS `0`, EOS `1`, UNK `2`, and byte `b` as
 `b + 3`, giving vocabulary size 259. Encoding always adds BOS/EOS. Truncation reserves EOS and backs

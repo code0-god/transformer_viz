@@ -1,7 +1,7 @@
-//! Phase B Candle operation contract retained through the shared schema.
+//! Phase B Candle operation contract retained beside the exact Worker schema.
 
-use nanogpt_schema::{FiniteF32, SchemaVersion};
-use transformer_viz_web::spike::{WorkerRequest, WorkerResponse, handle_worker_request};
+use nanogpt_schema::FiniteF32;
+use transformer_viz_web::spike::run_candle_spike;
 
 fn assert_close(actual: &[FiniteF32], expected: &[f32]) {
     assert_eq!(actual.len(), expected.len());
@@ -15,22 +15,11 @@ fn assert_close(actual: &[FiniteF32], expected: &[f32]) {
 }
 
 #[test]
-fn candle_results_are_typed_when_worker_runs_cpu_spike() -> Result<(), Box<dyn std::error::Error>> {
-    // Given: a shared request sent across the browser Worker boundary.
-    let request = WorkerRequest::RunOperations {
-        schema_version: SchemaVersion::current(),
-        request_id: 7,
-    };
-    // When: Candle evaluates the Phase B CPU operation graph.
-    let response = handle_worker_request(request)?;
-    // Then: every required operation is returned as finite typed tensor data.
-    let WorkerResponse::OperationResult {
-        request_id, result, ..
-    } = response
-    else {
-        return Err("expected an operation result response".into());
-    };
-    assert_eq!(request_id, 7);
+fn candle_results_remain_finite_when_cpu_spike_runs() -> Result<(), Box<dyn std::error::Error>> {
+    // Given: the retained deterministic Candle operation graph.
+    // When: it executes through the same code compiled into Worker WASM.
+    let result = run_candle_spike()?;
+    // Then: every Phase B operation remains represented by finite snapshots.
     assert_eq!(result.backend, "Candle CPU");
     assert_eq!(result.matmul.shape, [2, 2]);
     assert_close(&result.matmul.values, &[19.0, 22.0, 43.0, 50.0]);

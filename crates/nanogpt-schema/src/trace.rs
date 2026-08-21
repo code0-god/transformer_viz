@@ -1,64 +1,70 @@
-use crate::{AttentionMask, ModelMetadata, SchemaVersion, TensorData, TensorSummary, Token};
+use crate::{
+    FiniteF32, MaskSnapshot, SchemaVersion, TensorSnapshot, TensorStats, TokenId, TokenInfo,
+};
 use serde::{Deserialize, Serialize};
 
-/// Amount and selector of trace detail requested by the UI.
+/// Exact amount and selector of trace detail requested from inference.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum TraceMode {
-    /// Whole-pass summaries.
+    /// Disable trace capture.
+    Off,
+    /// Capture whole-run summaries.
     Summary,
-    /// One Transformer block.
+    /// Capture one Transformer block.
     Block {
         /// Zero-based block index.
         layer: usize,
     },
-    /// One attention head.
-    Attention {
+    /// Capture one attention head.
+    AttentionHead {
         /// Zero-based block index.
         layer: usize,
         /// Zero-based head index.
         head: usize,
     },
-    /// One sequence position.
+    /// Capture one token within an attention head.
     Token {
+        /// Zero-based block index.
+        layer: usize,
+        /// Zero-based head index.
+        head: usize,
         /// Zero-based token position.
-        position: usize,
+        token: usize,
     },
-    /// Every educational tensor.
-    Full,
 }
 
-/// Named nanoGPT forward-pass operation.
+/// Stable identifier for a nanoGPT forward-pass operation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Operation {
-    /// Token plus position embedding.
+pub enum OperationId {
+    /// Token and positional embedding addition.
     Embedding,
-    /// Pre-attention normalization.
+    /// Pre-attention layer normalization.
     AttentionLayerNorm,
-    /// Combined QKV projection.
+    /// Combined query/key/value projection.
     QueryKeyValue,
-    /// Scaled causal attention.
+    /// Scaled causal self-attention.
     Attention,
-    /// Attention residual.
+    /// Attention projection and residual addition.
     AttentionResidual,
-    /// Pre-MLP normalization.
+    /// Pre-MLP layer normalization.
     MlpLayerNorm,
-    /// MLP expansion/GELU/projection.
+    /// MLP expansion, GELU, and projection.
     Mlp,
-    /// MLP residual.
+    /// MLP residual addition.
     MlpResidual,
-    /// Final normalization.
+    /// Final layer normalization.
     FinalLayerNorm,
     /// Tied language-model head.
     Logits,
 }
 
-/// Source code location corresponding to an operation.
+/// Canonical source code location for an educational operation.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct SourceLocation {
-    /// Repository-relative file.
+pub struct SourceReference {
+    /// Repository-relative source file.
     pub file: String,
     /// First one-based line.
     pub line_start: usize,
@@ -72,86 +78,160 @@ pub struct SourceLocation {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OperationTrace {
-    /// Forward operation.
-    pub operation: Operation,
-    /// Canonical source.
-    pub source: SourceLocation,
+    /// Forward-pass operation.
+    pub operation: OperationId,
+    /// Canonical nanoGPT source location.
+    pub source: SourceReference,
     /// Output statistics.
-    pub output: TensorSummary,
+    pub output: TensorStats,
 }
 
-/// Detailed trace for one token position.
+/// Summary of one Transformer layer.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct TokenTrace {
-    /// Sequence position.
-    pub position: usize,
-    /// Token at this position.
-    pub token: Token,
-    /// Token plus position embedding.
-    pub embedding: TensorData,
-    /// Optional vocabulary logits.
-    pub logits: Option<TensorData>,
+pub struct LayerSummary {
+    /// Zero-based layer index.
+    pub layer: usize,
+    /// Layer input statistics.
+    pub input: TensorStats,
+    /// Attention output statistics.
+    pub attention: TensorStats,
+    /// MLP output statistics.
+    pub mlp: TensorStats,
+    /// Layer output statistics.
+    pub output: TensorStats,
 }
 
 /// Detailed values for one causal attention head.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct AttentionTrace {
-    /// Block index.
+pub struct AttentionHeadTrace {
+    /// Zero-based layer index.
     pub layer: usize,
-    /// Head index.
+    /// Zero-based head index.
     pub head: usize,
     /// Query vectors.
-    pub query: TensorData,
+    pub query: TensorSnapshot,
     /// Key vectors.
-    pub key: TensorData,
+    pub key: TensorSnapshot,
     /// Value vectors.
-    pub value: TensorData,
-    /// Pre-scale scores.
-    pub raw_scores: TensorData,
-    /// Scaled scores.
-    pub scaled_scores: TensorData,
+    pub value: TensorSnapshot,
+    /// Query-key products before scaling.
+    pub raw_scores: TensorSnapshot,
+    /// Scores after head-size scaling.
+    pub scaled_scores: TensorSnapshot,
     /// Explicit causal mask.
-    pub mask: AttentionMask,
-    /// Softmax probabilities.
-    pub probabilities: TensorData,
-    /// Attention times values.
-    pub weighted_values: TensorData,
+    pub mask: MaskSnapshot,
+    /// Post-mask softmax probabilities.
+    pub probabilities: TensorSnapshot,
+    /// Attention probabilities multiplied by values.
+    pub output: TensorSnapshot,
+    /// Canonical source location.
+    pub source: SourceReference,
 }
 
-/// One Transformer block's educational outputs.
+/// Detailed MLP expansion, activation, and projection values.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MlpTrace {
+    /// Zero-based layer index.
+    pub layer: usize,
+    /// Normalized MLP input.
+    pub input: TensorSnapshot,
+    /// Expanded hidden values.
+    pub hidden: TensorSnapshot,
+    /// Exact GELU activation values.
+    pub activated: TensorSnapshot,
+    /// Projected MLP output.
+    pub output: TensorSnapshot,
+    /// Canonical source location.
+    pub source: SourceReference,
+}
+
+/// One candidate from the model's output distribution.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LogitCandidate {
+    /// Candidate token ID.
+    pub token_id: TokenId,
+    /// Human-readable token display.
+    pub display: String,
+    /// Raw logit.
+    pub logit: FiniteF32,
+    /// Softmax probability.
+    pub probability: FiniteF32,
+}
+
+/// Final logits and ranked candidate tokens.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LogitsTrace {
+    /// Full or selected vocabulary logits.
+    pub logits: TensorSnapshot,
+    /// Highest-probability candidates in descending order.
+    pub top_k: Vec<LogitCandidate>,
+    /// Canonical source location.
+    pub source: SourceReference,
+}
+
+/// Summary returned after a complete inference run.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RunSummary {
+    /// Contract version.
+    pub schema_version: SchemaVersion,
+    /// Stable run identifier used by inspection requests.
+    pub run_id: u64,
+    /// Encoded prompt tokens.
+    pub tokens: Vec<TokenInfo>,
+    /// Per-layer summaries.
+    pub layers: Vec<LayerSummary>,
+    /// Final output distribution.
+    pub logits: LogitsTrace,
+}
+
+/// Detailed trace for one Transformer block.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BlockTrace {
-    /// Block index.
-    pub layer: usize,
-    /// Selected head detail.
-    pub attention: Option<AttentionTrace>,
-    /// Attention residual.
-    pub attention_residual: TensorSummary,
-    /// MLP before residual.
-    pub mlp: TensorSummary,
-    /// Block output.
-    pub output: TensorSummary,
-}
-
-/// Versioned forward-pass trace returned by the Worker.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Trace {
     /// Contract version.
     pub schema_version: SchemaVersion,
-    /// Model provenance.
-    pub model: ModelMetadata,
-    /// Input tokens.
-    pub tokens: Vec<Token>,
+    /// Stable run identifier.
+    pub run_id: u64,
+    /// Zero-based layer index.
+    pub layer: usize,
     /// Source-linked operation summaries.
     pub operations: Vec<OperationTrace>,
-    /// Requested token details.
-    pub token_traces: Vec<TokenTrace>,
-    /// Block traces.
-    pub blocks: Vec<BlockTrace>,
-    /// Final logits summary.
-    pub logits: TensorSummary,
+    /// Attention output after residual addition.
+    pub attention_residual: TensorSnapshot,
+    /// Detailed MLP values.
+    pub mlp: MlpTrace,
+    /// Block output after residual addition.
+    pub output: TensorSnapshot,
+}
+
+/// Detailed trace for one token selection.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TokenTrace {
+    /// Contract version.
+    pub schema_version: SchemaVersion,
+    /// Stable run identifier.
+    pub run_id: u64,
+    /// Zero-based layer index.
+    pub layer: usize,
+    /// Zero-based head index.
+    pub head: usize,
+    /// Zero-based token position.
+    pub token: usize,
+    /// Selected token metadata.
+    pub token_info: TokenInfo,
+    /// Token representation entering the selected layer.
+    pub input: TensorSnapshot,
+    /// Selected attention output.
+    pub attention: TensorSnapshot,
+    /// Selected MLP output.
+    pub mlp: TensorSnapshot,
+    /// Logits at the selected token position.
+    pub logits: LogitsTrace,
 }

@@ -1,27 +1,31 @@
-//! Phase C integration through the real shared Worker handler.
+//! Exact Phase C integration through the shared Worker handler.
 
 use nanogpt_schema::{TokenId, WorkerResponse};
 use transformer_viz_web::spike::{WorkerRequest, handle_worker_request};
 
 #[test]
-fn tokenizer_response_is_decoded_when_versioned_request_crosses_worker_boundary()
--> Result<(), Box<dyn std::error::Error>> {
-    // Given: the concrete Phase C JSON sent to the Worker.
-    let json = r#"{"schema_version":"1.0.0","type":"tokenize","request_id":9,"text":"the cat"}"#;
-    // When: the public boundary decodes and handles it.
+fn run_summary_uses_u64_request_and_native_wasm_tokenizer() -> Result<(), Box<dyn std::error::Error>>
+{
+    // Given: exact Run JSON with an ID outside u32 range.
+    let json = r#"{"type":"run","request_id":4294967296,"text":"the cat"}"#;
+    // When: the public Worker boundary decodes and handles it.
     let response = handle_worker_request(serde_json::from_str::<WorkerRequest>(json)?)?;
-    // Then: native and Worker WASM share deterministic token IDs.
-    let WorkerResponse::Tokens {
+    // Then: the exact response carries the same ID and deterministic tokenizer output.
+    let WorkerResponse::RunComplete {
         request_id,
-        encoded,
-        ..
+        summary,
     } = response
     else {
-        return Err("expected token response".into());
+        return Err("expected run-complete response".into());
     };
-    assert_eq!(request_id, 9);
+    assert_eq!(request_id, 4_294_967_296);
+    assert_eq!(summary.run_id, request_id);
     assert_eq!(
-        encoded.ids(),
+        summary
+            .tokens
+            .iter()
+            .map(|token| token.id)
+            .collect::<Vec<_>>(),
         vec![
             TokenId(0),
             TokenId(119),
@@ -31,7 +35,7 @@ fn tokenizer_response_is_decoded_when_versioned_request_crosses_worker_boundary(
             TokenId(102),
             TokenId(100),
             TokenId(119),
-            TokenId(1)
+            TokenId(1),
         ]
     );
     Ok(())

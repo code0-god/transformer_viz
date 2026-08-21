@@ -1,6 +1,6 @@
 //! Deterministic, educational UTF-8 byte-fallback tokenizer.
 
-use nanogpt_schema::{EncodedTokens, Token, TokenId, TokenKind, TokenizerConfig};
+use nanogpt_schema::{EncodedTokens, TokenId, TokenInfo, TokenKind, TokenizerConfig};
 use thiserror::Error;
 
 /// A validated deterministic tokenizer.
@@ -62,7 +62,7 @@ impl Tokenizer {
         let mut tokens = Vec::with_capacity(kept + 2);
         tokens.push(special(self.config.bos_id, "<BOS>", TokenKind::Bos));
         for (offset, byte) in input.as_bytes()[..kept].iter().copied().enumerate() {
-            tokens.push(Token {
+            tokens.push(TokenInfo {
                 id: TokenId(self.config.byte_offset + u32::from(byte)),
                 display: display_byte(byte),
                 piece: vec![byte],
@@ -83,7 +83,7 @@ impl Tokenizer {
     ///
     /// # Errors
     /// Returns [`TokenizerError`] for invalid IDs or invalid UTF-8 token sequences.
-    pub fn decode(&self, tokens: &[Token]) -> Result<String, TokenizerError> {
+    pub fn decode(&self, tokens: &[TokenInfo]) -> Result<String, TokenizerError> {
         let mut bytes = Vec::with_capacity(tokens.len());
         for token in tokens {
             match token.kind {
@@ -106,8 +106,8 @@ impl Tokenizer {
     }
 }
 
-fn special(id: TokenId, display: &str, kind: TokenKind) -> Token {
-    Token {
+fn special(id: TokenId, display: &str, kind: TokenKind) -> TokenInfo {
+    TokenInfo {
         id,
         display: display.to_owned(),
         piece: Vec::new(),

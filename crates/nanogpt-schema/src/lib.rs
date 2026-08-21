@@ -7,14 +7,14 @@ mod token;
 mod trace;
 
 pub use config::{
-    AssetDescriptor, ModelConfig, ModelManifest, ModelMetadata, TokenizerConfig, TokenizerKind,
+    AssetDescriptor, GptConfig, ModelManifest, ModelMetadata, TokenizerConfig, TokenizerKind,
 };
-pub use protocol::{OperationResult, WorkerError, WorkerErrorCode, WorkerRequest, WorkerResponse};
-pub use tensor::{AttentionMask, FiniteF32, TensorData, TensorSummary};
-pub use token::{EncodedTokens, Token, TokenId, TokenKind};
+pub use protocol::{WorkerErrorCode, WorkerRequest, WorkerResponse};
+pub use tensor::{FiniteF32, MaskSnapshot, TensorSnapshot, TensorStats};
+pub use token::{EncodedTokens, TokenId, TokenInfo, TokenKind};
 pub use trace::{
-    AttentionTrace, BlockTrace, Operation, OperationTrace, SourceLocation, TokenTrace, Trace,
-    TraceMode,
+    AttentionHeadTrace, BlockTrace, LayerSummary, LogitCandidate, LogitsTrace, MlpTrace,
+    OperationId, OperationTrace, RunSummary, SourceReference, TokenTrace, TraceMode,
 };
 
 use serde::{Deserialize, Serialize};
@@ -94,6 +94,9 @@ pub enum SchemaError {
     /// A tensor value is not finite f32.
     #[error("tensor values must be finite f32 numbers")]
     NonFiniteTensorValue,
+    /// Tensor statistics are undefined for an empty snapshot.
+    #[error("tensor snapshot must contain at least one value")]
+    EmptyTensor,
     /// Tensor dimensions and values disagree.
     #[error("tensor shape requires {expected} values but received {actual}")]
     TensorLength {

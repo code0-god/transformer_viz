@@ -22,7 +22,7 @@ pub enum TokenKind {
 /// One educational token with display and original source bytes.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Token {
+pub struct TokenInfo {
     /// Vocabulary ID.
     pub id: TokenId,
     /// Human-readable label.
@@ -42,7 +42,7 @@ pub struct Token {
 #[serde(deny_unknown_fields)]
 pub struct EncodedTokens {
     /// Sequence tokens.
-    pub tokens: Vec<Token>,
+    pub tokens: Vec<TokenInfo>,
     /// Whether input was shortened.
     pub truncated: bool,
     /// Original input byte length.

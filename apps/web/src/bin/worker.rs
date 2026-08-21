@@ -2,7 +2,7 @@
 
 #[cfg(target_arch = "wasm32")]
 use transformer_viz_web::spike::{
-    WorkerRequest, WorkerResponse, handle_worker_request, worker_error,
+    WorkerRequest, WorkerResponse, handle_worker_request, spike_model_metadata, worker_error,
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::{JsCast as _, JsValue, closure::Closure};
@@ -33,12 +33,9 @@ fn main() {
                 Err(error) => worker_error(&error),
             },
             Err(error) => WorkerResponse::Error {
-                schema_version: nanogpt_schema::SchemaVersion::current(),
-                error: nanogpt_schema::WorkerError {
-                    code: nanogpt_schema::WorkerErrorCode::InvalidRequest,
-                    request_id: None,
-                    message: error.to_string(),
-                },
+                request_id: None,
+                code: nanogpt_schema::WorkerErrorCode::InvalidRequest,
+                message: error.to_string(),
             },
         };
         post(&message_scope, &response);
@@ -48,7 +45,7 @@ fn main() {
     post(
         &scope,
         &WorkerResponse::Ready {
-            schema_version: nanogpt_schema::SchemaVersion::current(),
+            model: spike_model_metadata(),
         },
     );
 }
