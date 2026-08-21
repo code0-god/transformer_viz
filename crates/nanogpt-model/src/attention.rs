@@ -20,12 +20,17 @@ pub(crate) struct AttentionOutput {
     pub(super) projected: Tensor,
 }
 
+/// Explicit unfused nanoGPT causal multi-head self-attention.
 #[derive(Debug)]
-pub(crate) struct CausalSelfAttention {
-    c_attn: Linear,
-    c_proj: Linear,
-    head_count: usize,
-    embedding_size: usize,
+pub struct CausalSelfAttention {
+    /// Combined query, key, and value projection.
+    pub c_attn: Linear,
+    /// Output projection after head merge.
+    pub c_proj: Linear,
+    /// Attention head count.
+    pub n_head: usize,
+    /// Residual embedding width.
+    pub n_embd: usize,
 }
 
 impl CausalSelfAttention {
@@ -43,28 +48,28 @@ impl CausalSelfAttention {
                 config.bias,
                 weights.pp("c_proj"),
             )?,
-            head_count: config.n_head,
-            embedding_size: config.n_embd,
+            n_head: config.n_head,
+            n_embd: config.n_embd,
         })
     }
 
     pub(crate) fn forward(&self, input: &Tensor) -> Result<AttentionOutput, ModelError> {
         let (batch_size, sequence_length, embedding_size) = input.dims3()?;
-        let head_size = embedding_size / self.head_count;
+        let head_size = embedding_size / self.n_head;
         let qkv = self.c_attn.forward(input)?;
         let query = qkv
-            .narrow(2, 0, self.embedding_size)?
-            .reshape((batch_size, sequence_length, self.head_count, head_size))?
+            .narrow(2, 0, self.n_embd)?
+            .reshape((batch_size, sequence_length, self.n_head, head_size))?
             .transpose(1, 2)?
             .contiguous()?;
         let key = qkv
-            .narrow(2, self.embedding_size, self.embedding_size)?
-            .reshape((batch_size, sequence_length, self.head_count, head_size))?
+            .narrow(2, self.n_embd, self.n_embd)?
+            .reshape((batch_size, sequence_length, self.n_head, head_size))?
             .transpose(1, 2)?
             .contiguous()?;
         let value = qkv
-            .narrow(2, 2 * self.embedding_size, self.embedding_size)?
-            .reshape((batch_size, sequence_length, self.head_count, head_size))?
+            .narrow(2, 2 * self.n_embd, self.n_embd)?
+            .reshape((batch_size, sequence_length, self.n_head, head_size))?
             .transpose(1, 2)?
             .contiguous()?;
         let raw_scores = query.matmul(&key.transpose(2, 3)?)?;
@@ -83,7 +88,7 @@ impl CausalSelfAttention {
             (sequence_length, sequence_length),
             input.device(),
         )?
-        .broadcast_left((batch_size, self.head_count))?
+        .broadcast_left((batch_size, self.n_head))?
         .contiguous()?;
         let blocked = Tensor::full(BLOCKED_SCORE, raw_scores.shape(), input.device())?;
         let masked_scores = mask.where_cond(&scaled_scores, &blocked)?;

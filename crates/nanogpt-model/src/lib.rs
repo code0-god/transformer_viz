@@ -3,10 +3,15 @@
 /// Internal explicit causal-attention operations.
 #[doc(hidden)]
 pub mod attention;
+mod head;
 /// Internal pre-normalized Transformer layers.
 #[doc(hidden)]
 pub mod layers;
+mod load;
 mod model;
+/// Internal forward-request validation.
+#[doc(hidden)]
+pub mod request;
 /// Internal trace selection and dispatch.
 #[doc(hidden)]
 pub mod trace;
@@ -15,6 +20,9 @@ use candle_core::Tensor;
 use nanogpt_schema::{OperationId, SchemaError, TokenId, TraceMode};
 use thiserror::Error;
 
+pub use attention::CausalSelfAttention;
+pub use head::TiedLmHead;
+pub use layers::{Block, Mlp};
 pub use model::Gpt;
 
 /// Errors produced while loading or evaluating a model.
@@ -53,6 +61,14 @@ pub enum ModelError {
     /// A tensor dimension cannot be represented by Candle's u32 index dtype.
     #[error("model dimension exceeds supported u32 indexing")]
     DimensionOverflow,
+    /// Hidden states do not match the shared token embedding width.
+    #[error("tied head hidden width {hidden} does not match token embedding width {embedding}")]
+    TiedHeadDimension {
+        /// Hidden-state width.
+        hidden: usize,
+        /// Token-embedding width.
+        embedding: usize,
+    },
     /// Candle could not evaluate a model operation.
     #[error("model tensor operation failed: {0}")]
     Candle(#[from] candle_core::Error),

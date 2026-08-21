@@ -15,10 +15,13 @@ pub(crate) struct MlpOutput {
     pub(super) output: Tensor,
 }
 
+/// nanoGPT feed-forward expansion, exact GELU, and projection.
 #[derive(Debug)]
-struct Mlp {
-    c_fc: Linear,
-    c_proj: Linear,
+pub struct Mlp {
+    /// Residual-width to four-times-width expansion.
+    pub c_fc: Linear,
+    /// Four-times-width to residual-width projection.
+    pub c_proj: Linear,
 }
 
 impl Mlp {
@@ -63,19 +66,24 @@ pub(crate) struct BlockOutput {
     pub(super) output: Tensor,
 }
 
+/// One canonical pre-layer-normalized nanoGPT Transformer block.
 #[derive(Debug)]
-pub(crate) struct Block {
-    ln_1: LayerNorm,
-    attention: CausalSelfAttention,
-    ln_2: LayerNorm,
-    mlp: Mlp,
+pub struct Block {
+    /// Pre-attention layer normalization.
+    pub ln_1: LayerNorm,
+    /// Explicit causal self-attention.
+    pub attn: CausalSelfAttention,
+    /// Pre-MLP layer normalization.
+    pub ln_2: LayerNorm,
+    /// Feed-forward network.
+    pub mlp: Mlp,
 }
 
 impl Block {
     pub(crate) fn load(config: &GptConfig, weights: &VarBuilder<'_>) -> Result<Self, ModelError> {
         Ok(Self {
             ln_1: load_layer_norm(config, &weights.pp("ln_1"))?,
-            attention: CausalSelfAttention::load(config, &weights.pp("attn"))?,
+            attn: CausalSelfAttention::load(config, &weights.pp("attn"))?,
             ln_2: load_layer_norm(config, &weights.pp("ln_2"))?,
             mlp: Mlp::load(config, &weights.pp("mlp"))?,
         })
@@ -83,7 +91,7 @@ impl Block {
 
     pub(crate) fn forward(&self, input: &Tensor) -> Result<BlockOutput, ModelError> {
         let attention_layer_norm = self.ln_1.forward(input)?;
-        let attention = self.attention.forward(&attention_layer_norm)?;
+        let attention = self.attn.forward(&attention_layer_norm)?;
         let attention_residual = input.add(&attention.projected)?;
         let mlp_layer_norm = self.ln_2.forward(&attention_residual)?;
         let mlp = self.mlp.forward(&mlp_layer_norm)?;

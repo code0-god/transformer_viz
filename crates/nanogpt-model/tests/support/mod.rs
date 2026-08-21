@@ -135,7 +135,7 @@ pub(super) fn run_model(
 ) -> Result<(ForwardOutput, CapturedTrace), Box<dyn std::error::Error>> {
     let config = tiny_config();
     let bytes = fixture_bytes(&config, false)?;
-    let model = Gpt::from_safetensors(config, &bytes, &Device::Cpu)?;
+    let model = Gpt::from_safetensors(&config, &bytes, &Device::Cpu)?;
     let mut trace = CapturedTrace::default();
     let output = model.forward(
         ForwardRequest {

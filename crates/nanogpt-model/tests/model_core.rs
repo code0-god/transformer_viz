@@ -3,10 +3,55 @@
 /// Shared deterministic model fixture construction.
 pub mod support;
 
-use candle_core::Device;
-use nanogpt_model::{ForwardRequest, Gpt, ModelError};
+use candle_core::{Device, Tensor};
+use candle_nn::{Embedding, LayerNorm, Linear};
+use nanogpt_model::{Block, CausalSelfAttention, ForwardRequest, Gpt, Mlp, ModelError, TiedLmHead};
 use nanogpt_schema::{TokenId, TraceMode};
 use support::{CapturedTrace, fixture_bytes, run_model, tiny_config};
+
+#[test]
+fn canonical_public_shape_uses_only_wte_storage_for_tied_logits()
+-> Result<(), Box<dyn std::error::Error>> {
+    // Given: canonical safetensors with one physical token embedding and no lm_head key.
+    let config = tiny_config();
+    let bytes = fixture_bytes(&config, false)?;
+    let tensors = safetensors::SafeTensors::deserialize(&bytes)?;
+    let names = tensors.names();
+    let model = Gpt::from_safetensors(&config, &bytes, &Device::Cpu)?;
+    // When: the public nanoGPT structure and tied head are inspected.
+    let _: &Embedding = &model.wte;
+    let _: &Embedding = &model.wpe;
+    let _: &LayerNorm = &model.ln_f;
+    let _: &TiedLmHead = &model.lm_head;
+    let block: &Block = model.blocks.first().ok_or("missing fixture block")?;
+    let _: &LayerNorm = &block.ln_1;
+    let attention: &CausalSelfAttention = &block.attn;
+    let _: &Linear = &attention.c_attn;
+    let _: &Linear = &attention.c_proj;
+    assert_eq!(attention.n_head, 2);
+    assert_eq!(attention.n_embd, 4);
+    let _: &LayerNorm = &block.ln_2;
+    let mlp: &Mlp = &block.mlp;
+    let _: &Linear = &mlp.c_fc;
+    let _: &Linear = &mlp.c_proj;
+    let hidden = Tensor::ones((1, 1, 4), candle_core::DType::F32, &Device::Cpu)?;
+    let tied_logits = model.lm_head.forward(&hidden, &model.wte)?;
+    let expected = hidden
+        .reshape((1, 4))?
+        .matmul(&model.wte.embeddings().t()?)?
+        .reshape((1, 1, 5))?;
+    // Then: the wrapper is zero-sized and computes from the sole wte tensor.
+    assert_eq!(std::mem::size_of_val(&model.lm_head), 0);
+    assert!(names.contains(&"transformer.wte.weight"));
+    assert!(!names.contains(&"lm_head.weight"));
+    let error = tied_logits
+        .sub(&expected)?
+        .abs()?
+        .max_all()?
+        .to_scalar::<f32>()?;
+    assert!(error < f32::EPSILON);
+    Ok(())
+}
 
 #[test]
 fn forward_has_nanogpt_shape_when_asset_is_canonical() -> Result<(), Box<dyn std::error::Error>> {
@@ -132,7 +177,7 @@ fn duplicated_lm_head_is_rejected_when_loading_tied_weights()
     let config = tiny_config();
     let bytes = fixture_bytes(&config, true)?;
     // When: the canonical loader parses the asset.
-    let result = Gpt::from_safetensors(config, &bytes, &Device::Cpu);
+    let result = Gpt::from_safetensors(&config, &bytes, &Device::Cpu);
     // Then: duplicate tied storage is rejected.
     assert!(matches!(
         result,
@@ -146,7 +191,7 @@ fn sequence_over_block_size_is_rejected() -> Result<(), Box<dyn std::error::Erro
     // Given: a valid model with block size three.
     let config = tiny_config();
     let bytes = fixture_bytes(&config, false)?;
-    let model = Gpt::from_safetensors(config, &bytes, &Device::Cpu)?;
+    let model = Gpt::from_safetensors(&config, &bytes, &Device::Cpu)?;
     // When: four tokens are submitted.
     let result = model.forward(
         ForwardRequest {
@@ -166,7 +211,7 @@ fn invalid_trace_selector_is_rejected() -> Result<(), Box<dyn std::error::Error>
     // Given: one layer and two heads.
     let config = tiny_config();
     let bytes = fixture_bytes(&config, false)?;
-    let model = Gpt::from_safetensors(config, &bytes, &Device::Cpu)?;
+    let model = Gpt::from_safetensors(&config, &bytes, &Device::Cpu)?;
     // When: head two is requested.
     let result = model.forward(
         ForwardRequest {
