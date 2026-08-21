@@ -1,4 +1,4 @@
-use crate::{SchemaError, SchemaVersion, TokenId};
+use crate::{SchemaError, TokenId};
 use serde::{Deserialize, Serialize};
 
 /// Static asset location and integrity metadata.
@@ -142,14 +142,28 @@ impl TokenizerConfig {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ModelManifest {
-    /// Contract version.
-    pub schema_version: SchemaVersion,
-    /// Model identity.
-    pub metadata: ModelMetadata,
-    /// Architecture.
-    pub model: GptConfig,
-    /// Tokenizer asset.
-    pub tokenizer: AssetDescriptor,
-    /// Safetensors asset.
-    pub weights: AssetDescriptor,
+    /// Stable model identifier.
+    pub model_id: String,
+    /// Human-readable model name.
+    pub display_name: String,
+    /// Reference architecture family.
+    pub architecture: String,
+    /// Stored tensor data type.
+    pub dtype: String,
+    /// Base-relative safetensors filename.
+    pub weights_file: String,
+    /// Lowercase SHA-256 digest of the safetensors file.
+    pub weights_sha256: String,
+    /// Base-relative model configuration filename.
+    pub config_file: String,
+    /// Base-relative tokenizer configuration filename.
+    pub tokenizer_file: String,
+    /// Pinned upstream nanoGPT commit.
+    pub nanogpt_commit: String,
+    /// Learned parameter count.
+    pub parameter_count: u64,
+    /// Maximum supported token count.
+    pub max_sequence_length: usize,
+    /// SPDX asset license identifier.
+    pub license: String,
 }

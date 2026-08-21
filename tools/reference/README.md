@@ -3,9 +3,10 @@
 These tools train and export the tiny educational model from the pinned nanoGPT `model.py`. They
 use Python 3.12 through `uv`; the browser and Rust runtime do not require Python.
 
-The corpus is original CC0 text. Training is deterministic on CPU: Python, NumPy, and PyTorch use
-seed `20260821`, one CPU thread, deterministic algorithms, and dropout `0`. The completion format
-places EOS after each sentence prefix, matching the Rust tokenizer's inference representation.
+The corpus at `assets/corpus/edu_corpus.txt` is original CC0 text. Training is deterministic on
+CPU: Python, NumPy, and PyTorch use seed `20260821`, one CPU thread, deterministic algorithms, and
+dropout `0`. The completion format places EOS after each sentence prefix, matching the Rust
+tokenizer's inference representation.
 
 ## Rebuild from clean generated outputs
 

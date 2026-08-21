@@ -1,5 +1,6 @@
 {
   "config_sha256": "a81ea5a170d8dd7f75064b4962076d0d54adcc55440bc98aed9c52c664b99c64",
+  "corpus_file": "assets/corpus/edu_corpus.txt",
   "corpus_sha256": "b4612aa9500d36f667619e69bbcbe54be71f595d3367136a782e52ca70e8a532",
   "generated_continuation": "mat",
   "model_sha256": "8fd76c662da0d0cb9fe1035cb205b1a071ad95f9e22d116578a0a8bec0754be9",
@@ -30,10 +31,12 @@
   ],
   "seed": 20260821,
   "source_map_sha256": "fd80289787ce755169ab1eb6733a935b232464cc1c141a12d982215f5bdf9bc0",
-  "tensor_count": 43,
+  "tensor_count": 46,
   "tensor_names": [
-    "embedding",
+    "embedding_sum",
     "final_layer_norm",
+    "last_token_logits",
+    "last_token_top3_ids",
     "layer.0.attention_output",
     "layer.0.attention_residual",
     "layer.0.input",
@@ -71,10 +74,11 @@
     "layer.1.scaled_scores",
     "layer.1.value",
     "logits",
+    "position_embeddings",
     "representative.head",
     "representative.token",
-    "tokens",
-    "top3.ids"
+    "token_embeddings",
+    "tokens"
   ],
   "tokenizer_sha256": "dd6f35a39cd126462a8d34f9e2832cca2ae2851fb7290761ab63dd2c3fbf572e",
   "top3_token_ids_by_step": [
@@ -94,5 +98,5 @@
       35
     ]
   ],
-  "trace_sha256": "f3c3f1fe7304f8b1ed04f20a81e23dee39bf12b10a2366582f519f6ffba5069b"
+  "trace_sha256": "c8bc5fe66ee6e3b6c052f6c082a99ec6691ccd5889c01f3ab95fdc2451657dfd"
 }

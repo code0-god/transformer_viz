@@ -15,6 +15,7 @@ import hashlib
 import json
 from pathlib import Path
 
+import numpy as np
 import pytest
 from safetensors import safe_open
 
@@ -22,6 +23,34 @@ ROOT = Path(__file__).resolve().parents[2]
 MODEL = ROOT / "assets/models/edu"
 PUBLIC = ROOT / "apps/web/public/models/edu"
 GOLDEN = ROOT / "assets/golden/edu"
+CORPUS = ROOT / "assets/corpus/edu_corpus.txt"
+
+
+def test_manifest_and_corpus_use_canonical_contract_when_loaded() -> None:
+    # Given: the generated manifest and corpus inputs.
+    manifest = json.loads((MODEL / "manifest.json").read_text())
+    required = {
+        "model_id",
+        "display_name",
+        "architecture",
+        "dtype",
+        "weights_file",
+        "weights_sha256",
+        "config_file",
+        "tokenizer_file",
+        "nanogpt_commit",
+        "parameter_count",
+        "max_sequence_length",
+        "license",
+    }
+    # When: the canonical boundary fields and source path are inspected.
+    # Then: no nested compatibility shape remains and provenance uses the binding corpus path.
+    assert set(manifest) == required
+    assert manifest["weights_sha256"] == hashlib.sha256((MODEL / manifest["weights_file"]).read_bytes()).hexdigest()
+    assert manifest["config_file"] == "config.json"
+    assert manifest["tokenizer_file"] == "tokenizer.json"
+    assert CORPUS.is_file()
+    assert not (ROOT / "assets/corpus/edu.txt").exists()
 
 
 def test_assets_match_checksums_when_bundle_is_generated() -> None:
@@ -56,9 +85,12 @@ def test_golden_quality_contract_when_metadata_is_loaded() -> None:
     assert all(token in top for token, top in zip(expected, rankings, strict=True))
     assert metadata["trace_sha256"] == hashlib.sha256((GOLDEN / "trace.safetensors").read_bytes()).hexdigest()
     assert metadata["model_sha256"] == hashlib.sha256((MODEL / "model.safetensors").read_bytes()).hexdigest()
+    assert metadata["corpus_file"] == "assets/corpus/edu_corpus.txt"
     assert metadata["prompt_token_ids"] == [0, *(byte + 3 for byte in b"the cat sat on the"), 1]
     assert {
-        "embedding",
+        "token_embeddings",
+        "position_embeddings",
+        "embedding_sum",
         "layer.0.query",
         "layer.0.key",
         "layer.0.value",
@@ -74,9 +106,28 @@ def test_golden_quality_contract_when_metadata_is_loaded() -> None:
         "layer.0.output",
         "final_layer_norm",
         "logits",
+        "last_token_logits",
+        "last_token_top3_ids",
         "representative.head",
         "representative.token",
     }.issubset(metadata["tensor_names"])
+
+
+def test_golden_embeddings_and_last_token_are_exact_projections_when_loaded() -> None:
+    # Given: independently named embedding and final-token tensors from Python nanoGPT.
+    with safe_open(GOLDEN / "trace.safetensors", framework="np") as tensors:
+        token_embeddings = tensors.get_tensor("token_embeddings")
+        position_embeddings = tensors.get_tensor("position_embeddings")
+        embedding_sum = tensors.get_tensor("embedding_sum")
+        logits = tensors.get_tensor("logits")
+        last_token_logits = tensors.get_tensor("last_token_logits")
+        top3_ids = tensors.get_tensor("last_token_top3_ids")
+    # When: the canonical projections are recomputed from their source tensors.
+    expected_top3 = np.argsort(last_token_logits[0])[-3:][::-1]
+    # Then: the stored boundaries preserve exact embedding and final-token relationships.
+    np.testing.assert_allclose(embedding_sum, token_embeddings + position_embeddings, rtol=0.0, atol=0.0)
+    np.testing.assert_allclose(last_token_logits, logits[:, -1], rtol=0.0, atol=0.0)
+    np.testing.assert_array_equal(top3_ids, expected_top3)
 
 
 if __name__ == "__main__":

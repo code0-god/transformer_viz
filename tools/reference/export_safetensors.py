@@ -58,16 +58,18 @@ def main() -> None:
     write_json(MODEL_DIR / "source_map.json", source_map)
     tokenizer = MODEL_DIR / "tokenizer.json"
     manifest = {
-        "metadata": {
-            "corpus": "Original CC0 educational sentences in assets/corpus/edu.txt",
-            "name": "Transformer Viz EDU-2L-64D",
-            "nanogpt_commit": REFERENCE_COMMIT_PATH.read_text(encoding="utf-8").strip(),
-            "parameter_count": parameter_count(model),
-        },
-        "model": model_config,
-        "schema_version": "1.0.0",
-        "tokenizer": descriptor(tokenizer),
-        "weights": descriptor(weights),
+        "architecture": "nanoGPT",
+        "config_file": "config.json",
+        "display_name": "Transformer Viz EDU-2L-64D",
+        "dtype": "f32",
+        "license": "CC0-1.0",
+        "max_sequence_length": config.block_size,
+        "model_id": "edu",
+        "nanogpt_commit": REFERENCE_COMMIT_PATH.read_text(encoding="utf-8").strip(),
+        "parameter_count": parameter_count(model),
+        "tokenizer_file": tokenizer.name,
+        "weights_file": weights.name,
+        "weights_sha256": sha256(weights),
     }
     write_json(MODEL_DIR / "manifest.json", manifest)
     names = ["config.json", "manifest.json", "model.safetensors", "source_map.json", "tokenizer.json"]
@@ -82,10 +84,6 @@ def main() -> None:
 
 def write_json(path, value) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-
-
-def descriptor(path) -> dict[str, str | int]:
-    return {"sha256": sha256(path), "size_bytes": path.stat().st_size, "url": path.name}
 
 
 def build_source_map() -> dict[str, dict[str, str | int]]:

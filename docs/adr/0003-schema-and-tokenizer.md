@@ -12,8 +12,8 @@ WASM builds, preserve arbitrary UTF-8, expose original pieces, and stay small en
 
 ## Decision
 
-`nanogpt-schema` owns trace schema version `1.0.0`; manifests, run summaries, block traces, and
-token traces carry a checked `SchemaVersion`. Worker request and response enums are explicitly
+`nanogpt-schema` owns trace schema version `1.0.0`; run summaries, block traces, and token traces
+carry a checked `SchemaVersion`. Worker request and response enums are explicitly
 tagged, reject unknown fields, and use `u64` request/run IDs. Their public variants match the browser
 binding directly rather than routing through compatibility aliases.
 

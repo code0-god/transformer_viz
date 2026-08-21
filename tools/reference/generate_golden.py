@@ -54,6 +54,7 @@ def main() -> None:
     save_file(trace, trace_path)
     metadata = {
         "config_sha256": sha256(MODEL_DIR / "config.json"),
+        "corpus_file": "assets/corpus/edu_corpus.txt",
         "corpus_sha256": sha256(CORPUS_PATH),
         "generated_continuation": bytes(token - 3 for token in generated).decode(),
         "model_sha256": sha256(MODEL_DIR / "model.safetensors"),
@@ -79,8 +80,12 @@ def main() -> None:
 def explicit_trace(model: torch.nn.Module, inputs: torch.Tensor) -> dict[str, torch.Tensor]:
     trace: dict[str, torch.Tensor] = {"tokens": inputs.contiguous()}
     positions = torch.arange(inputs.size(1), dtype=torch.long)
-    hidden = model.transformer.wte(inputs) + model.transformer.wpe(positions)
-    trace["embedding"] = hidden.detach().contiguous()
+    token_embeddings = model.transformer.wte(inputs)
+    position_embeddings = model.transformer.wpe(positions)
+    hidden = token_embeddings + position_embeddings
+    trace["token_embeddings"] = token_embeddings.detach().contiguous()
+    trace["position_embeddings"] = position_embeddings.detach().contiguous()
+    trace["embedding_sum"] = hidden.detach().contiguous()
     for layer, block in enumerate(model.transformer.h):
         prefix = f"layer.{layer}"
         trace[f"{prefix}.input"] = hidden.detach().contiguous()
@@ -128,9 +133,10 @@ def explicit_trace(model: torch.nn.Module, inputs: torch.Tensor) -> dict[str, to
     logits = model.lm_head(normalized)
     trace["final_layer_norm"] = normalized.detach().contiguous()
     trace["logits"] = logits.detach().contiguous()
+    trace["last_token_logits"] = logits[:, -1].detach().contiguous()
+    trace["last_token_top3_ids"] = torch.topk(logits[0, -1], k=3).indices.contiguous()
     trace["representative.head"] = trace["layer.0.probabilities"][:, 1].contiguous()
     trace["representative.token"] = hidden[:, -1].detach().contiguous()
-    trace["top3.ids"] = torch.topk(logits[0, -1], k=3).indices.contiguous()
     return trace
 
 

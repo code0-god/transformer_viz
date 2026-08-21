@@ -1,27 +1,14 @@
 {
-  "metadata": {
-    "corpus": "Original CC0 educational sentences in assets/corpus/edu.txt",
-    "name": "Transformer Viz EDU-2L-64D",
-    "nanogpt_commit": "3adf61e154c3fe3fca428ad6bc3818b27a3b8291",
-    "parameter_count": 118208
-  },
-  "model": {
-    "bias": true,
-    "block_size": 24,
-    "n_embd": 64,
-    "n_head": 4,
-    "n_layer": 2,
-    "vocab_size": 259
-  },
-  "schema_version": "1.0.0",
-  "tokenizer": {
-    "sha256": "dd6f35a39cd126462a8d34f9e2832cca2ae2851fb7290761ab63dd2c3fbf572e",
-    "size_bytes": 118,
-    "url": "tokenizer.json"
-  },
-  "weights": {
-    "sha256": "8fd76c662da0d0cb9fe1035cb205b1a071ad95f9e22d116578a0a8bec0754be9",
-    "size_bytes": 475432,
-    "url": "model.safetensors"
-  }
+  "architecture": "nanoGPT",
+  "config_file": "config.json",
+  "display_name": "Transformer Viz EDU-2L-64D",
+  "dtype": "f32",
+  "license": "CC0-1.0",
+  "max_sequence_length": 24,
+  "model_id": "edu",
+  "nanogpt_commit": "3adf61e154c3fe3fca428ad6bc3818b27a3b8291",
+  "parameter_count": 118208,
+  "tokenizer_file": "tokenizer.json",
+  "weights_file": "model.safetensors",
+  "weights_sha256": "8fd76c662da0d0cb9fe1035cb205b1a071ad95f9e22d116578a0a8bec0754be9"
 }
