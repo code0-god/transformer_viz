@@ -2,7 +2,7 @@
 
 use candle_core::Device;
 use nanogpt_model::{ForwardRequest, Gpt, NoTrace};
-use nanogpt_schema::{GptConfig, ModelManifest, TokenizerConfig, TraceMode};
+use nanogpt_schema::{GptConfig, ModelManifest, SchemaVersion, TokenizerConfig, TraceMode};
 use nanogpt_tokenizer::Tokenizer;
 
 const CONFIG: &str = include_str!("../../../assets/models/edu/config.json");
@@ -14,7 +14,10 @@ const WEIGHTS: &[u8] = include_bytes!("../../../assets/models/edu/model.safetens
 fn edu_asset_loads_when_prompt_is_encoded() -> Result<(), Box<dyn std::error::Error>> {
     // Given: the committed Python-exported model and shared byte tokenizer configuration.
     let manifest = serde_json::from_str::<ModelManifest>(MANIFEST)?;
-    assert_eq!(manifest.model_id, "edu");
+    assert_eq!(manifest.schema_version, SchemaVersion::current());
+    assert_eq!(manifest.model_id, "nanogpt-edu");
+    assert_eq!(manifest.display_name, "nanoGPT Educational Model");
+    assert_eq!(manifest.architecture, "nanogpt-compatible");
     assert_eq!(manifest.weights_file, "model.safetensors");
     assert_eq!(manifest.config_file, "config.json");
     assert_eq!(manifest.tokenizer_file, "tokenizer.json");

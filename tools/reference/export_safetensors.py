@@ -58,15 +58,16 @@ def main() -> None:
     write_json(MODEL_DIR / "source_map.json", source_map)
     tokenizer = MODEL_DIR / "tokenizer.json"
     manifest = {
-        "architecture": "nanoGPT",
+        "architecture": "nanogpt-compatible",
         "config_file": "config.json",
-        "display_name": "Transformer Viz EDU-2L-64D",
+        "display_name": "nanoGPT Educational Model",
         "dtype": "f32",
         "license": "CC0-1.0",
         "max_sequence_length": config.block_size,
-        "model_id": "edu",
+        "model_id": "nanogpt-edu",
         "nanogpt_commit": REFERENCE_COMMIT_PATH.read_text(encoding="utf-8").strip(),
         "parameter_count": parameter_count(model),
+        "schema_version": "1.0.0",
         "tokenizer_file": tokenizer.name,
         "weights_file": weights.name,
         "weights_sha256": sha256(weights),

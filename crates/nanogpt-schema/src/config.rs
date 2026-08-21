@@ -1,4 +1,4 @@
-use crate::{SchemaError, TokenId};
+use crate::{SchemaError, SchemaVersion, TokenId};
 use serde::{Deserialize, Serialize};
 
 /// Static asset location and integrity metadata.
@@ -142,6 +142,8 @@ impl TokenizerConfig {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ModelManifest {
+    /// Binding contract version.
+    pub schema_version: SchemaVersion,
     /// Stable model identifier.
     pub model_id: String,
     /// Human-readable model name.

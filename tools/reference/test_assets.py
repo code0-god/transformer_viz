@@ -30,6 +30,7 @@ def test_manifest_and_corpus_use_canonical_contract_when_loaded() -> None:
     # Given: the generated manifest and corpus inputs.
     manifest = json.loads((MODEL / "manifest.json").read_text())
     required = {
+        "schema_version",
         "model_id",
         "display_name",
         "architecture",
@@ -46,6 +47,10 @@ def test_manifest_and_corpus_use_canonical_contract_when_loaded() -> None:
     # When: the canonical boundary fields and source path are inspected.
     # Then: no nested compatibility shape remains and provenance uses the binding corpus path.
     assert set(manifest) == required
+    assert manifest["schema_version"] == "1.0.0"
+    assert manifest["model_id"] == "nanogpt-edu"
+    assert manifest["display_name"] == "nanoGPT Educational Model"
+    assert manifest["architecture"] == "nanogpt-compatible"
     assert manifest["weights_sha256"] == hashlib.sha256((MODEL / manifest["weights_file"]).read_bytes()).hexdigest()
     assert manifest["config_file"] == "config.json"
     assert manifest["tokenizer_file"] == "tokenizer.json"
@@ -107,7 +112,7 @@ def test_golden_quality_contract_when_metadata_is_loaded() -> None:
         "final_layer_norm",
         "logits",
         "last_token_logits",
-        "last_token_top3_ids",
+        "top_k_ids",
         "representative.head",
         "representative.token",
     }.issubset(metadata["tensor_names"])
@@ -121,13 +126,13 @@ def test_golden_embeddings_and_last_token_are_exact_projections_when_loaded() ->
         embedding_sum = tensors.get_tensor("embedding_sum")
         logits = tensors.get_tensor("logits")
         last_token_logits = tensors.get_tensor("last_token_logits")
-        top3_ids = tensors.get_tensor("last_token_top3_ids")
+        top_k_ids = tensors.get_tensor("top_k_ids")
     # When: the canonical projections are recomputed from their source tensors.
     expected_top3 = np.argsort(last_token_logits[0])[-3:][::-1]
     # Then: the stored boundaries preserve exact embedding and final-token relationships.
     np.testing.assert_allclose(embedding_sum, token_embeddings + position_embeddings, rtol=0.0, atol=0.0)
     np.testing.assert_allclose(last_token_logits, logits[:, -1], rtol=0.0, atol=0.0)
-    np.testing.assert_array_equal(top3_ids, expected_top3)
+    np.testing.assert_array_equal(top_k_ids, expected_top3)
 
 
 if __name__ == "__main__":

@@ -36,7 +36,6 @@
     "embedding_sum",
     "final_layer_norm",
     "last_token_logits",
-    "last_token_top3_ids",
     "layer.0.attention_output",
     "layer.0.attention_residual",
     "layer.0.input",
@@ -78,7 +77,8 @@
     "representative.head",
     "representative.token",
     "token_embeddings",
-    "tokens"
+    "tokens",
+    "top_k_ids"
   ],
   "tokenizer_sha256": "dd6f35a39cd126462a8d34f9e2832cca2ae2851fb7290761ab63dd2c3fbf572e",
   "top3_token_ids_by_step": [
@@ -98,5 +98,5 @@
       35
     ]
   ],
-  "trace_sha256": "c8bc5fe66ee6e3b6c052f6c082a99ec6691ccd5889c01f3ab95fdc2451657dfd"
+  "trace_sha256": "b441b99f8392b80784adadcc249a961b148908012ec4ee15f473494c6d5e5f56"
 }

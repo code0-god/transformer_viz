@@ -134,7 +134,7 @@ def explicit_trace(model: torch.nn.Module, inputs: torch.Tensor) -> dict[str, to
     trace["final_layer_norm"] = normalized.detach().contiguous()
     trace["logits"] = logits.detach().contiguous()
     trace["last_token_logits"] = logits[:, -1].detach().contiguous()
-    trace["last_token_top3_ids"] = torch.topk(logits[0, -1], k=3).indices.contiguous()
+    trace["top_k_ids"] = torch.topk(logits[0, -1], k=3).indices.contiguous()
     trace["representative.head"] = trace["layer.0.probabilities"][:, 1].contiguous()
     trace["representative.token"] = hidden[:, -1].detach().contiguous()
     return trace
