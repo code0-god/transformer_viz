@@ -1,0 +1,24 @@
+[package]
+name = "transformer-viz-web"
+description = "Leptos browser application for transformer-viz"
+categories.workspace = true
+edition.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[dependencies]
+nanogpt-model.workspace = true
+nanogpt-schema.workspace = true
+nanogpt-tokenizer.workspace = true
+nanogpt-trace.workspace = true
+thiserror.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[lints]
+workspace = true

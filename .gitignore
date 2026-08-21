@@ -1,0 +1,5 @@
+.omo/
+/target/
+/apps/web/dist/
+/apps/web/.trunk/
+.DS_Store

@@ -1,0 +1,6 @@
+[alias]
+check-workspace = "check --workspace"
+test-workspace = "test --workspace"
+
+[term]
+color = "always"
