@@ -3,7 +3,18 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <base data-trunk-public-url />
     <title>Transformer Viz</title>
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; background: #eef2ff; color: #172554; }
+      main { max-width: 52rem; margin: 0 auto; padding: 3rem 1.25rem; }
+      section { min-height: 18rem; margin: 1.5rem 0; padding: 1rem; border: 1px solid #a5b4fc; border-radius: .75rem; background: white; }
+      button { padding: .75rem 1rem; border: 0; border-radius: .5rem; background: #3730a3; color: white; font-weight: 700; }
+      button:disabled { opacity: .5; }
+    </style>
   </head>
-  <body></body>
+  <body>
+    <link data-trunk rel="rust" href="Cargo.toml" data-bin="app" data-type="main" data-wasm-opt="z" />
+    <link data-trunk rel="rust" href="Cargo.toml" data-bin="worker" data-type="worker" data-loader-shim data-bindgen-target="web" data-wasm-opt="z" />
+  </body>
 </html>

@@ -1,4 +1,6 @@
-//! Browser application entry points.
+//! Browser application protocol and Candle spike.
+
+pub mod spike;
 
 use thiserror::Error;
 
