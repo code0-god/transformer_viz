@@ -1,5 +1,8 @@
 //! Browser application protocol and Candle spike.
 
+pub mod app;
+#[cfg(target_arch = "wasm32")]
+pub mod components;
 pub mod runtime;
 #[doc(hidden)]
 pub mod runtime_assets;
@@ -9,6 +12,7 @@ pub mod runtime_timer;
 #[doc(hidden)]
 pub mod runtime_trace;
 pub mod spike;
+pub mod visualization;
 
 use thiserror::Error;
 

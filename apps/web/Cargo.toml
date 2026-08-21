@@ -36,7 +36,11 @@ getrandom = { version = "=0.3.4", features = ["wasm_js"] }
 version = "=0.3.104"
 features = [
     "DedicatedWorkerGlobalScope",
+    "Document",
+    "Element",
     "ErrorEvent",
+    "HtmlElement",
+    "KeyboardEvent",
     "Location",
     "MessageEvent",
     "Performance",
@@ -45,6 +49,7 @@ features = [
     "WorkerLocation",
     "WorkerOptions",
     "WorkerType",
+    "Window",
     "console",
 ]
 
