@@ -1457,7 +1457,9 @@ dependencies = [
  "candle-nn",
  "libm",
  "nanogpt-schema",
+ "nanogpt-tokenizer",
  "safetensors",
+ "serde_json",
  "thiserror 2.0.16",
 ]
 

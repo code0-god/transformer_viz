@@ -1,0 +1,8 @@
+{
+  "bos_id": 0,
+  "byte_offset": 3,
+  "eos_id": 1,
+  "kind": "byte_fallback_v1",
+  "max_length": 24,
+  "unk_id": 2
+}

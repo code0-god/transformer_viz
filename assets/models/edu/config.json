@@ -1,0 +1,8 @@
+{
+  "bias": true,
+  "block_size": 24,
+  "n_embd": 64,
+  "n_head": 4,
+  "n_layer": 2,
+  "vocab_size": 259
+}

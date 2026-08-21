@@ -3,3 +3,5 @@
 /apps/web/dist/
 /apps/web/.trunk/
 .DS_Store
+/tools/reference/.work/
+/tools/reference/__pycache__/

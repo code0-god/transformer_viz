@@ -1,0 +1,62 @@
+{
+  "attention": {
+    "file": "reference/model.py",
+    "line_end": 67,
+    "line_start": 67,
+    "symbol": "attention"
+  },
+  "attention_layer_norm": {
+    "file": "reference/model.py",
+    "line_end": 104,
+    "line_start": 104,
+    "symbol": "attention_layer_norm"
+  },
+  "attention_residual": {
+    "file": "reference/model.py",
+    "line_end": 104,
+    "line_start": 104,
+    "symbol": "attention_residual"
+  },
+  "embedding": {
+    "file": "reference/model.py",
+    "line_end": 177,
+    "line_start": 177,
+    "symbol": "embedding"
+  },
+  "final_layer_norm": {
+    "file": "reference/model.py",
+    "line_end": 182,
+    "line_start": 182,
+    "symbol": "final_layer_norm"
+  },
+  "logits": {
+    "file": "reference/model.py",
+    "line_end": 190,
+    "line_start": 190,
+    "symbol": "logits"
+  },
+  "mlp": {
+    "file": "reference/model.py",
+    "line_end": 88,
+    "line_start": 88,
+    "symbol": "mlp"
+  },
+  "mlp_layer_norm": {
+    "file": "reference/model.py",
+    "line_end": 105,
+    "line_start": 105,
+    "symbol": "mlp_layer_norm"
+  },
+  "mlp_residual": {
+    "file": "reference/model.py",
+    "line_end": 105,
+    "line_start": 105,
+    "symbol": "mlp_residual"
+  },
+  "query_key_value": {
+    "file": "reference/model.py",
+    "line_end": 56,
+    "line_start": 56,
+    "symbol": "query_key_value"
+  }
+}
