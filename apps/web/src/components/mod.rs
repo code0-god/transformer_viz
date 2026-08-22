@@ -4,6 +4,7 @@ pub mod attention;
 pub mod auxiliary;
 pub mod block;
 pub mod chrome;
+pub mod guided;
 pub mod playback;
 pub mod source;
 pub mod tensor;

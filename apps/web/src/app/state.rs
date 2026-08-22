@@ -107,11 +107,11 @@ impl AppState {
                 self.attention = None;
                 self.token = None;
                 self.ui = ExplorerUiState::default();
-                self.ui.prompt_expanded = false;
                 if can_inspect {
                     self.status = AppStatus::Running("선택한 블록 추적 중".to_owned());
                     return Ok(vec![self.block_request(run_id)]);
                 }
+                self.ui.prompt_expanded = false;
                 self.status = AppStatus::Complete;
             }
             WorkerResponse::BlockTrace { run_id, trace, .. } => {
@@ -132,6 +132,7 @@ impl AppState {
             WorkerResponse::TokenTrace { run_id, trace, .. } => {
                 self.require_run(run_id)?;
                 self.token = Some(*trace);
+                self.ui.prompt_expanded = false;
                 self.status = AppStatus::Complete;
             }
             WorkerResponse::Error { message, .. } => self.status = AppStatus::Error(message),

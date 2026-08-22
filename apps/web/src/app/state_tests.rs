@@ -10,7 +10,7 @@ mod tests {
         ui_state::{ExplorerUiState, InspectorTab},
     };
     use crate::{
-        app::narrative::{NARRATIVE_STAGE_COUNT, NarrativeStage},
+        app::narrative::{NARRATIVE_STAGE_COUNT, NarrativeSpeed, NarrativeStage},
         spike,
     };
 
@@ -55,6 +55,29 @@ mod tests {
     }
 
     #[test]
+    fn autoplay_keeps_legacy_detail_mapping_synchronized() {
+        // Given: narrative playback is on the final stage backed by block operations.
+        let mut ui = ExplorerUiState::default();
+        ui.select_stage(NarrativeStage::MlpAndResidual);
+        ui.set_narrative_speed(NarrativeSpeed::Double);
+        ui.toggle_narrative();
+
+        // When: one double-speed stage interval advances the browser-only clock.
+        for _ in 0..3 {
+            ui.tick_narrative();
+        }
+
+        // Then: prediction is current, its absent legacy operation is explicit, and no Worker state exists here.
+        assert_eq!(ui.narrative.stage, NarrativeStage::LanguageModelHead);
+        assert_eq!(ui.detail_operation, None);
+        assert!(ui.narrative.playing);
+        for _ in 0..3 {
+            ui.tick_narrative();
+        }
+        assert!(!ui.narrative.playing);
+    }
+
+    #[test]
     fn run_complete_defaults_to_last_byte_and_clamps_old_coordinates() {
         let mut state = AppState::default();
         state.selection.layer = usize::MAX;
@@ -78,7 +101,7 @@ mod tests {
         assert_eq!(state.ui.inspector_tab, InspectorTab::Explanation);
         assert_eq!(state.ui.selected_feature, 0);
         assert_eq!(state.ui.detail_operation, None);
-        assert!(!state.ui.prompt_expanded);
+        assert!(state.ui.prompt_expanded);
         assert_eq!(requests.len(), 1);
     }
 
@@ -156,6 +179,7 @@ mod tests {
             .apply(token_response())
             .expect("token detail should apply");
         assert_user_selection(&state, 3);
+        assert!(!state.ui.prompt_expanded);
     }
 
     #[test]

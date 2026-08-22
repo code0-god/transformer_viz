@@ -1,6 +1,8 @@
 //! Pure browser-only state for the guided explorer shell.
 
-use super::narrative::{DETAIL_OPERATION_STAGES, NarrativePlayback, NarrativeStage};
+use super::narrative::{
+    DETAIL_OPERATION_STAGES, NarrativePlayback, NarrativeSpeed, NarrativeStage,
+};
 
 /// Inspector content selected beside the main narrative stage.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -60,6 +62,23 @@ impl ExplorerUiState {
     /// Moves to the next narrative stage without a Worker request.
     pub fn next_stage(&mut self) {
         self.narrative.next();
+        self.sync_detail_operation();
+    }
+
+    /// Starts or pauses the browser-only narrative clock.
+    pub fn toggle_narrative(&mut self) {
+        self.narrative.toggle();
+        self.sync_detail_operation();
+    }
+
+    /// Changes the browser-only narrative playback speed.
+    pub const fn set_narrative_speed(&mut self, speed: NarrativeSpeed) {
+        self.narrative.set_speed(speed);
+    }
+
+    /// Advances the narrative clock and keeps legacy detail selection aligned.
+    pub fn tick_narrative(&mut self) {
+        self.narrative.tick();
         self.sync_detail_operation();
     }
 
