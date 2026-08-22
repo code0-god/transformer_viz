@@ -2,9 +2,21 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from browser_cdp import Cdp
+
+
+@dataclass(frozen=True, slots=True)
+class JourneyProbeError(Exception):
+    """Report an invalid result from a browser journey probe."""
+
+    probe: str
+
+    def __str__(self) -> str:
+        return f"{self.probe} probe returned an invalid result"
+
 
 DENSE_REPLAY_PROBE = r"""new Promise((resolve, reject) => {
   const timeout = setTimeout(() => finish('dense replay timeout'), 30000);
@@ -161,20 +173,25 @@ def replay_detail_navigation(cdp: Cdp, session: str) -> dict[str, Any]:
             True,
         )
         renderers.append(operation)
-    return {"count": len(seen), "distinct": len(set(seen)), "posts": before,
-            "renderers": renderers, "distinctRenderers": len(set(renderers)),
-            "failures": failures}
+    return {
+        "count": len(seen),
+        "distinct": len(set(seen)),
+        "posts": before,
+        "renderers": renderers,
+        "distinctRenderers": len(set(renderers)),
+        "failures": failures,
+    }
 
 
 def stream_reveal(cdp: Cdp, session: str) -> dict[str, Any]:
     result = cdp.evaluate(session, STREAM_REVEAL_PROBE, True)
     if not isinstance(result, dict):
-        raise TypeError("stream reveal probe returned no result")
+        raise JourneyProbeError(probe="stream reveal")
     return result
 
 
 def dense_replay(cdp: Cdp, session: str) -> dict[str, Any]:
     result = cdp.evaluate(session, DENSE_REPLAY_PROBE, True)
     if not isinstance(result, dict):
-        raise TypeError("dense replay probe returned no geometry")
+        raise JourneyProbeError(probe="dense replay")
     return result

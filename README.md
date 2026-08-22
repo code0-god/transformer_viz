@@ -159,10 +159,12 @@ in [the numerical parity report](docs/NUMERICAL_PARITY.md).
 
 ## Reference assets and implementation
 
-Optional Python training packages are needed only to retrain or regenerate golden files; the
-canonical release/check prerequisites above need only the Python 3 interpreter and standard library.
-Follow [tools/reference/README.md](tools/reference/README.md), then run `./scripts/check.sh` to prove
-model copies, checksums, Rust parity, WASM target, and static release agree.
+Optional reference-tool Python packages are needed only to statically analyze those tools, retrain,
+or regenerate golden files; they are installed from `tools/reference/requirements.txt` in an
+isolated `uv` environment and do not change the canonical release/check or deployed-app
+prerequisites above. Follow [tools/reference/README.md](tools/reference/README.md), then run
+`./scripts/check.sh` to prove model copies, checksums, Rust parity, WASM target, and static release
+agree.
 
 `reference/nanoGPT` is a read-only Git submodule pinned to an immutable upstream commit. It is a
 compatibility and golden-fixture reference, not a runtime dependency. The release copies

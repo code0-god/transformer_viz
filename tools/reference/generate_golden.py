@@ -24,6 +24,7 @@ from edu_common import (
     MODEL_DIR,
     N_HEAD,
     PROMPT,
+    NanoGptModel,
     REFERENCE_COMMIT_PATH,
     SEED,
     ToolError,
@@ -45,11 +46,15 @@ def main() -> None:
     model.load_state_dict(checkpoint["model"])
     model.eval()
     inputs = torch.tensor([prompt_ids()], dtype=torch.long)
-    trace = {name: tensor.clone() for name, tensor in explicit_trace(model, inputs).items()}
+    trace = {
+        name: tensor.clone() for name, tensor in explicit_trace(model, inputs).items()
+    }
     generated, rankings = generate(model, len(EXPECTED_CONTINUATION))
     expected = [byte + 3 for byte in EXPECTED_CONTINUATION.encode()]
     if any(token not in top for token, top in zip(expected, rankings, strict=True)):
-        raise ToolError(detail=f"Top-3 quality gate failed: expected={expected}, rankings={rankings}")
+        raise ToolError(
+            detail=f"Top-3 quality gate failed: expected={expected}, rankings={rankings}"
+        )
     GOLDEN_DIR.mkdir(parents=True, exist_ok=True)
     trace_path = GOLDEN_DIR / "trace.safetensors"
     save_file(trace, trace_path)
@@ -76,10 +81,14 @@ def main() -> None:
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     print(f"golden={trace_path} tensors={len(trace)} sha256={sha256(trace_path)}")
-    print(f"quality=expected 'mat' bytes are Top-3 at every autoregressive step: {rankings}")
+    print(
+        f"quality=expected 'mat' bytes are Top-3 at every autoregressive step: {rankings}"
+    )
 
 
-def explicit_trace(model: torch.nn.Module, inputs: torch.Tensor) -> dict[str, torch.Tensor]:
+def explicit_trace(
+    model: NanoGptModel, inputs: torch.Tensor
+) -> dict[str, torch.Tensor]:
     trace: dict[str, torch.Tensor] = {"tokens": inputs.contiguous()}
     positions = torch.arange(inputs.size(1), dtype=torch.long)
     token_embeddings = model.transformer.wte(inputs)
@@ -95,15 +104,29 @@ def explicit_trace(model: torch.nn.Module, inputs: torch.Tensor) -> dict[str, to
         qkv = block.attn.c_attn(normalized)
         query, key, value = qkv.split(model.config.n_embd, dim=2)
         head_size = model.config.n_embd // N_HEAD
-        query = query.view(1, inputs.size(1), N_HEAD, head_size).transpose(1, 2).contiguous()
-        key = key.view(1, inputs.size(1), N_HEAD, head_size).transpose(1, 2).contiguous()
-        value = value.view(1, inputs.size(1), N_HEAD, head_size).transpose(1, 2).contiguous()
+        query = (
+            query.view(1, inputs.size(1), N_HEAD, head_size)
+            .transpose(1, 2)
+            .contiguous()
+        )
+        key = (
+            key.view(1, inputs.size(1), N_HEAD, head_size).transpose(1, 2).contiguous()
+        )
+        value = (
+            value.view(1, inputs.size(1), N_HEAD, head_size)
+            .transpose(1, 2)
+            .contiguous()
+        )
         raw = query @ key.transpose(-2, -1)
         scaled = raw / math.sqrt(head_size)
         mask = torch.tril(torch.ones(inputs.size(1), inputs.size(1), dtype=torch.bool))
         probabilities = torch.softmax(scaled.masked_fill(~mask, float("-inf")), dim=-1)
         attended = probabilities @ value
-        merged = attended.transpose(1, 2).contiguous().view(1, inputs.size(1), model.config.n_embd)
+        merged = (
+            attended.transpose(1, 2)
+            .contiguous()
+            .view(1, inputs.size(1), model.config.n_embd)
+        )
         projected = block.attn.c_proj(merged)
         attention_residual = hidden + projected
         mlp_input = block.ln_2(attention_residual)
@@ -130,7 +153,12 @@ def explicit_trace(model: torch.nn.Module, inputs: torch.Tensor) -> dict[str, to
             "mlp_output": mlp_output,
             "output": hidden,
         }
-        trace.update({f"{prefix}.{name}": tensor.detach().contiguous() for name, tensor in values.items()})
+        trace.update(
+            {
+                f"{prefix}.{name}": tensor.detach().contiguous()
+                for name, tensor in values.items()
+            }
+        )
     normalized = model.transformer.ln_f(hidden)
     logits = model.lm_head(normalized)
     trace["final_layer_norm"] = normalized.detach().contiguous()

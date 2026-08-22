@@ -52,6 +52,20 @@ Clippy, WASM-target strict Clippy, workspace tests, native release, WASM check, 
 comparison/checksums, dependency policy, and an isolated Trunk release. Its temporary dist directory
 is removed by its EXIT trap. Remove `/tmp/transformer-viz-final-dist` after browser acceptance.
 
+Run Pyright separately for the audit-hardening Python files. The canonical browser/release scripts
+use the base Python 3 environment; they belong to the same release surface whose runtime gates also
+require Chrome/Chromium as documented in the README. The optional reference tools require their
+pinned packages, so analyze them in an isolated `uv` environment:
+
+```sh
+pyright $(git diff --name-only 241ebaf..HEAD -- 'scripts/*.py')
+uv run --isolated --python 3.12 --with pyright --with-requirements tools/reference/requirements.txt pyright $(git diff --name-only 241ebaf..HEAD -- 'tools/reference/*.py')
+```
+
+The isolated reference-tool command does not add Python packages, `uv`, or Pyright to the deployed
+static app's prerequisites. It also does not change the canonical release prerequisites: Python 3
+and Chrome/Chromium remain required for the browser/release gates.
+
 ## Isolated static and browser gates
 
 Build root and project-subpath bundles into separate hosts:
@@ -140,20 +154,26 @@ equivalent).
   accessibility/source-correspondence review and one visual/CJK/responsive review. Record reviewer
   IDs, findings, disposition, and confidence; the implementation author is not either lane.
 - Preserve exactly the nine existing atomic phase commits after base `49e72ae`, ending at
-  `241ebafb55a0b12f885e6eb4345b730790195836`, unchanged. The no-amend policy applies: do not amend,
-  squash, rebase, reset, or otherwise rewrite those commits.
-- Put all audit fixes in one fresh post-audit hardening commit on top of those nine commits. Commit
-  only tracked Phase 9 source, documentation, and verifier changes; never commit `.omo` evidence or
-  dist. The hardening commit makes the frozen history exactly ten commits after the base. From that
-  tenth commit, run:
+  `241ebafb55a0b12f885e6eb4345b730790195836`, unchanged. Also preserve the first audit hardening
+  commit `6f84e45b50a5b3b3a8a9f0f39f186c76046fc81e` unchanged on top of them.
+- Put the changed-Python quality fixes in exactly one second and final quality hardening commit on
+  top of `6f84e45`. Do not create any other commit. Commit only tracked Phase 9 source,
+  documentation, and verifier changes; never commit `.omo` evidence or dist.
+- Do not amend, squash, rebase, reset, or otherwise rewrite any of the preserved commits. The final
+  frozen history must contain exactly eleven commits after `49e72ae`: nine phase commits, the first
+  audit hardening commit, and the second/final quality hardening commit. From that eleventh commit,
+  run:
 
 ```sh
-test "$(git rev-parse HEAD^)" = 241ebafb55a0b12f885e6eb4345b730790195836
-test "$(git rev-list --count 49e72ae..HEAD^)" -eq 9
-test "$(git rev-list --count 49e72ae..HEAD)" -eq 10
-git log --reverse --format='%H %s' 49e72ae..HEAD^ | tee .omo/evidence/phase9/nine-phase-commits.txt
-git log -1 --format='%H %s' HEAD | tee .omo/evidence/phase9/post-audit-hardening-commit.txt
-git log --reverse --format='%H %s' 49e72ae..HEAD | tee .omo/evidence/phase9/ten-post-base-commits.txt
+test "$(git rev-parse HEAD^)" = 6f84e45b50a5b3b3a8a9f0f39f186c76046fc81e
+test "$(git rev-parse HEAD^^)" = 241ebafb55a0b12f885e6eb4345b730790195836
+test "$(git rev-list --count 49e72ae..HEAD^^)" -eq 9
+test "$(git rev-list --count 49e72ae..HEAD^)" -eq 10
+test "$(git rev-list --count 49e72ae..HEAD)" -eq 11
+git log --reverse --format='%H %s' 49e72ae..HEAD^^ | tee .omo/evidence/phase9/nine-phase-commits.txt
+git log -1 --format='%H %s' HEAD^ | tee .omo/evidence/phase9/first-audit-hardening-commit.txt
+git log -1 --format='%H %s' HEAD | tee .omo/evidence/phase9/final-quality-hardening-commit.txt
+git log --reverse --format='%H %s' 49e72ae..HEAD | tee .omo/evidence/phase9/eleven-post-base-commits.txt
 git rev-parse HEAD HEAD^{tree} | tee .omo/evidence/phase9/exact-tree.txt
 git status --short | tee .omo/evidence/phase9/final-status.txt
 test ! -s .omo/evidence/phase9/final-status.txt
@@ -169,7 +189,8 @@ server stopped, port 8097 has no listener, `apps/web/dist`, `/tmp/transformer-vi
 test-result directories, and temporary profiles are absent, and no generated server process leaked.
 Include changed-file scope, Rust pure-LOC counts (all changed production/test modules <=250),
 screenshot hashes, Lighthouse summaries, independent verdicts, the exact-tree stamp, preserved
-nine-phase history receipt, post-audit hardening receipt, ten-commit stamp, and cleanup checks in
-`.omo/evidence/phase9/cleanup.txt`. The final tracked worktree must be clean; do not push. The fresh
-post-audit hardening commit may contain only tracked Phase 9 source, documentation, and verifier
-changes, never generated evidence or dist output.
+nine-phase history receipt, first audit hardening receipt, final quality hardening receipt,
+eleven-commit stamp, and cleanup checks in `.omo/evidence/phase9/cleanup.txt`. The final tracked
+worktree must be clean; do not push. The second/final quality hardening commit may contain only
+tracked Phase 9 source, documentation, and verifier changes, never generated evidence or dist
+output.

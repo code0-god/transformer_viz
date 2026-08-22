@@ -77,14 +77,22 @@ def dense_contract(cdp: Cdp, session: str) -> tuple[dict[str, Any], list[str]]:
     if geometry["defaultPrompt"] != "the cat":
         failures.append(f"default prompt is not literal C001: {geometry}")
     if geometry["generatedCount"] < 2 or not geometry["decoded"]:
-        failures.append(f"default generation was not a meaningful continuation: {geometry}")
+        failures.append(
+            f"default generation was not a meaningful continuation: {geometry}"
+        )
     details = replay_detail_navigation(cdp, session)
     geometry["detailNavigation"] = details
     failures.extend(contrast_contract(cdp, session))
-    if (details["count"] != 18 or details["distinct"] != 18
-            or details["distinctRenderers"] != 7 or "missing" in details["renderers"]
-            or details["failures"]):
-        failures.append(f"Inspector details/generation renderers were not exhaustive: {details}")
+    if (
+        details["count"] != 18
+        or details["distinct"] != 18
+        or details["distinctRenderers"] != 7
+        or "missing" in details["renderers"]
+        or details["failures"]
+    ):
+        failures.append(
+            f"Inspector details/generation renderers were not exhaustive: {details}"
+        )
     return geometry, failures
 
 
@@ -168,11 +176,18 @@ def verify(args: argparse.Namespace) -> int:
             if size == (390, 844):
                 stream = stream_reveal(cdp, session)
                 if stream["requested"] != 24 or stream["count"] < 2:
-                    size_failures.append(f"390px stream did not exercise the 24-token request: {stream}")
+                    size_failures.append(
+                        f"390px stream did not exercise the 24-token request: {stream}"
+                    )
                 if stream["violations"]:
                     size_failures.append(f"stream reveal escaped local reels: {stream}")
-                if stream["scrollX"] != stream["initial"]["scrollX"] or stream["docW"] != stream["initial"]["docW"]:
-                    size_failures.append(f"stream changed document horizontal geometry: {stream}")
+                if (
+                    stream["scrollX"] != stream["initial"]["scrollX"]
+                    or stream["docW"] != stream["initial"]["docW"]
+                ):
+                    size_failures.append(
+                        f"stream changed document horizontal geometry: {stream}"
+                    )
                 if stream["focus"] != stream["initial"]["focus"]:
                     size_failures.append(f"stream stole focus: {stream}")
                 print(f"390x844 stream reveal: {json.dumps(stream, sort_keys=True)}")
@@ -196,8 +211,13 @@ def verify(args: argparse.Namespace) -> int:
             failures.extend(f"{width}x{height}: {failure}" for failure in size_failures)
         for physical in ((1440, 900), (390, 844)):
             zoom, zoom_failures = actual_zoom_contract(browser, args.url, physical)
-            print(f"actual zoom {physical[0]}x{physical[1]}: {json.dumps(zoom, sort_keys=True)}")
-            failures.extend(f"actual zoom {physical[0]}x{physical[1]}: {failure}" for failure in zoom_failures)
+            print(
+                f"actual zoom {physical[0]}x{physical[1]}: {json.dumps(zoom, sort_keys=True)}"
+            )
+            failures.extend(
+                f"actual zoom {physical[0]}x{physical[1]}: {failure}"
+                for failure in zoom_failures
+            )
             browser.session_barrier()
             telemetry.consume(cdp.events)
         browser.session_barrier()

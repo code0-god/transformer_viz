@@ -17,9 +17,10 @@ import random
 import subprocess
 import sys
 from dataclasses import dataclass
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 from types import ModuleType
-from typing import Final
+from typing import Final, Protocol, Self, overload
 
 import numpy as np
 import torch
@@ -34,7 +35,9 @@ REFERENCE_PATH: Final = ROOT / "reference/nanoGPT/model.py"
 REFERENCE_COMMIT_PATH: Final = ROOT / "reference/NANOGPT_COMMIT"
 PUBLIC_REFERENCE_PATH: Final = ROOT / "apps/web/public/reference/model.py"
 EXPECTED_NANOGPT_COMMIT: Final = "3adf61e154c3fe3fca428ad6bc3818b27a3b8291"
-CANONICAL_MODEL_SHA256: Final = "7c01703240dbec5d554527dc666e35b3df8391d0b117fddc07afcf325a21d11c"
+CANONICAL_MODEL_SHA256: Final = (
+    "7c01703240dbec5d554527dc666e35b3df8391d0b117fddc07afcf325a21d11c"
+)
 CHECKPOINT_PATH: Final = WORK_DIR / "checkpoint.pt"
 SEED: Final = 20260821
 BLOCK_SIZE: Final = 24
@@ -63,6 +66,79 @@ class ToolError(Exception):
 
     def __str__(self) -> str:
         return self.detail
+
+
+class NanoGptConfig(Protocol):
+    """Configuration fields consumed by the educational trace generator."""
+
+    n_embd: int
+
+
+class NanoGptAttention(Protocol):
+    """Attention projections consumed by the explicit trace."""
+
+    c_attn: torch.nn.Linear
+    c_proj: torch.nn.Linear
+
+
+class NanoGptMlp(Protocol):
+    """MLP projections consumed by the explicit trace."""
+
+    c_fc: torch.nn.Linear
+    c_proj: torch.nn.Linear
+
+
+class NanoGptBlock(Protocol):
+    """Transformer block shape consumed by the explicit trace."""
+
+    ln_1: torch.nn.LayerNorm
+    attn: NanoGptAttention
+    ln_2: torch.nn.LayerNorm
+    mlp: NanoGptMlp
+
+
+class NanoGptTransformer(Protocol):
+    """Transformer components consumed by the educational tooling."""
+
+    wte: torch.nn.Embedding
+    wpe: torch.nn.Embedding
+    h: Sequence[NanoGptBlock]
+    ln_f: torch.nn.LayerNorm
+
+
+class StateLoadResult(Protocol):
+    """Result returned after loading a Torch state dictionary."""
+
+    missing_keys: list[str]
+    unexpected_keys: list[str]
+
+
+class NanoGptModel(Protocol):
+    """nanoGPT model capabilities required by the educational tooling."""
+
+    transformer: NanoGptTransformer
+    config: NanoGptConfig
+    lm_head: torch.nn.Linear
+
+    @overload
+    def __call__(self, inputs: torch.Tensor) -> tuple[torch.Tensor, None]: ...
+
+    @overload
+    def __call__(
+        self, inputs: torch.Tensor, targets: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]: ...
+
+    def eval(self) -> Self: ...
+
+    def train(self, mode: bool = True) -> Self: ...
+
+    def load_state_dict(
+        self, state_dict: dict[str, torch.Tensor]
+    ) -> StateLoadResult: ...
+
+    def state_dict(self) -> dict[str, torch.Tensor]: ...
+
+    def parameters(self, recurse: bool = True) -> Iterator[torch.nn.Parameter]: ...
 
 
 def seed_everything() -> None:
@@ -100,12 +176,23 @@ def verify_reference_provenance() -> None:
         text=True,
     ).stdout.strip()
     if head != expected_commit:
-        raise ToolError(detail=f"nanoGPT HEAD {head} differs from pin {expected_commit}")
+        raise ToolError(
+            detail=f"nanoGPT HEAD {head} differs from pin {expected_commit}"
+        )
     clean = all(
         subprocess.run(command, check=False).returncode == 0
         for command in (
             ["git", "-C", str(reference_dir), "diff", "--quiet", "--", "model.py"],
-            ["git", "-C", str(reference_dir), "diff", "--cached", "--quiet", "--", "model.py"],
+            [
+                "git",
+                "-C",
+                str(reference_dir),
+                "diff",
+                "--cached",
+                "--quiet",
+                "--",
+                "model.py",
+            ],
         )
     )
     if not clean:
@@ -119,7 +206,9 @@ def verify_reference_provenance() -> None:
 
 def load_reference() -> ModuleType:
     verify_reference_provenance()
-    spec = importlib.util.spec_from_file_location("pinned_nanogpt_model", REFERENCE_PATH)
+    spec = importlib.util.spec_from_file_location(
+        "pinned_nanogpt_model", REFERENCE_PATH
+    )
     if spec is None or spec.loader is None:
         raise ToolError(detail=f"cannot import pinned nanoGPT model: {REFERENCE_PATH}")
     module = importlib.util.module_from_spec(spec)
@@ -128,7 +217,7 @@ def load_reference() -> ModuleType:
     return module
 
 
-def make_model(module: ModuleType) -> torch.nn.Module:
+def make_model(module: ModuleType) -> NanoGptModel:
     config = EduConfig()
     reference_config = module.GPTConfig(
         block_size=config.block_size,
@@ -144,7 +233,7 @@ def make_model(module: ModuleType) -> torch.nn.Module:
     return model
 
 
-def parameter_count(model: torch.nn.Module) -> int:
+def parameter_count(model: NanoGptModel) -> int:
     return sum(parameter.numel() for parameter in model.parameters())
 
 
@@ -152,7 +241,7 @@ def prompt_ids() -> list[int]:
     return encode(PROMPT)
 
 
-def generate(model: torch.nn.Module, count: int) -> tuple[list[int], list[list[int]]]:
+def generate(model: NanoGptModel, count: int) -> tuple[list[int], list[list[int]]]:
     generated: list[int] = []
     rankings: list[list[int]] = []
     context = prompt_ids()

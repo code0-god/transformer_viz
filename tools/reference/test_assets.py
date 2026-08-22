@@ -62,7 +62,9 @@ def test_manifest_and_corpus_use_canonical_contract_when_loaded() -> None:
     assert manifest["architecture"] == "nanogpt-compatible"
     for kind in ("weights", "config", "tokenizer"):
         asset = MODEL / manifest[f"{kind}_file"]
-        assert manifest[f"{kind}_sha256"] == hashlib.sha256(asset.read_bytes()).hexdigest()
+        assert (
+            manifest[f"{kind}_sha256"] == hashlib.sha256(asset.read_bytes()).hexdigest()
+        )
         assert manifest[f"{kind}_size_bytes"] == asset.stat().st_size
     assert manifest["config_file"] == "config.json"
     assert manifest["tokenizer_file"] == "tokenizer.json"
@@ -75,12 +77,21 @@ def test_manifest_and_corpus_use_canonical_contract_when_loaded() -> None:
 
 def test_assets_match_checksums_when_bundle_is_generated() -> None:
     # Given: the generated canonical and public bundles.
-    entries = [line.split(maxsplit=1) for line in (MODEL / "SHA256SUMS").read_text().splitlines()]
+    entries = [
+        line.split(maxsplit=1)
+        for line in (MODEL / "SHA256SUMS").read_text().splitlines()
+    ]
     # When: each recorded digest is recomputed.
-    actual = [(hashlib.sha256((MODEL / name).read_bytes()).hexdigest(), name) for _, name in entries]
+    actual = [
+        (hashlib.sha256((MODEL / name).read_bytes()).hexdigest(), name)
+        for _, name in entries
+    ]
     # Then: digests and public bytes match exactly.
     assert actual == [(digest, name) for digest, name in entries]
-    assert all((MODEL / name).read_bytes() == (PUBLIC / name).read_bytes() for _, name in entries)
+    assert all(
+        (MODEL / name).read_bytes() == (PUBLIC / name).read_bytes()
+        for _, name in entries
+    )
 
 
 def test_pinned_reference_source_and_public_copies_are_exact() -> None:
@@ -93,10 +104,21 @@ def test_pinned_reference_source_and_public_copies_are_exact() -> None:
     assert head == PINNED_COMMIT
     assert (ROOT / "reference/NANOGPT_COMMIT").read_text().strip() == PINNED_COMMIT
     for diff_mode in ("diff", "diff --cached"):
-        assert subprocess.run(
-            ["git", "-C", str(REFERENCE), *diff_mode.split(), "--quiet", "--", "model.py"],
-            check=False,
-        ).returncode == 0
+        assert (
+            subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(REFERENCE),
+                    *diff_mode.split(),
+                    "--quiet",
+                    "--",
+                    "model.py",
+                ],
+                check=False,
+            ).returncode
+            == 0
+        )
     canonical = (REFERENCE / "model.py").read_bytes()
     assert hashlib.sha256(canonical).hexdigest() == MODEL_PY_SHA256
     assert canonical == (ROOT / "apps/web/public/reference/model.py").read_bytes()
@@ -125,16 +147,35 @@ def test_golden_quality_contract_when_metadata_is_loaded() -> None:
     rankings = metadata["top3_token_ids_by_step"]
     # Then: each expected token is Top-3 and checksums bind fixtures to model inputs.
     assert all(token in top for token, top in zip(expected, rankings, strict=True))
-    assert metadata["trace_sha256"] == hashlib.sha256((GOLDEN / "trace.safetensors").read_bytes()).hexdigest()
-    assert metadata["model_sha256"] == hashlib.sha256((MODEL / "model.safetensors").read_bytes()).hexdigest()
-    assert metadata["config_sha256"] == hashlib.sha256((MODEL / "config.json").read_bytes()).hexdigest()
-    assert metadata["tokenizer_sha256"] == hashlib.sha256((MODEL / "tokenizer.json").read_bytes()).hexdigest()
-    assert metadata["source_map_sha256"] == hashlib.sha256((MODEL / "source_map.json").read_bytes()).hexdigest()
+    assert (
+        metadata["trace_sha256"]
+        == hashlib.sha256((GOLDEN / "trace.safetensors").read_bytes()).hexdigest()
+    )
+    assert (
+        metadata["model_sha256"]
+        == hashlib.sha256((MODEL / "model.safetensors").read_bytes()).hexdigest()
+    )
+    assert (
+        metadata["config_sha256"]
+        == hashlib.sha256((MODEL / "config.json").read_bytes()).hexdigest()
+    )
+    assert (
+        metadata["tokenizer_sha256"]
+        == hashlib.sha256((MODEL / "tokenizer.json").read_bytes()).hexdigest()
+    )
+    assert (
+        metadata["source_map_sha256"]
+        == hashlib.sha256((MODEL / "source_map.json").read_bytes()).hexdigest()
+    )
     assert metadata["corpus_sha256"] == hashlib.sha256(CORPUS.read_bytes()).hexdigest()
     assert metadata["nanogpt_commit"] == PINNED_COMMIT
     assert metadata["reference_model_sha256"] == MODEL_PY_SHA256
     assert metadata["corpus_file"] == "assets/corpus/edu_corpus.txt"
-    assert metadata["prompt_token_ids"] == [0, *(byte + 3 for byte in b"the cat sat on the"), 1]
+    assert metadata["prompt_token_ids"] == [
+        0,
+        *(byte + 3 for byte in b"the cat sat on the"),
+        1,
+    ]
     with safe_open(MODEL / "model.safetensors", framework="np") as weights:
         weight_names = weights.keys()
         assert metadata["parameter_count"] == sum(
@@ -181,7 +222,9 @@ def test_golden_embeddings_and_last_token_are_exact_projections_when_loaded() ->
     # When: the canonical projections are recomputed from their source tensors.
     expected_top3 = np.argsort(last_token_logits[0])[-3:][::-1]
     # Then: the stored boundaries preserve exact embedding and final-token relationships.
-    np.testing.assert_allclose(embedding_sum, token_embeddings + position_embeddings, rtol=0.0, atol=0.0)
+    np.testing.assert_allclose(
+        embedding_sum, token_embeddings + position_embeddings, rtol=0.0, atol=0.0
+    )
     np.testing.assert_allclose(last_token_logits, logits[:, -1], rtol=0.0, atol=0.0)
     np.testing.assert_array_equal(top_k_ids, expected_top3)
 

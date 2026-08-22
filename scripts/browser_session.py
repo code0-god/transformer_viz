@@ -229,7 +229,8 @@ class ChromeSession:
             if self.target_id:
                 self.cdp.send("Target.closeTarget", {"targetId": self.target_id})
         except (CdpError, OSError):
-            pass
+            if self.process is not None and self.process.poll() is None:
+                self.process.terminate()
         finally:
             self.cdp.close()
             self.cdp = None

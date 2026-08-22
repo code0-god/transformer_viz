@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from browser_contract import failures_for
@@ -9,6 +10,17 @@ from browser_contrast import contrast_contract
 from browser_keyboard import keyboard_contract, settle
 from browser_probes import READY_PROBE, STATE_PROBE
 from browser_session import ChromeSession
+
+
+@dataclass(frozen=True, slots=True)
+class ZoomContractError(Exception):
+    """Report a failed browser zoom verifier boundary."""
+
+    detail: str
+
+    def __str__(self) -> str:
+        return self.detail
+
 
 _METRICS = (
     "({innerWidth,innerHeight,devicePixelRatio,docW:document.documentElement.scrollWidth,"
@@ -46,7 +58,9 @@ def set_browser_zoom(browser: ChromeSession, value: str) -> None:
         }})()""",
     )
     if not changed:
-        raise RuntimeError("Chrome Settings page zoom control was not available")
+        raise ZoomContractError(
+            detail="Chrome Settings page zoom control was not available"
+        )
 
 
 def app_metrics(browser: ChromeSession, url: str) -> dict[str, Any]:
@@ -55,7 +69,7 @@ def app_metrics(browser: ChromeSession, url: str) -> dict[str, Any]:
     cdp.evaluate(browser.page_session, READY_PROBE, True)
     result = settle(cdp, browser.page_session, _METRICS)
     if not isinstance(result, dict):
-        raise TypeError("page zoom metrics were not an object")
+        raise ZoomContractError(detail="page zoom metrics were not an object")
     return result
 
 
@@ -105,7 +119,9 @@ def zoom_generation_interactions(browser: ChromeSession) -> dict[str, Any]:
     })"""
     result = browser.require_cdp().evaluate(browser.page_session, probe, True)
     if not isinstance(result, dict):
-        raise TypeError("zoom generation interaction result was not an object")
+        raise ZoomContractError(
+            detail="zoom generation interaction result was not an object"
+        )
     return result
 
 
@@ -119,10 +135,18 @@ def actual_zoom_contract(
     window_id = window["windowId"]
     cdp.send(
         "Browser.setWindowBounds",
-        {"windowId": window_id, "bounds": {
-            "width": physical[0], "height": physical[1], "windowState": "normal"}},
+        {
+            "windowId": window_id,
+            "bounds": {
+                "width": physical[0],
+                "height": physical[1],
+                "windowState": "normal",
+            },
+        },
     )
-    actual_bounds = cdp.send("Browser.getWindowBounds", {"windowId": window_id})["bounds"]
+    actual_bounds = cdp.send("Browser.getWindowBounds", {"windowId": window_id})[
+        "bounds"
+    ]
     before = app_metrics(browser, url)
     set_browser_zoom(browser, "2")
     actual_zoom = app_metrics(browser, url)
@@ -139,23 +163,34 @@ def actual_zoom_contract(
     state = cdp.evaluate(session, STATE_PROBE)
     failures = failures_for((effective["innerWidth"], effective["innerHeight"]), state)
     if actual_zoom["innerWidth"] >= before["innerWidth"] * 0.65:
-        failures.append(f"browser zoom did not halve CSS viewport: {before=}, {actual_zoom=}")
+        failures.append(
+            f"browser zoom did not halve CSS viewport: {before=}, {actual_zoom=}"
+        )
     if actual_zoom["devicePixelRatio"] <= before["devicePixelRatio"]:
-        failures.append(f"browser zoom did not increase devicePixelRatio: {before=}, {actual_zoom=}")
+        failures.append(
+            f"browser zoom did not increase devicePixelRatio: {before=}, {actual_zoom=}"
+        )
     if layout_195 is not None and layout_195["innerWidth"] != 195:
-        failures.append(f"200% zoom plus 390px layout did not prove 195px: {layout_195}")
+        failures.append(
+            f"200% zoom plus 390px layout did not prove 195px: {layout_195}"
+        )
     if effective["docW"] > effective["innerWidth"] or not effective["controls"]:
         failures.append(f"actual 200% zoom clips or overflows: {effective}")
     failures.extend(keyboard_contract(cdp, session, state, effective["innerWidth"]))
     generation = zoom_generation_interactions(browser)
     failures.extend(contrast_contract(cdp, session))
-    if not generation["stopped"] or not generation["replayReady"] or generation["generated"] < 2:
+    if (
+        not generation["stopped"]
+        or not generation["replayReady"]
+        or generation["generated"] < 2
+    ):
         failures.append(f"zoom Generate/Stop/replay journey failed: {generation}")
     cdp.send("Emulation.clearDeviceMetricsOverride", session_id=session)
     set_browser_zoom(browser, "1")
     restored = app_metrics(browser, url)
     if (restored["innerWidth"], restored["devicePixelRatio"]) != (
-        before["innerWidth"], before["devicePixelRatio"]
+        before["innerWidth"],
+        before["devicePixelRatio"],
     ):
         failures.append(f"browser zoom reset failed: {before=}, {restored=}")
     return {

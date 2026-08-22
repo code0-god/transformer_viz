@@ -8,6 +8,7 @@ import threading
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Protocol
 from urllib.parse import unquote, urlsplit
 
 from browser_probes import READY_PROBE
@@ -16,6 +17,14 @@ from browser_session import ChromeSession
 
 class ReleaseReadinessError(RuntimeError):
     """The built static release violates a startup-readiness contract."""
+
+
+class LogValue(Protocol):
+    """Value accepted by the standard HTTP request logger."""
+
+    def __str__(self) -> str:
+        """Render the value for percent-style request logging."""
+        ...
 
 
 class ReleaseHandler(SimpleHTTPRequestHandler):
@@ -29,7 +38,7 @@ class ReleaseHandler(SimpleHTTPRequestHandler):
             return str(Path(self.directory) / "__outside_public_url__")
         return str(Path(self.directory) / requested.removeprefix(self.base))
 
-    def log_message(self, format: str, *args: object) -> None:
+    def log_message(self, format: str, *args: LogValue) -> None:
         return
 
 
@@ -52,7 +61,11 @@ def main() -> int:
     source = index.read_text(encoding="utf-8")
     shell_position = source.find('id="startup-shell"')
     bootstrap_position = source.find("<script")
-    if shell_position < 0 or bootstrap_position < 0 or shell_position >= bootstrap_position:
+    if (
+        shell_position < 0
+        or bootstrap_position < 0
+        or shell_position >= bootstrap_position
+    ):
         raise ReleaseReadinessError(
             "static startup shell must precede the bootstrap script"
         )

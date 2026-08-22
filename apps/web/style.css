@@ -502,6 +502,8 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 
 @media (min-width: 768px) and (max-width: 1279px) {
   .guided-player { grid-template-areas: "header header" "controls controls" "timeline timeline" "context context" "model model" "stage inspector" "transport transport" "rail rail"; grid-template-columns: minmax(0, 1fr) minmax(280px, 300px); grid-template-rows: auto auto auto auto auto minmax(520px, 1fr) auto auto; block-size: auto; min-block-size: 100dvb; padding-inline: var(--s4); overflow: visible; }
+  .curriculum-group[data-current="true"] { display: grid; grid-template-columns: minmax(0, .4fr) minmax(0, .6fr); align-items: center; }
+  .curriculum-group[data-current="true"] .stage-reel { position: relative; }
   .generation-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .generation-form .prompt-field, .generation-actions { grid-column: 1 / -1; }
   .generation-actions { flex-wrap: wrap; }
@@ -568,7 +570,8 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
   .trace-evidence { min-block-size: 220px; }
   .trace-evidence, .stage-visual { overflow: visible; }
   .stage-visual { padding-inline-end: 0; }
-  .rail-transport { position: sticky; inset-block-start: calc(100dvb - 52px); z-index: 8; grid-row: transport-start / -1; align-self: start; grid-template-columns: minmax(max-content, 1fr) auto auto; min-block-size: 52px; inline-size: max-content; max-inline-size: 100%; padding-block: var(--s1); overflow-x: auto; background: var(--canvas); }
+  .rail-transport { position: sticky; inset-block-start: calc(100dvb - 52px); z-index: 8; grid-row: transport-start / -1; align-self: start; grid-template-columns: minmax(max-content, 1fr) auto auto; min-block-size: 52px; inline-size: max-content; max-inline-size: 100%; padding-block: var(--s1); overflow-x: auto; background: var(--canvas); scrollbar-width: none; }
+  .rail-transport::-webkit-scrollbar { display: none; }
   .curriculum-rail { padding-block: var(--s2); border-block-start: 1px solid var(--hairline); }
   .rail-transport > span { display: none; }
   .speed-buttons { justify-self: start; }
