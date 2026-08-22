@@ -4,13 +4,13 @@ This is the final acceptance record for the nine-stage Guided Learning Player. I
 dashboard-era final report and its 18-step acceptance language; the 18 operation boundaries remain
 available only as stage-linked Inspector detail.
 
-## Production baseline
+## Release binding
 
-- Commit: `550b2141083416f505423590a45b15204873d66d`
-- Tree: `db95bfdb7e9b7c131fe65edd78ccb6c0ea52bc61`
 - nanoGPT reference: `3adf61e154c3fe3fca428ad6bc3818b27a3b8291`
-- Guided implementation range: nine logical commits from `d1714d0` through `550b214`
-- Final committed-tree binding and cleanup receipt: `.omo/evidence/guided/final/validation.txt`
+- Guided implementation begins at `d1714d0`.
+- Exact accepted commit/tree, screenshot hashes, independent reviews, and cleanup receipt are
+  recorded after the final commit in `.omo/evidence/guided/final/validation.txt` and the durable
+  ULW ledger. A tracked document intentionally does not claim its own self-referential Git hash.
 
 The accepted flow is Embedding, Attention LayerNorm, Q/K/V, Attention Score, Causal Mask,
 Softmax, Value + Residual, MLP + Residual, and Prediction.
