@@ -1,7 +1,6 @@
 //! Final normalization, tied embedding head, and full-vocabulary Top-10 stage.
 
 use leptos::prelude::*;
-use nanogpt_schema::TokenKind;
 
 use crate::{app::state::AppState, trace_lookup::TraceLookup};
 
@@ -21,16 +20,14 @@ pub(super) fn prediction(state: &AppState) -> AnyView {
     let (Some(normalized), Some(logits)) = (lookup.final_layer_norm(), lookup.logits()) else {
         return facts::waiting("prediction");
     };
-    let last_byte = summary
-        .tokens
-        .iter()
-        .rposition(|token| token.kind == TokenKind::Byte)
-        .unwrap_or_else(|| summary.tokens.len().saturating_sub(1));
-    let Ok(values) = btc_row(normalized, last_byte) else {
-        return facts::error_state("final LayerNorm Byte row");
+    let Some(prediction_token) = summary.tokens.len().checked_sub(1) else {
+        return facts::error_state("final LayerNorm prediction row");
+    };
+    let Ok(values) = btc_row(normalized, prediction_token) else {
+        return facts::error_state("final LayerNorm prediction row");
     };
     let strip = VectorStrip {
-        label: "마지막 Byte의 final LayerNorm",
+        label: "입력 끝(EOS)의 final LayerNorm",
         tensor_id: normalized.id.clone(),
         values,
         tone: "prediction",
@@ -39,10 +36,10 @@ pub(super) fn prediction(state: &AppState) -> AnyView {
     let scale = shared_scale(std::slice::from_ref(&strip));
     let vocabulary = model.config.vocab_size;
     view! {
-        <div class="stage-visual prediction-visual" data-visual="prediction" data-trace-ready="true">
+        <div class="stage-visual prediction-visual" data-visual="prediction" data-trace-ready="true" data-token-index=prediction_token>
             {vector_strip(strip, scale)}
             <div class="tied-head" data-tensor-id=logits.logits.id.clone()>
-                <svg role="img" viewBox="0 0 720 120"><title>"Tied embedding language-model head"</title><desc>"마지막 Byte의 정규화 표현을 입력 token embedding weight의 transpose와 곱해 전체 vocabulary logit을 계산합니다."</desc><rect x="20" y="24" width="180" height="72" rx="10" /><text x="110" y="54">"final LN · C"</text><text x="110" y="77">{format!("token {last_byte}")}</text><path d="M200 60 H270" /><rect class="prediction-weight" x="270" y="24" width="180" height="72" rx="10" /><text x="360" y="54">"Wₑᵀ · tied"</text><text x="360" y="77">"no extra weights"</text><path d="M450 60 H520" /><rect x="520" y="24" width="180" height="72" rx="10" /><text x="610" y="54">"all logits"</text><text x="610" y="77">{format!("V={vocabulary}")}</text></svg>
+                <svg role="img" viewBox="0 0 720 120"><title>"Tied embedding language-model head"</title><desc>"입력 끝 EOS의 정규화 표현을 token embedding weight의 transpose와 곱해 전체 vocabulary logit을 계산합니다."</desc><rect x="20" y="24" width="180" height="72" rx="10" /><text x="110" y="54">"final LN · C"</text><text x="110" y="77">{format!("token {prediction_token}")}</text><path d="M200 60 H270" /><rect class="prediction-weight" x="270" y="24" width="180" height="72" rx="10" /><text x="360" y="54">"Wₑᵀ · tied"</text><text x="360" y="77">"no extra weights"</text><path d="M450 60 H520" /><rect x="520" y="24" width="180" height="72" rx="10" /><text x="610" y="54">"all logits"</text><text x="610" y="77">{format!("V={vocabulary}")}</text></svg>
                 <p>{format!("별도 LM head weight 없이 token embedding Wₑ를 공유합니다. 순위는 전체 {vocabulary}개 vocabulary 확률에서 계산했습니다.")}</p>
             </div>
             <div class="prediction-ledger">{facts::tensor_facts(normalized, "final LN")}<ol class="top-k-list" aria-label="실제 다음 토큰 Top-10">

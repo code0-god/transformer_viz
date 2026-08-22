@@ -30,15 +30,15 @@ pub(super) fn stage_rail(state: RwSignal<AppState>) -> impl IntoView {
             <div class="rail-transport">
                 <span id="stage-rail-title">"학습 경로"</span>
                 <div class="transport-buttons" role="group" aria-label="단계 재생 제어">
-                    <button type="button" disabled=move || state.get().ui.narrative.stage == NarrativeStage::Embedding on:click=move |_| state.update(|current| current.ui.previous_stage())>"이전"</button>
+                    <button type="button" disabled=move || state.with(|current| current.ui.narrative.stage == NarrativeStage::Embedding) on:click=move |_| state.update(|current| current.ui.previous_stage())>"이전"</button>
                     <button
                         class="play-toggle"
                         type="button"
-                        disabled=move || state.get().summary.is_none()
-                        aria-pressed=move || state.get().ui.narrative.playing.to_string()
+                        disabled=move || state.with(|current| current.summary.is_none())
+                        aria-pressed=move || state.with(|current| current.ui.narrative.playing.to_string())
                         on:click=move |_| state.update(|current| current.ui.toggle_narrative())
-                    >{move || if state.get().ui.narrative.playing { "일시정지" } else { "재생" }}</button>
-                    <button type="button" disabled=move || state.get().ui.narrative.stage == NarrativeStage::LanguageModelHead on:click=move |_| state.update(|current| current.ui.next_stage())>"다음"</button>
+                    >{move || state.with(|current| if current.ui.narrative.playing { "일시정지" } else { "재생" })}</button>
+                    <button type="button" disabled=move || state.with(|current| current.ui.narrative.stage == NarrativeStage::LanguageModelHead) on:click=move |_| state.update(|current| current.ui.next_stage())>"다음"</button>
                 </div>
                 <div class="speed-buttons" role="group" aria-label="재생 속도">
                     {speed_button(state, NarrativeSpeed::Half, "0.5x")}
@@ -51,8 +51,8 @@ pub(super) fn stage_rail(state: RwSignal<AppState>) -> impl IntoView {
                     <button
                         type="button"
                         data-stage=stage.index()
-                        data-progress=move || progress(&state.get(), stage)
-                        aria-current=move || (state.get().ui.narrative.stage == stage).then_some("step")
+                        data-progress=move || state.with(|current| progress(current, stage))
+                        aria-current=move || state.with(|current| (current.ui.narrative.stage == stage).then_some("step"))
                         on:click=move |_| state.update(|current| current.ui.select_stage(stage))
                     >
                         <span>{format!("{}", stage.index() + 1)}</span>
@@ -73,7 +73,7 @@ fn speed_button(
     view! {
         <button
             type="button"
-            aria-pressed=move || (state.get().ui.narrative.speed == speed).to_string()
+            aria-pressed=move || state.with(|current| (current.ui.narrative.speed == speed).to_string())
             on:click=move |_| state.update(|current| current.ui.set_narrative_speed(speed))
         >{label}</button>
     }

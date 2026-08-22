@@ -126,12 +126,12 @@ impl ExplorerUiState {
     const fn sync_detail_operation(&mut self) {
         self.detail_operation = match self.narrative.stage {
             NarrativeStage::Embedding
+            | NarrativeStage::CausalMask
             | NarrativeStage::Softmax
             | NarrativeStage::LanguageModelHead => None,
             NarrativeStage::AttentionLayerNorm => Some(1),
             NarrativeStage::QueryKeyValue => Some(2),
             NarrativeStage::AttentionScores => Some(6),
-            NarrativeStage::CausalMask => Some(7),
             NarrativeStage::ValueAggregation => Some(8),
             NarrativeStage::MlpAndResidual => Some(12),
         };

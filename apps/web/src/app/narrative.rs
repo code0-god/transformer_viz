@@ -81,7 +81,7 @@ pub const DETAIL_OPERATION_STAGES: [NarrativeStage; 18] = [
     NarrativeStage::QueryKeyValue,
     NarrativeStage::AttentionScores,
     NarrativeStage::AttentionScores,
-    NarrativeStage::CausalMask,
+    NarrativeStage::Softmax,
     NarrativeStage::ValueAggregation,
     NarrativeStage::ValueAggregation,
     NarrativeStage::ValueAggregation,

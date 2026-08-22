@@ -55,7 +55,7 @@ pub(super) fn query_key_value(state: &AppState) -> AnyView {
 }
 
 pub(super) fn scores(state: RwSignal<AppState>, client: &WorkerClient) -> AnyView {
-    let current = state.get();
+    let current = state.read();
     let Some(trace) = current.attention.as_ref() else {
         return facts::waiting("attention-score");
     };
@@ -91,7 +91,7 @@ pub(super) fn scores(state: RwSignal<AppState>, client: &WorkerClient) -> AnyVie
 }
 
 pub(super) fn mask(state: RwSignal<AppState>, client: &WorkerClient) -> AnyView {
-    let current = state.get();
+    let current = state.read();
     let Some(trace) = current.attention.as_ref() else {
         return facts::waiting("causal-mask");
     };
@@ -113,7 +113,7 @@ pub(super) fn mask(state: RwSignal<AppState>, client: &WorkerClient) -> AnyView 
 }
 
 pub(super) fn softmax(state: RwSignal<AppState>, client: &WorkerClient) -> AnyView {
-    let current = state.get();
+    let current = state.read();
     let Some(trace) = current.attention.as_ref() else {
         return facts::waiting("softmax");
     };

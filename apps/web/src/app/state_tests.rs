@@ -58,6 +58,15 @@ mod tests {
     }
 
     #[test]
+    fn causal_mask_has_no_legacy_probability_detail() {
+        let mut ui = ExplorerUiState::default();
+
+        ui.select_stage(NarrativeStage::CausalMask);
+
+        assert_eq!(ui.detail_operation, None);
+    }
+
+    #[test]
     fn autoplay_keeps_legacy_detail_mapping_synchronized() {
         // Given: narrative playback is on the final stage backed by block operations.
         let mut ui = ExplorerUiState::default();

@@ -19,10 +19,10 @@ pub(super) fn player_header(state: RwSignal<AppState>) -> impl IntoView {
                 <p>"실제 trace로 따라가는 Guided Learning Player"</p>
             </div>
             <div class="lifecycle" aria-live="polite">
-                <span id="status" class="status-badge" data-status=move || status_kind(&state.get().status)>
-                    {move || status_label(&state.get().status)}
+                <span id="status" class="status-badge" data-status=move || state.with(|current| status_kind(&current.status))>
+                    {move || state.with(|current| status_label(&current.status))}
                 </span>
-                <span class="lifecycle-detail">{move || status_detail(&state.get())}</span>
+                <span class="lifecycle-detail">{move || state.with(status_detail)}</span>
             </div>
         </header>
     }
@@ -41,21 +41,21 @@ pub(super) fn prompt_drawer(state: RwSignal<AppState>, client: WorkerClient) -> 
     view! {
         <section
             class="prompt-drawer"
-            data-expanded=move || state.get().ui.prompt_expanded.to_string()
+            data-expanded=move || state.with(|current| current.ui.prompt_expanded.to_string())
             aria-labelledby="prompt-drawer-title"
         >
             <button
                 id="prompt-drawer-title"
                 class="prompt-disclosure"
                 type="button"
-                aria-expanded=move || state.get().ui.prompt_expanded.to_string()
+                aria-expanded=move || state.with(|current| current.ui.prompt_expanded.to_string())
                 aria-controls="prompt-drawer-body"
                 on:click=move |_| state.update(|current| current.ui.prompt_expanded = !current.ui.prompt_expanded)
             >
                 <span>"문장 실행"</span>
-                <span>{move || if state.get().ui.prompt_expanded { "입력 닫기" } else { "입력 열기" }}</span>
+                <span>{move || state.with(|current| if current.ui.prompt_expanded { "입력 닫기" } else { "입력 열기" })}</span>
             </button>
-            <div id="prompt-drawer-body" class="prompt-body" hidden=move || !state.get().ui.prompt_expanded>
+            <div id="prompt-drawer-body" class="prompt-body" hidden=move || state.with(|current| !current.ui.prompt_expanded)>
                 <label for="prompt">"분석할 문장"</label>
                 <textarea
                     id="prompt"
@@ -67,17 +67,17 @@ pub(super) fn prompt_drawer(state: RwSignal<AppState>, client: WorkerClient) -> 
                     id="run"
                     class="primary"
                     type="button"
-                    aria-busy=move || matches!(state.get().status, AppStatus::Running(_)).to_string()
+                    aria-busy=move || state.with(|current| matches!(current.status, AppStatus::Running(_)).to_string())
                     on:click=run
-                    disabled=move || matches!(state.get().status, AppStatus::Loading(_) | AppStatus::Running(_))
+                    disabled=move || state.with(|current| matches!(current.status, AppStatus::Loading(_) | AppStatus::Running(_)))
                 >"실행"</button>
             </div>
-            {move || match state.get().status {
+            {move || state.with(|current| match &current.status {
                 AppStatus::Error(message) => Some(view! {
                     <p class="prompt-error" role="alert">{format!("오류: {message} 입력을 확인하고 다시 실행하세요.")}</p>
                 }),
                 AppStatus::Loading(_) | AppStatus::Ready | AppStatus::Running(_) | AppStatus::Complete => None,
-            }}
+            })}
         </section>
     }
 }
@@ -94,39 +94,40 @@ pub(super) fn context_bar(state: RwSignal<AppState>, client: WorkerClient) -> im
     view! {
         <section class="context-bar" aria-label="현재 학습 맥락">
             <div id="token-reel" class="token-reel" aria-label="실제 입력 토큰">
-                {move || state.get().summary.map_or_else(
+                {move || state.with(|current| current.summary.as_ref().map_or_else(
                     || view! { <p class="context-empty">"실행하면 실제 토큰 경로가 열립니다."</p> }.into_any(),
-                    |summary| summary.tokens.into_iter().enumerate().map(|(index, token)| {
+                    |summary| summary.tokens.iter().enumerate().map(|(index, token)| {
                         let token_client = client.clone();
                         let display = token.display.clone();
+                        let token_text = token.display.clone();
                         let token_id = token.id.0;
                         view! {
                             <button
                                 id=format!("context-token-{index}")
                                 type="button"
                                 class="context-token"
-                                aria-current=move || (state.get().selection.token == index).then_some("true")
-                                aria-label=move || token_aria_label(&state.get(), index, &display, token_id)
+                                aria-current=move || state.with(|current| (current.selection.token == index).then_some("true"))
+                                aria-label=move || state.with(|current| token_aria_label(current, index, &display, token_id))
                                 on:click=move |_| {
                                     let mut request = None;
                                     state.update(|current| request = current.select_token(index));
                                     if let Some(request) = request { send_or_error(state, &token_client, &request); }
                                 }
                             >
-                                <span class="token-text">{token.display}</span>
+                                <span class="token-text">{token_text}</span>
                                 <span class="token-id">{format!("{index}:{token_id}")}</span>
                                 <span class="token-markers">
-                                    <span class="query-marker" hidden=move || state.get().selection.token != index>"Q"</span>
-                                    <span class="key-marker" hidden=move || state.get().selection.key != index>"K"</span>
+                                    <span class="query-marker" hidden=move || state.with(|current| current.selection.token != index)>"Q"</span>
+                                    <span class="key-marker" hidden=move || state.with(|current| current.selection.key != index)>"K"</span>
                                 </span>
                             </button>
                         }
                     }).collect_view().into_any()
-                )}
+                ))}
             </div>
             <div class="context-coordinates">
                 <span class="breadcrumb">"GPT / Block / Attention"</span>
-                <strong>{move || format!("Layer {} · Head {}", state.get().selection.layer, state.get().selection.head)}</strong>
+                <strong>{move || state.with(|current| format!("Layer {} · Head {}", current.selection.layer, current.selection.head))}</strong>
             </div>
         </section>
     }
@@ -141,16 +142,16 @@ pub(super) fn model_map(state: RwSignal<AppState>, client: WorkerClient) -> impl
                 <button
                     class="model-map-toggle"
                     type="button"
-                    aria-expanded=move || state.get().ui.model_map_expanded.to_string()
+                    aria-expanded=move || state.with(|current| current.ui.model_map_expanded.to_string())
                     aria-controls="model-map-body"
                     on:click=move |_| state.update(|current| current.ui.model_map_expanded = !current.ui.model_map_expanded)
-                >{move || if state.get().ui.model_map_expanded { "모델 맵 닫기" } else { "모델 맵 열기" }}</button>
+                >{move || state.with(|current| if current.ui.model_map_expanded { "모델 맵 닫기" } else { "모델 맵 열기" })}</button>
             </div>
-            <div id="model-map-body" class="model-map-body" hidden=move || !state.get().ui.model_map_expanded>
-                {move || state.get().model.map_or_else(
+            <div id="model-map-body" class="model-map-body" hidden=move || state.with(|current| !current.ui.model_map_expanded)>
+                {move || state.with(|current| current.model.as_ref().map_or_else(
                     || view! { <p class="empty-state">"모델 구성을 불러오는 중입니다."</p> }.into_any(),
                     |model| {
-                        let config = model.config;
+                        let config = &model.config;
                         view! {
                             <dl class="config-ledger">
                                 <div><dt>"layers"</dt><dd>{config.n_layer}</dd></div>
@@ -163,7 +164,7 @@ pub(super) fn model_map(state: RwSignal<AppState>, client: WorkerClient) -> impl
                                 <strong>"GPT"</strong>
                                 {(0..config.n_layer).map(|layer| {
                                     let layer_client = client.clone();
-                                    view! { <button type="button" disabled=move || model_controls_disabled(&state.get()) aria-current=move || (state.get().selection.layer == layer).then_some("page") on:click=move |_| {
+                                    view! { <button type="button" disabled=move || state.with(model_controls_disabled) aria-current=move || state.with(|current| (current.selection.layer == layer).then_some("page")) on:click=move |_| {
                                         let mut request = None;
                                         state.update(|current| request = current.select_layer(layer));
                                         if let Some(request) = request { send_or_error(state, &layer_client, &request); }
@@ -172,7 +173,7 @@ pub(super) fn model_map(state: RwSignal<AppState>, client: WorkerClient) -> impl
                                 <span class="map-branch">"Attention heads"</span>
                                 <div class="map-heads">{(0..config.n_head).map(|head| {
                                     let head_client = client.clone();
-                                    view! { <button type="button" disabled=move || model_controls_disabled(&state.get()) aria-current=move || (state.get().selection.head == head).then_some("true") on:click=move |_| {
+                                    view! { <button type="button" disabled=move || state.with(model_controls_disabled) aria-current=move || state.with(|current| (current.selection.head == head).then_some("true")) on:click=move |_| {
                                         let mut request = None;
                                         state.update(|current| request = current.select_head(head));
                                         if let Some(request) = request { send_or_error(state, &head_client, &request); }
@@ -181,7 +182,7 @@ pub(super) fn model_map(state: RwSignal<AppState>, client: WorkerClient) -> impl
                             </div>
                         }.into_any()
                     }
-                )}
+                ))}
             </div>
         </nav>
     }

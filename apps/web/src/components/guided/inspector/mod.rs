@@ -22,16 +22,17 @@ pub(super) struct TensorSelection<'a> {
 #[must_use]
 pub(super) fn inspector(state: RwSignal<AppState>) -> impl IntoView {
     Effect::new(move |_| {
-        let current = state.get();
-        let Some(width) = selected_tensor(&current)
-            .ok()
-            .and_then(|selection| feature_width(selection.tensor))
-        else {
+        let Some((feature, width)) = state.with(|current| {
+            selected_tensor(current)
+                .ok()
+                .and_then(|selection| feature_width(selection.tensor))
+                .map(|width| (current.ui.selected_feature, width))
+        }) else {
             return;
         };
-        if current.ui.selected_feature >= width {
+        if feature >= width {
             state.update(|next| {
-                let _selected = next.ui.select_feature(current.ui.selected_feature, width);
+                let _selected = next.ui.select_feature(feature, width);
             });
         }
     });
@@ -40,14 +41,14 @@ pub(super) fn inspector(state: RwSignal<AppState>) -> impl IntoView {
             <div class="region-heading"><h2 id="inspector-title">"Inspector"</h2><span>"stage-linked"</span></div>
             {tabs::tab_list(state)}
             {details::detail_operations(state)}
-            <section id="panel-explanation" class="inspector-panel" role="tabpanel" aria-labelledby="tab-explanation" hidden=move || state.get().ui.inspector_tab != InspectorTab::Explanation>
-                {move || explanation::panel(&state.get())}
+            <section id="panel-explanation" class="inspector-panel" role="tabpanel" aria-labelledby="tab-explanation" hidden=move || state.with(|current| current.ui.inspector_tab != InspectorTab::Explanation)>
+                {move || state.with(explanation::panel)}
             </section>
-            <section id="panel-tensor" class="inspector-panel" role="tabpanel" aria-labelledby="tab-tensor" hidden=move || state.get().ui.inspector_tab != InspectorTab::Tensor>
-                {move || tensor::panel(state, &state.get())}
+            <section id="panel-tensor" class="inspector-panel" role="tabpanel" aria-labelledby="tab-tensor" hidden=move || state.with(|current| current.ui.inspector_tab != InspectorTab::Tensor)>
+                {move || state.with(|current| tensor::panel(state, current))}
             </section>
-            <section id="panel-source" class="inspector-panel" role="tabpanel" aria-labelledby="tab-source" hidden=move || state.get().ui.inspector_tab != InspectorTab::Source>
-                {move || source::panel(&state.get())}
+            <section id="panel-source" class="inspector-panel" role="tabpanel" aria-labelledby="tab-source" hidden=move || state.with(|current| current.ui.inspector_tab != InspectorTab::Source)>
+                {move || state.with(source::panel)}
             </section>
         </aside>
     }

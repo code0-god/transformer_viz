@@ -13,6 +13,9 @@ use crate::{
 use super::{feature_width, selected_tensor};
 
 pub(super) fn panel(state: RwSignal<AppState>, current: &AppState) -> AnyView {
+    if current.ui.narrative.stage == NarrativeStage::CausalMask {
+        return mask_panel(current);
+    }
     let selection = match selected_tensor(current) {
         Ok(selection) => selection,
         Err(error) => return empty(error),
@@ -63,6 +66,42 @@ pub(super) fn panel(state: RwSignal<AppState>, current: &AppState) -> AnyView {
                 {slice.into_iter().enumerate().map(|(offset, value)| view! { <span><small>{slice_start + offset}</small><code>{format!("{value:+.7}")}</code></span> }).collect_view()}
             </div>
             {math_evidence(current, stage)}
+        </div>
+    }.into_any()
+}
+
+fn mask_panel(state: &AppState) -> AnyView {
+    let Some(trace) = state.attention.as_ref() else {
+        return empty("Causal mask trace가 아직 준비되지 않았습니다.");
+    };
+    let rows = trace.mask.rows;
+    let cols = trace.mask.cols;
+    let query = state.selection.token.min(rows.saturating_sub(1));
+    let key = state.selection.key.min(cols.saturating_sub(1));
+    let Some(index) = query.checked_mul(cols).and_then(|row| row.checked_add(key)) else {
+        return empty("Causal mask 주소를 계산할 수 없습니다.");
+    };
+    let Some(allowed) = trace.mask.allowed.get(index).copied() else {
+        return empty("Causal mask 주소가 실제 shape 범위를 벗어났습니다.");
+    };
+    view! {
+        <div class="inspector-tensor" data-testid="inspector-tensor" data-tensor-id="causal_mask" data-mask-allowed=allowed.to_string()>
+            <dl class="tensor-identity">
+                <div><dt>"stable id"</dt><dd><code>"causal_mask"</code></dd></div>
+                <div><dt>"label"</dt><dd>"causal attention mask"</dd></div>
+                <div><dt>"shape"</dt><dd><code>{format!("[1, 1, {rows}, {cols}]")}</code></dd></div>
+                <div><dt>"dtype"</dt><dd><code>"bool"</code></dd></div>
+                <div><dt>"operation"</dt><dd><code>"Attention"</code></dd></div>
+            </dl>
+            <div class="tensor-address" aria-label="선택 causal mask 주소">
+                <span><b>"batch"</b> <code>"0"</code></span>
+                <span><b>"head"</b> <code>"0"</code></span>
+                <span><b>"query"</b> <code data-axis="query">{query}</code></span>
+                <span><b>"key"</b> <code data-axis="key">{key}</code></span>
+                <span><b>"flat"</b> <code>{index}</code></span>
+            </div>
+            <p class="selected-value"><span>"선택 값"</span><strong>{if allowed { "allowed" } else { "masked (−∞)" }}</strong></p>
+            <p class="table-proof">{if allowed { "현재 key는 query가 볼 수 있는 위치입니다." } else { "미래 key이므로 softmax 전에 −∞로 차단됩니다." }}</p>
         </div>
     }.into_any()
 }

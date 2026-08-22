@@ -26,9 +26,9 @@ fn tab_button(
             id=format!("tab-{id}")
             type="button"
             role="tab"
-            aria-selected=move || (state.get().ui.inspector_tab == tab).to_string()
+                    aria-selected=move || state.with(|current| (current.ui.inspector_tab == tab).to_string())
             aria-controls=format!("panel-{id}")
-            tabindex=move || if state.get().ui.inspector_tab == tab { "0" } else { "-1" }
+                    tabindex=move || state.with(|current| if current.ui.inspector_tab == tab { "0" } else { "-1" })
             on:click=move |_| state.update(|current| current.ui.inspector_tab = tab)
             on:keydown=move |event| {
                 if let Some(next) = tab.after_key(&event.key()) {

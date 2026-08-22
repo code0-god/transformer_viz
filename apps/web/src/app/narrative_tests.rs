@@ -33,6 +33,8 @@ mod tests {
             NarrativeStage::AttentionLayerNorm
         );
         assert!(!DETAIL_OPERATION_STAGES.contains(&NarrativeStage::Embedding));
+        assert!(!DETAIL_OPERATION_STAGES.contains(&NarrativeStage::CausalMask));
+        assert_eq!(DETAIL_OPERATION_STAGES[7], NarrativeStage::Softmax);
     }
 
     #[test]

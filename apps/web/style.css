@@ -165,7 +165,7 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 .top-k-list code { color: var(--accent); }
 
 /* 9. visualization primitives */
-.stage-visual { display: grid; gap: var(--s3); min-block-size: 0; align-content: start; overflow-y: auto; padding-inline-end: var(--s1); scrollbar-gutter: stable; }
+.stage-visual { display: grid; gap: var(--s3); min-block-size: 0; align-content: start; overflow: hidden; }
 .stage-visual[data-trace-ready="true"] { animation: trace-arrival var(--standard) both; }
 @keyframes trace-arrival { from { opacity: .72; filter: blur(2px); } to { opacity: 1; filter: blur(0); } }
 .stage-empty { place-content: center; text-align: center; }
@@ -178,7 +178,9 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 .vector-comparison .equation-line, .vector-comparison .comparison-ledger, .qkv-markers { grid-column: 1 / -1; }
 .vector-strip { min-inline-size: 0; margin: 0; padding-block-end: var(--s2); border-block-end: 1px solid var(--hairline); }
 .vector-strip figcaption, .attention-matrix figcaption, .contribution-matrix figcaption { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2); margin-block-end: var(--s1); font-size: .75rem; }
+.vector-strip figcaption strong { flex: 0 0 auto; word-break: keep-all; }
 .vector-strip figcaption span, .attention-matrix figcaption span, .contribution-matrix figcaption span { color: var(--ink-muted); font-size: .7rem; }
+.vector-strip figcaption span { min-inline-size: 0; overflow-wrap: anywhere; }
 .vector-strip svg { display: block; inline-size: 100%; block-size: 82px; overflow: visible; }
 .vector-zero { stroke: var(--hairline); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .vector-bar { fill: var(--accent); opacity: .78; }
@@ -265,8 +267,13 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 .tied-head .prediction-weight { fill: color-mix(in srgb, var(--prediction-gold) 18%, var(--surface)); stroke: var(--prediction-gold); }
 .tied-head path { stroke: var(--prediction-gold); stroke-width: 2; }
 .tied-head text { fill: var(--prediction-ink); font-size: 12px; text-anchor: middle; }
-.tied-head p { margin: 0; font-size: .75rem; }
+.tied-head p { margin: 0; overflow-wrap: break-word; font-size: .75rem; word-break: keep-all; }
 .prediction-ledger { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
+.prediction-visual { grid-template: "vector ledger" auto "head ledger" auto / minmax(0, 1.45fr) minmax(280px, .75fr); gap: var(--s2) var(--s3); }
+.prediction-visual > .vector-strip { grid-area: vector; }
+.prediction-visual > .tied-head { grid-area: head; }
+.prediction-visual > .prediction-ledger { grid-area: ledger; grid-template-columns: minmax(0, 1fr); gap: var(--s1); }
+.prediction-visual .top-k-list { overflow: visible; }
 .sr-only { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* 10. inspector */
@@ -359,6 +366,20 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
   .model-map-body { position: absolute; z-index: 10; inline-size: min(560px, calc(100vi - var(--s8))); max-block-size: min(60dvb, 460px); padding: var(--s4); overflow: auto; border: 1px solid var(--hairline); background: var(--surface); box-shadow: 0 12px 28px color-mix(in srgb, var(--ink) 12%, transparent); }
   .qkv-evidence { grid-template-columns: 1fr; gap: var(--s1); }
   .marked-tensor { padding: var(--s2); }
+  .stage-canvas { gap: var(--s2); padding: var(--s3); }
+  .stage-heading { gap: 0; }
+  .stage-heading h2 { font-size: clamp(1.45rem, 3vw, 1.8rem); }
+  .stage-heading p { font-size: .8rem; line-height: 1.3; }
+  .formula-band { padding: var(--s2) var(--s3); }
+  .trace-evidence { gap: var(--s1); }
+  .stage-bridge { padding-block-start: var(--s2); font-size: .72rem; line-height: 1.25; }
+  .qkv-visual { gap: var(--s1); }
+  .qkv-visual .qkv-markers { display: none; }
+  .qkv-visual .vector-strip { padding: var(--s1); }
+  .qkv-visual .vector-strip figcaption { gap: var(--s1); margin-block-end: 0; font-size: .68rem; }
+  .qkv-visual .vector-strip figcaption span { font-size: .62rem; }
+  .qkv-visual .vector-strip svg { block-size: 64px; }
+  .qkv-visual .vector-values { display: none; }
 }
 
 @media (max-width: 767px) {
@@ -393,6 +414,7 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
   .softmax-visual { grid-template-columns: minmax(0, 1fr); }
   .softmax-visual .softmax-transform, .softmax-visual .math-proof, .softmax-visual .attention-matrix, .value-visual .flow-diagram, .value-visual .output-proof { grid-column: 1; grid-row: auto; }
   .evidence-grid, .prediction-evidence { grid-template-columns: minmax(0, 1fr); }
+  .prediction-visual { grid-template: "vector" auto "head" auto "ledger" auto / minmax(0, 1fr); }
   .top-k-list { grid-template-columns: minmax(0, 1fr); max-block-size: 240px; }
   .softmax-transform, .tied-head, .prediction-ledger, .value-visual .value-strips, .residual-strips { grid-template-columns: minmax(0, 1fr); }
   .softmax-transform > span { justify-self: center; }

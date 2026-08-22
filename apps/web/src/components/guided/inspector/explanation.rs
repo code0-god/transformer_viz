@@ -50,7 +50,7 @@ const fn evidence_prompt(stage: NarrativeStage) -> &'static str {
             "LN₂, 4C 확장, exact GELU, C projection, residual 합의 실제 tensor 경계를 차례로 확인하세요."
         }
         NarrativeStage::LanguageModelHead => {
-            "마지막 Byte의 final LayerNorm과 tied embedding head가 만든 전체 vocabulary logits를 확인하세요."
+            "입력 끝 EOS의 final LayerNorm과 tied embedding head가 만든 전체 vocabulary logits를 확인하세요."
         }
     }
 }

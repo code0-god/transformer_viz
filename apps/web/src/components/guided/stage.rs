@@ -80,16 +80,16 @@ pub(super) fn main_stage(state: RwSignal<AppState>, client: WorkerClient) -> imp
     view! {
         <main id="main-stage" class="stage-canvas" tabindex="-1">
             <div class="stage-heading" aria-live="polite">
-                <span class="stage-position">{move || format!("Stage {} / 9", state.get().ui.narrative.stage.index() + 1)}</span>
-                <h2>{move || stage_copy(state.get().ui.narrative.stage).title}</h2>
-                <p>{move || stage_copy(state.get().ui.narrative.stage).purpose}</p>
+                <span class="stage-position">{move || state.with(|current| format!("Stage {} / 9", current.ui.narrative.stage.index() + 1))}</span>
+                <h2>{move || state.with(|current| stage_copy(current.ui.narrative.stage).title)}</h2>
+                <p>{move || state.with(|current| stage_copy(current.ui.narrative.stage).purpose)}</p>
             </div>
-            <div class="formula-band"><span>"formula"</span><code>{move || stage_copy(state.get().ui.narrative.stage).formula}</code></div>
+            <div class="formula-band"><span>"formula"</span><code>{move || state.with(|current| stage_copy(current.ui.narrative.stage).formula)}</code></div>
             <section class="trace-evidence" aria-labelledby="trace-evidence-title">
-                <div class="evidence-heading"><h3 id="trace-evidence-title">"현재 trace 증거"</h3><span>{move || coordinate_label(&state.get())}</span></div>
+                <div class="evidence-heading"><h3 id="trace-evidence-title">"현재 trace 증거"</h3><span>{move || state.with(coordinate_label)}</span></div>
                 {move || visuals::stage_visual(state, &client)}
             </section>
-            <p class="stage-bridge">{move || stage_copy(state.get().ui.narrative.stage).bridge}</p>
+            <p class="stage-bridge">{move || state.with(|current| stage_copy(current.ui.narrative.stage).bridge)}</p>
         </main>
     }
 }

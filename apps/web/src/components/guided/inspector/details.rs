@@ -6,10 +6,10 @@ use crate::app::{narrative::NarrativeStage, state::AppState, ui_state::Inspector
 
 pub(super) fn detail_operations(state: RwSignal<AppState>) -> impl IntoView {
     view! {
-        <details class="detail-operations" data-testid="detail-operations" open=move || state.get().ui.inspector_tab != InspectorTab::Explanation>
-            <summary>"세부 연산" <span>{move || detail_count(&state.get())}</span></summary>
+        <details class="detail-operations" data-testid="detail-operations" open=move || state.with(|current| current.ui.inspector_tab != InspectorTab::Explanation)>
+            <summary>"세부 연산" <span>{move || state.with(detail_count)}</span></summary>
             <div class="detail-operation-list">
-                {move || operation_buttons(state, &state.get())}
+                {move || state.with(|current| operation_buttons(state, current))}
             </div>
         </details>
     }

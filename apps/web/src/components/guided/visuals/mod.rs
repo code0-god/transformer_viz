@@ -19,8 +19,7 @@ use crate::{
 };
 
 pub(super) fn stage_visual(state: RwSignal<AppState>, client: &WorkerClient) -> AnyView {
-    let current = state.get();
-    match current.ui.narrative.stage {
+    state.with(|current| match current.ui.narrative.stage {
         NarrativeStage::Embedding => embedding::embedding(&current),
         NarrativeStage::AttentionLayerNorm => embedding::attention_norm(&current),
         NarrativeStage::QueryKeyValue => attention::query_key_value(&current),
@@ -30,7 +29,7 @@ pub(super) fn stage_visual(state: RwSignal<AppState>, client: &WorkerClient) -> 
         NarrativeStage::ValueAggregation => value::value_residual(&current),
         NarrativeStage::MlpAndResidual => mlp::mlp_residual(&current),
         NarrativeStage::LanguageModelHead => prediction::prediction(&current),
-    }
+    })
 }
 
 fn bhtd_row(tensor: &TensorSnapshot, token: usize) -> Result<Vec<f32>, TraceLookupError> {
