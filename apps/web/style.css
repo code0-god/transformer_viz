@@ -7,7 +7,7 @@
   --ink: #22221f;
   --ink-muted: #68665f;
   --hairline: #d7d1c4;
-  --accent: #a94327;
+  --accent: #963a22;
   --accent-soft: #f0d3c8;
   --positive: #27614f;
   --warning: #8a5a12;
@@ -72,7 +72,7 @@ code, dd, .token-id, .stage-position { font-family: ui-monospace, "SFMono-Regula
 /* 3. app shell */
 .skip-link { position: fixed; inset-block-start: var(--s2); inset-inline-start: var(--s2); z-index: 20; inline-size: 1px; block-size: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); background: var(--ink); color: var(--surface); white-space: nowrap; }
 .skip-link:focus { inline-size: auto; block-size: auto; padding: var(--s3); overflow: visible; clip-path: none; }
-.guided-player { display: grid; grid-template-areas: "header header header" "controls controls controls" "timeline timeline timeline" "context context context" "model stage inspector" "rail rail rail"; grid-template-columns: minmax(12rem, .62fr) minmax(32rem, 1.9fr) minmax(19rem, .86fr); grid-template-rows: auto auto auto auto minmax(0, 1fr) auto; gap: var(--s2); inline-size: min(100%, 1600px); block-size: 100dvb; margin-inline: auto; padding: var(--s2) var(--s6); overflow: hidden; }
+.guided-player { display: grid; grid-template-areas: "header header header" "controls controls controls" "timeline timeline timeline" "context context context" "model stage inspector" "transport transport transport" "rail rail rail"; grid-template-columns: minmax(12rem, .62fr) minmax(32rem, 1.9fr) minmax(19rem, .86fr); grid-template-rows: auto auto auto auto minmax(0, 1fr) auto auto; gap: var(--s2); inline-size: min(100%, 1600px); block-size: 100dvb; margin-inline: auto; padding: var(--s2) var(--s6); overflow: hidden; }
 .shared-workspace { display: contents; }
 .player-header, .generation-controls, .generation-timeline, .context-bar { min-inline-size: 0; min-block-size: 0; }
 
@@ -117,7 +117,10 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 .generation-applied { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3); min-block-size: 18px; color: var(--ink-muted); font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: .68rem; }
 .generation-error { margin: 0; color: var(--error); font-size: .75rem; }
 .generation-timeline { grid-area: timeline; display: grid; grid-template-columns: minmax(17rem, .85fr) minmax(0, 1.65fr); gap: var(--s2); padding: var(--s2); border-block-end: 1px solid var(--hairline); background: var(--surface); }
+.generation-timeline.generation-empty { grid-template-columns: minmax(0, 1fr); padding-block: var(--s1); }
+.generation-timeline.generation-empty .decoded-text, .generation-timeline.generation-empty .raw-tokens { display: none; }
 .decoded-output { display: grid; align-content: start; gap: var(--s2); min-inline-size: 0; }
+.generation-timeline.generation-empty .decoded-output { gap: 0; }
 .decoded-heading { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2); }
 .decoded-heading h2 { font-size: .875rem; }
 .decoded-heading span { color: var(--warning); font-size: .7rem; font-weight: 700; }
@@ -158,7 +161,7 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 .context-coordinates strong { font-size: .8125rem; }
 
 /* 7. workspace */
-.stage-canvas, .stage-rail, .model-map, .inspector { min-inline-size: 0; min-block-size: 0; }
+.stage-canvas, .curriculum-rail, .model-map, .inspector { min-inline-size: 0; min-block-size: 0; }
 
 /* 7. model map */
 .model-map { grid-area: model; overflow: hidden; padding: var(--s4); border-block: 1px solid var(--hairline); background: color-mix(in srgb, var(--surface-strong) 68%, transparent); }
@@ -182,7 +185,7 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 .generation-loop svg { inline-size: 100%; block-size: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; }
 
 /* 8. stage canvas */
-.stage-canvas { grid-area: stage; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: var(--s4); overflow: hidden; padding: var(--s5); border: 1px solid var(--hairline); border-radius: 14px; background: var(--surface); box-shadow: 0 12px 28px color-mix(in srgb, var(--ink) 8%, transparent), inset 0 1px 0 color-mix(in srgb, var(--surface) 65%, transparent); }
+.stage-canvas { grid-area: stage; display: grid; grid-template-rows: auto auto minmax(min-content, 1fr) auto; gap: var(--s4); overflow-y: auto; overscroll-behavior-block: contain; padding: var(--s5); border: 1px solid var(--hairline); border-radius: 14px; background: var(--surface); box-shadow: 0 12px 28px color-mix(in srgb, var(--ink) 8%, transparent), inset 0 1px 0 color-mix(in srgb, var(--surface) 65%, transparent); }
 .stage-heading { max-inline-size: 72ch; }
 .stage-position { display: block; margin-block-end: var(--s1); color: var(--accent); font-size: .75rem; font-weight: 700; }
 .stage-heading h2 { margin-block-end: var(--s1); font-size: 1.75rem; letter-spacing: -.025em; }
@@ -223,7 +226,7 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 .top-k-list code { color: var(--accent); }
 
 /* 9. visualization primitives */
-.stage-visual { display: grid; gap: var(--s3); min-block-size: 0; align-content: start; overflow: hidden; }
+.stage-visual { display: grid; gap: var(--s3); min-block-size: min-content; align-content: start; overflow: visible; }
 .stage-visual[data-trace-ready="true"] { animation: trace-arrival var(--standard) both; }
 @keyframes trace-arrival { from { opacity: .72; filter: blur(2px); } to { opacity: 1; filter: blur(0); } }
 .stage-empty { place-content: center; text-align: center; }
@@ -446,8 +449,8 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 .inspector-empty { margin: 0; padding: var(--s4); background: var(--surface-strong); }
 
 /* 11. stage rail */
-.stage-rail { grid-area: rail; display: grid; gap: var(--s2); padding-block: var(--s2); border-block-start: 1px solid var(--hairline); background: var(--canvas); }
-.rail-transport { display: grid; grid-template-columns: auto auto 1fr; gap: var(--s3); align-items: center; }
+.curriculum-rail { grid-area: rail; display: grid; gap: var(--s2); padding-block: var(--s2); border-block-start: 1px solid var(--hairline); background: var(--canvas); }
+.rail-transport { grid-area: transport; display: grid; grid-template-columns: auto auto 1fr; gap: var(--s3); align-items: center; }
 .rail-transport > span { font-size: .8125rem; font-weight: 700; }
 .transport-buttons, .speed-buttons { display: flex; gap: var(--s1); }
 .transport-buttons button, .speed-buttons button { padding-inline: var(--s3); font-size: .75rem; }
@@ -456,7 +459,7 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 .speed-buttons { justify-self: end; }
 .speed-buttons button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 800; box-shadow: inset 0 -3px 0 currentColor; }
 .speed-buttons button[aria-pressed="true"]::after { content: " ✓"; }
-.curriculum-groups { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s1); }
+.curriculum-groups { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s1); }
 .curriculum-group { min-inline-size: 0; padding: var(--s1); border: 1px solid var(--hairline); border-radius: 10px; }
 .curriculum-group[data-current="true"] { grid-column: span 2; border-color: var(--accent); background: color-mix(in srgb, var(--accent-soft) 34%, var(--surface)); }
 .curriculum-group h3 { margin: 0; color: var(--ink-muted); font-size: .7rem; overflow-wrap: anywhere; }
@@ -472,13 +475,13 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 .stage-reel button[data-progress="future"] { color: var(--future); }
 
 /* 12. responsive */
-@media (min-width: 1200px) {
+@media (min-width: 1280px) {
   .model-map-body[hidden] { display: block; }
   .generation-heading p { display: none; }
 }
 
-@media (min-width: 768px) and (max-width: 1199px) {
-  .guided-player { grid-template-areas: "header header" "controls controls" "timeline timeline" "context context" "model model" "stage inspector" "rail rail"; grid-template-columns: minmax(0, 1fr) minmax(280px, 300px); grid-template-rows: auto auto auto auto auto minmax(520px, 1fr) auto; block-size: auto; min-block-size: 100dvb; padding-inline: var(--s4); overflow: visible; }
+@media (min-width: 768px) and (max-width: 1279px) {
+  .guided-player { grid-template-areas: "header header" "controls controls" "timeline timeline" "context context" "model model" "stage inspector" "transport transport" "rail rail"; grid-template-columns: minmax(0, 1fr) minmax(280px, 300px); grid-template-rows: auto auto auto auto auto minmax(520px, 1fr) auto auto; block-size: auto; min-block-size: 100dvb; padding-inline: var(--s4); overflow: visible; }
   .generation-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .generation-form .prompt-field, .generation-actions { grid-column: 1 / -1; }
   .generation-actions { flex-wrap: wrap; }
@@ -509,9 +512,10 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 }
 
 @media (max-width: 767px) {
-  html { block-size: auto; }
+  html { block-size: auto; scroll-padding-block-end: 64px; }
   body { overflow-x: hidden; }
-  .guided-player { grid-template-areas: "header" "controls" "timeline" "context" "stage" "model" "inspector" "rail"; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; block-size: auto; min-block-size: 100dvb; padding: var(--s2) var(--s3) var(--s6); overflow: visible; }
+  :focus-visible { scroll-margin-block: 64px; }
+  .guided-player { grid-template-areas: "header" "controls" "timeline" "context" "stage" "transport" "model" "inspector" "rail"; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; block-size: auto; min-block-size: 100dvb; padding: var(--s2) var(--s3) var(--s6); overflow: visible; }
   .generation-heading { display: grid; align-items: start; }
   .generation-model-limit { white-space: normal; }
   .generation-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -536,15 +540,15 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
   .trace-evidence { min-block-size: 220px; }
   .trace-evidence, .stage-visual { overflow: visible; }
   .stage-visual { padding-inline-end: 0; }
-  .stage-rail { overflow-x: auto; overscroll-behavior-inline: contain; }
-  .rail-transport { grid-template-columns: minmax(max-content, 1fr) auto auto; inline-size: max-content; }
+  .rail-transport { position: sticky; inset-block-start: calc(100dvb - 52px); z-index: 8; grid-template-columns: minmax(max-content, 1fr) auto auto; min-block-size: 52px; inline-size: max-content; max-inline-size: 100%; padding-block: var(--s1); overflow-x: auto; background: var(--canvas); }
+  .curriculum-rail { padding-block: var(--s2); border-block-start: 1px solid var(--hairline); }
   .rail-transport > span { display: none; }
   .speed-buttons { justify-self: start; }
   .stage-reel { inline-size: 100%; overflow-x: auto; }
   .model-map, .inspector { overflow: visible; }
-  .model-map { max-block-size: none; }
+  .model-map { position: relative; max-block-size: none; }
   .model-map-toggle { display: inline-flex; align-items: center; }
-  .model-map-body { padding-block-start: var(--s2); }
+  .model-map-body { position: absolute; inset-block-start: 100%; inset-inline: 0; z-index: 10; inline-size: 100%; max-block-size: min(70dvb, 560px); padding: var(--s3); overflow: auto; border: 1px solid var(--hairline); background: var(--surface); box-shadow: 0 12px 28px color-mix(in srgb, var(--ink) 12%, transparent); }
   .vector-comparison, .qkv-visual, .score-visual, .matrix-pair, .value-visual, .mlp-strips { grid-template-columns: minmax(0, 1fr); }
   .score-visual .matrix-pair, .score-visual > .vector-strip, .score-visual > .math-proof { grid-column: 1; grid-row: auto; }
   .softmax-visual { grid-template-columns: minmax(0, 1fr); }

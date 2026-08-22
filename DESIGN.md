@@ -41,7 +41,7 @@ canvas and Inspector components.
 | Ink | `--ink` | `#22221f` | Primary text and prediction structure |
 | Ink muted | `--ink-muted` | `#68665f` | Secondary text |
 | Hairline | `--hairline` | `#d7d1c4` | Structural separation |
-| Accent | `--accent` | `#a94327` | Active path and controls |
+| Accent | `--accent` | `#963a22` | Active path and controls |
 | Accent soft | `--accent-soft` | `#f0d3c8` | Selected background |
 | Positive | `--positive` | `#27614f` | Ready and completed states |
 | Warning | `--warning` | `#8a5a12` | Loading and running states |
@@ -71,29 +71,34 @@ Q, K, V, selected, completed, future, and masked states never depend on color al
 
 ## 4. Layout and Scroll Ownership
 
-### Desktop, 1200px and wider
+### Desktop, 1280px and wider
 
-- `.learning-lab` is a bounded `100dvb` scroll-body shell with no document scroll at 1440x900.
+- `.guided-player` is exactly one bounded `100dvb` scroll-body shell with no document scroll; no
+  layout uses `100vh`.
 - Rows are Header, Generate, Timeline, Breadcrumb, Workspace, and Guided controls.
 - Workspace areas are Architecture Map, dominant Main Canvas, and Inspector with intrinsic-safe
   tracks: `minmax(13rem,.7fr) minmax(32rem,1.9fr) minmax(19rem,.86fr)`.
 - Timeline owns horizontal token overflow. Inspector owns vertical evidence scroll. Main Canvas
   stays visible while architecture and generation context change.
 
-### Tablet, 768-1199px
+### Tablet, 768-1279px
 
-- Architecture Map becomes a compact full-width disclosure row.
+- Architecture Map becomes a keyboard-accessible overlay drawer, closed by default; disclosure
+  changes are browser-only and preserve focus.
 - Main Stage and Inspector form two columns; Inspector is 280-340px, targeting 300px.
 - Generation timeline remains above the workspace. Expanded Architecture Map is bounded and
   scrollable.
 
-### Mobile, 767px and narrower
+### Mobile, below 768px
 
-- The document owns vertical scroll and follows source order: Generate, Timeline, Breadcrumb,
-  Main Canvas, Architecture drawer, Inspector, Guided controls.
+- The document owns vertical scroll and follows DOM/visual order: Header, generation controls,
+  generation timeline, Context Bar, Main Canvas, sticky compact transport, Architecture Map,
+  Inspector, then curriculum groups.
 - No squeezed three-column layout is permitted. The page never exceeds the viewport width.
 - Heatmaps own a bounded local two-axis scrollport so 44px selected cells stay visible. Stage Rail, token strip, tensor slices, source lines, math tables, and flow diagrams own only their required horizontal overflow.
 - Heatmap cells remain at least 44x44px; `.matrix-scroll` scrolls rather than shrinking them.
+- The compact transport follows Main Canvas in the mobile grid, starts below the initial viewport,
+  and pins to the viewport bottom while Architecture Map and Inspector pass behind its reserved edge.
 
 Every grid/flex child that may scroll uses `min-block-size: 0` and `min-inline-size: 0`. Intrinsic grids use `minmax(min(..., 100%), 1fr)`.
 
@@ -144,11 +149,13 @@ stops at Repeat.
 - Generation level shows Logits, Temperature, Top-K, Softmax, Sample, Append, and Repeat.
 - Every node is a button. Layer/head counts and dimensions come from `ModelMetadata.config`.
 - Breadcrumb items are buttons and permit direct return to every ancestor.
-- Generated-token loop arrow visibly reconnects Repeat to the full GPT forward path.
+- Generated-token loop arrow visibly reconnects Repeat to the full GPT forward path. Generate grants
+  one initial full-context forward, and each accepted token grants exactly one matching continuation;
+  there is no KV cache.
 
 ### Inspector
 
-Explanation, Tensor, and Source use an ARIA tablist with one tab stop, wrapping Arrow keys, Home, and End. A current-stage detail disclosure exposes the existing 18 operation boundaries without becoming a second transport. Inspector actions preserve the narrative stage and do not request Worker data unless an actual layer/head/token/cell selection requires cached replay.
+Explanation, Tensor, and Source use an ARIA tablist with one tab stop, wrapping Arrow keys, Home, and End. A current-stage detail disclosure exposes the existing 18 operation boundaries without becoming a second transport. Inspector actions preserve the narrative stage and do not request Worker data unless an actual layer/head/token/cell selection requires cached replay. Generated-step replay performs one full-prefix traced forward, never samples, and never grants continuation credit.
 
 ### Visualization Primitives
 
@@ -156,7 +163,9 @@ Explanation, Tensor, and Source use an ARIA tablist with one tab stop, wrapping 
 - Attention Matrix: raw/scaled/mask/probability modes, 44px roving-focus cells, bounded two-axis matrix scroll with selected-cell alignment, hatch/text mask cue.
 - Tensor Flow: labelled shapes and paths plus an equivalent ordered HTML summary.
 - Tensor Viewer: stable tensor ID, operation, shape, semantic axes, row-major flat index, selected value, bounded slice, and full score/value contribution tables.
-- Source Correspondence: pinned nanoGPT lines, commit, MIT link, and Rust counterpart in a bounded source viewport.
+- Source Correspondence: pinned nanoGPT lines, commit, MIT link, and Rust counterpart in a bounded
+  source viewport. Generated `apps/web/public/models/edu/source_map.json` is authoritative for the
+  ten canonical `OperationId` entries; sampling-policy concepts never invent source IDs.
 - Sampling Distribution: one selected Generation operation owns the canvas at a time. Raw Logits,
   Temperature, Top-K, and Softmax stay outcome-neutral; only Sample marks the selected outcome.
   Sample marker geometry uses the stored selected interval, while candidate CDF columns are labelled

@@ -1,4 +1,4 @@
-//! Deterministic grouped 21-step curriculum transport.
+//! Deterministic transport and grouped 21-step curriculum.
 
 use super::{scroll, stage_copy::stage_copy};
 use crate::app::{
@@ -9,7 +9,29 @@ use leptos::prelude::*;
 use std::time::Duration;
 
 #[must_use]
-pub(super) fn stage_rail(app_state: RwSignal<AppState>) -> impl IntoView {
+pub(super) fn rail_transport(app_state: RwSignal<AppState>) -> impl IntoView {
+    view! {
+        <div class="rail-transport" role="group" aria-label="학습 경로 재생 제어">
+            <span>"학습 경로 · 21 steps"</span>
+            <div class="transport-buttons" role="group" aria-label="단계 재생 제어">
+                <button type="button" disabled=move || at(app_state, NarrativeStage::Tokenization) on:click=move |_| app_state.update(|current| current.ui.previous_stage())>"이전"</button>
+                <button class="play-toggle" type="button"
+                    aria-pressed=move || app_state.with(|current| current.ui.narrative.playing.to_string())
+                    on:click=move |_| app_state.update(|current| current.ui.toggle_narrative())
+                >{move || app_state.with(|current| if current.ui.narrative.playing { "일시정지" } else { "재생" })}</button>
+                <button type="button" disabled=move || at(app_state, NarrativeStage::Repeat) on:click=move |_| app_state.update(|current| current.ui.next_stage())>"다음"</button>
+            </div>
+            <div class="speed-buttons" role="group" aria-label="재생 속도">
+                {speed_button(app_state, NarrativeSpeed::Half, "0.5x")}
+                {speed_button(app_state, NarrativeSpeed::Normal, "1x")}
+                {speed_button(app_state, NarrativeSpeed::Double, "2x")}
+            </div>
+        </div>
+    }
+}
+
+#[must_use]
+pub(super) fn curriculum_rail(app_state: RwSignal<AppState>) -> impl IntoView {
     let timer_error = RwSignal::new(None::<String>);
     Effect::new(move |_| {
         let concept = app_state.with(|current| current.ui.narrative.stage);
@@ -30,23 +52,7 @@ pub(super) fn stage_rail(app_state: RwSignal<AppState>) -> impl IntoView {
         Err(error) => timer_error.set(Some(format!("재생 시계를 시작하지 못했습니다: {error:?}"))),
     }
     view! {
-        <nav class="stage-rail" aria-labelledby="stage-rail-title">
-            <div class="rail-transport">
-                <span id="stage-rail-title">"학습 경로 · 21 steps"</span>
-                <div class="transport-buttons" role="group" aria-label="단계 재생 제어">
-                    <button type="button" disabled=move || at(app_state, NarrativeStage::Tokenization) on:click=move |_| app_state.update(|current| current.ui.previous_stage())>"이전"</button>
-                    <button class="play-toggle" type="button"
-                        aria-pressed=move || app_state.with(|current| current.ui.narrative.playing.to_string())
-                        on:click=move |_| app_state.update(|current| current.ui.toggle_narrative())
-                    >{move || app_state.with(|current| if current.ui.narrative.playing { "일시정지" } else { "재생" })}</button>
-                    <button type="button" disabled=move || at(app_state, NarrativeStage::Repeat) on:click=move |_| app_state.update(|current| current.ui.next_stage())>"다음"</button>
-                </div>
-                <div class="speed-buttons" role="group" aria-label="재생 속도">
-                    {speed_button(app_state, NarrativeSpeed::Half, "0.5x")}
-                    {speed_button(app_state, NarrativeSpeed::Normal, "1x")}
-                    {speed_button(app_state, NarrativeSpeed::Double, "2x")}
-                </div>
-            </div>
+        <nav class="curriculum-rail" aria-label="학습 경로 · 21 steps">
             <div class="curriculum-groups" aria-label="21단계 그룹 학습 경로">
                 {CurriculumGroup::ALL.into_iter().map(|group| group_part(app_state, group)).collect_view()}
             </div>

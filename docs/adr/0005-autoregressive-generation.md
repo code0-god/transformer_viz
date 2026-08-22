@@ -57,8 +57,9 @@ without retaining full tensors for every step. Stop/new-generation handling requ
 Worker yielding between forwards. Generation ends before `block_size`; no hidden sliding window is
 introduced. Generated text quality remains limited by the small educational checkpoint.
 
-Sampling follows this Rust implementation and is source-linked to nanoGPT `generate()` only where
-the algorithms correspond. Differences are described rather than presented as parity.
+Sampling follows this Rust implementation. Corresponding nanoGPT generation policy may be explained
+in prose, but the canonical ten-entry `source_map.json` remains authoritative and no sampling
+`OperationId` or source ID is invented. Differences are described rather than presented as parity.
 
 ## Rejected alternatives
 

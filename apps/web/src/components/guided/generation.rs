@@ -117,7 +117,7 @@ pub(super) fn generation_controls(
                     >"Stop"</button>
                 </div>
             </div>
-            <div class="generation-applied" aria-label="Worker 적용 설정">
+            <div class="generation-applied" role="group" aria-label="Worker 적용 설정">
                 {move || state.with(|current| current.generation.config.as_ref().map(|config| view! {
                     <span>{format!("적용: {} tokens", config.max_new_tokens)}</span>
                     <span>{format!("T {:.1}", config.temperature.get())}</span>

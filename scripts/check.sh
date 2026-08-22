@@ -14,6 +14,9 @@ printf '%s\n' '==> Clippy (native workspace)'
 # below because Cargo cannot compile native-only transitive dependencies for the WASM target.
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 
+printf '%s\n' '==> Clippy (WASM browser package)'
+cargo clippy --target wasm32-unknown-unknown -p transformer-viz-web --all-features -- -D warnings
+
 printf '%s\n' '==> workspace tests'
 cargo test --workspace
 

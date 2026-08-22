@@ -13,7 +13,11 @@ pub(super) fn generation_timeline(
     client: WorkerClient,
 ) -> impl IntoView {
     view! {
-        <section class="generation-timeline" aria-labelledby="continuation-title">
+        <section
+            class="generation-timeline"
+            class:generation-empty=move || state.with(|current| current.generation.phase == GenerationPhase::Idle && current.generation.steps.is_empty())
+            aria-labelledby="continuation-title"
+        >
             <div class="decoded-output">
                 <div class="decoded-heading">
                     <h2 id="continuation-title">"Decoded continuation"</h2>

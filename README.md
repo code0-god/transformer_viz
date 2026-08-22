@@ -1,37 +1,47 @@
 # Transformer Viz
 
-Transformer Viz는 작은 nanoGPT-compatible Transformer의 실제 forward trace를 브라우저에서
-아홉 단계로 따라가는 Guided Learning Player입니다. It is a backend-free Rust/WASM teaching app:
-Leptos renders the interface while a dedicated Rust Web Worker performs Candle CPU inference and
-returns versioned, serialized tensor evidence.
+Transformer Viz는 작은 nanoGPT-compatible Transformer의 실제 forward trace와 토큰 생성을
+브라우저에서 21단계로 탐색하는 Guided + Explore 학습 도구입니다. It is a backend-free Rust/WASM
+teaching app: Leptos renders the interface while a dedicated Rust Web Worker performs Candle CPU
+inference and returns versioned, serialized tensor evidence.
 
 ![Transformer Viz Guided Learning Player showing the Attention Score stage](docs/images/guided-player.png)
 
-## Guided Player 사용법 / How to use it
+## Guided + Explore 사용법 / How to use it
 
 1. 상태가 **준비 완료**가 될 때까지 기다립니다 / wait for **Ready**.
-2. 기본 문장 `the cat sat on the` 또는 분석할 문장을 입력하고 **실행**을 누릅니다.
-3. Context Bar에서 현재 query `Q`, key `K`, Layer, Head를 확인합니다.
-4. Stage Rail의 이전/재생/다음 또는 단계 버튼으로 실제 trace를 이동합니다.
-5. Inspector의 **설명 / Tensor / Source** 탭에서 개념, 정확한 값, 고정 nanoGPT 소스를
+2. **이어쓰기 생성**의 Prompt에 시작 문맥을 입력하고 Max new tokens, Temperature, Top-K,
+   Mode, Seed를 설정합니다.
+3. **Generate**로 생성을 시작하고 필요하면 **Stop**으로 중단합니다. Decoded continuation과
+   prompt/generated raw-token reels, context usage, typed stop reason이 Worker stream대로 갱신됩니다.
+4. 생성된 token 버튼을 선택해 그 token을 만든 저장 문맥의 full-forward trace를 sampling 없이
+   replay합니다. 선택은 과거 token을 다시 뽑지 않습니다.
+5. Guided의 Temperature → Top-K → Sampling → Generated Token → Append → Repeat를 따라가거나
+   Explore의 Architecture Map에서 같은 sampling/Transformer 경로를 자유롭게 선택합니다.
+6. Context Bar와 Inspector의 **설명 / Tensor / Source**에서 실제 값과 고정 nanoGPT 소스를
    비교합니다.
-6. Model Map에서 레이어와 헤드를 바꾸면 현재 실행의 캐시된 trace를 다시 검사합니다.
 
-The exact nine-stage learning flow is:
+Legacy **문장 실행** (`WorkerRequest::Run`)은 한 문장의 inspectable forward trace를 만드는
+별도 경계입니다. **이어쓰기 생성** prompt는 EOS 없는 생성 문맥이며, token별 continuation과
+replay lifecycle을 사용합니다; 두 입력/실행 의미를 서로 대신 쓰지 않습니다.
 
-1. **Embedding** - token embedding과 position embedding을 더합니다.
-2. **Attention LayerNorm** - attention 입력의 특징 규모를 맞춥니다.
-3. **Q/K/V** - 찾을 정보, 제공할 표지, 전달할 값을 투영합니다.
-4. **Attention Score** - `QK^T / sqrt(d_head)`를 계산합니다.
-5. **Causal Mask** - 미래 key를 hatch와 mask 상태로 차단합니다.
-6. **Softmax** - 허용된 key 사이의 점수를 확률로 정규화합니다.
-7. **Value + Residual** - 확률로 V를 모으고 residual stream에 더합니다.
-8. **MLP + Residual** - 토큰별 비선형 특징 변환을 다시 residual에 더합니다.
-9. **Prediction** - final LayerNorm과 tied embedding head로 Top-10을 확인합니다.
+The canonical curriculum has exactly 21 steps in four groups:
 
-Stage movement, playback, Inspector tabs, feature selection, and the responsive Model Map drawer are
-browser-only actions. Layer/head/token/attention-cell changes request cached trace detail from the
-Worker; they do not rerun the full model.
+1. **Input representation (3)** - Tokenization, Token Embedding, Position Embedding.
+2. **Transformer Block (9)** - LayerNorm, Q/K/V, Attention Score, Causal Mask, Softmax, Value
+   Aggregation, Residual, MLP, Block Output.
+3. **Prediction (3)** - Final LayerNorm, LM Head, Logits.
+4. **Generation (6)** - Temperature, Top-K, Sampling, Generated Token, Append to Context, Repeat.
+
+Guided transport and Explore architecture navigation share one focus and the same Main Canvas,
+Inspector, and source correspondence. Stage movement, playback, mode/Inspector tabs, feature
+selection, and the responsive Architecture Map drawer are browser-only actions. Layer/head/token/
+attention-cell changes request cached detail for the current run; they do not rerun the full model.
+
+Generation has exact continuation boundaries: Generate authorizes one initial full-context forward,
+and each accepted generated step grants one matching single-use continuation credit. Every token is
+computed by another full-prefix forward (there is no KV cache). Selecting an earlier generated token
+performs one traced full-context replay without sampling again and cannot grant continuation credit.
 
 ## Model and scope
 
@@ -42,8 +52,11 @@ reserves BOS `0`, EOS `1`, and UNK `2`, then maps byte `b` to `b + 3`.
 
 The Worker returns real embeddings, LayerNorm, Q/K/V, causal scores and probabilities, value
 aggregation, residuals, MLP tensors, final normalization, and full-vocabulary logits. The main
-thread renders only serialized trace data. See [the trace schema](docs/TRACE_SCHEMA.md),
-[architecture](docs/ARCHITECTURE.md), and [model format](docs/MODEL_FORMAT.md).
+thread renders only serialized trace data. The generated
+`apps/web/public/models/edu/source_map.json` is authoritative for the ten canonical nanoGPT
+`OperationId` source ranges and Rust counterparts; generation sampling never invents source IDs.
+See [the trace schema](docs/TRACE_SCHEMA.md), [architecture](docs/ARCHITECTURE.md), and
+[model format](docs/MODEL_FORMAT.md).
 
 ## Setup and development
 
@@ -62,8 +75,9 @@ Bootstrap initializes the pinned nanoGPT submodule, Rust **1.94.0**, the
 `http://127.0.0.1:8080/`; no backend or Python process is used.
 
 The web application and Worker live in `apps/web`. Schema, tokenizer, model, and trace
-responsibilities are separate crates under `crates/`. The Guided Player decision is recorded in
-[ADR 0003](docs/adr/0003-guided-learning-player.md); the existing schema/tokenizer ADR remains at
+responsibilities are separate crates under `crates/`. Guided Player and generation decisions are
+recorded in [ADR 0003](docs/adr/0003-guided-learning-player.md) and
+[ADR 0005](docs/adr/0005-autoregressive-generation.md); the schema/tokenizer ADR remains at
 [docs/adr/0003-schema-and-tokenizer.md](docs/adr/0003-schema-and-tokenizer.md).
 
 ## Test and release
@@ -74,8 +88,9 @@ responsibilities are separate crates under `crates/`. The Guided Player decision
 ./scripts/build-web.sh /transformer_viz/ # GitHub Pages project subpath
 ```
 
-`check.sh` runs rustfmt, strict Clippy, workspace tests, a workspace release build, the WASM package
-check, asset integrity/copy checks, forbidden dependency checks, and a root Trunk release. The only
+`check.sh` runs rustfmt, native and WASM-target strict Clippy, workspace tests, a workspace release
+build, the WASM package check, asset integrity/copy checks, forbidden dependency checks, and a root
+Trunk release. The only
 deployable artifact is `apps/web/dist`: static HTML, CSS, JavaScript loader glue, WebAssembly, and
 same-origin model assets, with no Python or server program.
 
@@ -88,6 +103,11 @@ Pages. Repository Pages must use **GitHub Actions** as its source.
 Application, Worker, model, tokenizer, and glue URLs resolve from the document base. Root hosting
 and project-subpath hosting therefore preserve the same browser Worker flow and same-origin asset
 policy. Browser support requires module Workers and WebAssembly.
+
+Responsive boundaries are exact: desktop starts at 1280px with one `100dvb` no-document-scroll
+three-column shell; tablet is 768-1279px with an Architecture Map drawer and two-column Canvas +
+Inspector; mobile is below 768px with document scrolling, one-column regions, the drawer, sticky
+compact transport, and local horizontal reels.
 
 ## Measured artifact
 

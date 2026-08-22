@@ -57,11 +57,11 @@ pub enum OperationId {
     /// Tied language-model head.
     Logits,
 }
-/// Canonical source code location for an educational operation.
+/// Deployed base-relative source location for an educational operation (for example, `reference/model.py`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SourceReference {
-    /// Repository-relative source file.
+    /// Deployed base-relative source file.
     pub file: String,
     /// Function or expression label.
     pub symbol: String,

@@ -8,8 +8,10 @@ at deserialization rather than being interpreted loosely.
 
 ## Worker protocol
 
-Requests are `initialize`, `run`, `inspect_block`, `inspect_attention_head`, `inspect_token`, and
-`cancel`. Responses are `initializing`, `ready`, `run_complete`, `block_trace`,
+Requests are `initialize`, `run`, `generate`, `stop_generation`, `continue_generation`,
+`inspect_generation_step`, `inspect_block`, `inspect_attention_head`, `inspect_token`, and `cancel`.
+Responses are `initializing`, `ready`, `generation_started`, `token_generated`,
+`generation_finished`, `generation_step_trace`, `run_complete`, `block_trace`,
 `attention_head_trace`, `token_trace`, and `error`.
 
 Errors carry an optional request ID, Korean user-readable message, and one stable code:
@@ -17,8 +19,16 @@ Errors carry an optional request ID, Korean user-readable message, and one stabl
 `checksum_mismatch`, `tokenization`, `inference`, or `cancelled`.
 
 `Ready.model` is `ModelMetadata`, including the loaded `GptConfig` as `ModelMetadata.config`:
-`block_size`, `vocab_size`, `n_layer`, `n_head`, `n_embd`, and `bias`. Guided Player architecture
-controls derive from these values and do not hard-code model dimensions.
+`block_size`, `vocab_size`, `n_layer`, `n_head`, `n_embd`, and `bias`. The shared 21-step/four-group
+Guided + Explore architecture controls derive from these values and do not hard-code model
+dimensions.
+
+`generate` authorizes one initial full-prefix forward. A matching accepted `token_generated` step
+allows the UI to send one exact `continue_generation` credit identified by request ID, run ID, and
+preceding step index. Duplicate, stale, future, or terminal credits are no-ops. Every accepted token
+uses another full-prefix forward; there is no KV cache. `inspect_generation_step` performs one traced
+full-prefix replay from retained context, preserves the historical sampled token, does not sample
+again, and cannot create continuation credit.
 
 ## Run summary additions in 1.1.0
 
@@ -90,8 +100,12 @@ the selected query row and vary over key.
 
 Operations are embedding, attention LayerNorm, QKV projection, attention, attention residual, MLP
 LayerNorm, MLP, MLP residual, final LayerNorm, and logits. Each operation snapshot includes a
-one-based pinned nanoGPT source range. Generated `source_map.json` also records the Rust file and
-symbol used by Source Inspector.
+one-based pinned nanoGPT source range. The generated
+`apps/web/public/models/edu/source_map.json` is authoritative for exactly these ten `OperationId`
+entries and also records the Rust file and symbol used by Source Inspector. The retained 18 detail
+boundaries resolve through those ten owning ranges. Temperature, Top-K, generation softmax,
+sampling, append, and repeat are generation-policy or educational concepts and never invent
+serialized operation or source IDs.
 
 Adding or changing a serialized variant requires a schema version decision, exhaustive Rust match
 updates, Worker protocol tests, source-map review, and this document. Numerical guarantees and the

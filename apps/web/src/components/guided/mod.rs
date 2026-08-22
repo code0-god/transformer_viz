@@ -26,9 +26,10 @@ pub fn guided_player(state: RwSignal<AppState>, client: WorkerClient) -> impl In
                 {generation_timeline::generation_timeline(state, client.clone())}
                 {shell::context_bar(state, client.clone())}
                 {stage::main_stage(state, client.clone())}
+                {rail::rail_transport(state)}
                 {architecture::architecture_map(state, client)}
                 {inspector::inspector(state)}
-                {rail::stage_rail(state)}
+                {rail::curriculum_rail(state)}
             </div>
         </div>
     }

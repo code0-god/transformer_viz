@@ -4,4 +4,5 @@
 /apps/web/.trunk/
 .DS_Store
 /tools/reference/.work/
-/tools/reference/__pycache__/
+__pycache__/
+*.pyc

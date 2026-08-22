@@ -1,62 +1,161 @@
-# Final verification: Guided Learning Player
+# Final verification: 21-step Guided + Explore Explorer
 
-This is the final acceptance record for the nine-stage Guided Learning Player. It supersedes the
-dashboard-era final report and its 18-step acceptance language; the 18 operation boundaries remain
-available only as stage-linked Inspector detail.
+Run this acceptance from the repository root on the pinned toolchain. A release is accepted only
+when every automated command and every real-browser item below passes against the same tree.
 
-## Release binding
+| Contract | Acceptance scope | Status before frozen-tree evidence |
+|---|---|---|
+| C001 | Happy generation path: ready Worker, `the cat sat on the`, exact generated-token stream and replay, 21-step Guided/Explore path, real tensor/source evidence, and no main-thread freeze or console panic | **PENDING** |
+| C002 | Sampling/seed/stop edge contracts: deterministic modes, context limits, replacement and cancellation, stale-credit rejection, exact replay without resampling, finite/masked evidence, and recoverable Korean errors | **PENDING** |
+| C003 | Full regression: numerical parity, schema/runtime tests, responsive/reflow/a11y/static root+subpath browser checks, Lighthouse and independent reviews, asset integrity, release gates, exact-tree receipts, and cleanup | **PENDING** |
 
-- nanoGPT reference: `3adf61e154c3fe3fca428ad6bc3818b27a3b8291`
-- Guided implementation begins at `d1714d0`.
-- Exact accepted commit/tree, screenshot hashes, independent reviews, and cleanup receipt are
-  recorded after the final commit in `.omo/evidence/guided/final/validation.txt` and the durable
-  ULW ledger. A tracked document intentionally does not claim its own self-referential Git hash.
+No row may be changed to PASS until its receipts are captured from the final committed tree.
 
-The accepted flow is Embedding, Attention LayerNorm, Q/K/V, Attention Score, Causal Mask,
-Softmax, Value + Residual, MLP + Residual, and Prediction.
+## Release and source binding
 
-## C001 - happy path: PASS
+- nanoGPT upstream: `karpathy/nanoGPT` (MIT).
+- Pinned full commit from `reference/NANOGPT_COMMIT`:
+  `3adf61e154c3fe3fca428ad6bc3818b27a3b8291`.
+- Repository-pinned canonical source: `reference/nanoGPT/model.py`.
+- Public byte-identical source copy: `apps/web/public/reference/model.py`.
+- Serialized deployed source-map path (unchanged): `reference/model.py`.
+- Runtime source authority: `apps/web/public/models/edu/source_map.json`.
+- The source map contains exactly the ten `OperationId` entries documented in
+  `docs/ARCHITECTURE.md`; the 18 retained operation-detail boundaries resolve through those ten
+  ranges. Generation sampling concepts must not manufacture source IDs.
 
-Chrome at 1440x900 completed `the cat sat on the` through the real Rust/WASM Worker. The shell had
-all nine stages, the prompt collapsed after completion, autoplay was stopped, and stage-only
-navigation sent zero Worker requests. Every stage resolved real tensor IDs; Prediction alone showed
-Top-10 output. Context Bar, metadata-derived Model Map, Main Stage, Inspector, Stage Rail, tensor
-detail, and pinned source correspondence were present.
+## Executable automated gate
 
-## C002 - interaction, math, and responsive behavior: PASS
+Run each command from the repository root and preserve its output in the release evidence:
 
-Attention evidence reconstructed the captured computation: 190 future cells were masked,
-future-token probability was exactly `0`, the observed softmax row sum was `0.99999994`, and the
-final frozen score/scaling and probability-times-value reconstruction errors were `0`. Preserved
-fixture evidence also remained within contract (`2.9802322e-8` raw, `7.450581e-9` scaled, and
-`1.4901161e-8` value maximum absolute error).
+```sh
+cargo fmt --all -- --check
+cargo test --workspace
+cargo test -p nanogpt-model --test golden_parity
+uv run --python 3.12 tools/reference/test_assets.py
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo clippy --target wasm32-unknown-unknown -p transformer-viz-web --all-features -- -D warnings
+cargo build --workspace --release
+cargo check --target wasm32-unknown-unknown -p transformer-viz-web
+for asset in config.json manifest.json model.safetensors SHA256SUMS source_map.json tokenizer.json; do cmp "assets/models/edu/$asset" "apps/web/public/models/edu/$asset"; done
+(cd assets/models/edu && shasum -a 256 -c SHA256SUMS)
+./scripts/build-web.sh / /tmp/transformer-viz-final-dist
+./scripts/check.sh
+```
 
-Fresh Chrome captures passed at 1440x900, 1024x768, and 390x844 with no page-width overflow. The
-tablet split, mobile stage-first order, local matrix/rail scrolling, visible focus, reduced motion,
-44px controls, keyboard stage/tab/heatmap operation, and non-color Q/K/mask cues passed. A 28-token
-submission produced a recoverable Korean error while preserving Main Stage and all nine stages.
-Independent design-system/functional review `st_01a027ff` and screenshot/CJK review
-`st_01a02800` both returned **PASS, HIGH confidence**, with no visual findings or blockers.
+`scripts/check.sh` is the canonical one-command gate. It runs formatting, native workspace strict
+Clippy, WASM-target strict Clippy, workspace tests, native release, WASM check, canonical asset
+comparison/checksums, dependency policy, and an isolated Trunk release. Its temporary dist directory
+is removed by its EXIT trap. Remove `/tmp/transformer-viz-final-dist` after browser acceptance.
 
-## C003 - regression and static deployment: PASS
+## Isolated static and browser gates
 
-Formatting, strict workspace Clippy, workspace tests, native release, WASM check, and
-`./scripts/check.sh` passed. Python nanoGPT parity retained the `1e-4` absolute/relative tolerance;
-the largest measured error was logits at `2.86102295e-6`. Canonical and public model bundles were
-byte-identical and checksum-valid. The tied-weight model remained 475,432 bytes with SHA-256
-`8fd76c662da0d0cb9fe1035cb205b1a071ad95f9e22d116578a0a8bec0754be9`.
+Build root and project-subpath bundles into separate hosts:
 
-Isolated `/` and `/transformer_viz/` releases loaded app JavaScript/WASM, Worker JavaScript/WASM,
-manifest, config, tokenizer, and model from the expected same origin in Chrome. Both surfaces had
-no cross-origin requests, requests outside their base prefix, request failures, or console errors.
-These local static bundles prove the required reproducible root/subpath deployment contract.
+```sh
+rm -rf /tmp/transformer-viz-root /tmp/transformer-viz-subpath
+./scripts/build-web.sh / /tmp/transformer-viz-root
+./scripts/build-web.sh /transformer_viz/ /tmp/transformer-viz-subpath/transformer_viz
+```
 
-## Cleanup and release disposition
+Serve each host in turn (server command in one terminal, verifier in a second), then stop it. The
+verifier requires same-origin/base-prefix requests, zero failed requests/console/page errors, exact
+breakpoints, keyboard behavior, reduced motion, Chrome AX landmarks, sticky geometry, and captures.
 
-Browser contexts closed, root/subpath servers stopped, ports 8098 and 8099 had no listeners, and
-generated `apps/web/dist` plus the temporary subpath bundle were removed. Screenshot hashes and the
-full frozen command record are retained under `.omo/evidence/guided/final/`.
+```sh
+python3 -m http.server 8097 --bind 127.0.0.1 --directory /tmp/transformer-viz-root
+./scripts/browser_responsive.py --url http://127.0.0.1:8097/ --evidence .omo/evidence/phase9/root
+python3 -m http.server 8098 --bind 127.0.0.1 --directory /tmp/transformer-viz-subpath
+./scripts/browser_responsive.py --url http://127.0.0.1:8098/transformer_viz/ --evidence .omo/evidence/phase9/subpath
+```
 
-Remote push and live GitHub Pages enablement were intentionally not performed: the original brief
-forbids push, and acceptance requires reproducible static root/subpath deployment rather than a live
-Pages site. The Guided Player commit series remains local to the accepted tree.
+With the corresponding server running, capture both Lighthouse profiles:
+
+```sh
+lighthouse http://127.0.0.1:8097/ --quiet --chrome-flags='--headless=new' --output=json --output-path=.omo/evidence/phase9/lighthouse-mobile.json
+lighthouse http://127.0.0.1:8097/ --quiet --preset=desktop --chrome-flags='--headless=new' --output=json --output-path=.omo/evidence/phase9/lighthouse-desktop.json
+```
+
+## Guided + Explore acceptance
+
+- Guided exposes exactly 21 ordered concepts in exactly four groups: Input representation (3),
+  Transformer Block (9), Prediction (3), and Generation (6). Exactly one group reel is visible.
+- Previous, Next, autoplay, speed, group selection, direct step selection, and mode switching share
+  one curriculum cursor. The current step has text/shape treatment in addition to color and remains
+  visible in its local reel.
+- Guided and Explore are tabs for the same labeled tabpanel. Explore selects the shared architecture,
+  evidence, Inspector, and source focus; switching modes does not fork trace state.
+- Inspector exposes keyboard-operable Explanation, Tensor, and Source tabpanels. Architecture Map
+  and Inspector source correspondence agree with the canonical ten-entry map.
+- Starting generation grants exactly one initial forward credit. Each accepted step grants one exact
+  continuation credit. Stop, replacement, stale callbacks, replay, and replay errors cannot spend or
+  mint credit; replay shows retained evidence without resampling.
+
+## Responsive browser acceptance
+
+Test the exact breakpoint boundaries 1280/1279 and 768/767, plus 1440x900, 1024x768,
+720x450 (the 200%-zoom layout equivalent), 390x844, and 320px wide (the WCAG 400%-reflow
+equivalent).
+
+- **Desktop, >=1280:** the shell is exactly one `100dvb` viewport and never `100vh`; the document has
+  no horizontal or vertical scrollbar. Header, generation setup/timeline, context, Architecture Map,
+  Main Canvas, Inspector, and Stage Rail fit. Architecture Map/Main Canvas/Inspector remain three
+  columns. Only intended local regions scroll and the active curriculum step stays visible.
+- **Tablet, 768-1279:** Architecture Map is a keyboard-accessible drawer, closed by default, whose
+  open/close causes no Worker request or focus theft. Main Canvas and Inspector remain two columns;
+  Stage Rail is below them. Generation controls reflow without clipping or page-width overflow.
+- **Mobile, <768:** document vertical scrolling is enabled; all major regions are one column;
+  Architecture Map remains a drawer. DOM, focus, AX, and visual order is Main Canvas, compact
+  transport, Architecture Map, Inspector, then curriculum. The transport starts outside the initial
+  viewport and remains bottom-pinned through Architecture Map and Inspector scrolling; curriculum
+  alone owns the named navigation landmark. Step/token reels scroll locally on the inline axis. At
+  390x844 there is no horizontal document
+  overflow, clipped control, or clipped Korean/CJK copy.
+- Capture `desktop-1440x900.png`, `tablet-1024x768.png`, and `mobile-390x844.png`, plus waiting and
+  dense replay-backed Main Canvas captures at 1280x800 and 1440x900. Dense evidence must contribute
+  to the outer canvas scroll range without hidden `.stage-visual` clipping. Record zero page/Worker
+  console, exception, HTTP, and loading errors under `.omo/evidence/phase9/`.
+
+## Accessibility and visual acceptance
+
+- All visible interactive targets are at least 44px in both axes and have visible keyboard focus.
+- Mode and Inspector tabs retain tablist/tab/tabpanel semantics and roving keyboard behavior.
+- Current step and selected speed have non-color cues. Q/K/V and mask/sampling meanings retain
+  shape, label, pattern, or text cues in addition to color.
+- `prefers-reduced-motion: reduce` removes meaningful transitions/animations.
+- Revealing the active rail item scrolls its local reel without moving focus.
+- Korean/CJK uses wrapping that does not split or clip readable copy at 390px.
+
+## Manual, independent, and frozen-tree gates
+
+- In Chrome at 390x844 and 1440x900, set page zoom to 200%; complete Generate/Stop, generated-token
+  replay, mode/Inspector tabs, Architecture drawer, and rail transport with no clipped content or
+  horizontal document overflow. Repeat with OS/browser reduced motion and record the computed
+  reduction plus usable state changes.
+- Two independent review lanes inspect the frozen tree and fresh screenshots: one functional/
+  accessibility/source-correspondence review and one visual/CJK/responsive review. Record reviewer
+  IDs, findings, disposition, and confidence; the implementation author is not either lane.
+- Commit only tracked Phase 9 source/docs/verifier as the ninth logical phase commit. Never commit
+  `.omo` evidence or dist. From the frozen commit, run:
+
+```sh
+test "$(git rev-list --count 49e72ae..HEAD)" -eq 9
+git log --reverse --format='%H %s' 49e72ae..HEAD | tee .omo/evidence/phase9/nine-phase-commits.txt
+git rev-parse HEAD HEAD^{tree} | tee .omo/evidence/phase9/exact-tree.txt
+git status --short | tee .omo/evidence/phase9/final-status.txt
+test ! -s .omo/evidence/phase9/final-status.txt
+git remote -v | tee .omo/evidence/phase9/remotes-no-push.txt
+```
+
+The release record must state that no push was performed.
+
+## Cleanup receipt
+
+The acceptance evidence must record that browser contexts and temporary profiles closed, the local
+server stopped, port 8097 has no listener, `apps/web/dist`, `/tmp/transformer-viz-final-dist`, browser
+test-result directories, and temporary profiles are absent, and no generated server process leaked.
+Include changed-file scope, Rust pure-LOC counts (all changed production/test modules <=250),
+screenshot hashes, Lighthouse summaries, independent verdicts, exact-tree/nine-commit stamps, and
+cleanup checks in `.omo/evidence/phase9/cleanup.txt`. The final tracked worktree must be clean; do
+not push. Commit only tracked Phase 9 source, documentation, and verifier script, never generated
+evidence or dist output.
