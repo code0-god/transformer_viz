@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import random
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,6 +32,9 @@ WORK_DIR: Final = ROOT / "tools/reference/.work"
 CORPUS_PATH: Final = ROOT / "assets/corpus/edu_corpus.txt"
 REFERENCE_PATH: Final = ROOT / "reference/nanoGPT/model.py"
 REFERENCE_COMMIT_PATH: Final = ROOT / "reference/NANOGPT_COMMIT"
+PUBLIC_REFERENCE_PATH: Final = ROOT / "apps/web/public/reference/model.py"
+EXPECTED_NANOGPT_COMMIT: Final = "3adf61e154c3fe3fca428ad6bc3818b27a3b8291"
+CANONICAL_MODEL_SHA256: Final = "7c01703240dbec5d554527dc666e35b3df8391d0b117fddc07afcf325a21d11c"
 CHECKPOINT_PATH: Final = WORK_DIR / "checkpoint.pt"
 SEED: Final = 20260821
 BLOCK_SIZE: Final = 24
@@ -84,10 +88,37 @@ def decode(ids: list[int]) -> str:
     return bytes(token - 3 for token in ids if token >= 3).decode("utf-8")
 
 
-def load_reference() -> ModuleType:
+def verify_reference_provenance() -> None:
     expected_commit = REFERENCE_COMMIT_PATH.read_text(encoding="utf-8").strip()
-    if expected_commit != "3adf61e154c3fe3fca428ad6bc3818b27a3b8291":
+    if expected_commit != EXPECTED_NANOGPT_COMMIT:
         raise ToolError(detail=f"unexpected nanoGPT commit: {expected_commit}")
+    reference_dir = REFERENCE_PATH.parent
+    head = subprocess.run(
+        ["git", "-C", str(reference_dir), "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if head != expected_commit:
+        raise ToolError(detail=f"nanoGPT HEAD {head} differs from pin {expected_commit}")
+    clean = all(
+        subprocess.run(command, check=False).returncode == 0
+        for command in (
+            ["git", "-C", str(reference_dir), "diff", "--quiet", "--", "model.py"],
+            ["git", "-C", str(reference_dir), "diff", "--cached", "--quiet", "--", "model.py"],
+        )
+    )
+    if not clean:
+        raise ToolError(detail="canonical nanoGPT model.py has local modifications")
+    digest = sha256(REFERENCE_PATH)
+    if digest != CANONICAL_MODEL_SHA256:
+        raise ToolError(detail=f"unexpected canonical model.py SHA-256: {digest}")
+    if REFERENCE_PATH.read_bytes() != PUBLIC_REFERENCE_PATH.read_bytes():
+        raise ToolError(detail="public model.py differs from pinned canonical source")
+
+
+def load_reference() -> ModuleType:
+    verify_reference_provenance()
     spec = importlib.util.spec_from_file_location("pinned_nanogpt_model", REFERENCE_PATH)
     if spec is None or spec.loader is None:
         raise ToolError(detail=f"cannot import pinned nanoGPT model: {REFERENCE_PATH}")

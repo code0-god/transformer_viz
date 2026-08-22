@@ -16,6 +16,7 @@ import math
 
 import torch
 from edu_common import (
+    CANONICAL_MODEL_SHA256,
     CHECKPOINT_PATH,
     CORPUS_PATH,
     EXPECTED_CONTINUATION,
@@ -60,6 +61,7 @@ def main() -> None:
         "model_sha256": sha256(MODEL_DIR / "model.safetensors"),
         "nanogpt_commit": REFERENCE_COMMIT_PATH.read_text(encoding="utf-8").strip(),
         "parameter_count": parameter_count(model),
+        "reference_model_sha256": CANONICAL_MODEL_SHA256,
         "prompt": PROMPT,
         "prompt_token_ids": prompt_ids(),
         "seed": SEED,

@@ -40,7 +40,8 @@ assistant answer.
 Users open one static URL, wait for Worker and model readiness, enter a prompt, choose generation
 settings, and watch tokens stream into the continuation. Selecting a generated token replays that
 step's stored context without sampling again. Generate, Architecture, and Inspect remain linked
-inside one Explorer state. The default educational prompt is `the cat sat on the`.
+inside one Explorer state. The default C001 educational prompt is `the cat`; the legacy
+`the cat sat on the` phrase remains only as the full-forward golden/parity fixture.
 
 ## Capabilities and Constraints
 

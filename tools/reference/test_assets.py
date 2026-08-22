@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -24,6 +25,9 @@ MODEL = ROOT / "assets/models/edu"
 PUBLIC = ROOT / "apps/web/public/models/edu"
 GOLDEN = ROOT / "assets/golden/edu"
 CORPUS = ROOT / "assets/corpus/edu_corpus.txt"
+REFERENCE = ROOT / "reference/nanoGPT"
+PINNED_COMMIT = "3adf61e154c3fe3fca428ad6bc3818b27a3b8291"
+MODEL_PY_SHA256 = "7c01703240dbec5d554527dc666e35b3df8391d0b117fddc07afcf325a21d11c"
 
 
 def test_manifest_and_corpus_use_canonical_contract_when_loaded() -> None:
@@ -37,8 +41,13 @@ def test_manifest_and_corpus_use_canonical_contract_when_loaded() -> None:
         "dtype",
         "weights_file",
         "weights_sha256",
+        "weights_size_bytes",
         "config_file",
+        "config_sha256",
+        "config_size_bytes",
         "tokenizer_file",
+        "tokenizer_sha256",
+        "tokenizer_size_bytes",
         "nanogpt_commit",
         "parameter_count",
         "max_sequence_length",
@@ -51,9 +60,15 @@ def test_manifest_and_corpus_use_canonical_contract_when_loaded() -> None:
     assert manifest["model_id"] == "nanogpt-edu"
     assert manifest["display_name"] == "nanoGPT Educational Model"
     assert manifest["architecture"] == "nanogpt-compatible"
-    assert manifest["weights_sha256"] == hashlib.sha256((MODEL / manifest["weights_file"]).read_bytes()).hexdigest()
+    for kind in ("weights", "config", "tokenizer"):
+        asset = MODEL / manifest[f"{kind}_file"]
+        assert manifest[f"{kind}_sha256"] == hashlib.sha256(asset.read_bytes()).hexdigest()
+        assert manifest[f"{kind}_size_bytes"] == asset.stat().st_size
     assert manifest["config_file"] == "config.json"
     assert manifest["tokenizer_file"] == "tokenizer.json"
+    manifest_digest = hashlib.sha256((MODEL / "manifest.json").read_bytes()).hexdigest()
+    worker_source = (ROOT / "apps/web/src/bin/worker/assets.rs").read_text()
+    assert manifest_digest in worker_source
     assert CORPUS.is_file()
     assert not (ROOT / "assets/corpus/edu.txt").exists()
 
@@ -66,6 +81,28 @@ def test_assets_match_checksums_when_bundle_is_generated() -> None:
     # Then: digests and public bytes match exactly.
     assert actual == [(digest, name) for digest, name in entries]
     assert all((MODEL / name).read_bytes() == (PUBLIC / name).read_bytes() for _, name in entries)
+
+
+def test_pinned_reference_source_and_public_copies_are_exact() -> None:
+    head = subprocess.run(
+        ["git", "-C", str(REFERENCE), "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    assert head == PINNED_COMMIT
+    assert (ROOT / "reference/NANOGPT_COMMIT").read_text().strip() == PINNED_COMMIT
+    for diff_mode in ("diff", "diff --cached"):
+        assert subprocess.run(
+            ["git", "-C", str(REFERENCE), *diff_mode.split(), "--quiet", "--", "model.py"],
+            check=False,
+        ).returncode == 0
+    canonical = (REFERENCE / "model.py").read_bytes()
+    assert hashlib.sha256(canonical).hexdigest() == MODEL_PY_SHA256
+    assert canonical == (ROOT / "apps/web/public/reference/model.py").read_bytes()
+    license_bytes = (REFERENCE / "LICENSE").read_bytes()
+    assert license_bytes == (ROOT / "apps/web/public/reference/LICENSE").read_bytes()
+    assert license_bytes == (ROOT / "assets/reference/nanoGPT-LICENSE.txt").read_bytes()
 
 
 def test_weights_have_one_tied_embedding_when_exported() -> None:
@@ -90,8 +127,22 @@ def test_golden_quality_contract_when_metadata_is_loaded() -> None:
     assert all(token in top for token, top in zip(expected, rankings, strict=True))
     assert metadata["trace_sha256"] == hashlib.sha256((GOLDEN / "trace.safetensors").read_bytes()).hexdigest()
     assert metadata["model_sha256"] == hashlib.sha256((MODEL / "model.safetensors").read_bytes()).hexdigest()
+    assert metadata["config_sha256"] == hashlib.sha256((MODEL / "config.json").read_bytes()).hexdigest()
+    assert metadata["tokenizer_sha256"] == hashlib.sha256((MODEL / "tokenizer.json").read_bytes()).hexdigest()
+    assert metadata["source_map_sha256"] == hashlib.sha256((MODEL / "source_map.json").read_bytes()).hexdigest()
+    assert metadata["corpus_sha256"] == hashlib.sha256(CORPUS.read_bytes()).hexdigest()
+    assert metadata["nanogpt_commit"] == PINNED_COMMIT
+    assert metadata["reference_model_sha256"] == MODEL_PY_SHA256
     assert metadata["corpus_file"] == "assets/corpus/edu_corpus.txt"
     assert metadata["prompt_token_ids"] == [0, *(byte + 3 for byte in b"the cat sat on the"), 1]
+    with safe_open(MODEL / "model.safetensors", framework="np") as weights:
+        weight_names = weights.keys()
+        assert metadata["parameter_count"] == sum(
+            weights.get_tensor(name).size for name in weight_names
+        )
+    with safe_open(GOLDEN / "trace.safetensors", framework="np") as trace:
+        assert metadata["tensor_count"] == len(trace.keys())
+        assert metadata["tensor_names"] == sorted(trace.keys())
     assert {
         "token_embeddings",
         "position_embeddings",

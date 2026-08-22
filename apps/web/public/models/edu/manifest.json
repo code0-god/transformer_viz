@@ -1,6 +1,8 @@
 {
   "architecture": "nanogpt-compatible",
   "config_file": "config.json",
+  "config_sha256": "a81ea5a170d8dd7f75064b4962076d0d54adcc55440bc98aed9c52c664b99c64",
+  "config_size_bytes": 107,
   "display_name": "nanoGPT Educational Model",
   "dtype": "f32",
   "license": "CC0-1.0",
@@ -10,6 +12,9 @@
   "parameter_count": 118208,
   "schema_version": "1.1.0",
   "tokenizer_file": "tokenizer.json",
+  "tokenizer_sha256": "dd6f35a39cd126462a8d34f9e2832cca2ae2851fb7290761ab63dd2c3fbf572e",
+  "tokenizer_size_bytes": 118,
   "weights_file": "model.safetensors",
-  "weights_sha256": "8fd76c662da0d0cb9fe1035cb205b1a071ad95f9e22d116578a0a8bec0754be9"
+  "weights_sha256": "8fd76c662da0d0cb9fe1035cb205b1a071ad95f9e22d116578a0a8bec0754be9",
+  "weights_size_bytes": 475432
 }

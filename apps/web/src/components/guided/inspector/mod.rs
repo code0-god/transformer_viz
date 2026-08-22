@@ -11,8 +11,10 @@ use nanogpt_schema::{OperationId, OperationTrace, TensorSnapshot};
 
 use crate::{
     app::{
-        architecture::SummaryEvidence, narrative::NarrativeStage, state::AppState,
-        ui_state::InspectorTab,
+        architecture::SummaryEvidence,
+        narrative::NarrativeStage,
+        state::AppState,
+        ui_state::{ExplorerMode, InspectorTab},
     },
     trace_lookup::TraceLookup,
 };
@@ -101,6 +103,9 @@ pub(super) fn selected_tensor(state: &AppState) -> Result<TensorSelection<'_>, S
             })
             .map_err(|error| error.to_string());
     }
+    if state.ui.mode == ExplorerMode::Explore {
+        return Err("이 아키텍처 경계에는 연결된 세부 trace tensor가 없습니다.".to_owned());
+    }
     let selection = match state.ui.narrative.stage {
         NarrativeStage::TokenEmbedding => state.summary.as_ref().map(|summary| TensorSelection {
             tensor: &summary.embeddings.token,
@@ -140,7 +145,7 @@ pub(super) fn selected_tensor(state: &AppState) -> Result<TensorSelection<'_>, S
 
 pub(super) fn selected_operation(state: &AppState) -> Option<&OperationTrace> {
     let index = state.ui.detail_operation?;
-    if NarrativeStage::for_detail_operation(index) != Some(state.ui.narrative.stage) {
+    if !state.ui.detail_visible(index) {
         return None;
     }
     let operation = state.block.as_ref()?.operations.get(index)?;

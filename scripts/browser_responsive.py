@@ -11,11 +11,13 @@ from typing import Any
 
 from browser_cdp import Cdp
 from browser_contract import CAPTURES, VIEWPORTS, failures_for
-from browser_journey import dense_replay
+from browser_contrast import contrast_contract
+from browser_journey import dense_replay, replay_detail_navigation, stream_reveal
 from browser_keyboard import keyboard_contract, mobile_contract
 from browser_probes import READY_PROBE, RESET_SCROLL_PROBE, STATE_PROBE
 from browser_session import ChromeSession
 from browser_telemetry import BrowserTelemetry
+from browser_zoom import actual_zoom_contract
 
 WORKER_INSTRUMENTATION = r"""
 window.__phase9WorkerPosts = 0;
@@ -72,6 +74,17 @@ def dense_contract(cdp: Cdp, session: str) -> tuple[dict[str, Any], list[str]]:
         failures.append(f"dense visual extends beyond canvas scroll range: {geometry}")
     if not geometry["matrix"]:
         failures.append("dense replay did not render an attention matrix")
+    if geometry["defaultPrompt"] != "the cat":
+        failures.append(f"default prompt is not literal C001: {geometry}")
+    if geometry["generatedCount"] < 2 or not geometry["decoded"]:
+        failures.append(f"default generation was not a meaningful continuation: {geometry}")
+    details = replay_detail_navigation(cdp, session)
+    geometry["detailNavigation"] = details
+    failures.extend(contrast_contract(cdp, session))
+    if (details["count"] != 18 or details["distinct"] != 18
+            or details["distinctRenderers"] != 7 or "missing" in details["renderers"]
+            or details["failures"]):
+        failures.append(f"Inspector details/generation renderers were not exhaustive: {details}")
     return geometry, failures
 
 
@@ -147,9 +160,22 @@ def verify(args: argparse.Namespace) -> int:
             if not workers:
                 size_failures.append("expected dedicated app Worker was not attached")
             size_failures.extend(keyboard_contract(cdp, session, state, width))
+            size_failures.extend(contrast_contract(cdp, session))
+            cdp.evaluate(session, RESET_SCROLL_PROBE, True)
             if width < 768:
                 size_failures.extend(mobile_contract(cdp, session, width, height))
                 size_failures.extend(reduced_motion_contract(cdp, session))
+            if size == (390, 844):
+                stream = stream_reveal(cdp, session)
+                if stream["requested"] != 24 or stream["count"] < 2:
+                    size_failures.append(f"390px stream did not exercise the 24-token request: {stream}")
+                if stream["violations"]:
+                    size_failures.append(f"stream reveal escaped local reels: {stream}")
+                if stream["scrollX"] != stream["initial"]["scrollX"] or stream["docW"] != stream["initial"]["docW"]:
+                    size_failures.append(f"stream changed document horizontal geometry: {stream}")
+                if stream["focus"] != stream["initial"]["focus"]:
+                    size_failures.append(f"stream stole focus: {stream}")
+                print(f"390x844 stream reveal: {json.dumps(stream, sort_keys=True)}")
             if args.evidence and size in WAITING_CAPTURES:
                 capture(cdp, session, args.evidence / WAITING_CAPTURES[size])
             if args.evidence and size in CAPTURES:
@@ -168,6 +194,12 @@ def verify(args: argparse.Namespace) -> int:
             result = "PASS" if not size_failures else "FAIL"
             print(f"{width}x{height}: {result} {json.dumps(state, sort_keys=True)}")
             failures.extend(f"{width}x{height}: {failure}" for failure in size_failures)
+        for physical in ((1440, 900), (390, 844)):
+            zoom, zoom_failures = actual_zoom_contract(browser, args.url, physical)
+            print(f"actual zoom {physical[0]}x{physical[1]}: {json.dumps(zoom, sort_keys=True)}")
+            failures.extend(f"actual zoom {physical[0]}x{physical[1]}: {failure}" for failure in zoom_failures)
+            browser.session_barrier()
+            telemetry.consume(cdp.events)
         browser.session_barrier()
         telemetry.consume(cdp.events)
     worker_urls = telemetry.worker_urls(observed_workers)

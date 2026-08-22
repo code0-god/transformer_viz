@@ -1,7 +1,7 @@
 //! Smoke coverage for the committed educational model bundle.
 
 use candle_core::Device;
-use nanogpt_model::{ForwardRequest, Gpt, NoTrace};
+use nanogpt_model::{ForwardRequest, Gpt, NoTrace, stored_parameter_count};
 use nanogpt_schema::{GptConfig, ModelManifest, SchemaVersion, TokenizerConfig, TraceMode};
 use nanogpt_tokenizer::Tokenizer;
 
@@ -22,6 +22,8 @@ fn edu_asset_loads_when_prompt_is_encoded() -> Result<(), Box<dyn std::error::Er
     assert_eq!(manifest.config_file, "config.json");
     assert_eq!(manifest.tokenizer_file, "tokenizer.json");
     assert_eq!(manifest.max_sequence_length, 24);
+    assert_eq!(manifest.parameter_count, 118_208);
+    assert_eq!(stored_parameter_count(WEIGHTS)?, 118_208);
     let config = serde_json::from_str::<GptConfig>(CONFIG)?;
     let tokenizer_config = serde_json::from_str::<TokenizerConfig>(TOKENIZER)?;
     let tokenizer = Tokenizer::new(tokenizer_config)?;

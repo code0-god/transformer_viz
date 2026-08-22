@@ -5,13 +5,18 @@ use nanogpt_schema::{GenerationStopReason, TokenInfo};
 
 use crate::app::{generation::GenerationPhase, state::AppState, worker_client::WorkerClient};
 
-use super::shell::send_or_error;
+use super::{scroll, shell::send_or_error};
 
 #[must_use]
 pub(super) fn generation_timeline(
     state: RwSignal<AppState>,
     client: WorkerClient,
 ) -> impl IntoView {
+    Effect::new(move |_| {
+        if let Some(index) = state.with(|current| current.generation.steps.len().checked_sub(1)) {
+            scroll::reveal_item("generated-token-reel", &format!("generated-token-{index}"));
+        }
+    });
     view! {
         <section
             class="generation-timeline"
@@ -41,7 +46,7 @@ pub(super) fn generation_timeline(
                 </div>
                 <div class="raw-group raw-generated" aria-label="생성된 토큰">
                     <strong>"Generated tokens"</strong>
-                    <div class="raw-token-reel generated-reel">
+                    <div id="generated-token-reel" class="raw-token-reel generated-reel">
                         <For
                             each=move || state.with(|current| {
                                 let run_id = current.generation.active.map_or(0, |active| active.run_id);
@@ -54,6 +59,7 @@ pub(super) fn generation_timeline(
                                 let token_client = client.clone();
                                 view! {
                                     <button
+                                        id=format!("generated-token-{index}")
                                         type="button"
                                         class="generated-token"
                                         data-testid=format!("generated-token-{index}")

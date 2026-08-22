@@ -1,6 +1,8 @@
 //! Browser application protocol and Candle spike.
 
 pub mod app;
+#[doc(hidden)]
+pub mod asset_policy;
 #[cfg(target_arch = "wasm32")]
 pub mod components;
 pub mod guided_math;

@@ -5,7 +5,7 @@ when every automated command and every real-browser item below passes against th
 
 | Contract | Acceptance scope | Status before frozen-tree evidence |
 |---|---|---|
-| C001 | Happy generation path: ready Worker, `the cat sat on the`, exact generated-token stream and replay, 21-step Guided/Explore path, real tensor/source evidence, and no main-thread freeze or console panic | **PENDING** |
+| C001 | Happy generation path: ready Worker, default prompt `the cat`, exact generated-token stream and replay, 21-step Guided/Explore path, real tensor/source evidence, and no main-thread freeze or console panic | **PENDING** |
 | C002 | Sampling/seed/stop edge contracts: deterministic modes, context limits, replacement and cancellation, stale-credit rejection, exact replay without resampling, finite/masked evidence, and recoverable Korean errors | **PENDING** |
 | C003 | Full regression: numerical parity, schema/runtime tests, responsive/reflow/a11y/static root+subpath browser checks, Lighthouse and independent reviews, asset integrity, release gates, exact-tree receipts, and cleanup | **PENDING** |
 
@@ -17,7 +17,9 @@ No row may be changed to PASS until its receipts are captured from the final com
 - Pinned full commit from `reference/NANOGPT_COMMIT`:
   `3adf61e154c3fe3fca428ad6bc3818b27a3b8291`.
 - Repository-pinned canonical source: `reference/nanoGPT/model.py`.
-- Public byte-identical source copy: `apps/web/public/reference/model.py`.
+- Public byte-identical source/license copies: `apps/web/public/reference/model.py` and
+  `apps/web/public/reference/LICENSE`.
+- Public/deployed reference checksum manifest: `apps/web/public/reference/SHA256SUMS`.
 - Serialized deployed source-map path (unchanged): `reference/model.py`.
 - Runtime source authority: `apps/web/public/models/edu/source_map.json`.
 - The source map contains exactly the ten `OperationId` entries documented in
@@ -39,7 +41,9 @@ cargo build --workspace --release
 cargo check --target wasm32-unknown-unknown -p transformer-viz-web
 for asset in config.json manifest.json model.safetensors SHA256SUMS source_map.json tokenizer.json; do cmp "assets/models/edu/$asset" "apps/web/public/models/edu/$asset"; done
 (cd assets/models/edu && shasum -a 256 -c SHA256SUMS)
-./scripts/build-web.sh / /tmp/transformer-viz-final-dist
+for asset in model.py LICENSE; do cmp "reference/nanoGPT/$asset" "apps/web/public/reference/$asset"; done
+(cd apps/web/public/reference && shasum -a 256 -c SHA256SUMS)
+./scripts/build-web.sh / /tmp/transformer-viz-final-dist # includes real-Chrome Worker readiness
 ./scripts/check.sh
 ```
 
@@ -135,12 +139,21 @@ equivalent).
 - Two independent review lanes inspect the frozen tree and fresh screenshots: one functional/
   accessibility/source-correspondence review and one visual/CJK/responsive review. Record reviewer
   IDs, findings, disposition, and confidence; the implementation author is not either lane.
-- Commit only tracked Phase 9 source/docs/verifier as the ninth logical phase commit. Never commit
-  `.omo` evidence or dist. From the frozen commit, run:
+- Preserve exactly the nine existing atomic phase commits after base `49e72ae`, ending at
+  `241ebafb55a0b12f885e6eb4345b730790195836`, unchanged. The no-amend policy applies: do not amend,
+  squash, rebase, reset, or otherwise rewrite those commits.
+- Put all audit fixes in one fresh post-audit hardening commit on top of those nine commits. Commit
+  only tracked Phase 9 source, documentation, and verifier changes; never commit `.omo` evidence or
+  dist. The hardening commit makes the frozen history exactly ten commits after the base. From that
+  tenth commit, run:
 
 ```sh
-test "$(git rev-list --count 49e72ae..HEAD)" -eq 9
-git log --reverse --format='%H %s' 49e72ae..HEAD | tee .omo/evidence/phase9/nine-phase-commits.txt
+test "$(git rev-parse HEAD^)" = 241ebafb55a0b12f885e6eb4345b730790195836
+test "$(git rev-list --count 49e72ae..HEAD^)" -eq 9
+test "$(git rev-list --count 49e72ae..HEAD)" -eq 10
+git log --reverse --format='%H %s' 49e72ae..HEAD^ | tee .omo/evidence/phase9/nine-phase-commits.txt
+git log -1 --format='%H %s' HEAD | tee .omo/evidence/phase9/post-audit-hardening-commit.txt
+git log --reverse --format='%H %s' 49e72ae..HEAD | tee .omo/evidence/phase9/ten-post-base-commits.txt
 git rev-parse HEAD HEAD^{tree} | tee .omo/evidence/phase9/exact-tree.txt
 git status --short | tee .omo/evidence/phase9/final-status.txt
 test ! -s .omo/evidence/phase9/final-status.txt
@@ -155,7 +168,8 @@ The acceptance evidence must record that browser contexts and temporary profiles
 server stopped, port 8097 has no listener, `apps/web/dist`, `/tmp/transformer-viz-final-dist`, browser
 test-result directories, and temporary profiles are absent, and no generated server process leaked.
 Include changed-file scope, Rust pure-LOC counts (all changed production/test modules <=250),
-screenshot hashes, Lighthouse summaries, independent verdicts, exact-tree/nine-commit stamps, and
-cleanup checks in `.omo/evidence/phase9/cleanup.txt`. The final tracked worktree must be clean; do
-not push. Commit only tracked Phase 9 source, documentation, and verifier script, never generated
-evidence or dist output.
+screenshot hashes, Lighthouse summaries, independent verdicts, the exact-tree stamp, preserved
+nine-phase history receipt, post-audit hardening receipt, ten-commit stamp, and cleanup checks in
+`.omo/evidence/phase9/cleanup.txt`. The final tracked worktree must be clean; do not push. The fresh
+post-audit hardening commit may contain only tracked Phase 9 source, documentation, and verifier
+changes, never generated evidence or dist output.

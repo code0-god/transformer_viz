@@ -4,6 +4,7 @@
 use leptos::{mount::mount_to_body, prelude::*};
 #[cfg(target_arch = "wasm32")]
 use transformer_viz_web::{
+    AppError,
     app::{
         state::{AppState, AppStatus},
         worker_client::WorkerClient,
@@ -40,9 +41,28 @@ fn app() -> impl IntoView {
 }
 
 #[cfg(target_arch = "wasm32")]
+fn remove_startup_shell() -> Result<(), AppError> {
+    let shell = web_sys::window()
+        .and_then(|window| window.document())
+        .and_then(|document| document.get_element_by_id("startup-shell"))
+        .ok_or_else(|| AppError::Startup("static startup shell is missing".to_owned()))?;
+    shell.remove();
+    Ok(())
+}
+
+#[cfg(target_arch = "wasm32")]
 fn main() {
     console_error_panic_hook::set_once();
-    mount_to_body(app);
+    match remove_startup_shell() {
+        Ok(()) => {
+            mount_to_body(app);
+        }
+        Err(error) => {
+            mount_to_body(move || {
+                view! { <main class="fatal-error"><h1>"Transformer Viz"</h1><p role="alert">{error.to_string()}</p></main> }
+            });
+        }
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]

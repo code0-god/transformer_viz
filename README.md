@@ -60,7 +60,13 @@ See [the trace schema](docs/TRACE_SCHEMA.md), [architecture](docs/ARCHITECTURE.m
 
 ## Setup and development
 
-Prerequisites are `rustup`, Cargo, and Git.
+Prerequisites are `rustup`, Cargo, Git, Python 3, and a real Google Chrome or Chromium
+executable. Python 3 and Chrome/Chromium are required by the canonical release and `check.sh`
+gates, not by the deployed static app. Browser verification searches, in order, the executable path
+in `CHROME`, macOS Google Chrome at
+`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`, then `google-chrome`, `chromium`,
+and `chromium-browser` on `PATH`. Set `CHROME` to the executable path when automatic discovery is
+not suitable.
 
 ```sh
 git clone --recurse-submodules https://github.com/code0-god/transformer_viz.git
@@ -89,10 +95,12 @@ recorded in [ADR 0003](docs/adr/0003-guided-learning-player.md) and
 ```
 
 `check.sh` runs rustfmt, native and WASM-target strict Clippy, workspace tests, a workspace release
-build, the WASM package check, asset integrity/copy checks, forbidden dependency checks, and a root
-Trunk release. The only
-deployable artifact is `apps/web/dist`: static HTML, CSS, JavaScript loader glue, WebAssembly, and
-same-origin model assets, with no Python or server program.
+build, the WASM package check, asset integrity/copy checks, forbidden dependency checks, and root +
+project-subpath Trunk releases with real-Chrome Worker readiness. The only deployable artifact is
+`apps/web/dist`: static HTML, CSS, JavaScript loader
+glue, WebAssembly, same-origin model assets, and the pinned read-only
+`reference/model.py`/`reference/LICENSE` source records. No Python or server program runs in the
+artifact; `reference/model.py` is shipped solely for source correspondence.
 
 ## Static deployment
 
@@ -100,9 +108,17 @@ same-origin model assets, with no Python or server program.
 builds with public URL `/transformer_viz/`, uploads `apps/web/dist`, and deploys through GitHub
 Pages. Repository Pages must use **GitHub Actions** as its source.
 
-Application, Worker, model, tokenizer, and glue URLs resolve from the document base. Root hosting
-and project-subpath hosting therefore preserve the same browser Worker flow and same-origin asset
-policy. Browser support requires module Workers and WebAssembly.
+Application, Worker, model, tokenizer, source/license, and glue URLs resolve from the document base.
+Root hosting and project-subpath hosting therefore preserve the same browser Worker flow and
+same-origin asset policy. The static entry point uses a same-origin CSP that permits the module
+Worker, WASM compilation, and model fetches, plus `strict-origin-when-cross-origin` referrers; hosts
+that can set response headers must use the matching policy documented in
+[ADR 0004](docs/adr/0004-reproducible-static-deployment.md). Browser support requires module Workers
+and WebAssembly.
+
+Only the root entry point (`/`) and configured deployment-prefix entry point (such as
+`/transformer_viz/`) are supported. Arbitrary nested deep links are unsupported on the static host:
+GitHub Pages does not rewrite them to `index.html`.
 
 Responsive boundaries are exact: desktop starts at 1280px with one `100dvb` no-document-scroll
 three-column shell; tablet is 768-1279px with an Architecture Map drawer and two-column Canvas +
@@ -111,18 +127,27 @@ compact transport, and local horizontal reels.
 
 ## Measured artifact
 
-Measurements use the committed model and a Trunk 0.21.14 release built on macOS 26.5.2 arm64:
+Measurements use a fresh, final-ish root release (`./scripts/build-web.sh / /tmp/transformer-viz-release-root`)
+built with Trunk 0.21.14 on macOS 26.5.2 arm64. **Uncompressed** is the sum of emitted regular-file
+sizes. **Compressed** models static transfer: `scripts/measure-static-transfer.py` sorts relative
+regular-file paths, gzip-compresses each file independently at level 9 with an empty filename and
+`mtime=0`, then sums the byte lengths. This is equivalent to per-resource `gzip -9 -n -c` accounting
+without tar path or timestamp metadata:
+
+```sh
+python3 scripts/measure-static-transfer.py /tmp/transformer-viz-release-root
+```
 
 | Item | Measured value |
 |---|---:|
 | Learned parameters | 118,208 |
 | `model.safetensors` | 475,432 bytes |
 | Model SHA-256 | `8fd76c662da0d0cb9fe1035cb205b1a071ad95f9e22d116578a0a8bec0754be9` |
-| Static `dist` size | 3,201,006 apparent bytes; 3.1 MiB (`du -sh`) |
+| Static `dist` size | 4,001,546 bytes uncompressed; 1,461,818 bytes deterministic per-resource gzip |
 | Largest native/Python absolute error | `2.86102295e-6` (logits) |
 | Parity tolerance | absolute + relative `1e-4` |
 
-For prompt `the cat sat on the`, the deterministic reference continuation is `mat`. The first
+For the full-forward golden/parity fixture prompt `the cat sat on the`, the deterministic reference continuation is `mat`. The first
 three Top-3 token IDs are `[112, 107, 1]` (`m`, `h`, EOS), followed by `[100, 119, 1]` (`a`, `t`,
 EOS), then `[119, 100, 35]` (`t`, `a`, space). The expected continuation byte is in Top-3 at every
 step; this is a fixture quality check, not a broad language-quality claim.
@@ -134,13 +159,16 @@ in [the numerical parity report](docs/NUMERICAL_PARITY.md).
 
 ## Reference assets and implementation
 
-Python is needed only to retrain or regenerate golden files. Follow
-[tools/reference/README.md](tools/reference/README.md), then run `./scripts/check.sh` to prove model
-copies, checksums, Rust parity, WASM target, and static release agree.
+Optional Python training packages are needed only to retrain or regenerate golden files; the
+canonical release/check prerequisites above need only the Python 3 interpreter and standard library.
+Follow [tools/reference/README.md](tools/reference/README.md), then run `./scripts/check.sh` to prove
+model copies, checksums, Rust parity, WASM target, and static release agree.
 
 `reference/nanoGPT` is a read-only Git submodule pinned to an immutable upstream commit. It is a
-compatibility and golden-fixture reference, not a runtime dependency. Provenance and license details
-are in [reference/NANOGPT_SOURCE.md](reference/NANOGPT_SOURCE.md) and
+compatibility and golden-fixture reference, not a runtime dependency. The release copies
+`reference/model.py` and `reference/LICENSE` byte-for-byte from its canonical `model.py` and
+`LICENSE`; `reference/SHA256SUMS` verifies both deployed files. Provenance and license details are in
+[reference/NANOGPT_SOURCE.md](reference/NANOGPT_SOURCE.md) and
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Limits

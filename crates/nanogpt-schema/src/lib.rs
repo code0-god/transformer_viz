@@ -86,6 +86,12 @@ pub enum SchemaError {
     /// Special token IDs overlap.
     #[error("BOS, EOS, and UNK token IDs must be distinct")]
     DuplicateSpecialToken,
+    /// The configured byte-token range exceeds u32.
+    #[error("byte token range beginning at {byte_offset} exceeds u32")]
+    ByteTokenRangeOverflow {
+        /// First byte-token ID.
+        byte_offset: u32,
+    },
     /// A special token overlaps the byte-token range.
     #[error("special token ID {token_id} overlaps byte-token IDs {first_byte_id}..={last_byte_id}")]
     SpecialTokenOverlapsBytes {
@@ -99,6 +105,23 @@ pub enum SchemaError {
     /// The sequence cannot hold BOS and EOS.
     #[error("maximum token length {0} must reserve at least BOS and EOS")]
     SequenceTooShort(usize),
+    /// A manifest digest is not lowercase SHA-256 hex.
+    #[error("manifest digest for {field} must be 64 lowercase hexadecimal characters")]
+    InvalidAssetDigest {
+        /// Manifest field name.
+        field: &'static str,
+    },
+    /// A manifest asset size is zero or exceeds its fixed bound.
+    #[error("manifest size for {field} must be in 1..={maximum} bytes")]
+    InvalidAssetSize {
+        /// Manifest field name.
+        field: &'static str,
+        /// Maximum admitted size.
+        maximum: u64,
+    },
+    /// The educational manifest identity or filename is not canonical.
+    #[error("invalid educational model manifest: {0}")]
+    InvalidModelManifest(&'static str),
     /// A tensor value is not finite f32.
     #[error("tensor values must be finite f32 numbers")]
     NonFiniteTensorValue,

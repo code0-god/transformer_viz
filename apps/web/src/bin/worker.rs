@@ -6,7 +6,7 @@ use std::{cell::RefCell, rc::Rc};
 #[cfg(target_arch = "wasm32")]
 use gloo_net::http::Request;
 #[cfg(target_arch = "wasm32")]
-use nanogpt_schema::{WorkerErrorCode, WorkerRequest, WorkerResponse};
+use nanogpt_schema::{ModelManifest, WorkerErrorCode, WorkerRequest, WorkerResponse};
 #[cfg(target_arch = "wasm32")]
 use transformer_viz_web::runtime::{AssetBundle, WorkerRuntime, error_response};
 #[cfg(target_arch = "wasm32")]
@@ -20,6 +20,8 @@ use wasm_bindgen_futures::spawn_local;
 #[cfg(target_arch = "wasm32")]
 use web_sys::{DedicatedWorkerGlobalScope, MessageEvent, Url};
 
+#[cfg(target_arch = "wasm32")]
+include!("worker/assets.rs");
 #[cfg(target_arch = "wasm32")]
 include!("worker/generation.rs");
 
@@ -38,13 +40,6 @@ fn post(scope: &DedicatedWorkerGlobalScope, response: &WorkerResponse) -> bool {
             false
         }
     }
-}
-
-#[cfg(target_arch = "wasm32")]
-fn resolve(relative: &str, base: &str) -> Result<String, RuntimeError> {
-    Url::new_with_base(relative, base)
-        .map(|url| url.href())
-        .map_err(|error| RuntimeError::AssetUnavailable(format!("{error:?}")))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -80,33 +75,56 @@ fn begin_initialization(
     let worker_url = scope.location().href();
     spawn_local(async move {
         let load = async {
-            let manifest_url = resolve(&manifest_path, &worker_url)?;
-            let fetch = |url: String| async move {
-                let response = Request::get(&url)
-                    .send()
-                    .await
-                    .map_err(|error| RuntimeError::AssetUnavailable(error.to_string()))?;
-                if !response.ok() {
-                    return Err(RuntimeError::AssetUnavailable(format!(
-                        "HTTP {}: {url}",
-                        response.status()
-                    )));
-                }
-                response
-                    .binary()
-                    .await
-                    .map_err(|error| RuntimeError::AssetUnavailable(error.to_string()))
-            };
+            let policy = AssetPolicy::from_worker(&worker_url)?;
+            let manifest_url = policy.manifest_url(&manifest_path, &worker_url)?;
+            let manifest_bytes = fetch_bounded(
+                &policy,
+                manifest_url.clone(),
+                "manifest.json",
+                ModelManifest::MAX_MANIFEST_BYTES,
+                None,
+            )
+            .await?;
+            verify_manifest_identity(&manifest_bytes)?;
             let text = |bytes: Vec<u8>| {
                 String::from_utf8(bytes)
                     .map_err(|error| RuntimeError::InvalidAsset(error.to_string()))
             };
-            let manifest = text(fetch(manifest_url.clone()).await?)?;
-            let (config_name, tokenizer_name, weights_name) =
-                WorkerRuntime::asset_names(&manifest)?;
-            let config = text(fetch(resolve(&config_name, &manifest_url)?).await?)?;
-            let tokenizer = text(fetch(resolve(&tokenizer_name, &manifest_url)?).await?)?;
-            let weights = fetch(resolve(&weights_name, &manifest_url)?).await?;
+            let manifest = text(manifest_bytes)?;
+            let descriptor = serde_json::from_str::<ModelManifest>(&manifest)
+                .map_err(|error| RuntimeError::InvalidAsset(error.to_string()))?;
+            descriptor.validate()?;
+            let config_url = policy.child_url(&descriptor.config_file, &manifest_url)?;
+            let tokenizer_url = policy.child_url(&descriptor.tokenizer_file, &manifest_url)?;
+            let weights_url = policy.child_url(&descriptor.weights_file, &manifest_url)?;
+            let config = text(
+                fetch_bounded(
+                    &policy,
+                    config_url,
+                    &descriptor.config_file,
+                    ModelManifest::MAX_CONFIG_BYTES,
+                    Some(descriptor.config_size_bytes),
+                )
+                .await?,
+            )?;
+            let tokenizer = text(
+                fetch_bounded(
+                    &policy,
+                    tokenizer_url,
+                    &descriptor.tokenizer_file,
+                    ModelManifest::MAX_TOKENIZER_BYTES,
+                    Some(descriptor.tokenizer_size_bytes),
+                )
+                .await?,
+            )?;
+            let weights = fetch_bounded(
+                &policy,
+                weights_url,
+                &descriptor.weights_file,
+                ModelManifest::MAX_WEIGHTS_BYTES,
+                Some(descriptor.weights_size_bytes),
+            )
+            .await?;
             Ok::<_, RuntimeError>(AssetBundle {
                 manifest,
                 config,

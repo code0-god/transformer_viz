@@ -104,6 +104,12 @@ Every grid/flex child that may scroll uses `min-block-size: 0` and `min-inline-s
 
 ## 5. Components
 
+### Startup Shell
+
+- Before Rust WASM loads, a static startup shell paints the product identity, browser-app loading state, and the honest Browser app → dedicated Worker → educational model startup path.
+- It reuses the canvas, surface, strong-surface, ink, hairline, warning, typography, and spacing tokens; it contains no fabricated model output, spinner, animation, controls, or live region.
+- The shell is removed synchronously immediately before the Leptos app mounts, so mounted pages contain only the real Header, Main Stage, and lifecycle live region.
+
 ### Header and Explorer Modes
 
 - Header pairs product identity with a polite lifecycle live region.
@@ -190,6 +196,7 @@ preserving token streaming and state changes.
 - Every visible button, textarea, and link has a minimum 44x44px target.
 - Visible `:focus-visible` uses a 2px focus ring with offset.
 - Skip link targets Main Stage. Lifecycle and stage changes are polite live regions; errors use alert semantics.
+- The pre-WASM startup shell is static status copy rather than a live region, preventing duplicate announcements when the mounted lifecycle takes ownership.
 - Generation updates use one polite live region; each token is not announced as a separate alert.
 - Stop remains keyboard reachable while generation is active. Mode tabs, breadcrumbs,
   architecture nodes, generated tokens, and grouped curriculum all have visible focus.

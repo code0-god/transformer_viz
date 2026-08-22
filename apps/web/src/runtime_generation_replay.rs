@@ -9,7 +9,6 @@ use crate::runtime_timer::InferenceTimer;
 use crate::runtime_trace::TraceCapture;
 
 const ABSOLUTE_TOLERANCE: f32 = 1e-4;
-const RELATIVE_TOLERANCE: f32 = 1e-4;
 
 impl WorkerRuntime {
     /// Reconstructs one historical pre-selection context as a fresh inspectable trace.
@@ -73,12 +72,58 @@ fn compare_candidates(
             .zip(historical)
             .any(|(replayed, historical)| {
                 replayed.token_id != historical.token_id
-                    || (replayed.logit - historical.logit.get()).abs()
-                        > RELATIVE_TOLERANCE
-                            .mul_add(historical.logit.get().abs(), ABSOLUTE_TOLERANCE)
+                    || (replayed.logit - historical.logit.get()).abs() > ABSOLUTE_TOLERANCE
             })
     {
         return Err(RuntimeError::GenerationReplayMismatch);
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tolerance_tests {
+    use nanogpt_model::TopKCandidate;
+    use nanogpt_schema::{FiniteF32, LogitCandidate, TokenId};
+
+    use super::compare_candidates;
+
+    fn historical(logit: f32) -> Result<LogitCandidate, nanogpt_schema::SchemaError> {
+        Ok(LogitCandidate {
+            token_id: TokenId(7),
+            display: "x".to_owned(),
+            logit: FiniteF32::new(logit)?,
+            probability: FiniteF32::new(1.0)?,
+        })
+    }
+
+    #[test]
+    fn replay_candidate_parity_uses_only_strict_absolute_tolerance()
+    -> Result<(), nanogpt_schema::SchemaError> {
+        let baseline = historical(10_000.0)?;
+        let accepted = TopKCandidate {
+            token_id: TokenId(7),
+            logit: 10_000.0 + 1e-4,
+            probability: 1.0,
+        };
+        let rejected = TopKCandidate {
+            token_id: TokenId(7),
+            logit: 10_000.01,
+            probability: 1.0,
+        };
+        assert!(compare_candidates(&[accepted], std::slice::from_ref(&baseline)).is_ok());
+        assert!(compare_candidates(&[rejected], &[baseline]).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn replay_candidate_parity_rejects_historical_token_mismatch()
+    -> Result<(), nanogpt_schema::SchemaError> {
+        let replayed = TopKCandidate {
+            token_id: TokenId(8),
+            logit: 1.0,
+            probability: 1.0,
+        };
+        assert!(compare_candidates(&[replayed], &[historical(1.0)?]).is_err());
+        Ok(())
+    }
 }

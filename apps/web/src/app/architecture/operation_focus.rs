@@ -2,6 +2,7 @@
 
 use super::{ArchitectureLevel, ArchitectureOperation, SummaryEvidence};
 use crate::app::narrative::NarrativeStage;
+use nanogpt_schema::OperationId;
 
 impl ArchitectureOperation {
     #[cfg(test)]
@@ -89,25 +90,24 @@ impl ArchitectureOperation {
         }
     }
 
-    /// Legacy detail evidence target, kept isolated from curriculum identity.
+    /// Exhaustive retained detail tensors owned by this architecture boundary.
     #[must_use]
-    pub(crate) const fn target(self) -> (NarrativeStage, Option<usize>) {
-        let concept = self.concept();
-        let detail = match self {
-            Self::AttentionLayerNorm => Some(1),
-            Self::AttentionResidual => Some(11),
-            Self::MlpLayerNorm => Some(12),
-            Self::Mlp => Some(13),
-            Self::MlpResidual => Some(17),
-            Self::Query => Some(2),
-            Self::Key => Some(3),
-            Self::Value => Some(4),
-            Self::QueryKeyProduct => Some(5),
-            Self::Scale => Some(6),
-            Self::Softmax => Some(7),
-            Self::ValueProduct => Some(8),
-            Self::MergeHeads => Some(9),
-            Self::Projection => Some(10),
+    pub(crate) const fn retained_detail_indices(self) -> &'static [usize] {
+        match self {
+            Self::AttentionLayerNorm => &[0, 1],
+            Self::Query => &[2],
+            Self::Key => &[3],
+            Self::Value => &[4],
+            Self::QueryKeyProduct => &[5],
+            Self::Scale => &[6],
+            Self::Softmax => &[7],
+            Self::ValueProduct => &[8],
+            Self::MergeHeads => &[9],
+            Self::Projection => &[10],
+            Self::AttentionResidual => &[11],
+            Self::MlpLayerNorm => &[12],
+            Self::Mlp => &[13, 14, 15, 16],
+            Self::MlpResidual => &[17],
             Self::Embedding
             | Self::FinalLayerNorm
             | Self::LanguageModelHead
@@ -118,9 +118,37 @@ impl ArchitectureOperation {
             | Self::GenerationSoftmax
             | Self::Sample
             | Self::Append
+            | Self::Repeat => &[],
+        }
+    }
+
+    /// Source-map operation owned by this architecture boundary.
+    #[must_use]
+    pub(crate) const fn source_operation(self) -> Option<OperationId> {
+        match self {
+            Self::Embedding => Some(OperationId::Embedding),
+            Self::FinalLayerNorm => Some(OperationId::FinalLayerNorm),
+            Self::LanguageModelHead | Self::Logits => Some(OperationId::Logits),
+            Self::AttentionLayerNorm => Some(OperationId::AttentionLayerNorm),
+            Self::AttentionResidual => Some(OperationId::AttentionResidual),
+            Self::MlpLayerNorm => Some(OperationId::MlpLayerNorm),
+            Self::Mlp => Some(OperationId::Mlp),
+            Self::MlpResidual => Some(OperationId::MlpResidual),
+            Self::Query | Self::Key | Self::Value => Some(OperationId::QueryKeyValue),
+            Self::QueryKeyProduct
+            | Self::Scale
+            | Self::Mask
+            | Self::Softmax
+            | Self::ValueProduct
+            | Self::MergeHeads
+            | Self::Projection => Some(OperationId::Attention),
+            Self::Temperature
+            | Self::TopK
+            | Self::GenerationSoftmax
+            | Self::Sample
+            | Self::Append
             | Self::Repeat => None,
-        };
-        (concept, detail)
+        }
     }
 
     /// Exact summary tensor identity, when the operation reads summary evidence.

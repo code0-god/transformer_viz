@@ -14,10 +14,10 @@ pub(super) fn panel(state: &AppState) -> AnyView {
         state.ui.architecture.operation.map_or(
             "연산을 선택하기 전에는 level 구조와 모델 설정만 표시합니다.",
             |operation| {
-                if operation.target().1.is_some() {
-                    evidence_prompt(state.ui.narrative.stage)
-                } else {
+                if operation.retained_detail_indices().is_empty() {
                     "이 경계에는 연결된 trace tensor ID가 없습니다."
+                } else {
+                    evidence_prompt(state.ui.narrative.stage)
                 }
             },
         )

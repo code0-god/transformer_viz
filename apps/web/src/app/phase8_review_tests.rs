@@ -30,7 +30,7 @@ mod tests {
     }
 
     #[test]
-    fn operation_concept_round_trips_and_ln2_keeps_legacy_detail() {
+    fn generation_operation_and_concept_are_bijective_pairs_and_ln2_keeps_detail() {
         let mut ui = ExplorerUiState::default();
         for (operation, concept) in [
             (

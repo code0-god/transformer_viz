@@ -4,11 +4,14 @@ use leptos::prelude::*;
 use nanogpt_schema::WorkerRequest;
 use wasm_bindgen::JsCast as _;
 
-use crate::app::{
-    generation::GenerationPhase,
-    state::{AppState, AppStatus},
-    ui_state::ExplorerMode,
-    worker_client::WorkerClient,
+use crate::{
+    app::{
+        generation::GenerationPhase,
+        state::{AppState, AppStatus},
+        ui_state::ExplorerMode,
+        worker_client::WorkerClient,
+    },
+    components::guided::scroll,
 };
 
 #[must_use]
@@ -76,6 +79,16 @@ fn focus_mode(mode: ExplorerMode) {
 
 #[must_use]
 pub(super) fn context_bar(state: RwSignal<AppState>, client: WorkerClient) -> impl IntoView {
+    Effect::new(move |_| {
+        let newest = state.with(|current| {
+            (!current.generation.steps.is_empty()).then(|| {
+                current.generation.prompt_tokens.len() + current.generation.steps.len() - 1
+            })
+        });
+        if let Some(index) = newest {
+            scroll::reveal_item("token-reel", &format!("context-token-{index}"));
+        }
+    });
     view! {
         <section class="context-bar" aria-label="현재 생성 문맥">
             <div id="token-reel" class="token-reel" aria-label="현재 생성 문맥 토큰">
@@ -129,7 +142,7 @@ fn context_token(
     let token_id = token.id.0;
     let Some(client) = client.cloned() else {
         return view! {
-            <span class="context-token" data-trace-ready="false">
+            <span id=format!("context-token-{index}") class="context-token" data-trace-ready="false">
                 <span class="token-text">{display}</span>
                 <span class="token-id">{format!("{index}:{token_id}")}</span>
             </span>
@@ -138,6 +151,7 @@ fn context_token(
     };
     view! {
         <button
+            id=format!("context-token-{index}")
             type="button"
             class="context-token"
             data-trace-ready="true"

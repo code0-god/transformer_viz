@@ -126,7 +126,11 @@ impl TokenizerConfig {
         if ids[0] == ids[1] || ids[0] == ids[2] || ids[1] == ids[2] {
             return Err(SchemaError::DuplicateSpecialToken);
         }
-        let last = self.byte_offset.saturating_add(u32::from(u8::MAX));
+        let last = self.byte_offset.checked_add(u32::from(u8::MAX)).ok_or(
+            SchemaError::ByteTokenRangeOverflow {
+                byte_offset: self.byte_offset,
+            },
+        )?;
         for token_id in ids {
             if (self.byte_offset..=last).contains(&token_id) {
                 return Err(SchemaError::SpecialTokenOverlapsBytes {
@@ -158,10 +162,20 @@ pub struct ModelManifest {
     pub weights_file: String,
     /// Lowercase SHA-256 digest of the safetensors file.
     pub weights_sha256: String,
+    /// Exact safetensors byte size.
+    pub weights_size_bytes: u64,
     /// Base-relative model configuration filename.
     pub config_file: String,
+    /// Lowercase SHA-256 digest of the raw configuration file.
+    pub config_sha256: String,
+    /// Exact configuration byte size.
+    pub config_size_bytes: u64,
     /// Base-relative tokenizer configuration filename.
     pub tokenizer_file: String,
+    /// Lowercase SHA-256 digest of the raw tokenizer file.
+    pub tokenizer_sha256: String,
+    /// Exact tokenizer byte size.
+    pub tokenizer_size_bytes: u64,
     /// Pinned upstream nanoGPT commit.
     pub nanogpt_commit: String,
     /// Learned parameter count.
@@ -170,4 +184,79 @@ pub struct ModelManifest {
     pub max_sequence_length: usize,
     /// SPDX asset license identifier.
     pub license: String,
+}
+
+impl ModelManifest {
+    /// Maximum accepted manifest size at the network boundary.
+    pub const MAX_MANIFEST_BYTES: u64 = 16 * 1024;
+    /// Maximum accepted model configuration size.
+    pub const MAX_CONFIG_BYTES: u64 = 64 * 1024;
+    /// Maximum accepted tokenizer configuration size.
+    pub const MAX_TOKENIZER_BYTES: u64 = 1024 * 1024;
+    /// Maximum accepted educational weights size.
+    pub const MAX_WEIGHTS_BYTES: u64 = 8 * 1024 * 1024;
+
+    /// Validates the fixed educational model identity and complete asset descriptors.
+    ///
+    /// # Errors
+    /// Returns [`SchemaError`] for an unexpected identity, filename, digest, or size.
+    pub fn validate(&self) -> Result<(), SchemaError> {
+        for (valid, detail) in [
+            (self.model_id == "nanogpt-edu", "model_id"),
+            (
+                self.display_name == "nanoGPT Educational Model",
+                "display_name",
+            ),
+            (self.architecture == "nanogpt-compatible", "architecture"),
+            (self.dtype == "f32", "dtype"),
+            (self.weights_file == "model.safetensors", "weights_file"),
+            (self.config_file == "config.json", "config_file"),
+            (self.tokenizer_file == "tokenizer.json", "tokenizer_file"),
+            (self.max_sequence_length == 24, "max_sequence_length"),
+            (self.license == "CC0-1.0", "license"),
+            (
+                self.nanogpt_commit == "3adf61e154c3fe3fca428ad6bc3818b27a3b8291",
+                "nanogpt_commit",
+            ),
+        ] {
+            if !valid {
+                return Err(SchemaError::InvalidModelManifest(detail));
+            }
+        }
+        for (field, digest) in [
+            ("weights_sha256", self.weights_sha256.as_str()),
+            ("config_sha256", self.config_sha256.as_str()),
+            ("tokenizer_sha256", self.tokenizer_sha256.as_str()),
+        ] {
+            if digest.len() != 64
+                || !digest
+                    .bytes()
+                    .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+            {
+                return Err(SchemaError::InvalidAssetDigest { field });
+            }
+        }
+        for (field, size, maximum) in [
+            (
+                "weights_size_bytes",
+                self.weights_size_bytes,
+                Self::MAX_WEIGHTS_BYTES,
+            ),
+            (
+                "config_size_bytes",
+                self.config_size_bytes,
+                Self::MAX_CONFIG_BYTES,
+            ),
+            (
+                "tokenizer_size_bytes",
+                self.tokenizer_size_bytes,
+                Self::MAX_TOKENIZER_BYTES,
+            ),
+        ] {
+            if size == 0 || size > maximum {
+                return Err(SchemaError::InvalidAssetSize { field, maximum });
+            }
+        }
+        Ok(())
+    }
 }

@@ -51,6 +51,21 @@ fn assert_generation_equal(left: &GenerationStepSummary, right: &GenerationStepS
     assert_eq!(left.selected_interval, right.selected_interval);
 }
 
+fn assert_selected_replay(
+    summary: &nanogpt_schema::RunSummary,
+    original: &GenerationStepSummary,
+) -> Result<(), RuntimeError> {
+    let replayed = summary
+        .logits
+        .top_k
+        .iter()
+        .find(|candidate| candidate.token_id == original.generated_token.id)
+        .ok_or(RuntimeError::GenerationReplayMismatch)?;
+    assert_eq!(replayed.token_id, original.generated_token.id);
+    assert!((replayed.logit.get() - original.selected_logit.get()).abs() <= 1e-4);
+    Ok(())
+}
+
 #[test]
 fn selected_step_replay_is_exact_inspectable_and_generation_neutral() -> Result<(), RuntimeError> {
     // Given: peer generation runtimes advanced through two identical committed steps.
@@ -114,17 +129,15 @@ fn selected_step_replay_is_exact_inspectable_and_generation_neutral() -> Result<
         .zip(&original.candidates)
     {
         assert_eq!(replayed.token_id, historical.token_id);
-        let tolerance = 1e-4_f32.mul_add(historical.logit.get().abs(), 1e-4);
+        let tolerance = 1e-4_f32;
         let candidate_delta = (replayed.logit.get() - historical.logit.get()).abs();
         let raw_delta = (raw_logit.get() - historical.logit.get()).abs();
         maximum_logit_delta = maximum_logit_delta.max(candidate_delta).max(raw_delta);
         assert!(candidate_delta <= tolerance);
         assert!(raw_delta <= tolerance);
     }
-    eprintln!(
-        "replay candidates={}, maximum_logit_delta={maximum_logit_delta}",
-        original.candidates.len()
-    );
+    assert_selected_replay(&summary, &original)?;
+    assert!(maximum_logit_delta <= 1e-4);
 
     // And: the fresh trace cache drives every existing detail replay.
     assert!(matches!(

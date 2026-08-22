@@ -11,6 +11,8 @@ runtime dependency.
 
 Unmodified convenience copies of `model.py` and `LICENSE` are published under
 `apps/web/public/reference/` so the source viewer and static deployment use the exact pinned
-material. `tools/reference/export_safetensors.py --source-map-only` derives every Python range and
-Rust counterpart in the canonical `source_map.json` from symbol markers in that pinned file. The
-license is also preserved under `assets/reference/`.
+material. `apps/web/public/reference/SHA256SUMS` records their SHA-256 digests; the release build
+compares both public and emitted copies to this pinned submodule before checking those digests.
+`tools/reference/export_safetensors.py --source-map-only` derives every Python range and Rust
+counterpart in the canonical `source_map.json` from symbol markers in that pinned file. The license
+is also preserved under `assets/reference/`.

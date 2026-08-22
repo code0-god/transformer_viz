@@ -61,6 +61,8 @@ def main() -> None:
     manifest = {
         "architecture": "nanogpt-compatible",
         "config_file": "config.json",
+        "config_sha256": sha256(MODEL_DIR / "config.json"),
+        "config_size_bytes": (MODEL_DIR / "config.json").stat().st_size,
         "display_name": "nanoGPT Educational Model",
         "dtype": "f32",
         "license": "CC0-1.0",
@@ -70,8 +72,11 @@ def main() -> None:
         "parameter_count": parameter_count(model),
         "schema_version": "1.1.0",
         "tokenizer_file": tokenizer.name,
+        "tokenizer_sha256": sha256(tokenizer),
+        "tokenizer_size_bytes": tokenizer.stat().st_size,
         "weights_file": weights.name,
         "weights_sha256": sha256(weights),
+        "weights_size_bytes": weights.stat().st_size,
     }
     write_json(MODEL_DIR / "manifest.json", manifest)
     write_checksums(MODEL_DIR)

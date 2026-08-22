@@ -24,6 +24,7 @@ use thiserror::Error;
 pub use attention::CausalSelfAttention;
 pub use head::TiedLmHead;
 pub use layers::{Block, Mlp};
+pub use load::stored_parameter_count;
 pub use model::Gpt;
 pub use sampling::{
     SamplingDecision, SamplingError, SamplingInterval, derive_step_seed, sample_final_logits,
@@ -42,6 +43,15 @@ pub enum ModelError {
     /// The asset stored a second copy of the tied language-model head.
     #[error("model asset must tie logits to transformer.wte.weight without lm_head.weight")]
     DuplicateLanguageModelHead,
+    /// A stored f32 weight is NaN or infinite.
+    #[error("model tensor '{tensor}' contains a non-finite f32 value")]
+    NonFiniteWeight {
+        /// Safetensors key containing the invalid value.
+        tensor: String,
+    },
+    /// Stored tensor dimensions overflow the supported parameter count.
+    #[error("stored tensor element count exceeds u64")]
+    ParameterCountOverflow,
     /// Inference is restricted to Candle's CPU backend.
     #[error("model inference requires the Candle CPU device")]
     UnsupportedDevice,

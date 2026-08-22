@@ -124,6 +124,40 @@ fn truncation_stops_at_utf8_boundary_when_next_character_does_not_fit()
 }
 
 #[test]
+fn tokenizer_byte_range_uses_checked_u32_arithmetic() {
+    let accepted = TokenizerConfig {
+        byte_offset: u32::MAX - u32::from(u8::MAX),
+        ..TokenizerConfig::byte_fallback(4)
+    };
+    assert!(Tokenizer::new(accepted.clone()).is_ok());
+
+    let rejected = TokenizerConfig {
+        byte_offset: accepted.byte_offset + 1,
+        ..accepted
+    };
+    assert!(Tokenizer::new(rejected).is_err());
+}
+
+#[test]
+fn maximum_valid_byte_range_encodes_without_panicking_or_wrapping()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tokenizer = Tokenizer::new(TokenizerConfig {
+        byte_offset: u32::MAX - u32::from(u8::MAX),
+        ..TokenizerConfig::byte_fallback(4)
+    })?;
+    let encoded = tokenizer.encode("\u{00ff}");
+    assert_eq!(encoded.tokens[1].id, TokenId(u32::MAX - 60));
+    assert!(
+        encoded
+            .tokens
+            .iter()
+            .all(|token| token.id.0 >= tokenizer.config().byte_offset
+                || token.kind != TokenKind::Byte)
+    );
+    Ok(())
+}
+
+#[test]
 fn tokenizer_configuration_round_trips_through_json() -> Result<(), Box<dyn std::error::Error>> {
     // Given: canonical compact configuration.
     let config = TokenizerConfig::byte_fallback(24);

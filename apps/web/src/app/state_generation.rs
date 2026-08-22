@@ -8,7 +8,7 @@ use nanogpt_schema::{
 #[cfg(any(test, target_arch = "wasm32"))]
 use super::generation::PendingGeneration;
 use super::{
-    generation::{ActiveGeneration, GenerationPhase, ReplayCorrelation},
+    generation::{ActiveGeneration, GenerationPhase, GenerationState, ReplayCorrelation},
     selection::Selection,
     state::{AppState, AppStatus},
 };
@@ -141,10 +141,16 @@ impl AppState {
             .as_ref()
             .is_some_and(|pending| pending.request_id == request_id)
         {
-            self.generation.pending = None;
-            self.generation.error = Some(message.to_owned());
-            if self.generation.active.is_none() {
-                self.generation.phase = GenerationPhase::Idle;
+            if self.generation.phase == GenerationPhase::Running && self.generation.active.is_some()
+            {
+                self.generation.pending = None;
+                self.generation.error = Some(message.to_owned());
+            } else {
+                self.generation = GenerationState {
+                    error: Some(message.to_owned()),
+                    ..GenerationState::default()
+                };
+                self.clear_replay_evidence();
             }
             return true;
         }

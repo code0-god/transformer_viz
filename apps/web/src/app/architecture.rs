@@ -13,7 +13,7 @@ pub(crate) use catalog::{
 
 use nanogpt_schema::{GptConfig, OperationId, WorkerRequest};
 
-use super::state::AppState;
+use super::{state::AppState, ui_state::ExplorerMode};
 
 /// Current browser-only hierarchy path and operation selection.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -82,38 +82,23 @@ impl ArchitectureMapState {
 }
 
 pub(crate) const fn source_operation_precedence(
+    mode: ExplorerMode,
     architecture: Option<ArchitectureOperation>,
     legacy: Option<OperationId>,
 ) -> Option<OperationId> {
-    match architecture {
-        Some(ArchitectureOperation::Logits) => Some(OperationId::Logits),
-        Some(
-            ArchitectureOperation::Embedding
-            | ArchitectureOperation::FinalLayerNorm
-            | ArchitectureOperation::LanguageModelHead
-            | ArchitectureOperation::AttentionLayerNorm
-            | ArchitectureOperation::AttentionResidual
-            | ArchitectureOperation::MlpLayerNorm
-            | ArchitectureOperation::Mlp
-            | ArchitectureOperation::MlpResidual
-            | ArchitectureOperation::Query
-            | ArchitectureOperation::Key
-            | ArchitectureOperation::Value
-            | ArchitectureOperation::QueryKeyProduct
-            | ArchitectureOperation::Scale
-            | ArchitectureOperation::Mask
-            | ArchitectureOperation::Softmax
-            | ArchitectureOperation::ValueProduct
-            | ArchitectureOperation::MergeHeads
-            | ArchitectureOperation::Projection
-            | ArchitectureOperation::Temperature
-            | ArchitectureOperation::TopK
-            | ArchitectureOperation::GenerationSoftmax
-            | ArchitectureOperation::Sample
-            | ArchitectureOperation::Append
-            | ArchitectureOperation::Repeat,
-        )
-        | None => legacy,
+    match mode {
+        ExplorerMode::Explore => match architecture {
+            Some(operation) => operation.source_operation(),
+            None => None,
+        },
+        ExplorerMode::Guided => match architecture {
+            Some(ArchitectureOperation::Logits) => Some(OperationId::Logits),
+            Some(operation) => match legacy {
+                Some(operation) => Some(operation),
+                None => operation.source_operation(),
+            },
+            None => legacy,
+        },
     }
 }
 

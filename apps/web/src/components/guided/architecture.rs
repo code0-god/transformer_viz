@@ -1,22 +1,35 @@
 //! Accessible config-driven architecture hierarchy.
 
+mod drawer;
+mod labels;
+
 use leptos::prelude::*;
 
 use crate::app::{
     architecture::{
-        ArchitectureLevel, ArchitectureMapState, ArchitectureNode, ArchitectureNodeKind,
-        ArchitectureOperation, catalog,
+        ArchitectureLevel, ArchitectureMapState, ArchitectureNode, ArchitectureNodeKind, catalog,
     },
     state::AppState,
     worker_client::WorkerClient,
 };
 
 use super::{shell::send_or_error, stage_copy::operation_label};
+use labels::operation_slug;
 
 #[must_use]
 pub(super) fn architecture_map(state: RwSignal<AppState>, client: WorkerClient) -> impl IntoView {
     view! {
-        <section class="model-map architecture-map" data-testid="architecture-map" aria-labelledby="architecture-map-title">
+        <section
+            id="architecture-map"
+            class="model-map architecture-map"
+            data-testid="architecture-map"
+            aria-labelledby="architecture-map-title"
+            on:keydown=move |event| if event.key() == "Escape" && state.with_untracked(|current| current.ui.model_map_expanded) {
+                event.prevent_default();
+                drawer::close(state, true);
+            }
+            on:focusout=move |event| drawer::focus_leaving(state, &event)
+        >
             <div class="region-heading">
                 <h2 id="architecture-map-title">"Architecture Map"</h2>
                 <button
@@ -112,7 +125,16 @@ fn node_button(
 
 fn navigate(state: RwSignal<AppState>, client: &WorkerClient, node: ArchitectureNodeKind) {
     let mut request = None;
-    state.update(|current| request = current.navigate_architecture(node));
+    let closes_drawer = drawer::is_non_desktop();
+    state.update(|current| {
+        request = current.navigate_architecture(node);
+        if closes_drawer {
+            current.ui.model_map_expanded = false;
+        }
+    });
+    if closes_drawer {
+        drawer::focus_toggle();
+    }
     if let Some(request) = request {
         send_or_error(state, client, &request);
     }
@@ -191,36 +213,5 @@ fn node_slug(kind: ArchitectureNodeKind) -> String {
         ArchitectureNodeKind::Layer(layer) => format!("block-{layer}"),
         ArchitectureNodeKind::Head(head) => format!("head-{head}"),
         ArchitectureNodeKind::Level(level) => level.slug().to_owned(),
-    }
-}
-
-pub(super) const fn operation_slug(operation: ArchitectureOperation) -> &'static str {
-    use ArchitectureOperation as O;
-    match operation {
-        O::Embedding => "embedding",
-        O::FinalLayerNorm => "final-layernorm",
-        O::LanguageModelHead => "lm-head",
-        O::AttentionLayerNorm => "ln1",
-        O::AttentionResidual => "attention-residual",
-        O::MlpLayerNorm => "ln2",
-        O::Mlp => "mlp",
-        O::MlpResidual => "mlp-residual",
-        O::Query => "query",
-        O::Key => "key",
-        O::Value => "value",
-        O::QueryKeyProduct => "qk-product",
-        O::Scale => "scale",
-        O::Mask => "mask",
-        O::Softmax => "softmax",
-        O::ValueProduct => "value-product",
-        O::MergeHeads => "merge-heads",
-        O::Projection => "projection",
-        O::Logits => "logits",
-        O::Temperature => "temperature",
-        O::TopK => "top-k",
-        O::GenerationSoftmax => "generation-softmax",
-        O::Sample => "sample",
-        O::Append => "append",
-        O::Repeat => "repeat",
     }
 }

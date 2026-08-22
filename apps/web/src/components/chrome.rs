@@ -25,7 +25,7 @@ pub fn header() -> impl IntoView {
 /// Prompt form and model lifecycle status.
 #[must_use]
 pub fn prompt_panel(state: RwSignal<AppState>, client: WorkerClient) -> impl IntoView {
-    let (prompt, set_prompt) = signal("the cat sat on the".to_owned());
+    let (prompt, set_prompt) = signal("the cat".to_owned());
     let run_client = client;
     let run = move |_| {
         let mut request = None;

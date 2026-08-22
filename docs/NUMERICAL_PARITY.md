@@ -5,7 +5,7 @@
 - Producer: `tools/reference/generate_golden.py`, importing pinned `reference/nanoGPT/model.py`.
 - nanoGPT commit: `3adf61e154c3fe3fca428ad6bc3818b27a3b8291`.
 - Deterministic seed: `20260821`.
-- Prompt: `the cat sat on the`.
+- Golden/parity fixture prompt: `the cat sat on the`.
 - Prompt token IDs: `[0, 119, 107, 104, 35, 102, 100, 119, 35, 118, 100, 119, 35, 114, 113, 35, 119, 107, 104, 1]`.
 - Model SHA-256: `8fd76c662da0d0cb9fe1035cb205b1a071ad95f9e22d116578a0a8bec0754be9`.
 - Trace SHA-256: `b441b99f8392b80784adadcc249a961b148908012ec4ee15f473494c6d5e5f56`.

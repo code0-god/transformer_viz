@@ -1,6 +1,6 @@
 //! Pure deterministic final-logit sampling contracts.
 
-use nanogpt_model::{SamplingError, sample_final_logits};
+use nanogpt_model::{SamplingError, derive_step_seed, sample_final_logits};
 use nanogpt_schema::{GenerationConfig, SamplingMode, Temperature, TokenId, TopK};
 
 fn config_for(mode: SamplingMode) -> GenerationConfig {
@@ -163,6 +163,32 @@ fn different_seeds_always_select_valid_intervals() -> Result<(), Box<dyn std::er
         assert!(interval.start <= random);
         assert!(random < interval.end);
         assert!(decision.candidates.contains(&decision.selected));
+    }
+    Ok(())
+}
+
+#[test]
+fn step_seed_and_f32_draws_match_canonical_known_answers() -> Result<(), Box<dyn std::error::Error>>
+{
+    let cases = [
+        (0, 0, 0xe220_a839_7b1d_cdaf, 0.652_448_4),
+        (1, 0, 0x910a_2dec_8902_5cc1, 0.368_189_45),
+        (42, 7, 0xccf6_35ee_9e9e_2fa4, 0.000_454_783_44),
+        (u64::MAX, u64::MAX, 0xb4d0_55fc_f2cb_bd7b, 0.646_354_2),
+        (20_260_821, 3, 0xf8ab_6872_4e0a_e526, 0.266_273_62),
+    ];
+    for (seed, step, expected_seed, expected_draw) in cases {
+        assert_eq!(derive_step_seed(seed, step), expected_seed);
+        let decision = sample_final_logits(
+            &[0.0, 0.0],
+            &GenerationConfig {
+                top_k: TopK::new(2)?,
+                seed,
+                ..config_for(SamplingMode::Sample)
+            },
+            step,
+        )?;
+        assert_eq!(decision.random, Some(expected_draw));
     }
     Ok(())
 }

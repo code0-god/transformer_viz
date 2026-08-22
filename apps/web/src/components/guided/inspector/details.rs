@@ -2,7 +2,7 @@
 
 use leptos::prelude::*;
 
-use crate::app::{narrative::NarrativeStage, state::AppState, ui_state::InspectorTab};
+use crate::app::{state::AppState, ui_state::InspectorTab};
 
 pub(super) fn detail_operations(state: RwSignal<AppState>) -> impl IntoView {
     view! {
@@ -16,44 +16,28 @@ pub(super) fn detail_operations(state: RwSignal<AppState>) -> impl IntoView {
 }
 
 fn detail_count(state: &AppState) -> String {
-    let has_trace_target = state
-        .ui
-        .architecture
-        .operation
-        .is_some_and(|operation| operation.target().1.is_some());
-    if !has_trace_target {
-        return "0개".to_owned();
-    }
     let count = state.block.as_ref().map_or(0, |block| {
         block
             .operations
             .iter()
             .enumerate()
-            .filter(|(index, _)| {
-                NarrativeStage::for_detail_operation(*index) == Some(state.ui.narrative.stage)
-            })
+            .filter(|(index, _)| state.ui.detail_visible(*index))
             .count()
     });
     format!("{count}개")
 }
 
 fn operation_buttons(app_state: RwSignal<AppState>, current: &AppState) -> AnyView {
-    if current
-        .ui
-        .architecture
-        .operation
-        .is_none_or(|operation| operation.target().1.is_none())
-    {
+    if !(0..18).any(|index| current.ui.detail_visible(index)) {
         return view! { <p class="empty-state">"이 구조 경계에는 연결된 세부 trace tensor가 없습니다."</p> }.into_any();
     }
     let Some(block) = current.block.as_ref() else {
         return view! { <p class="empty-state">"실행 후 현재 단계의 실제 세부 연산을 펼쳐 봅니다."</p> }.into_any();
     };
-    let concept = current.ui.narrative.stage;
     let selected = current.ui.detail_operation;
-    let operations = block.operations.iter().enumerate().filter(|(index, _)| {
-        NarrativeStage::for_detail_operation(*index) == Some(concept)
-    }).map(|(index, operation)| {
+    let operations = block.operations.iter().enumerate()
+        .filter(|(index, _)| current.ui.detail_visible(*index))
+        .map(|(index, operation)| {
         let tensor_id = operation.tensor.id.clone();
         let event_id = tensor_id.clone();
         let label = operation.tensor.label.clone();

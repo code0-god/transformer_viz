@@ -1,9 +1,45 @@
-use candle_core::{DType, Device};
+use candle_core::{DType, Device, safetensors::SliceSafetensors};
 use candle_nn::VarBuilder;
 use nanogpt_schema::GptConfig;
 
 use crate::layers::{Block, load_layer_norm};
 use crate::{Gpt, ModelError, TiedLmHead};
+
+/// Counts unique physically stored tensor elements and validates every f32 value.
+///
+/// # Errors
+/// Returns [`ModelError`] for malformed safetensors, non-f32/non-finite data, or count overflow.
+pub fn stored_parameter_count(bytes: &[u8]) -> Result<u64, ModelError> {
+    let tensors = SliceSafetensors::new(bytes)
+        .map_err(|error| ModelError::InvalidAsset(error.to_string()))?;
+    let mut count = 0_u64;
+    for (name, tensor) in tensors.tensors() {
+        if DType::try_from(tensor.dtype())? != DType::F32 {
+            return Err(ModelError::InvalidAsset(format!(
+                "tensor '{name}' must use f32"
+            )));
+        }
+        let elements =
+            tensor
+                .shape()
+                .iter()
+                .try_fold(1_u64, |product: u64, &dimension| -> Option<u64> {
+                    product.checked_mul(u64::try_from(dimension).ok()?)
+                });
+        let elements = elements.ok_or(ModelError::ParameterCountOverflow)?;
+        count = count
+            .checked_add(elements)
+            .ok_or(ModelError::ParameterCountOverflow)?;
+        if tensor
+            .data()
+            .chunks_exact(4)
+            .any(|chunk| !f32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]).is_finite())
+        {
+            return Err(ModelError::NonFiniteWeight { tensor: name });
+        }
+    }
+    Ok(count)
+}
 
 impl Gpt {
     /// Loads canonical `[out, in]` nanoGPT tensors from an in-memory safetensors asset.
@@ -22,6 +58,7 @@ impl Gpt {
         if !device.is_cpu() {
             return Err(ModelError::UnsupportedDevice);
         }
+        let _parameter_count = stored_parameter_count(bytes)?;
         let weights = VarBuilder::from_slice_safetensors(bytes, DType::F32, device)?;
         if weights.contains_tensor("lm_head.weight") {
             return Err(ModelError::DuplicateLanguageModelHead);

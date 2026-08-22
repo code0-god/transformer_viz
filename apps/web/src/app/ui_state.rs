@@ -1,10 +1,11 @@
 //! Pure browser-only state for one shared Guided/Explore focus.
 
+mod detail;
+
 #[cfg(any(test, target_arch = "wasm32"))]
 use super::architecture::{ArchitectureMapState, ArchitectureNodeKind, ArchitectureOperation};
-use super::narrative::{
-    DETAIL_OPERATION_STAGES, NarrativePlayback, NarrativeSpeed, NarrativeStage,
-};
+use super::narrative::{NarrativePlayback, NarrativeSpeed, NarrativeStage};
+use detail::representative_detail;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 /// Active writer for the single shared focus.
@@ -113,6 +114,8 @@ impl ExplorerUiState {
         #[cfg(any(test, target_arch = "wasm32"))]
         if matches!(mode, ExplorerMode::Guided) && self.architecture.operation.is_none() {
             self.sync_guided_focus();
+        } else {
+            self.canonicalize_detail();
         }
     }
 
@@ -129,11 +132,10 @@ impl ExplorerUiState {
     pub(crate) const fn navigate_architecture(&mut self, node: ArchitectureNodeKind) {
         self.mode = ExplorerMode::Explore;
         self.architecture.navigate(node);
-        self.detail_operation = None;
         if let ArchitectureNodeKind::Operation(operation) = node {
             self.narrative.select(operation.concept());
-            self.detail_operation = operation.target().1;
         }
+        self.canonicalize_detail();
     }
 
     /// Moves to the previous concept as Guided navigation.
@@ -165,17 +167,6 @@ impl ExplorerUiState {
     }
 
     #[must_use]
-    /// Accepts a legacy detail only when it belongs to the focused concept.
-    pub fn select_detail_operation(&mut self, index: usize) -> bool {
-        if DETAIL_OPERATION_STAGES.get(index) == Some(&self.narrative.stage) {
-            self.detail_operation = Some(index);
-            true
-        } else {
-            false
-        }
-    }
-
-    #[must_use]
     /// Clamps and stores a feature coordinate for a real tensor width.
     pub fn select_feature(&mut self, feature: usize, width: usize) -> Option<usize> {
         let selected = width.checked_sub(1).map(|last| feature.min(last))?;
@@ -191,32 +182,5 @@ impl ExplorerUiState {
             self.architecture.operation = Some(operation);
         }
         self.detail_operation = representative_detail(self.narrative.stage);
-    }
-}
-
-const fn representative_detail(stage: NarrativeStage) -> Option<usize> {
-    use NarrativeStage as S;
-    match stage {
-        S::LayerNorm => Some(1),
-        S::QueryKeyValue => Some(2),
-        S::AttentionScore => Some(6),
-        S::Softmax => Some(7),
-        S::ValueAggregation => Some(8),
-        S::Residual => Some(11),
-        S::Mlp => Some(13),
-        S::BlockOutput => Some(17),
-        S::Tokenization
-        | S::TokenEmbedding
-        | S::PositionEmbedding
-        | S::CausalMask
-        | S::FinalLayerNorm
-        | S::LanguageModelHead
-        | S::Logits
-        | S::Temperature
-        | S::TopK
-        | S::Sampling
-        | S::GeneratedToken
-        | S::AppendToContext
-        | S::Repeat => None,
     }
 }

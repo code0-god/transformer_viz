@@ -29,6 +29,7 @@
     104,
     1
   ],
+  "reference_model_sha256": "7c01703240dbec5d554527dc666e35b3df8391d0b117fddc07afcf325a21d11c",
   "seed": 20260821,
   "source_map_sha256": "06e1360e356f5a3d9b04afceaf447607e64c722b07b6d7b81c7b7f21b1e69844",
   "tensor_count": 46,

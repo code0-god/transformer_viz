@@ -31,7 +31,7 @@ pub(super) fn generation_controls(
     client: WorkerClient,
 ) -> impl IntoView {
     let defaults = GenerationForm::default();
-    let (prompt, set_prompt) = signal("the cat sat on the".to_owned());
+    let (prompt, set_prompt) = signal("the cat".to_owned());
     let (max_tokens, set_max_tokens) = signal(defaults.max_new_tokens);
     let (temperature, set_temperature) = signal(defaults.temperature);
     let (top_k, set_top_k) = signal(defaults.top_k);

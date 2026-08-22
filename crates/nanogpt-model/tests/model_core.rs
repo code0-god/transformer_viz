@@ -170,6 +170,34 @@ fn tied_head_ranks_full_vocabulary_probabilities() -> Result<(), Box<dyn std::er
     Ok(())
 }
 
+fn corrupt_tensor_value(
+    bytes: &mut [u8],
+    tensor_name: &str,
+    value: f32,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let tensors = safetensors::SafeTensors::deserialize(bytes)?;
+    let tensor = tensors.tensor(tensor_name)?;
+    let offset = tensor.data().as_ptr() as usize - bytes.as_ptr() as usize;
+    bytes[offset..offset + 4].copy_from_slice(&value.to_le_bytes());
+    Ok(())
+}
+
+#[test]
+fn non_finite_weights_are_rejected_with_the_tensor_name() -> Result<(), Box<dyn std::error::Error>>
+{
+    let config = tiny_config();
+    for value in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {
+        let mut bytes = fixture_bytes(&config, false)?;
+        corrupt_tensor_value(&mut bytes, "transformer.wte.weight", value)?;
+        let result = Gpt::from_safetensors(&config, &bytes, &Device::Cpu);
+        assert!(matches!(
+            result,
+            Err(ModelError::NonFiniteWeight { tensor }) if tensor == "transformer.wte.weight"
+        ));
+    }
+    Ok(())
+}
+
 #[test]
 fn duplicated_lm_head_is_rejected_when_loading_tied_weights()
 -> Result<(), Box<dyn std::error::Error>> {

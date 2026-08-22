@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import selectors
 import shutil
@@ -14,7 +15,22 @@ from typing import Any, Self
 
 from browser_cdp import Cdp, CdpError
 
-CHROME = Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+
+def chrome_binary() -> Path:
+    candidates = [
+        os.environ.get("CHROME"),
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        shutil.which("google-chrome"),
+        shutil.which("chromium"),
+        shutil.which("chromium-browser"),
+    ]
+    for candidate in candidates:
+        if candidate and Path(candidate).is_file():
+            return Path(candidate)
+    raise CdpError("Chrome or Chromium was not found; set CHROME to its executable")
+
+
+CHROME = chrome_binary()
 _ENDPOINT = re.compile(r"DevTools listening on (ws://\S+)")
 
 
