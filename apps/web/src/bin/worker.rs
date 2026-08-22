@@ -1,6 +1,10 @@
 //! Dedicated production inference Web Worker.
 
 #[cfg(target_arch = "wasm32")]
+#[path = "worker/generation.rs"]
+mod worker_generation;
+
+#[cfg(target_arch = "wasm32")]
 use std::{cell::RefCell, rc::Rc};
 
 #[cfg(target_arch = "wasm32")]
@@ -19,14 +23,22 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::{DedicatedWorkerGlobalScope, MessageEvent, Url};
 
 #[cfg(target_arch = "wasm32")]
-fn post(scope: &DedicatedWorkerGlobalScope, response: &WorkerResponse) {
+use self::worker_generation::spawn_generation;
+
+#[cfg(target_arch = "wasm32")]
+fn post(scope: &DedicatedWorkerGlobalScope, response: &WorkerResponse) -> bool {
     match serde_wasm_bindgen::to_value(response) {
-        Ok(value) => {
-            if let Err(error) = scope.post_message(&value) {
+        Ok(value) => match scope.post_message(&value) {
+            Ok(()) => true,
+            Err(error) => {
                 web_sys::console::error_1(&error);
+                false
             }
+        },
+        Err(error) => {
+            web_sys::console::error_1(&JsValue::from_str(&error.to_string()));
+            false
         }
-        Err(error) => web_sys::console::error_1(&JsValue::from_str(&error.to_string())),
     }
 }
 
@@ -85,6 +97,8 @@ fn request_id(request: &WorkerRequest) -> Option<u64> {
     match request {
         WorkerRequest::Initialize { .. } => None,
         WorkerRequest::Run { request_id, .. }
+        | WorkerRequest::Generate { request_id, .. }
+        | WorkerRequest::StopGeneration { request_id }
         | WorkerRequest::InspectBlock { request_id, .. }
         | WorkerRequest::InspectAttentionHead { request_id, .. }
         | WorkerRequest::InspectToken { request_id, .. }
@@ -103,7 +117,7 @@ fn main() {
         let request = match serde_wasm_bindgen::from_value::<WorkerRequest>(event.data()) {
             Ok(request) => request,
             Err(error) => {
-                post(
+                let _posted = post(
                     &message_scope,
                     &WorkerResponse::Error {
                         request_id: None,
@@ -115,7 +129,7 @@ fn main() {
             }
         };
         if let WorkerRequest::Initialize { manifest_url } = request {
-            post(
+            let _posted = post(
                 &message_scope,
                 &WorkerResponse::Initializing {
                     phase: "모델 파일 확인 중".to_owned(),
@@ -132,20 +146,48 @@ fn main() {
                         .unwrap_or_else(|error| error_response(None, &error)),
                     Err(error) => error_response(None, &error),
                 };
-                post(&task_scope, &response);
+                let _posted = post(&task_scope, &response);
             });
             return;
         }
-        let id = request_id(&request);
-        let response = message_runtime
-            .borrow_mut()
-            .handle(request)
-            .unwrap_or_else(|error| error_response(id, &error));
-        post(&message_scope, &response);
+        match request {
+            WorkerRequest::Generate {
+                request_id,
+                text,
+                config,
+            } => {
+                let start = {
+                    let mut runtime = message_runtime.borrow_mut();
+                    runtime.start_generation(request_id, &text, &config)
+                };
+                match start {
+                    Ok(start) => {
+                        spawn_generation(message_scope.clone(), Rc::clone(&message_runtime), start)
+                    }
+                    Err(error) => {
+                        let _posted =
+                            post(&message_scope, &error_response(Some(request_id), &error));
+                    }
+                }
+            }
+            WorkerRequest::StopGeneration { request_id } => {
+                if let Some(response) = message_runtime.borrow_mut().stop_generation(request_id) {
+                    let _posted = post(&message_scope, &response);
+                }
+            }
+            synchronous => {
+                let id = request_id(&synchronous);
+                let response = message_runtime
+                    .borrow_mut()
+                    .handle(synchronous)
+                    .unwrap_or_else(|error| error_response(id, &error));
+                let _posted = post(&message_scope, &response);
+            }
+        }
     });
     scope.set_onmessage(Some(on_message.as_ref().unchecked_ref()));
     on_message.forget();
-    post(
+    let _posted = post(
         &scope,
         &WorkerResponse::Initializing {
             phase: "Worker 시작됨".to_owned(),

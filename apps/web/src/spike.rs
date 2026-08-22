@@ -139,7 +139,9 @@ pub fn handle_worker_request(request: WorkerRequest) -> Result<WorkerResponse, S
                 summary: Box::new(summary),
             })
         }
-        WorkerRequest::InspectBlock { .. }
+        WorkerRequest::Generate { .. }
+        | WorkerRequest::StopGeneration { .. }
+        | WorkerRequest::InspectBlock { .. }
         | WorkerRequest::InspectAttentionHead { .. }
         | WorkerRequest::InspectToken { .. }
         | WorkerRequest::Cancel { .. } => Err(SpikeError::UnsupportedInspection),

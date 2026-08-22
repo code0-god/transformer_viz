@@ -10,6 +10,8 @@ pub mod runtime;
 pub mod runtime_assets;
 pub mod runtime_error;
 #[doc(hidden)]
+pub mod runtime_generation;
+#[doc(hidden)]
 pub mod runtime_timer;
 #[doc(hidden)]
 pub mod runtime_trace;

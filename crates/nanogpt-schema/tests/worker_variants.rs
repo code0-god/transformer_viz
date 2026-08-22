@@ -9,6 +9,8 @@ fn worker_request_variants_round_trip_with_exact_u64_flow() -> Result<(), serde_
     let values = [
         json!({"type":"initialize","manifest_url":"model/manifest.json"}),
         json!({"type":"run","request_id":4_294_967_296_u64,"text":"the cat"}),
+        json!({"type":"generate","request_id":7,"text":"the cat","config":{"max_new_tokens":24,"temperature":1.0,"top_k":20,"mode":"sample","seed":42}}),
+        json!({"type":"stop_generation","request_id":7}),
         json!({"type":"inspect_block","request_id":3,"run_id":20,"layer":1}),
         json!({"type":"inspect_attention_head","request_id":4,"run_id":20,"layer":1,"head":2}),
         json!({"type":"inspect_token","request_id":5,"run_id":20,"layer":1,"head":2,"token":3}),
@@ -60,6 +62,28 @@ fn state_and_error_response_variants_round_trip_with_exact_tags() -> Result<(), 
         .map(serde_json::to_value)
         .collect::<Result<Vec<_>, _>>()?;
     // Then: tags, model metadata, and error fields remain exact.
+    assert_eq!(encoded, values);
+    Ok(())
+}
+
+#[test]
+fn generation_stream_variants_round_trip_with_compact_steps() -> Result<(), serde_json::Error> {
+    // Given: the complete streaming lifecycle with one compact generation step.
+    let values = [
+        json!({"type":"generation_started","request_id":7,"run_id":11}),
+        json!({"type":"token_generated","request_id":7,"run_id":11,"step":{"index":0,"context_token_ids":[0,119],"generated_token":{"id":1,"display":"<EOS>","piece":[],"byte_start":null,"byte_end":null,"kind":"eos"},"selected_logit":2.0,"selected_probability":0.75,"candidates":[{"token_id":1,"display":"<EOS>","logit":2.0,"probability":0.75}],"random":0.5,"selected_interval":{"start":0.0,"end":0.75},"forward_ms":1.0,"sampling_ms":0.25,"total_ms":1.25}}),
+        json!({"type":"generation_finished","request_id":7,"run_id":11,"reason":"end_of_sequence"}),
+    ];
+    // When: each response crosses serde in both directions.
+    let encoded = values
+        .iter()
+        .cloned()
+        .map(serde_json::from_value::<WorkerResponse>)
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .map(serde_json::to_value)
+        .collect::<Result<Vec<_>, _>>()?;
+    // Then: tags and compact machine-consumed fields remain exact.
     assert_eq!(encoded, values);
     Ok(())
 }

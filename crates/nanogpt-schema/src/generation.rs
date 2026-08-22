@@ -1,4 +1,4 @@
-use crate::SchemaError;
+use crate::{FiniteF32, LogitCandidate, SchemaError, TokenId, TokenInfo};
 use serde::{Deserialize, Serialize};
 
 /// Token-selection strategy for one generation step.
@@ -115,4 +115,60 @@ impl Default for GenerationConfig {
             seed: 42,
         }
     }
+}
+
+/// Why an autoregressive generation stream terminated.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GenerationStopReason {
+    /// The configured generated-token count was reached.
+    MaxNewTokens,
+    /// The tokenizer EOS token was generated.
+    EndOfSequence,
+    /// The model context has no room for another forward pass.
+    ContextLimit,
+    /// The caller explicitly stopped the active request.
+    UserStopped,
+    /// A newer valid generation replaced this one.
+    Replaced,
+    /// Generation failed after it started.
+    Error,
+}
+
+/// Half-open cumulative interval containing the deterministic sample draw.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CumulativeProbabilityInterval {
+    /// Inclusive cumulative lower bound.
+    pub start: FiniteF32,
+    /// Exclusive cumulative upper bound.
+    pub end: FiniteF32,
+}
+
+/// Compact visualization data for one committed autoregressive token.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct GenerationStepSummary {
+    /// Zero-based generated-token index.
+    pub index: usize,
+    /// Full model context before selecting this token.
+    pub context_token_ids: Vec<TokenId>,
+    /// Selected token metadata.
+    pub generated_token: TokenInfo,
+    /// Selected raw model logit.
+    pub selected_logit: FiniteF32,
+    /// Selected probability after temperature and Top-K.
+    pub selected_probability: FiniteF32,
+    /// Retained candidates in deterministic sampling order.
+    pub candidates: Vec<LogitCandidate>,
+    /// Deterministic sample draw, absent in greedy mode.
+    pub random: Option<FiniteF32>,
+    /// Selected cumulative interval, absent in greedy mode.
+    pub selected_interval: Option<CumulativeProbabilityInterval>,
+    /// Full-context model-forward duration.
+    pub forward_ms: FiniteF32,
+    /// Final-logit sampling duration.
+    pub sampling_ms: FiniteF32,
+    /// Complete generation-step duration.
+    pub total_ms: FiniteF32,
 }

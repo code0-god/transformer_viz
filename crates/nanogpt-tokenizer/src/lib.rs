@@ -25,6 +25,20 @@ pub enum TokenizerError {
     /// Decoded token pieces are not valid UTF-8.
     #[error("decoded token bytes are not valid UTF-8: {0}")]
     Utf8(#[from] std::string::FromUtf8Error),
+    /// Generation requires at least one prompt byte.
+    #[error("generation prompt must not be empty")]
+    EmptyGenerationPrompt,
+    /// Generation prompt plus BOS exceeds the configured context.
+    #[error("generation prompt requires {actual} tokens but the limit is {limit}")]
+    GenerationPromptTooLong {
+        /// Configured context limit.
+        limit: usize,
+        /// Required token count including BOS.
+        actual: usize,
+    },
+    /// A token ID is outside the configured vocabulary.
+    #[error("token ID {0} is outside the configured vocabulary")]
+    InvalidToken(u32),
 }
 
 impl Tokenizer {
@@ -77,6 +91,75 @@ impl Tokenizer {
             truncated: kept < input.len(),
             original_byte_length: input.len(),
         }
+    }
+
+    /// Encodes generation context as BOS followed by every prompt byte, without EOS.
+    ///
+    /// # Errors
+    /// Returns [`TokenizerError`] for empty input or input that cannot fit after BOS.
+    pub fn generation_prompt(&self, input: &str) -> Result<EncodedTokens, TokenizerError> {
+        if input.is_empty() {
+            return Err(TokenizerError::EmptyGenerationPrompt);
+        }
+        let actual = input.len().saturating_add(1);
+        if actual > self.config.max_length {
+            return Err(TokenizerError::GenerationPromptTooLong {
+                limit: self.config.max_length,
+                actual,
+            });
+        }
+        let mut tokens = Vec::with_capacity(actual);
+        tokens.push(special(self.config.bos_id, "<BOS>", TokenKind::Bos));
+        tokens.extend(
+            input
+                .as_bytes()
+                .iter()
+                .copied()
+                .enumerate()
+                .map(|(offset, byte)| TokenInfo {
+                    id: TokenId(self.config.byte_offset + u32::from(byte)),
+                    display: display_byte(byte),
+                    piece: vec![byte],
+                    byte_start: Some(offset),
+                    byte_end: Some(offset + 1),
+                    kind: TokenKind::Byte,
+                }),
+        );
+        Ok(EncodedTokens {
+            tokens,
+            truncated: false,
+            original_byte_length: input.len(),
+        })
+    }
+
+    /// Returns focused metadata for a token selected by generation.
+    ///
+    /// # Errors
+    /// Returns [`TokenizerError::InvalidToken`] when the ID is outside this vocabulary.
+    pub fn token_info(&self, id: TokenId) -> Result<TokenInfo, TokenizerError> {
+        if id == self.config.bos_id {
+            return Ok(special(id, "<BOS>", TokenKind::Bos));
+        }
+        if id == self.config.eos_id {
+            return Ok(special(id, "<EOS>", TokenKind::Eos));
+        }
+        if id == self.config.unk_id {
+            return Ok(special(id, "<UNK>", TokenKind::Unknown));
+        }
+        let Some(byte) =
+            id.0.checked_sub(self.config.byte_offset)
+                .and_then(|value| u8::try_from(value).ok())
+        else {
+            return Err(TokenizerError::InvalidToken(id.0));
+        };
+        Ok(TokenInfo {
+            id,
+            display: display_byte(byte),
+            piece: vec![byte],
+            byte_start: None,
+            byte_end: None,
+            kind: TokenKind::Byte,
+        })
     }
 
     /// Decodes byte tokens and omits BOS/EOS markers.

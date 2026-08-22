@@ -1,6 +1,6 @@
 //! Phase C deterministic educational tokenizer contracts.
 
-use nanogpt_schema::{TokenId, TokenizerConfig};
+use nanogpt_schema::{TokenId, TokenKind, TokenizerConfig};
 use nanogpt_tokenizer::Tokenizer;
 
 fn tokenizer(max_length: usize) -> Result<Tokenizer, Box<dyn std::error::Error>> {
@@ -131,5 +131,51 @@ fn tokenizer_configuration_round_trips_through_json() -> Result<(), Box<dyn std:
     let parsed = Tokenizer::from_json(&serde_json::to_string(&config)?)?;
     // Then: all configuration remains intact.
     assert_eq!(parsed.config(), &config);
+    Ok(())
+}
+
+#[test]
+fn generation_prompt_has_bos_and_prompt_bytes_without_eos() -> Result<(), Box<dyn std::error::Error>>
+{
+    // Given: a prompt at the generation boundary.
+    let tokenizer = tokenizer(24)?;
+    // When: it is encoded as autoregressive context.
+    let encoded = tokenizer.generation_prompt("cat")?;
+    // Then: BOS and bytes are retained but encoder EOS is absent.
+    assert_eq!(
+        encoded.ids(),
+        vec![TokenId(0), TokenId(102), TokenId(100), TokenId(119)]
+    );
+    assert!(!encoded.truncated);
+    Ok(())
+}
+
+#[test]
+fn token_info_describes_generated_special_and_byte_tokens() -> Result<(), Box<dyn std::error::Error>>
+{
+    // Given: generated EOS and printable byte IDs.
+    let tokenizer = tokenizer(24)?;
+    // When: focused metadata is requested.
+    let eos = tokenizer.token_info(TokenId(1))?;
+    let byte = tokenizer.token_info(TokenId(100))?;
+    // Then: display, pieces, and semantic kinds are reusable by generation summaries.
+    assert_eq!((eos.display.as_str(), eos.kind), ("<EOS>", TokenKind::Eos));
+    assert_eq!(
+        (byte.display.as_str(), byte.piece, byte.kind),
+        ("a", vec![b'a'], TokenKind::Byte)
+    );
+    Ok(())
+}
+
+#[test]
+fn generation_prompt_rejects_empty_and_truncated_input() -> Result<(), Box<dyn std::error::Error>> {
+    // Given: an empty prompt and one longer than the context after BOS.
+    let tokenizer = tokenizer(5)?;
+    // When: each crosses the focused generation boundary.
+    let empty = tokenizer.generation_prompt("");
+    let long = tokenizer.generation_prompt("abcde");
+    // Then: neither silently becomes a generation context.
+    assert!(empty.is_err());
+    assert!(long.is_err());
     Ok(())
 }

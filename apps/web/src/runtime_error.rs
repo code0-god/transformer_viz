@@ -36,6 +36,9 @@ pub enum RuntimeError {
     /// Trace materialization failed in Candle.
     #[error("추적 텐서를 읽지 못했습니다: {0}")]
     Tensor(#[from] candle_core::Error),
+    /// Final-logit sampling failed.
+    #[error("토큰 샘플링에 실패했습니다: {0}")]
+    Sampling(#[from] nanogpt_model::SamplingError),
     /// The Worker has not initialized.
     #[error("모델 준비가 끝나지 않았습니다")]
     NotInitialized,
@@ -75,7 +78,7 @@ impl RuntimeError {
             | Self::InputTooLong { .. }
             | Self::InvalidSelector => WorkerErrorCode::InvalidRequest,
             Self::Tokenizer(_) => WorkerErrorCode::Tokenization,
-            Self::Model(_) | Self::Tensor(_) => WorkerErrorCode::Inference,
+            Self::Model(_) | Self::Tensor(_) | Self::Sampling(_) => WorkerErrorCode::Inference,
             Self::NotInitialized | Self::StaleRun => WorkerErrorCode::NotInitialized,
             Self::Cancelled => WorkerErrorCode::Cancelled,
         }

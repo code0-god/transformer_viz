@@ -9,6 +9,7 @@ use nanogpt_schema::{FiniteF32, TokenInfo, TraceMode, WorkerRequest, WorkerRespo
 pub use crate::runtime_assets::AssetBundle;
 use crate::runtime_assets::{LoadedModel, asset_names, load_assets};
 use crate::runtime_error::RuntimeError;
+use crate::runtime_generation::GenerationRun;
 use crate::runtime_timer::InferenceTimer;
 use crate::runtime_trace::{TokenSelection, TraceCapture};
 
@@ -17,6 +18,10 @@ const TOP_K: usize = 10;
 #[cfg(test)]
 #[path = "runtime_replay_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "runtime_generation_tests.rs"]
+mod generation_tests;
 
 #[derive(Debug)]
 struct CachedRun {
@@ -28,10 +33,12 @@ struct CachedRun {
 /// Stateful request processor retaining one model and one recent run.
 #[derive(Debug, Default)]
 pub struct WorkerRuntime {
-    loaded: Option<LoadedModel>,
+    pub(super) loaded: Option<LoadedModel>,
     cached: Option<CachedRun>,
     cancelled: HashSet<u64>,
-    next_run_id: u64,
+    pub(super) generation: Option<GenerationRun>,
+    pub(super) generation_epoch: u64,
+    pub(super) next_run_id: u64,
 }
 
 impl WorkerRuntime {
@@ -43,6 +50,7 @@ impl WorkerRuntime {
         let (loaded, metadata) = load_assets(assets)?;
         self.loaded = Some(loaded);
         self.cached = None;
+        self.generation = None;
         self.cancelled.clear();
         Ok(WorkerResponse::Ready { model: metadata })
     }
@@ -59,6 +67,9 @@ impl WorkerRuntime {
                 "initialization requires downloaded assets".to_owned(),
             )),
             WorkerRequest::Run { request_id, text } => self.run(request_id, &text),
+            WorkerRequest::Generate { .. } | WorkerRequest::StopGeneration { .. } => {
+                Err(RuntimeError::InvalidSelector)
+            }
             WorkerRequest::InspectBlock {
                 request_id,
                 run_id,

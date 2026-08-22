@@ -1,8 +1,11 @@
-use crate::{AttentionHeadTrace, BlockTrace, ModelMetadata, RunSummary, TokenTrace};
+use crate::{
+    AttentionHeadTrace, BlockTrace, GenerationConfig, GenerationStepSummary, GenerationStopReason,
+    ModelMetadata, RunSummary, TokenTrace,
+};
 use serde::{Deserialize, Serialize};
 
 /// Request accepted by the inference Worker.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum WorkerRequest {
     /// Load and verify model assets.
@@ -16,6 +19,20 @@ pub enum WorkerRequest {
         request_id: u64,
         /// UTF-8 prompt text.
         text: String,
+    },
+    /// Start streaming autoregressive generation.
+    Generate {
+        /// Correlates every stream event with this request.
+        request_id: u64,
+        /// UTF-8 prompt text.
+        text: String,
+        /// Deterministic generation controls.
+        config: GenerationConfig,
+    },
+    /// Stop an active generation request.
+    StopGeneration {
+        /// Active generation request to stop.
+        request_id: u64,
     },
     /// Inspect one cached Transformer block.
     InspectBlock {
@@ -92,6 +109,31 @@ pub enum WorkerResponse {
     Ready {
         /// Loaded model identity and provenance.
         model: ModelMetadata,
+    },
+    /// A valid generation became active.
+    GenerationStarted {
+        /// Correlated generation request.
+        request_id: u64,
+        /// Stable generation run ID.
+        run_id: u64,
+    },
+    /// One generated token was committed to the stream.
+    TokenGenerated {
+        /// Correlated generation request.
+        request_id: u64,
+        /// Stable generation run ID.
+        run_id: u64,
+        /// Compact committed step data.
+        step: GenerationStepSummary,
+    },
+    /// A generation stream reached a terminal state.
+    GenerationFinished {
+        /// Correlated generation request.
+        request_id: u64,
+        /// Stable generation run ID.
+        run_id: u64,
+        /// Stable terminal reason.
+        reason: GenerationStopReason,
     },
     /// Inference completed and can be inspected by run ID.
     RunComplete {
