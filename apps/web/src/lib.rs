@@ -3,6 +3,8 @@
 pub mod app;
 #[cfg(target_arch = "wasm32")]
 pub mod components;
+pub mod guided_math;
+mod guided_math_types;
 pub mod runtime;
 #[doc(hidden)]
 pub mod runtime_assets;

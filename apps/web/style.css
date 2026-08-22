@@ -16,6 +16,16 @@
   --query: #1769aa;
   --key: #27614f;
   --value: #6d4c8d;
+  --score-path: #a94327;
+  --mask-ink: #6f6d66;
+  --probability-low: #f3dfd6;
+  --probability-high: #8f2f20;
+  --residual: #a66616;
+  --mlp: #147369;
+  --prediction-ink: #25231f;
+  --prediction-gold: #a77a1f;
+  --matrix-ramp-start: var(--probability-low);
+  --matrix-ramp-end: var(--probability-high);
   --s1: 4px;
   --s2: 8px;
   --s3: 12px;
@@ -175,6 +185,111 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 
 .fatal-error { max-inline-size: 640px; margin: var(--s10) auto; padding: var(--s6); }
 
+/* Phase 4 real-trace stage primitives */
+.stage-visual { display: grid; gap: var(--s3); min-block-size: 0; align-content: start; overflow-y: auto; padding-inline-end: var(--s1); scrollbar-gutter: stable; }
+.stage-visual[data-trace-ready="true"] { animation: trace-arrival var(--standard) both; }
+@keyframes trace-arrival { from { opacity: .72; filter: blur(2px); } to { opacity: 1; filter: blur(0); } }
+.stage-empty { place-content: center; text-align: center; }
+.stage-empty svg { inline-size: min(100%, 320px); block-size: 64px; stroke: var(--hairline); }
+.stage-empty p { margin: 0; }
+.equation-line { display: flex; align-items: center; justify-content: center; gap: var(--s3); font-size: .8125rem; }
+.equation-line span { padding: var(--s1) var(--s3); background: var(--surface-strong); }
+.equation-line b { color: var(--score-path); }
+.vector-comparison, .qkv-visual { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.vector-comparison .equation-line, .vector-comparison .comparison-ledger, .qkv-markers { grid-column: 1 / -1; }
+.vector-strip { min-inline-size: 0; margin: 0; padding-block-end: var(--s2); border-block-end: 1px solid var(--hairline); }
+.vector-strip figcaption, .attention-matrix figcaption, .contribution-matrix figcaption { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2); margin-block-end: var(--s1); font-size: .75rem; }
+.vector-strip figcaption span, .attention-matrix figcaption span, .contribution-matrix figcaption span { color: var(--ink-muted); font-size: .7rem; }
+.vector-strip svg { display: block; inline-size: 100%; block-size: 82px; overflow: visible; }
+.vector-zero { stroke: var(--hairline); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.vector-bar { fill: var(--accent); opacity: .78; }
+.vector-bar.selected { opacity: 1; stroke: var(--ink); stroke-width: 2px; vector-effect: non-scaling-stroke; }
+.vector-query .vector-bar { fill: var(--query); }
+.vector-key .vector-bar { fill: var(--key); }
+.vector-value .vector-bar { fill: var(--value); }
+.vector-residual .vector-bar { fill: var(--residual); }
+.vector-mlp .vector-bar { fill: var(--mlp); }
+.vector-probability .vector-bar { fill: var(--probability-high); }
+.vector-prediction .vector-bar { fill: var(--prediction-gold); }
+.vector-values { display: flex; gap: 1px; margin: 0; padding: 0; overflow-x: auto; list-style: none; scrollbar-gutter: stable; }
+.vector-values li { display: grid; flex: 0 0 54px; padding: 2px; color: var(--ink-muted); font-size: .58rem; text-align: center; }
+.vector-values li.selected { background: var(--accent-soft); color: var(--ink); font-weight: 700; }
+.vector-values code { font-size: .58rem; }
+.qkv-markers { display: flex; align-items: center; gap: var(--s2); }
+.qkv-markers > span { display: inline-grid; place-items: center; inline-size: 32px; block-size: 32px; background: var(--query); color: var(--surface); font-weight: 800; }
+.qkv-markers .q-marker { border-radius: 50%; }
+.qkv-markers .k-marker { border-radius: 3px; background: var(--key); }
+.qkv-markers .v-marker { border-radius: 10px 2px; background: var(--value); }
+.qkv-markers small { margin-inline-start: auto; color: var(--ink-muted); }
+.comparison-ledger, .prediction-ledger { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: var(--s2); }
+.tensor-facts { display: grid; gap: 2px; margin: 0; padding: var(--s2); background: var(--surface-strong); }
+.tensor-facts div { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: var(--s2); }
+.tensor-facts dt { color: var(--ink-muted); font-size: .65rem; }
+.tensor-facts dd { min-inline-size: 0; margin: 0; overflow: hidden; font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
+.score-visual { grid-template-columns: minmax(0, 1.4fr) minmax(180px, .6fr); align-items: start; }
+.score-visual .matrix-pair { grid-column: 1; grid-row: 1 / span 2; }
+.score-visual > .vector-strip { grid-column: 2; grid-row: 1; }
+.score-visual > .math-proof { grid-column: 2; grid-row: 2; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.matrix-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); }
+.attention-matrix, .contribution-matrix { min-inline-size: 0; margin: 0; }
+.matrix-scroll { max-inline-size: 100%; overflow-x: auto; }
+.matrix-frame { position: relative; inline-size: min(100%, 244px); min-inline-size: 208px; aspect-ratio: var(--matrix-cols) / var(--matrix-rows); margin-inline: auto; }
+.matrix-frame svg, .matrix-grid { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+.matrix-frame svg { border: 1px solid var(--hairline); }
+.matrix-frame rect { stroke: color-mix(in srgb, var(--surface) 68%, transparent); stroke-width: .035; }
+.matrix-frame rect.selected { stroke: var(--ink); stroke-width: .16; }
+.matrix-hatch { stroke: var(--mask-ink); stroke-width: .08; }
+.matrix-grid { display: grid; grid-template-columns: repeat(var(--matrix-cols), minmax(0, 1fr)); grid-template-rows: repeat(var(--matrix-rows), minmax(0, 1fr)); }
+.matrix-grid button { min-inline-size: 0; min-block-size: 0; padding: 0; border: 0; border-radius: 0; background: transparent; color: transparent; }
+.matrix-grid button:hover, .matrix-grid button:focus-visible { color: transparent; box-shadow: inset 0 0 0 2px var(--focus); }
+.matrix-grid button.selected { box-shadow: inset 0 0 0 2px var(--ink); }
+.matrix-grid button span:not(.sr-only) { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+.matrix-legend { display: flex; align-items: center; gap: var(--s1); margin-block-start: var(--s1); color: var(--ink-muted); font-size: .65rem; }
+.matrix-ramp { inline-size: 72px; block-size: 8px; background: linear-gradient(90deg, var(--probability-low), var(--probability-high)); }
+.mask-key { margin-inline-start: auto; color: var(--mask-ink); }
+.attention-matrix:not([data-mode="mask"]) .mask-key { display: none; }
+.math-proof { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(112px, 100%), 1fr)); gap: var(--s2); margin: 0; }
+.math-proof div { padding: var(--s2); border-block: 1px solid var(--hairline); }
+.math-proof dt { color: var(--ink-muted); font-size: .65rem; }
+.math-proof dd { margin: 2px 0 0; font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: .72rem; }
+.mask-verdict, .output-proof { margin: 0; padding: var(--s2); background: var(--surface-strong); color: var(--ink); font-size: .75rem; }
+.softmax-transform { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--s2); }
+.softmax-transform > span { color: var(--score-path); font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: .72rem; font-weight: 700; }
+.softmax-visual { grid-template-columns: minmax(0, 1.5fr) minmax(208px, .5fr); }
+.softmax-visual .softmax-transform, .softmax-visual .math-proof { grid-column: 1; }
+.softmax-visual .attention-matrix { grid-column: 2; grid-row: 1 / span 2; }
+.contribution-matrix svg { display: block; inline-size: min(100%, 560px); block-size: 116px; margin-inline: auto; border: 1px solid var(--hairline); }
+.contribution-matrix rect { stroke: var(--surface); stroke-width: .035; }
+.contribution-matrix rect.selected { stroke: var(--prediction-gold); stroke-width: .12; }
+.value-visual { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
+.value-visual .value-strips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
+.residual-equation { display: flex; align-items: center; justify-content: center; gap: var(--s2); color: var(--ink-muted); font-size: .7rem; }
+.residual-equation b { color: var(--residual); font-size: .9rem; }
+.residual-strips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2); }
+.value-visual .residual-equation, .value-visual .residual-strips, .value-visual .flow-diagram, .value-visual .output-proof { grid-column: 1 / -1; }
+.flow-diagram { min-inline-size: 0; margin: 0; }
+.flow-diagram svg { display: block; inline-size: 100%; block-size: 112px; }
+.flow-path { fill: none; stroke: var(--score-path); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.flow-group rect { fill: var(--surface-strong); stroke: var(--hairline); }
+.flow-group text { fill: var(--ink); font-size: 11px; font-weight: 700; text-anchor: middle; }
+.flow-group .flow-shape { fill: var(--ink-muted); font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 9px; font-weight: 500; }
+.flow-residual rect { fill: color-mix(in srgb, var(--residual) 15%, var(--surface)); stroke: var(--residual); }
+.flow-mlp rect { fill: color-mix(in srgb, var(--mlp) 14%, var(--surface)); stroke: var(--mlp); }
+.flow-value rect { fill: color-mix(in srgb, var(--value) 14%, var(--surface)); stroke: var(--value); }
+.flow-summary { display: flex; gap: var(--s1); margin: 0; padding: 0; overflow-x: auto; list-style: none; }
+.flow-summary li { display: grid; flex: 1 0 112px; padding: var(--s1) var(--s2); border-block-end: 1px solid var(--hairline); font-size: .62rem; }
+.flow-summary code { color: var(--ink-muted); font-size: .58rem; }
+.mlp-strips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
+.tied-head { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(18ch, .5fr); gap: var(--s3); align-items: center; }
+.tied-head svg { inline-size: 100%; block-size: 92px; }
+.tied-head rect { fill: var(--surface-strong); stroke: var(--prediction-ink); }
+.tied-head .prediction-weight { fill: color-mix(in srgb, var(--prediction-gold) 18%, var(--surface)); stroke: var(--prediction-gold); }
+.tied-head path { stroke: var(--prediction-gold); stroke-width: 2; }
+.tied-head text { fill: var(--prediction-ink); font-size: 12px; text-anchor: middle; }
+.tied-head p { margin: 0; font-size: .75rem; }
+.prediction-ledger { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
+.sr-only { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
 @media (max-width: 1180px) {
   .guided-player { grid-template-columns: minmax(10rem, .55fr) minmax(28rem, 1.7fr) minmax(17rem, .8fr); padding-inline: var(--s4); }
   .lifecycle-detail { display: none; }
@@ -201,6 +316,13 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
   .speed-buttons { justify-self: start; }
   .model-map, .inspector { overflow: visible; }
   .model-map { max-block-size: none; }
+  .vector-comparison, .qkv-visual, .score-visual, .matrix-pair, .value-visual, .mlp-strips { grid-template-columns: minmax(0, 1fr); }
+  .score-visual .matrix-pair, .score-visual > .vector-strip, .score-visual > .math-proof { grid-column: 1; grid-row: auto; }
+  .softmax-visual { grid-template-columns: minmax(0, 1fr); }
+  .softmax-visual .softmax-transform, .softmax-visual .math-proof, .softmax-visual .attention-matrix, .value-visual .flow-diagram, .value-visual .output-proof { grid-column: 1; grid-row: auto; }
+  .matrix-frame { inline-size: min(100%, 320px); }
+  .trace-evidence, .stage-visual { overflow: visible; }
+  .stage-visual { padding-inline-end: 0; }
 }
 
 @media (max-width: 560px) {
@@ -211,6 +333,10 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
   .stage-heading h2 { font-size: 1.25rem; }
   .evidence-grid, .prediction-evidence { grid-template-columns: 1fr; }
   .top-k-list { grid-template-columns: 1fr; max-block-size: 240px; }
+  .softmax-transform, .tied-head, .prediction-ledger, .value-visual .value-strips, .residual-strips { grid-template-columns: minmax(0, 1fr); }
+  .softmax-transform > span { justify-self: center; }
+  .flow-diagram svg { min-inline-size: 620px; }
+  .flow-diagram { overflow-x: auto; }
   .rail-transport > span { display: none; }
 }
 

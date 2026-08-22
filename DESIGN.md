@@ -32,6 +32,14 @@ A warm scientific notebook with the precision of an oscilloscope. The interface 
 | Query | `--query` | `#1769aa` | Q marker and query evidence |
 | Key | `--key` | `#27614f` | K marker and key evidence |
 | Value | `--value` | `#6d4c8d` | V marker and value evidence |
+| Score path | `--score-path` | `#a94327` | QK score products and computational paths |
+| Mask hatch | `--mask-ink` | `#6f6d66` | Future-cell hatch and text cue |
+| Probability low | `--probability-low` | `#f3dfd6` | Sequential probability ramp floor |
+| Probability high | `--probability-high` | `#8f2f20` | Sequential probability ramp ceiling |
+| Residual | `--residual` | `#a66616` | Residual additions and stream continuity |
+| MLP | `--mlp` | `#147369` | MLP expansion, GELU, and projection |
+| Prediction ink | `--prediction-ink` | `#25231f` | Tied-head geometry and prediction labels |
+| Prediction gold | `--prediction-gold` | `#a77a1f` | Tied embedding weight and ranked output accent |
 
 Accent is reserved for interaction and the selected computational path. Query, key, and value colors always pair with `Q`, `K`, and `V` text markers and distinct silhouettes. Heatmap values use an ink-to-terracotta sequential ramp; future-mask cells also use diagonal hatching so color is never the only cue.
 
@@ -59,7 +67,7 @@ Base unit is 4px. Tokens: `--s1: 4px`, `--s2: 8px`, `--s3: 12px`, `--s4: 16px`, 
 - Desktop workspace areas are Model Mini Map, dominant Main Stage, and Inspector:
   `minmax(12rem, .62fr) minmax(32rem, 1.9fr) minmax(19rem, .86fr)`.
 - Main Stage is first in DOM order. CSS places Model Mini Map at inline-start and Inspector at inline-end on desktop without changing focus order.
-- Inspector is the only desktop vertical scroll owner. Source code, tensor tables, heatmaps, token strips, and Stage Rail may own bounded horizontal overflow for their named content.
+- Inspector owns desktop detail scroll. The named `.stage-visual` data region may own bounded vertical overflow only for content-dense real-trace stages (mask, value/residual, MLP/residual, prediction); source code, tensor tables, heatmaps, token strips, vector values, and Stage Rail may own bounded horizontal overflow for their named content.
 - Tablet reduces Model Mini Map to compact architecture controls and moves Inspector below Main Stage when three regions no longer fit.
 - Mobile returns vertical scrolling to the document. DOM and visual order are Main Stage, Stage Rail, compact model navigation, then Inspector; this keeps the current learning concept first.
 - Every bounded grid or flex scroll child uses `min-block-size: 0`; intrinsic tracks use `minmax(min(..., 100%), 1fr)` to prevent narrow-screen overflow.
@@ -129,11 +137,28 @@ Base unit is 4px. Tokens: `--s1: 4px`, `--s2: 8px`, `--s3: 12px`, `--s4: 16px`, 
 - **Accessibility**: semantic buttons and `aria-current`; indentation is not the only hierarchy cue.
 - **Layout**: ordered desktop stack and compact tablet/mobile disclosure; no hard-coded layer, head, or embedding dimensions.
 
-### Attention Heatmap
-- **Structure**: SVG with title/description, row and column labels, roving-focus cell buttons overlaid in a CSS grid, numeric legend, selected-cell detail.
-- **States**: probability intensity, masked future hatch, selected border, keyboard focus.
-- **Accessibility**: rows are query and columns key; arrow keys move one cell; each cell label includes query, key, head, mask, and probability.
-- **Layout**: square frame with horizontal overflow on mobile only.
+### Vector Strip
+- **Structure**: all feature dimensions around a signed zero line, shared comparison scale, selected-feature mark, stable tensor identity, and equivalent HTML values.
+- **States**: query, key, value, score, residual, MLP, and prediction semantic tones.
+- **Accessibility**: SVG title/description names sign and scale; every exact feature value remains available in the adjacent ordered list.
+- **Layout**: SVG is fluid while the exact-value reel owns bounded horizontal overflow.
+
+### Attention Matrix
+- **Structure**: one reusable raw, scaled, mask, or probability heatmap with query rows, key columns, real cell buttons, legend, and stable tensor identity.
+- **States**: selected cell, roving keyboard focus, signed magnitude, probability ramp, and hatched future mask.
+- **Accessibility**: arrows move one cell; labels include q/k/head/value/mask state; hatch and `mask` text supplement color.
+- **Interaction**: cell pointer/arrow selection is the only stage primitive allowed to request token detail; stage navigation remains local UI state.
+- **Layout**: matrix frame owns bounded horizontal overflow on narrow screens.
+
+### Tensor Flow
+- **Structure**: labelled geometric nodes and paths paired with an ordered HTML shape summary.
+- **States**: score path, value, residual, MLP, and prediction semantic tones.
+- **Accessibility**: SVG title/description and duplicate HTML labels/shapes; no meaning depends on path color.
+
+### Formula and Tensor Facts
+- **Structure**: formula band, stable tensor ID, label, shape, mean, and standard deviation.
+- **States**: ready, typed missing trace, and loading.
+- **Accessibility**: semantic definition lists and explicit error text.
 
 ### Tensor Viewer
 - **Structure**: tensor identity/shape/dtype, statistics, high-precision selected value, bounded row-major slice.

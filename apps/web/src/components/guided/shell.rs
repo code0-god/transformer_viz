@@ -166,7 +166,7 @@ pub(super) fn model_map(state: RwSignal<AppState>, client: WorkerClient) -> impl
     }
 }
 
-fn model_controls_disabled(state: &AppState) -> bool {
+const fn model_controls_disabled(state: &AppState) -> bool {
     state.summary.is_none() || matches!(state.status, AppStatus::Loading(_) | AppStatus::Running(_))
 }
 
@@ -181,12 +181,16 @@ pub(super) fn send_or_error(
 }
 
 fn token_aria_label(state: &AppState, index: usize, display: &str, token_id: u32) -> String {
-    let query = (state.selection.token == index)
-        .then_some(" query Q")
-        .unwrap_or("");
-    let key = (state.selection.key == index)
-        .then_some(" key K")
-        .unwrap_or("");
+    let query = if state.selection.token == index {
+        " query Q"
+    } else {
+        ""
+    };
+    let key = if state.selection.key == index {
+        " key K"
+    } else {
+        ""
+    };
     format!("토큰 {index}, {display}, ID {token_id},{query}{key}")
 }
 
@@ -212,9 +216,8 @@ const fn status_label(status: &AppStatus) -> &'static str {
 
 fn status_detail(state: &AppState) -> String {
     match &state.status {
-        AppStatus::Loading(phase) => phase.clone(),
+        AppStatus::Loading(phase) | AppStatus::Running(phase) => phase.clone(),
         AppStatus::Ready => "문장을 실행할 수 있습니다.".to_owned(),
-        AppStatus::Running(phase) => phase.clone(),
         AppStatus::Complete => state.summary.as_ref().map_or_else(
             || "추적 완료".to_owned(),
             |summary| format!("실제 Worker trace · {:.2} ms", summary.duration_ms.get()),

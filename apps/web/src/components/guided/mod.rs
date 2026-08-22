@@ -4,6 +4,7 @@ mod inspector;
 mod rail;
 mod shell;
 mod stage;
+mod visuals;
 
 use leptos::prelude::*;
 
@@ -17,7 +18,7 @@ pub fn guided_player(state: RwSignal<AppState>, client: WorkerClient) -> impl In
             {shell::player_header(state)}
             {shell::prompt_drawer(state, client.clone())}
             {shell::context_bar(state, client.clone())}
-            {stage::main_stage(state)}
+            {stage::main_stage(state, client.clone())}
             {rail::stage_rail(state)}
             {shell::model_map(state, client)}
             {inspector::inspector(state)}

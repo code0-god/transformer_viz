@@ -75,15 +75,13 @@ fn speed_button(
     }
 }
 
-fn progress(state: &AppState, stage: NarrativeStage) -> &'static str {
+const fn progress(state: &AppState, target_stage: NarrativeStage) -> &'static str {
     let current = state.ui.narrative.stage.index();
-    let target = stage.index();
-    if target < current {
-        "complete"
-    } else if target == current {
-        "current"
-    } else {
-        "future"
+    let target = target_stage.index();
+    match (target < current, target == current) {
+        (true, _) => "complete",
+        (false, true) => "current",
+        (false, false) => "future",
     }
 }
 
