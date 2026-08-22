@@ -30,10 +30,10 @@ mod tests {
         assert_eq!(state.selection.head, head);
         assert_eq!(state.selection.token, 0);
         assert_eq!(state.selection.key, 0);
-        assert_eq!(state.ui.narrative.stage, NarrativeStage::MlpAndResidual);
+        assert_eq!(state.ui.narrative.stage, NarrativeStage::Mlp);
         assert_eq!(state.ui.inspector_tab, InspectorTab::Tensor);
         assert_eq!(state.ui.selected_feature, 3);
-        assert_eq!(state.ui.detail_operation, Some(12));
+        assert_eq!(state.ui.detail_operation, Some(13));
     }
 
     #[test]
@@ -42,7 +42,7 @@ mod tests {
         assert_eq!(ui.inspector_tab, InspectorTab::Explanation);
         assert!(ui.prompt_expanded);
         assert!(!ui.model_map_expanded);
-        assert_eq!(ui.narrative.stage, NarrativeStage::Embedding);
+        assert_eq!(ui.narrative.stage, NarrativeStage::Tokenization);
         assert_eq!(ui.detail_operation, None);
 
         for expected in NarrativeStage::ALL.into_iter().skip(1) {
@@ -53,8 +53,8 @@ mod tests {
         assert_eq!(ui.detail_operation, None);
 
         ui.previous_stage();
-        assert_eq!(ui.narrative.stage, NarrativeStage::MlpAndResidual);
-        assert_eq!(ui.detail_operation, Some(12));
+        assert_eq!(ui.narrative.stage, NarrativeStage::AppendToContext);
+        assert_eq!(ui.detail_operation, None);
     }
 
     #[test]
@@ -70,7 +70,7 @@ mod tests {
     fn autoplay_keeps_legacy_detail_mapping_synchronized() {
         // Given: narrative playback is on the final stage backed by block operations.
         let mut ui = ExplorerUiState::default();
-        ui.select_stage(NarrativeStage::MlpAndResidual);
+        ui.select_stage(NarrativeStage::AppendToContext);
         ui.set_narrative_speed(NarrativeSpeed::Double);
         ui.toggle_narrative();
 
@@ -80,7 +80,7 @@ mod tests {
         }
 
         // Then: prediction is current, its absent legacy operation is explicit, and no Worker state exists here.
-        assert_eq!(ui.narrative.stage, NarrativeStage::LanguageModelHead);
+        assert_eq!(ui.narrative.stage, NarrativeStage::Repeat);
         assert_eq!(ui.detail_operation, None);
         assert!(ui.narrative.playing);
         for _ in 0..3 {
@@ -107,7 +107,7 @@ mod tests {
         assert_eq!(state.selection.head, 0);
         assert_eq!(state.selection.token, 2);
         assert_eq!(state.selection.key, 2);
-        assert_eq!(state.ui.narrative.stage, NarrativeStage::Embedding);
+        assert_eq!(state.ui.narrative.stage, NarrativeStage::Tokenization);
         assert_eq!(state.ui.inspector_tab, InspectorTab::Explanation);
         assert_eq!(state.ui.selected_feature, 0);
         assert_eq!(state.ui.detail_operation, None);
@@ -162,7 +162,7 @@ mod tests {
 
         state.selection.token = 0;
         state.selection.key = 0;
-        state.ui.select_stage(NarrativeStage::MlpAndResidual);
+        state.ui.select_stage(NarrativeStage::Mlp);
         state.ui.inspector_tab = InspectorTab::Tensor;
         state.ui.selected_feature = 3;
 

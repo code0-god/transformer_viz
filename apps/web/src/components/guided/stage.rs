@@ -3,12 +3,11 @@
 use leptos::prelude::*;
 
 use crate::app::{
-    architecture::ArchitectureOperation, state::AppState, worker_client::WorkerClient,
+    narrative::NarrativeStage, state::AppState, ui_state::ExplorerMode, worker_client::WorkerClient,
 };
 
 use super::{
-    architecture::operation_slug,
-    stage_copy::{focus_bridge, focus_formula, focus_purpose, focus_title, operation_label},
+    stage_copy::{focus_bridge, focus_formula, focus_purpose, focus_title},
     visuals,
 };
 
@@ -40,49 +39,34 @@ fn stage_position(state: &AppState) -> String {
     )
 }
 
-fn evidence_title(state: &AppState) -> &'static str {
+const fn evidence_title(state: &AppState) -> &'static str {
     match state.ui.architecture.operation {
         Some(operation)
             if visuals::generation_sampling::is_generation_sampling_operation(operation) =>
         {
             "선택한 생성 step 증거"
         }
-        Some(operation) if operation.target().is_some() => "현재 trace 증거",
-        Some(_) | None => "구조와 설정",
+        Some(_) => "현재 trace 증거",
+        None => "구조와 설정",
     }
 }
 
 fn stage_evidence(state: RwSignal<AppState>, client: &WorkerClient) -> AnyView {
+    if state.with(|current| {
+        current.ui.mode == ExplorerMode::Guided
+            && current.ui.narrative.stage.index() <= NarrativeStage::Logits.index()
+    }) {
+        return visuals::stage_visual(state, client);
+    }
     match state.with(|current| current.ui.architecture.operation) {
         Some(operation)
             if visuals::generation_sampling::is_generation_sampling_operation(operation) =>
         {
             state.with(|current| visuals::generation_sampling::visual(current, operation))
         }
-        Some(operation) if operation.target().is_none() => generation_orientation(state, operation),
         Some(_) => visuals::stage_visual(state, client),
         None => level_orientation(state),
     }
-}
-
-fn generation_orientation(state: RwSignal<AppState>, selected: ArchitectureOperation) -> AnyView {
-    let config = state.with(|current| current.model.as_ref().map(|model| model.config.clone()));
-    view! {
-        <div class="architecture-orientation" data-operation=operation_slug(selected)>
-            <ol aria-label="Generation 연산 순서">
-                {generation_operations().into_iter().map(|operation| view! {
-                    <li aria-current=(operation == selected).then_some("step")>{operation_label(operation)}</li>
-                }).collect_view()}
-            </ol>
-            {config.map(|config| view! {
-                <dl class="orientation-ledger">
-                    <div><dt>"context limit"</dt><dd>{config.block_size}</dd></div>
-                    <div><dt>"vocabulary"</dt><dd>{config.vocab_size}</dd></div>
-                    <div><dt>"forward depth"</dt><dd>{config.n_layer}</dd></div>
-                </dl>
-            })}
-        </div>
-    }.into_any()
 }
 
 fn level_orientation(state: RwSignal<AppState>) -> AnyView {
@@ -112,18 +96,6 @@ fn level_orientation(state: RwSignal<AppState>) -> AnyView {
         </div>
     }
     .into_any()
-}
-
-const fn generation_operations() -> [ArchitectureOperation; 7] {
-    [
-        ArchitectureOperation::Logits,
-        ArchitectureOperation::Temperature,
-        ArchitectureOperation::TopK,
-        ArchitectureOperation::GenerationSoftmax,
-        ArchitectureOperation::Sample,
-        ArchitectureOperation::Append,
-        ArchitectureOperation::Repeat,
-    ]
 }
 
 fn coordinate_label(state: &AppState) -> String {

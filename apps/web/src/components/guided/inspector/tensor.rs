@@ -13,7 +13,7 @@ use crate::{
 use super::super::visuals::generation_sampling;
 use super::{feature_width, selected_tensor};
 
-pub(super) fn panel(state: RwSignal<AppState>, current: &AppState) -> AnyView {
+pub(super) fn panel(app_state: RwSignal<AppState>, current: &AppState) -> AnyView {
     if current
         .ui
         .architecture
@@ -22,7 +22,9 @@ pub(super) fn panel(state: RwSignal<AppState>, current: &AppState) -> AnyView {
     {
         return generation_sampling::inspector_evidence(current);
     }
-    if current.ui.narrative.stage == NarrativeStage::CausalMask {
+    if current.ui.narrative.stage == NarrativeStage::CausalMask
+        && current.ui.architecture.operation.is_some()
+    {
         return mask_panel(current);
     }
     let selection = match selected_tensor(current) {
@@ -36,18 +38,14 @@ pub(super) fn panel(state: RwSignal<AppState>, current: &AppState) -> AnyView {
     let axes = address.axes().to_vec();
     let selected_value = address.value().get();
     let slice_start = address.slice_start();
-    let slice = address
-        .slice()
-        .iter()
-        .map(|value| value.get())
-        .collect::<Vec<_>>();
+    let slice_values = address.slice().iter().map(|value| value.get());
     let feature_width = feature_width(selection.tensor);
     let tensor_id = selection.tensor.id.clone();
     let identity_id = tensor_id.clone();
     let label = selection.tensor.label.clone();
     let shape = format!("{:?}", selection.tensor.shape);
-    let stats = selection.tensor.stats.clone();
-    let stage = current.ui.narrative.stage;
+    let statistics = selection.tensor.stats.clone();
+    let concept = current.ui.narrative.stage;
     let selected_feature = current.ui.selected_feature;
     view! {
         <div class="inspector-tensor" data-testid="inspector-tensor" data-tensor-id=identity_id>
@@ -59,22 +57,22 @@ pub(super) fn panel(state: RwSignal<AppState>, current: &AppState) -> AnyView {
                 <div><dt>"operation"</dt><dd><code>{format!("{:?}", selection.operation)}</code></dd></div>
             </dl>
             <dl class="tensor-stats">
-                <div><dt>"min"</dt><dd>{format!("{:+.6}", stats.min.get())}</dd></div>
-                <div><dt>"max"</dt><dd>{format!("{:+.6}", stats.max.get())}</dd></div>
-                <div><dt>"mean"</dt><dd>{format!("{:+.6}", stats.mean.get())}</dd></div>
-                <div><dt>"std"</dt><dd>{format!("{:.6}", stats.std.get())}</dd></div>
-                <div><dt>"L2"</dt><dd>{format!("{:.6}", stats.l2_norm.get())}</dd></div>
+                <div><dt>"min"</dt><dd>{format!("{:+.6}", statistics.min.get())}</dd></div>
+                <div><dt>"max"</dt><dd>{format!("{:+.6}", statistics.max.get())}</dd></div>
+                <div><dt>"mean"</dt><dd>{format!("{:+.6}", statistics.mean.get())}</dd></div>
+                <div><dt>"std"</dt><dd>{format!("{:.6}", statistics.std.get())}</dd></div>
+                <div><dt>"L2"</dt><dd>{format!("{:.6}", statistics.l2_norm.get())}</dd></div>
             </dl>
             <div class="tensor-address" aria-label="선택 tensor 주소">
                 {axes.into_iter().map(|axis| view! { <span><b>{axis.name}</b> <code data-axis=axis.name>{axis.index}</code></span> }).collect_view()}
                 <span><b>"flat"</b> <code>{address.flat_index()}</code></span>
             </div>
-            {feature_controls(state, feature_width, selected_feature)}
+            {feature_controls(app_state, feature_width, selected_feature)}
             <p class="selected-value"><span>"선택 값"</span><strong>{format!("{selected_value:+.9}")}</strong></p>
             <div class="tensor-slice" tabindex="0" role="region" aria-label="선택 행의 bounded slice, 가로 스크롤 가능">
-                {slice.into_iter().enumerate().map(|(offset, value)| view! { <span><small>{slice_start + offset}</small><code>{format!("{value:+.7}")}</code></span> }).collect_view()}
+                {slice_values.enumerate().map(|(offset, value)| view! { <span><small>{slice_start + offset}</small><code>{format!("{value:+.7}")}</code></span> }).collect_view()}
             </div>
-            {math_evidence(current, stage)}
+            {math_evidence(current, concept)}
         </div>
     }.into_any()
 }
@@ -164,17 +162,29 @@ fn feature_controls(state: RwSignal<AppState>, width: Option<usize>, selected: u
     }.into_any()
 }
 
-fn math_evidence(state: &AppState, stage: NarrativeStage) -> AnyView {
-    match stage {
-        NarrativeStage::AttentionScores => qk_table(state),
-        NarrativeStage::ValueAggregation => value_table(state),
-        NarrativeStage::Embedding
-        | NarrativeStage::AttentionLayerNorm
+fn math_evidence(app_state: &AppState, concept: NarrativeStage) -> AnyView {
+    match concept {
+        NarrativeStage::AttentionScore => qk_table(app_state),
+        NarrativeStage::ValueAggregation => value_table(app_state),
+        NarrativeStage::Tokenization
+        | NarrativeStage::TokenEmbedding
+        | NarrativeStage::PositionEmbedding
+        | NarrativeStage::LayerNorm
         | NarrativeStage::QueryKeyValue
         | NarrativeStage::CausalMask
         | NarrativeStage::Softmax
-        | NarrativeStage::MlpAndResidual
-        | NarrativeStage::LanguageModelHead => ().into_any(),
+        | NarrativeStage::Residual
+        | NarrativeStage::Mlp
+        | NarrativeStage::BlockOutput
+        | NarrativeStage::FinalLayerNorm
+        | NarrativeStage::LanguageModelHead
+        | NarrativeStage::Logits
+        | NarrativeStage::Temperature
+        | NarrativeStage::TopK
+        | NarrativeStage::Sampling
+        | NarrativeStage::GeneratedToken
+        | NarrativeStage::AppendToContext
+        | NarrativeStage::Repeat => ().into_any(),
     }
 }
 
@@ -198,13 +208,12 @@ fn qk_table(state: &AppState) -> AnyView {
         .enumerate()
         .map(|(feature, ((q_value, k_value), product))| {
             (feature, q_value.get(), k_value.get(), *product)
-        })
-        .collect::<Vec<_>>();
+        });
     view! {
         <div class="math-table-scroll" tabindex="0" role="region" aria-label="QK feature 기여도 표, 가로 세로 스크롤 가능">
             <table class="qk-contribution-table"><caption>{format!("q{query} · k{key} 전체 QᵢKᵢ")}</caption>
                 <thead><tr><th scope="col">"feature"</th><th scope="col">"Qᵢ"</th><th scope="col">"Kᵢ"</th><th scope="col">"Qᵢ × Kᵢ"</th></tr></thead>
-                <tbody>{rows.into_iter().map(|(feature, q_value, k_value, product)| view! { <tr><th scope="row">{feature}</th><td>{format!("{q_value:+.9}")}</td><td>{format!("{k_value:+.9}")}</td><td>{format!("{product:+.9}")}</td></tr> }).collect_view()}</tbody>
+                <tbody>{rows.map(|(feature, q_value, k_value, product)| view! { <tr><th scope="row">{feature}</th><td>{format!("{q_value:+.9}")}</td><td>{format!("{k_value:+.9}")}</td><td>{format!("{product:+.9}")}</td></tr> }).collect_view()}</tbody>
                 <tfoot><tr><th scope="row">"Σ / captured raw"</th><td colspan="3">{format!("{:.9} / {:.9} · error {:.2e}", evidence.dot, evidence.raw, evidence.raw_error)}</td></tr><tr><th scope="row">"scaled / error"</th><td colspan="3">{format!("{:.9} · {:.2e}", evidence.scaled, evidence.scaled_error)}</td></tr></tfoot>
             </table>
         </div>
@@ -221,16 +230,12 @@ fn value_table(state: &AppState) -> AnyView {
     };
     let selected_key = state.selection.key;
     let selected_feature = state.ui.selected_feature;
-    let contribution_rows = evidence
-        .contributions
-        .chunks(evidence.features.max(1))
-        .map(<[_]>::to_vec)
-        .collect::<Vec<_>>();
+    let contribution_rows = evidence.contributions.chunks(evidence.features.max(1));
     view! {
         <div class="math-table-scroll value-table-scroll" tabindex="0" role="region" aria-label="전체 P 곱하기 V 기여도 표, 가로 세로 스크롤 가능">
             <table class="value-contribution-table"><caption>{format!("q{query}의 전체 key × {} feature P[q,k] × V[k,d]", evidence.features)}</caption>
                 <thead><tr><th scope="col">"key"</th>{(0..evidence.features).map(|feature| view! { <th scope="col" class:selected=feature == selected_feature>{feature}</th> }).collect_view()}</tr></thead>
-                <tbody>{contribution_rows.into_iter().enumerate().map(|(key, row)| view! { <tr class:selected=key == selected_key><th scope="row">{format!("k{key}")}</th>{row.into_iter().enumerate().map(|(feature, value)| view! { <td class:selected=feature == selected_feature>{format!("{value:+.7}")}</td> }).collect_view()}</tr> }).collect_view()}</tbody>
+                <tbody>{contribution_rows.enumerate().map(|(key, row)| view! { <tr class:selected=key == selected_key><th scope="row">{format!("k{key}")}</th>{row.iter().copied().enumerate().map(|(feature, value)| view! { <td class:selected=feature == selected_feature>{format!("{value:+.7}")}</td> }).collect_view()}</tr> }).collect_view()}</tbody>
                 <tfoot><tr><th scope="row">"Σₖ"</th>{evidence.feature_sums.iter().enumerate().map(|(feature, value)| view! { <td class:selected=feature == selected_feature>{format!("{value:+.7}")}</td> }).collect_view()}</tr><tr><th scope="row">"captured"</th>{evidence.captured.iter().enumerate().map(|(feature, value)| view! { <td class:selected=feature == selected_feature>{format!("{value:+.7}")}</td> }).collect_view()}</tr></tfoot>
             </table><p class="table-proof">{format!("captured output 최대 절대 오차 {:.2e}", evidence.output_error)}</p>
         </div>

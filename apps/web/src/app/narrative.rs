@@ -1,55 +1,178 @@
-//! Guided nine-stage narrative state.
+//! Canonical grouped Guided curriculum and deterministic browser transport.
 
-/// Number of stages in the guided learning narrative.
-pub const NARRATIVE_STAGE_COUNT: usize = 9;
+mod evidence;
+pub use evidence::{EvidenceView, PredictionCandidateMetric};
 
-/// Stable guided-learning order from model input to prediction.
+/// Number of concepts in the canonical curriculum.
+pub const NARRATIVE_STAGE_COUNT: usize = 21;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// A named curriculum part used by the grouped rail.
+pub enum CurriculumGroup {
+    /// Input token and embedding concepts.
+    InputRepresentation,
+    /// Attention and MLP block concepts.
+    TransformerBlock,
+    /// Final normalization and vocabulary prediction concepts.
+    Prediction,
+    /// Autoregressive token-generation concepts.
+    Generation,
+}
+
+impl CurriculumGroup {
+    /// Exact stable order consumed by transport and presentation.
+    pub const ALL: [Self; 4] = [
+        Self::InputRepresentation,
+        Self::TransformerBlock,
+        Self::Prediction,
+        Self::Generation,
+    ];
+
+    /// Human-readable group heading.
+    #[must_use]
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::InputRepresentation => "Input representation",
+            Self::TransformerBlock => "Transformer Block",
+            Self::Prediction => "Prediction",
+            Self::Generation => "Generation",
+        }
+    }
+
+    /// Returns the stable DOM key for this curriculum group.
+    #[must_use]
+    pub const fn slug(self) -> &'static str {
+        match self {
+            Self::InputRepresentation => "input",
+            Self::TransformerBlock => "transformer",
+            Self::Prediction => "prediction",
+            Self::Generation => "generation",
+        }
+    }
+
+    /// Returns the first concept selected when a collapsed group is activated.
+    #[must_use]
+    pub const fn first_stage(self) -> NarrativeStage {
+        match self {
+            Self::InputRepresentation => NarrativeStage::Tokenization,
+            Self::TransformerBlock => NarrativeStage::LayerNorm,
+            Self::Prediction => NarrativeStage::FinalLayerNorm,
+            Self::Generation => NarrativeStage::Temperature,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 #[repr(u8)]
+/// One canonical Guided curriculum concept.
 pub enum NarrativeStage {
-    /// Token and position embeddings enter the residual stream.
     #[default]
-    Embedding,
-    /// The residual stream is normalized before attention.
-    AttentionLayerNorm,
-    /// Query, key, and value projections are formed.
+    /// Tokenizer ID boundary before vector lookup.
+    Tokenization,
+    /// Learned token-vector lookup.
+    TokenEmbedding,
+    /// Learned position-vector addition.
+    PositionEmbedding,
+    /// Pre-attention normalization.
+    LayerNorm,
+    /// Query, key, and value projections.
     QueryKeyValue,
-    /// Query-key scores are computed and scaled.
-    AttentionScores,
-    /// Future key positions are excluded.
+    /// Scaled query-key relevance score.
+    AttentionScore,
+    /// Future-position exclusion.
     CausalMask,
-    /// Allowed scores become attention probabilities.
+    /// Attention probability normalization.
     Softmax,
-    /// Values are aggregated and returned to the residual stream.
+    /// Probability-weighted value sum.
     ValueAggregation,
-    /// The MLP transforms features and adds its residual.
-    MlpAndResidual,
-    /// The final representation becomes token predictions.
+    /// Attention residual addition.
+    Residual,
+    /// Token-wise nonlinear MLP transform.
+    Mlp,
+    /// MLP residual result passed to the next block.
+    BlockOutput,
+    /// Final residual-stream normalization.
+    FinalLayerNorm,
+    /// Tied embedding projection into vocabulary space.
     LanguageModelHead,
+    /// Raw vocabulary prediction scores.
+    Logits,
+    /// Generation-logit temperature scaling.
+    Temperature,
+    /// Generation candidate filtering.
+    TopK,
+    /// Generation probability and selection policy.
+    Sampling,
+    /// Exact selected token identity.
+    GeneratedToken,
+    /// Selected-token context append.
+    AppendToContext,
+    /// Full-context forward repetition.
+    Repeat,
 }
 
 impl NarrativeStage {
-    /// Ordered catalog used by the rail, transport, and keyboard navigation.
+    /// Exact stable order consumed by transport and presentation.
     pub const ALL: [Self; NARRATIVE_STAGE_COUNT] = [
-        Self::Embedding,
-        Self::AttentionLayerNorm,
+        Self::Tokenization,
+        Self::TokenEmbedding,
+        Self::PositionEmbedding,
+        Self::LayerNorm,
         Self::QueryKeyValue,
-        Self::AttentionScores,
+        Self::AttentionScore,
         Self::CausalMask,
         Self::Softmax,
         Self::ValueAggregation,
-        Self::MlpAndResidual,
+        Self::Residual,
+        Self::Mlp,
+        Self::BlockOutput,
+        Self::FinalLayerNorm,
         Self::LanguageModelHead,
+        Self::Logits,
+        Self::Temperature,
+        Self::TopK,
+        Self::Sampling,
+        Self::GeneratedToken,
+        Self::AppendToContext,
+        Self::Repeat,
     ];
 
-    /// Returns the zero-based stable catalog position.
     #[must_use]
+    /// Zero-based position in the canonical catalog.
     pub const fn index(self) -> usize {
         self as usize
     }
 
-    /// Maps one legacy 18-step detail operation into the guided narrative.
     #[must_use]
+    /// Curriculum part containing this concept.
+    pub const fn group(self) -> CurriculumGroup {
+        match self {
+            Self::Tokenization | Self::TokenEmbedding | Self::PositionEmbedding => {
+                CurriculumGroup::InputRepresentation
+            }
+            Self::LayerNorm
+            | Self::QueryKeyValue
+            | Self::AttentionScore
+            | Self::CausalMask
+            | Self::Softmax
+            | Self::ValueAggregation
+            | Self::Residual
+            | Self::Mlp
+            | Self::BlockOutput => CurriculumGroup::TransformerBlock,
+            Self::FinalLayerNorm | Self::LanguageModelHead | Self::Logits => {
+                CurriculumGroup::Prediction
+            }
+            Self::Temperature
+            | Self::TopK
+            | Self::Sampling
+            | Self::GeneratedToken
+            | Self::AppendToContext
+            | Self::Repeat => CurriculumGroup::Generation,
+        }
+    }
+
+    #[must_use]
+    /// Legacy 18-operation owner, when the index is valid.
     pub const fn for_detail_operation(index: usize) -> Option<Self> {
         if index < DETAIL_OPERATION_STAGES.len() {
             Some(DETAIL_OPERATION_STAGES[index])
@@ -62,47 +185,42 @@ impl NarrativeStage {
         if index < NARRATIVE_STAGE_COUNT {
             Self::ALL[index]
         } else {
-            Self::LanguageModelHead
+            Self::Repeat
         }
     }
 }
 
-/// Exhaustive one-to-one assignment of the existing 18 detail-operation indices.
-///
-/// Embedding owns summary tensors and no legacy block operation. The legacy trace
-/// combines masking and softmax at operation 7, so that boundary belongs to Softmax.
-/// Causal Mask uses its dedicated boolean trace, while the language-model head uses
-/// summary tensors instead of claiming a duplicate detail index.
+/// Compatibility assignment for the isolated legacy 18-operation trace.
 pub const DETAIL_OPERATION_STAGES: [NarrativeStage; 18] = [
-    NarrativeStage::AttentionLayerNorm,
-    NarrativeStage::AttentionLayerNorm,
+    NarrativeStage::LayerNorm,
+    NarrativeStage::LayerNorm,
     NarrativeStage::QueryKeyValue,
     NarrativeStage::QueryKeyValue,
     NarrativeStage::QueryKeyValue,
-    NarrativeStage::AttentionScores,
-    NarrativeStage::AttentionScores,
+    NarrativeStage::AttentionScore,
+    NarrativeStage::AttentionScore,
     NarrativeStage::Softmax,
     NarrativeStage::ValueAggregation,
     NarrativeStage::ValueAggregation,
     NarrativeStage::ValueAggregation,
-    NarrativeStage::ValueAggregation,
-    NarrativeStage::MlpAndResidual,
-    NarrativeStage::MlpAndResidual,
-    NarrativeStage::MlpAndResidual,
-    NarrativeStage::MlpAndResidual,
-    NarrativeStage::MlpAndResidual,
-    NarrativeStage::MlpAndResidual,
+    NarrativeStage::Residual,
+    NarrativeStage::Mlp,
+    NarrativeStage::Mlp,
+    NarrativeStage::Mlp,
+    NarrativeStage::Mlp,
+    NarrativeStage::BlockOutput,
+    NarrativeStage::BlockOutput,
 ];
 
-/// User-selected speed for the 250ms narrative clock.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+/// User-selected deterministic curriculum playback rate.
 pub enum NarrativeSpeed {
-    /// Approximately 2.4 seconds per stage (ten ticks, 2.5 seconds).
+    /// Half-speed playback interval.
     Half,
-    /// Approximately 1.4 seconds per stage (six ticks, 1.5 seconds).
     #[default]
+    /// Normal playback interval.
     Normal,
-    /// Approximately 0.8 seconds per stage (three ticks, 0.75 seconds).
+    /// Double-speed playback interval.
     Double,
 }
 
@@ -116,69 +234,54 @@ impl NarrativeSpeed {
     }
 }
 
-/// Bounded transport state for the nine guided stages.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+/// Bounded cursor and deterministic autoplay state.
 pub struct NarrativePlayback {
-    /// Currently selected narrative stage.
+    /// Currently selected curriculum concept.
     pub stage: NarrativeStage,
-    /// Whether timed playback is active.
+    /// Whether deterministic autoplay is active.
     pub playing: bool,
-    /// Selected playback rate.
+    /// Current autoplay rate.
     pub speed: NarrativeSpeed,
     ticks: usize,
 }
 
 impl NarrativePlayback {
-    /// Selects the first stage and pauses.
-    pub const fn first(&mut self) {
-        self.stage = NarrativeStage::Embedding;
-        self.pause();
-    }
-
-    /// Selects the previous stage, bounded at the start, and pauses.
+    /// Moves backward one concept and pauses.
     pub const fn previous(&mut self) {
         self.stage = NarrativeStage::from_index(self.stage.index().saturating_sub(1));
         self.pause();
     }
-
-    /// Selects a stage and pauses.
+    /// Selects an exact concept and pauses.
     pub const fn select(&mut self, stage: NarrativeStage) {
         self.stage = stage;
         self.pause();
     }
-
-    /// Selects the next stage, bounded at the end, and pauses.
+    /// Moves forward one concept and pauses.
     pub const fn next(&mut self) {
         self.stage = NarrativeStage::from_index(self.stage.index().saturating_add(1));
         self.pause();
     }
-
-    /// Selects the final stage and pauses.
+    /// Selects Repeat and pauses.
     pub const fn last(&mut self) {
-        self.stage = NarrativeStage::LanguageModelHead;
+        self.stage = NarrativeStage::Repeat;
         self.pause();
     }
-
-    /// Starts or pauses playback, restarting from the beginning after completion.
+    /// Starts or pauses deterministic autoplay.
     pub const fn toggle(&mut self) {
         if self.playing {
             self.pause();
         } else {
-            if self.stage.index() == NARRATIVE_STAGE_COUNT - 1 {
-                self.stage = NarrativeStage::Embedding;
-            }
             self.playing = true;
             self.ticks = 0;
         }
     }
-
-    /// Changes playback speed and resets the partial stage interval.
+    /// Changes rate and resets the partial interval.
     pub const fn set_speed(&mut self, speed: NarrativeSpeed) {
         self.speed = speed;
         self.ticks = 0;
     }
-
-    /// Advances one deterministic 250ms clock tick.
+    /// Advances one deterministic 250 ms clock tick.
     pub const fn tick(&mut self) {
         if !self.playing {
             return;
@@ -194,7 +297,6 @@ impl NarrativePlayback {
             self.stage = NarrativeStage::from_index(self.stage.index() + 1);
         }
     }
-
     const fn pause(&mut self) {
         self.playing = false;
         self.ticks = 0;

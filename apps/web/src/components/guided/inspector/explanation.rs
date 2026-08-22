@@ -14,7 +14,7 @@ pub(super) fn panel(state: &AppState) -> AnyView {
         state.ui.architecture.operation.map_or(
             "연산을 선택하기 전에는 level 구조와 모델 설정만 표시합니다.",
             |operation| {
-                if operation.target().is_some() {
+                if operation.target().1.is_some() {
                     evidence_prompt(state.ui.narrative.stage)
                 } else {
                     "이 경계에는 연결된 trace tensor ID가 없습니다."
@@ -38,16 +38,16 @@ pub(super) fn panel(state: &AppState) -> AnyView {
 
 const fn evidence_prompt(stage: NarrativeStage) -> &'static str {
     match stage {
-        NarrativeStage::Embedding => {
-            "선택 token에서 token/position/sum의 같은 feature가 실제로 더해지는지 비교하세요."
-        }
-        NarrativeStage::AttentionLayerNorm => {
+        NarrativeStage::Tokenization => "실제 token ID와 표시 문자열의 경계를 확인하세요.",
+        NarrativeStage::TokenEmbedding => "선택 token의 학습된 embedding feature를 확인하세요.",
+        NarrativeStage::PositionEmbedding => "같은 위치의 position embedding feature를 확인하세요.",
+        NarrativeStage::LayerNorm => {
             "정규화 전후의 shape와 평균·표준편차, 선택 feature 값을 확인하세요."
         }
         NarrativeStage::QueryKeyValue => {
             "같은 입력이 Q·K·V의 서로 다른 값이 되는지, q token과 k token 주소를 구분해 보세요."
         }
-        NarrativeStage::AttentionScores => {
+        NarrativeStage::AttentionScore => {
             "16개 QᵢKᵢ 곱의 합이 captured raw score와 맞고 √D scaling 오차가 작은지 확인하세요."
         }
         NarrativeStage::CausalMask => {
@@ -57,13 +57,22 @@ const fn evidence_prompt(stage: NarrativeStage) -> &'static str {
             "선택 query의 전체 확률 합이 1이고 미래 key 확률이 0인지 확인하세요."
         }
         NarrativeStage::ValueAggregation => {
-            "모든 key×feature P×V를 더한 값이 captured attention output과 일치하는지 확인하세요."
+            "모든 key×feature P×V 합이 captured attention output과 일치하는지 확인하세요."
         }
-        NarrativeStage::MlpAndResidual => {
-            "LN₂, 4C 확장, exact GELU, C projection, residual 합의 실제 tensor 경계를 차례로 확인하세요."
+        NarrativeStage::Residual => {
+            "attention projection과 residual 합의 실제 tensor 경계를 확인하세요."
         }
-        NarrativeStage::LanguageModelHead => {
-            "입력 끝 EOS의 final LayerNorm과 tied embedding head가 만든 전체 vocabulary logits를 확인하세요."
+        NarrativeStage::Mlp => "LN₂, 4C 확장, exact GELU와 C projection 경계를 확인하세요.",
+        NarrativeStage::BlockOutput => "MLP residual 합이 다음 블록 입력과 이어지는지 확인하세요.",
+        NarrativeStage::FinalLayerNorm => "실제 final LayerNorm tensor의 shape와 값을 확인하세요.",
+        NarrativeStage::LanguageModelHead | NarrativeStage::Logits => {
+            "tied embedding head가 만든 전체 vocabulary logits를 확인하세요."
         }
+        NarrativeStage::Temperature
+        | NarrativeStage::TopK
+        | NarrativeStage::Sampling
+        | NarrativeStage::GeneratedToken
+        | NarrativeStage::AppendToContext
+        | NarrativeStage::Repeat => "선택한 generated step의 compact summary 경계를 확인하세요.",
     }
 }

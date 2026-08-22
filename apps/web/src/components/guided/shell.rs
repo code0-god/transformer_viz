@@ -2,10 +2,12 @@
 
 use leptos::prelude::*;
 use nanogpt_schema::WorkerRequest;
+use wasm_bindgen::JsCast as _;
 
 use crate::app::{
     generation::GenerationPhase,
     state::{AppState, AppStatus},
+    ui_state::ExplorerMode,
     worker_client::WorkerClient,
 };
 
@@ -17,6 +19,7 @@ pub(super) fn player_header(state: RwSignal<AppState>) -> impl IntoView {
                 <h1>"Transformer Viz"</h1>
                 <p>"실제 trace로 따라가는 Guided Learning Player"</p>
             </div>
+            {mode_tabs(state)}
             <div class="lifecycle" aria-live="polite">
                 <span id="status" class="status-badge" data-status=move || state.with(|current| status_kind(&current.status))>
                     {move || state.with(|current| status_label(&current.status))}
@@ -24,6 +27,50 @@ pub(super) fn player_header(state: RwSignal<AppState>) -> impl IntoView {
                 <span class="lifecycle-detail">{move || state.with(status_detail)}</span>
             </div>
         </header>
+    }
+}
+
+fn mode_tabs(state: RwSignal<AppState>) -> impl IntoView {
+    view! {
+        <div class="mode-tabs" role="tablist" aria-label="탐색 모드">
+            {mode_tab(state, ExplorerMode::Guided, "guided", "Guided")}
+            {mode_tab(state, ExplorerMode::Explore, "explore", "Explore")}
+        </div>
+    }
+}
+
+fn mode_tab(
+    state: RwSignal<AppState>,
+    mode: ExplorerMode,
+    id: &'static str,
+    label: &'static str,
+) -> impl IntoView {
+    view! {
+        <button id=format!("mode-{id}") type="button" role="tab" aria-controls="shared-workspace"
+            aria-selected=move || state.with(|current| (current.ui.mode == mode).to_string())
+            tabindex=move || state.with(|current| if current.ui.mode == mode { "0" } else { "-1" })
+            on:click=move |_| state.update(|current| current.ui.select_mode(mode))
+            on:keydown=move |event| if let Some(next) = mode.after_key(&event.key()) {
+                event.prevent_default();
+                state.update(|current| current.ui.select_mode(next));
+                focus_mode(next);
+            }
+        >{label}</button>
+    }
+}
+
+fn focus_mode(mode: ExplorerMode) {
+    let id = if mode == ExplorerMode::Guided {
+        "mode-guided"
+    } else {
+        "mode-explore"
+    };
+    if let Some(element) = web_sys::window()
+        .and_then(|window| window.document())
+        .and_then(|document| document.get_element_by_id(id))
+        .and_then(|element| element.dyn_into::<web_sys::HtmlElement>().ok())
+    {
+        let _result = element.focus();
     }
 }
 

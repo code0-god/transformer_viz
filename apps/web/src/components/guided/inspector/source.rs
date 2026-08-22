@@ -78,15 +78,14 @@ pub(super) fn panel(state: &AppState) -> AnyView {
             (first..=last)
                 .contains(&number)
                 .then(|| (number, text.to_owned()))
-        })
-        .collect::<Vec<_>>();
+        });
     let active_start = mapped.line_start;
     let active_end = mapped.line_end;
     view! {
         <div class="inspector-source" data-testid="inspector-source">
             <div class="source-meta"><span>{mapped.label.clone()}</span><code>{commit.clone()}</code></div>
             <div class="source-code" role="region" aria-label=format!("고정 model.py {}줄부터 {}줄, 가로 스크롤 가능", mapped.line_start, mapped.line_end) tabindex="0">
-                <code>{lines.into_iter().map(|(number, text)| view! { <span class="source-line" class:active=(active_start..=active_end).contains(&number)><span class="line-number">{number}</span><span class="line-text">{text}</span></span> }).collect_view()}</code>
+                <code>{lines.map(|(number, text)| view! { <span class="source-line" class:active=(active_start..=active_end).contains(&number)><span class="line-number">{number}</span><span class="line-text">{text}</span></span> }).collect_view()}</code>
             </div>
             <dl class="source-counterpart">
                 <div><dt>"Python"</dt><dd><a href=source_url target="_blank" rel="noreferrer">{format!("{}:{}–{}", mapped.file, mapped.line_start, mapped.line_end)}</a></dd></div>

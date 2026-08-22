@@ -15,21 +15,30 @@ use leptos::prelude::*;
 use nanogpt_schema::{AttentionHeadTrace, FiniteF32, TensorSnapshot};
 
 use crate::{
-    app::{narrative::NarrativeStage, state::AppState, worker_client::WorkerClient},
+    app::{narrative::EvidenceView, state::AppState, worker_client::WorkerClient},
     trace_lookup::{TraceLookupError, bhtd_shape, selected_head_token_slice, selected_token_row},
 };
 
 pub(super) fn stage_visual(state: RwSignal<AppState>, client: &WorkerClient) -> AnyView {
-    state.with(|current| match current.ui.narrative.stage {
-        NarrativeStage::Embedding => embedding::embedding(&current),
-        NarrativeStage::AttentionLayerNorm => embedding::attention_norm(&current),
-        NarrativeStage::QueryKeyValue => attention::query_key_value(&current),
-        NarrativeStage::AttentionScores => attention::scores(state, client),
-        NarrativeStage::CausalMask => attention::mask(state, client),
-        NarrativeStage::Softmax => attention::softmax(state, client),
-        NarrativeStage::ValueAggregation => value::value_residual(&current),
-        NarrativeStage::MlpAndResidual => mlp::mlp_residual(&current),
-        NarrativeStage::LanguageModelHead => prediction::prediction(&current),
+    state.with(|current| match current.ui.narrative.stage.evidence_view() {
+        EvidenceView::Tokenization => embedding::tokenization(current),
+        EvidenceView::TokenEmbedding => embedding::token_embedding(current),
+        EvidenceView::PositionEmbedding => embedding::position_embedding(current),
+        EvidenceView::LayerNorm => embedding::attention_norm(current),
+        EvidenceView::QueryKeyValue => attention::query_key_value(current),
+        EvidenceView::AttentionScore => attention::scores(state, client),
+        EvidenceView::CausalMask => attention::mask(state, client),
+        EvidenceView::Softmax => attention::softmax(state, client),
+        EvidenceView::ValueAggregation => value::value_aggregation(current),
+        EvidenceView::AttentionResidual => value::attention_residual(current),
+        EvidenceView::MlpTransform => mlp::mlp_transform(current),
+        EvidenceView::BlockOutput => mlp::block_output(current),
+        EvidenceView::FinalLayerNorm => prediction::final_layer_norm(current),
+        EvidenceView::LanguageModelHead => prediction::language_model_head(current),
+        EvidenceView::Logits => prediction::logits(current),
+        EvidenceView::Sampling
+        | EvidenceView::GeneratedToken
+        | EvidenceView::GenerationBoundary => ().into_any(),
     })
 }
 

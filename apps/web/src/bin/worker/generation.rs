@@ -1,16 +1,9 @@
-//! One-credit generation dispatch for the inference Worker.
+// One-credit generation dispatch helpers included by the Worker binary.
 
-use nanogpt_schema::{WorkerErrorCode, WorkerResponse};
-use transformer_viz_web::runtime::{WorkerRuntime, error_response};
-use transformer_viz_web::runtime_generation::{GenerationKey, GenerationStart};
-use web_sys::DedicatedWorkerGlobalScope;
-
-use super::post;
-
-pub(super) fn start_generation(
+fn start_generation(
     scope: &DedicatedWorkerGlobalScope,
     runtime: &mut WorkerRuntime,
-    start: GenerationStart,
+    start: &GenerationStart,
 ) {
     let key = start.key;
     if !post_all(scope, &start.responses) {
@@ -27,7 +20,7 @@ pub(super) fn start_generation(
     }
 }
 
-pub(super) fn continue_generation(
+fn continue_generation(
     scope: &DedicatedWorkerGlobalScope,
     runtime: &mut WorkerRuntime,
     request_id: u64,

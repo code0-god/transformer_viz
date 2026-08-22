@@ -49,12 +49,12 @@ const STEPS: [StepCopy; PLAYBACK_STEP_COUNT] = [
     },
     StepCopy {
         label: "Scale",
-        formula: "Ŝ = S / √dₕ",
+        formula: "Ŝ = S / √dₕ",
         explanation: "head 차원에 따라 점수 크기를 보정합니다.",
     },
     StepCopy {
         label: "Mask + softmax",
-        formula: "A = softmax(mask(Ŝ))",
+        formula: "A = softmax(mask(Ŝ))",
         explanation: "미래 위치를 차단하고 허용된 key 확률을 정규화합니다.",
     },
     StepCopy {

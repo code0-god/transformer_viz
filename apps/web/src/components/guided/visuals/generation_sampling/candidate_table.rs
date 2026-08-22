@@ -46,12 +46,11 @@ fn value_scale(projection: &SamplingProjection, section: GenerationSection) -> V
                 .iter()
                 .flat_map(|candidate| [candidate.raw_logit, candidate.temperature_logit]),
         ),
-        GenerationSection::Probability | GenerationSection::Sample => {
-            ValueScale { min: 0.0, max: 1.0 }
-        }
-        GenerationSection::TopK | GenerationSection::Append | GenerationSection::Repeat => {
-            ValueScale { min: 0.0, max: 1.0 }
-        }
+        GenerationSection::Probability
+        | GenerationSection::Sample
+        | GenerationSection::TopK
+        | GenerationSection::Append
+        | GenerationSection::Repeat => ValueScale { min: 0.0, max: 1.0 },
     }
 }
 

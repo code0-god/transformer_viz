@@ -1,6 +1,7 @@
 //! Config-driven browser-only architecture navigation policy.
 
 pub mod catalog;
+mod operation_focus;
 
 #[cfg(target_arch = "wasm32")]
 pub(crate) use catalog::ArchitectureNode;
@@ -12,7 +13,7 @@ pub(crate) use catalog::{
 
 use nanogpt_schema::{GptConfig, OperationId, WorkerRequest};
 
-use super::{narrative::NarrativeStage, state::AppState};
+use super::state::AppState;
 
 /// Current browser-only hierarchy path and operation selection.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -77,42 +78,6 @@ impl ArchitectureMapState {
     pub(crate) const fn return_to(&mut self, level: ArchitectureLevel) {
         self.level = level;
         self.operation = None;
-    }
-
-    pub(crate) const fn sync_stage(&mut self, stage: NarrativeStage) {
-        let (level, operation) = match stage {
-            NarrativeStage::Embedding => (ArchitectureLevel::Gpt, ArchitectureOperation::Embedding),
-            NarrativeStage::AttentionLayerNorm => (
-                ArchitectureLevel::Block,
-                ArchitectureOperation::AttentionLayerNorm,
-            ),
-            NarrativeStage::QueryKeyValue => {
-                (ArchitectureLevel::Attention, ArchitectureOperation::Query)
-            }
-            NarrativeStage::AttentionScores => (
-                ArchitectureLevel::Attention,
-                ArchitectureOperation::QueryKeyProduct,
-            ),
-            NarrativeStage::CausalMask => {
-                (ArchitectureLevel::Attention, ArchitectureOperation::Mask)
-            }
-            NarrativeStage::Softmax => {
-                (ArchitectureLevel::Attention, ArchitectureOperation::Softmax)
-            }
-            NarrativeStage::ValueAggregation => (
-                ArchitectureLevel::Attention,
-                ArchitectureOperation::ValueProduct,
-            ),
-            NarrativeStage::MlpAndResidual => {
-                (ArchitectureLevel::Block, ArchitectureOperation::Mlp)
-            }
-            NarrativeStage::LanguageModelHead => (
-                ArchitectureLevel::Gpt,
-                ArchitectureOperation::LanguageModelHead,
-            ),
-        };
-        self.level = level;
-        self.operation = Some(operation);
     }
 }
 

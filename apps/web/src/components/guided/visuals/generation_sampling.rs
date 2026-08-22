@@ -2,13 +2,15 @@
 
 #[path = "generation_sampling/candidate_table.rs"]
 mod candidate_table;
+#[path = "generation_sampling/generated_token.rs"]
+mod generated_token;
 
 use leptos::prelude::*;
 use nanogpt_schema::SamplingMode;
 
 use crate::app::{architecture::ArchitectureOperation, state::AppState};
 
-pub(crate) use crate::app::generation_sampling_projection::is_generation_sampling_operation;
+pub(in crate::components::guided) use crate::app::generation_sampling_projection::is_generation_sampling_operation;
 use crate::app::generation_sampling_projection::{
     ContextPresentation, GenerationSection, ProjectionInput, SamplingProjection,
     appended_token_visible, context_presentation, generation_operation_slug, generation_section,
@@ -16,7 +18,13 @@ use crate::app::generation_sampling_projection::{
 };
 use candidate_table::candidate_table;
 
-pub(crate) fn visual(state: &AppState, operation: ArchitectureOperation) -> AnyView {
+pub(in crate::components::guided) fn visual(
+    state: &AppState,
+    operation: ArchitectureOperation,
+) -> AnyView {
+    if generated_token::is_focus(state) {
+        return generated_token::evidence(state, false);
+    }
     let Some(projection) = selected_projection(state) else {
         return view! {
             <div class="stage-empty generation-selection-required" data-testid="generation-selection-required" role="status">
@@ -33,11 +41,13 @@ pub(crate) fn visual(state: &AppState, operation: ArchitectureOperation) -> AnyV
         return inspector_empty("Generation 연산이 아닙니다.");
     };
     let outcome_visible = selection_outcome_visible(section);
+    let guided_sampling = state.ui.mode == crate::app::ui_state::ExplorerMode::Guided
+        && state.ui.narrative.stage == crate::app::narrative::NarrativeStage::Sampling;
     let appended_visible = appended_token_visible(section);
     view! {
         <div
             class="stage-visual sampling-visual"
-            data-testid="generation-sampling-visual"
+            data-testid=if guided_sampling { "evidence-sampling" } else { "generation-sampling-visual" }
             data-operation=operation_name
             data-step-index=projection.step_index
             data-candidate-count=projection.candidates.len()
@@ -61,7 +71,10 @@ pub(crate) fn visual(state: &AppState, operation: ArchitectureOperation) -> AnyV
     .into_any()
 }
 
-pub(crate) fn inspector_evidence(state: &AppState) -> AnyView {
+pub(in crate::components::guided) fn inspector_evidence(state: &AppState) -> AnyView {
+    if generated_token::is_focus(state) {
+        return generated_token::evidence(state, true);
+    }
     let Some(operation) = state
         .ui
         .architecture
@@ -107,7 +120,12 @@ fn inspector_facts(
     }
 }
 
-pub(crate) fn explanation(state: &AppState) -> Option<&'static str> {
+pub(in crate::components::guided) fn explanation(state: &AppState) -> Option<&'static str> {
+    if generated_token::is_focus(state) {
+        return Some(
+            "TokenGenerated compact summary가 확정한 token ID, 표시 문자열, 원본 bytes를 확인합니다. Sample random draw나 누적 구간 증거가 아닙니다.",
+        );
+    }
     let operation = state.ui.architecture.operation?;
     Some(match operation {
         ArchitectureOperation::Logits => {

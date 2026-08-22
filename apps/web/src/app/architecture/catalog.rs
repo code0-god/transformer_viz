@@ -2,8 +2,6 @@
 
 use nanogpt_schema::GptConfig;
 
-use super::super::narrative::NarrativeStage;
-
 /// Stable hierarchy levels exposed by the architecture map.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub(crate) enum ArchitectureLevel {
@@ -72,72 +70,6 @@ pub(crate) enum SummaryEvidence {
     FinalLayerNorm,
     /// Vocabulary logits from the tied language-model head.
     Logits,
-}
-
-impl ArchitectureOperation {
-    /// Existing narrative/detail evidence, when this boundary has an honest mapping.
-    #[must_use]
-    pub(crate) const fn target(self) -> Option<(NarrativeStage, Option<usize>)> {
-        use NarrativeStage as S;
-        match self {
-            Self::Embedding => Some((S::Embedding, None)),
-            Self::FinalLayerNorm | Self::LanguageModelHead | Self::Logits => {
-                Some((S::LanguageModelHead, None))
-            }
-            Self::AttentionLayerNorm => Some((S::AttentionLayerNorm, Some(1))),
-            Self::AttentionResidual => Some((S::ValueAggregation, Some(11))),
-            Self::MlpLayerNorm => Some((S::MlpAndResidual, Some(12))),
-            Self::Mlp => Some((S::MlpAndResidual, Some(13))),
-            Self::MlpResidual => Some((S::MlpAndResidual, Some(17))),
-            Self::Query => Some((S::QueryKeyValue, Some(2))),
-            Self::Key => Some((S::QueryKeyValue, Some(3))),
-            Self::Value => Some((S::QueryKeyValue, Some(4))),
-            Self::QueryKeyProduct => Some((S::AttentionScores, Some(5))),
-            Self::Scale => Some((S::AttentionScores, Some(6))),
-            Self::Mask => Some((S::CausalMask, None)),
-            Self::Softmax => Some((S::Softmax, Some(7))),
-            Self::ValueProduct => Some((S::ValueAggregation, Some(8))),
-            Self::MergeHeads => Some((S::ValueAggregation, Some(9))),
-            Self::Projection => Some((S::ValueAggregation, Some(10))),
-            Self::Temperature
-            | Self::TopK
-            | Self::GenerationSoftmax
-            | Self::Sample
-            | Self::Append
-            | Self::Repeat => None,
-        }
-    }
-
-    /// Exact summary tensor identity, when the operation reads summary evidence.
-    #[must_use]
-    pub(crate) const fn summary_evidence(self) -> Option<SummaryEvidence> {
-        match self {
-            Self::FinalLayerNorm => Some(SummaryEvidence::FinalLayerNorm),
-            Self::LanguageModelHead | Self::Logits => Some(SummaryEvidence::Logits),
-            Self::Embedding
-            | Self::AttentionLayerNorm
-            | Self::AttentionResidual
-            | Self::MlpLayerNorm
-            | Self::Mlp
-            | Self::MlpResidual
-            | Self::Query
-            | Self::Key
-            | Self::Value
-            | Self::QueryKeyProduct
-            | Self::Scale
-            | Self::Mask
-            | Self::Softmax
-            | Self::ValueProduct
-            | Self::MergeHeads
-            | Self::Projection
-            | Self::Temperature
-            | Self::TopK
-            | Self::GenerationSoftmax
-            | Self::Sample
-            | Self::Append
-            | Self::Repeat => None,
-        }
-    }
 }
 
 /// One selectable node kind; labels remain presentation-only.

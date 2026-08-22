@@ -11,6 +11,20 @@ use crate::app::{
 
 use super::shell::send_or_error;
 
+#[derive(Clone, Copy)]
+struct GenerationSignals {
+    prompt: ReadSignal<String>,
+    max_tokens: ReadSignal<String>,
+    temperature: ReadSignal<String>,
+    top_k: ReadSignal<String>,
+    mode: ReadSignal<SamplingMode>,
+    seed: ReadSignal<String>,
+    set_max_tokens: WriteSignal<String>,
+    set_temperature: WriteSignal<String>,
+    set_top_k: WriteSignal<String>,
+    set_seed: WriteSignal<String>,
+}
+
 #[must_use]
 pub(super) fn generation_controls(
     state: RwSignal<AppState>,
@@ -24,62 +38,28 @@ pub(super) fn generation_controls(
     let (mode, set_mode) = signal(defaults.mode);
     let (seed, set_seed) = signal(defaults.seed);
 
-    let generate_client = client.clone();
-    let generate = move |_| {
-        let model_limits = state.with(|current| {
-            current
-                .model
-                .as_ref()
-                .map(|model| (model.config.block_size, model.config.vocab_size))
-        });
-        let Some((block_size, vocab_size)) = model_limits else {
-            return;
-        };
-        let form = GenerationForm {
-            max_new_tokens: max_tokens.get_untracked(),
-            temperature: temperature.get_untracked(),
-            top_k: top_k.get_untracked(),
-            mode: mode.get_untracked(),
-            seed: seed.get_untracked(),
-        };
-        match form.parse(block_size, vocab_size) {
-            Ok(config) => {
-                set_max_tokens.set(config.max_new_tokens.to_string());
-                set_temperature.set(config.temperature.get().to_string());
-                set_top_k.set(config.top_k.get().to_string());
-                set_seed.set(config.seed.to_string());
-                let mut request = None;
-                state.update(|current| {
-                    request = Some(current.begin_generation(&prompt.get_untracked(), config));
-                });
-                if let Some(request) = request {
-                    send_or_error(state, &generate_client, &request);
-                }
-            }
-            Err(error) => {
-                state.update(|current| current.generation.error = Some(error.to_string()))
-            }
-        }
-    };
+    let generate = generate_handler(
+        state,
+        client.clone(),
+        GenerationSignals {
+            prompt,
+            max_tokens,
+            temperature,
+            top_k,
+            mode,
+            seed,
+            set_max_tokens,
+            set_temperature,
+            set_top_k,
+            set_seed,
+        },
+    );
 
-    let stop = move |_| {
-        if let Some(request) = state.with_untracked(AppState::stop_generation) {
-            send_or_error(state, &client, &request);
-        }
-    };
+    let stop = stop_handler(state, client);
 
     view! {
         <section class="generation-controls" data-testid="generation-controls" aria-labelledby="generation-title">
-            <div class="generation-heading">
-                <div>
-                    <h2 id="generation-title">"이어쓰기 생성"</h2>
-                    <p>"작은 모델이 현재 문맥 전체를 다시 계산하며 다음 토큰을 한 개씩 선택합니다."</p>
-                </div>
-                <span class="generation-model-limit">{move || state.with(|current| current.model.as_ref().map_or_else(
-                    || "모델 준비 중".to_owned(),
-                    |model| format!("한 모델 · 문맥 {} · 어휘 {}", model.config.block_size, model.config.vocab_size),
-                ))}</span>
-            </div>
+            {generation_heading(state)}
             <div class="generation-form">
                 <label class="prompt-field" for="generation-prompt">
                     <span>"Prompt"</span>
@@ -150,6 +130,84 @@ pub(super) fn generation_controls(
                 <p class="generation-error" data-testid="generation-error" role="alert">{format!("생성 오류: {message} 설정이나 입력을 고친 뒤 다시 생성하세요.")}</p>
             }))}
         </section>
+    }
+}
+
+fn stop_handler(
+    state: RwSignal<AppState>,
+    client: WorkerClient,
+) -> impl Fn(leptos::ev::MouseEvent) {
+    move |_| {
+        if let Some(request) = state.with_untracked(AppState::stop_generation) {
+            send_or_error(state, &client, &request);
+        }
+    }
+}
+
+fn generation_heading(state: RwSignal<AppState>) -> impl IntoView {
+    view! {
+        <div class="generation-heading">
+            <div><h2 id="generation-title">"이어쓰기 생성"</h2><p>"작은 모델이 현재 문맥 전체를 다시 계산하며 다음 토큰을 한 개씩 선택합니다."</p></div>
+            <span class="generation-model-limit">{move || state.with(|current| current.model.as_ref().map_or_else(
+                || "모델 준비 중".to_owned(),
+                |model| format!("한 모델 · 문맥 {} · 어휘 {}", model.config.block_size, model.config.vocab_size),
+            ))}</span>
+        </div>
+    }
+}
+
+fn generate_handler(
+    state: RwSignal<AppState>,
+    client: WorkerClient,
+    signals: GenerationSignals,
+) -> impl Fn(leptos::ev::MouseEvent) {
+    move |_| {
+        let GenerationSignals {
+            prompt,
+            max_tokens,
+            temperature,
+            top_k,
+            mode,
+            seed,
+            set_max_tokens,
+            set_temperature,
+            set_top_k,
+            set_seed,
+        } = signals;
+        let limits = state.with(|current| {
+            current
+                .model
+                .as_ref()
+                .map(|model| (model.config.block_size, model.config.vocab_size))
+        });
+        let Some((block_size, vocab_size)) = limits else {
+            return;
+        };
+        let form = GenerationForm {
+            max_new_tokens: max_tokens.get_untracked(),
+            temperature: temperature.get_untracked(),
+            top_k: top_k.get_untracked(),
+            mode: mode.get_untracked(),
+            seed: seed.get_untracked(),
+        };
+        match form.parse(block_size, vocab_size) {
+            Ok(config) => {
+                set_max_tokens.set(config.max_new_tokens.to_string());
+                set_temperature.set(config.temperature.get().to_string());
+                set_top_k.set(config.top_k.get().to_string());
+                set_seed.set(config.seed.to_string());
+                let mut request = None;
+                state.update(|current| {
+                    request = Some(current.begin_generation(&prompt.get_untracked(), config));
+                });
+                if let Some(request) = request {
+                    send_or_error(state, &client, &request);
+                }
+            }
+            Err(error) => state.update(|current| {
+                current.generation.error = Some(error.to_string());
+            }),
+        }
     }
 }
 

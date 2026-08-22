@@ -20,7 +20,12 @@ mod inspector_state_tests;
 pub mod narrative;
 #[cfg(test)]
 mod narrative_tests;
+#[cfg(test)]
+mod phase8_review_tests;
+#[cfg(test)]
+mod phase8_tests;
 pub mod playback;
+pub mod prediction_candidate;
 pub mod selection;
 #[cfg(test)]
 mod source_precedence_tests;

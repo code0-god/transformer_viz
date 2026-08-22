@@ -11,7 +11,15 @@ use super::{
     vector::{VectorStrip, shared_scale, vector_strip},
 };
 
-pub(super) fn value_residual(state: &AppState) -> AnyView {
+pub(super) fn value_aggregation(state: &AppState) -> AnyView {
+    value_stage(state, false)
+}
+
+pub(super) fn attention_residual(state: &AppState) -> AnyView {
+    value_stage(state, true)
+}
+
+fn value_stage(state: &AppState, residual_focus: bool) -> AnyView {
     let (Some(trace), Some(block)) = (state.attention.as_ref(), state.block.as_ref()) else {
         return facts::waiting("value-residual");
     };
@@ -34,21 +42,13 @@ pub(super) fn value_residual(state: &AppState) -> AnyView {
     ) else {
         return facts::error_state("selected attention residual row");
     };
-    let selected_feature = state
-        .ui
-        .selected_feature
-        .min(evidence.features.saturating_sub(1));
-    let key_contributions = (0..evidence.keys)
-        .filter_map(|key| {
-            evidence
-                .contributions
-                .get(
-                    key.saturating_mul(evidence.features)
-                        .saturating_add(selected_feature),
-                )
-                .copied()
-        })
-        .collect::<Vec<_>>();
+    let selected_feature = selected_feature(state, evidence.features);
+    let key_contributions = selected_contributions(
+        &evidence.contributions,
+        evidence.keys,
+        evidence.features,
+        selected_feature,
+    );
     let contributions = VectorStrip {
         label: "선택 feature의 key별 P×V",
         tensor_id: trace.value.id.clone(),
@@ -91,13 +91,10 @@ pub(super) fn value_residual(state: &AppState) -> AnyView {
         residual_strip.clone(),
     ]);
     let matrix_values = evidence.contributions.clone();
-    let limit = matrix_values
-        .iter()
-        .map(|value| value.abs())
-        .fold(f32::EPSILON, f32::max);
+    let limit = absolute_limit(&matrix_values);
     view! {
-        <div class="stage-visual value-visual" data-visual="value-residual" data-trace-ready="true">
-            <figure class="contribution-matrix" data-tensor-id=trace.value.id.clone()>
+        <div class="stage-visual value-visual" data-testid=if residual_focus { "evidence-attention-residual" } else { "evidence-value-aggregation" } data-visual=if residual_focus { "attention-residual" } else { "value-aggregation" } data-trace-ready="true">
+            <figure hidden=residual_focus class="contribution-matrix" data-tensor-id=trace.value.id.clone()>
                 <figcaption><strong>"전체 key × feature 기여도"</strong><span>{format!("{} × {}", evidence.keys, evidence.features)}</span></figcaption>
                 <svg role="img" viewBox=format!("0 0 {} {}", evidence.features, evidence.keys)>
                     <title>"선택 query의 전체 P[q,k] × V[k,d] 기여도 matrix"</title><desc>"각 행은 key, 각 열은 value feature이며 모든 셀은 실제 확률과 value의 곱입니다."</desc>
@@ -109,16 +106,42 @@ pub(super) fn value_residual(state: &AppState) -> AnyView {
                     }).collect_view()}
                 </svg>
             </figure>
-            <div class="value-strips">{vector_strip(contributions, value_scale)}{vector_strip(attended, value_scale)}</div>
-            <div class="residual-equation"><span>"block input"</span><b>"+"</b><span>"attention projected"</span><b>"="</b><span>"attention residual"</span></div>
-            <div class="residual-strips">{vector_strip(input_strip, residual_scale)}{vector_strip(projected_strip, residual_scale)}{vector_strip(residual_strip, residual_scale)}</div>
-            {flow_diagram("Value aggregation to residual", "실제 P×V 출력이 projection을 거친 뒤 실제 block input addend와 더해져 attention residual이 됩니다.", vec![
+            <div hidden=residual_focus class="value-strips">{vector_strip(contributions, value_scale)}{vector_strip(attended, value_scale)}</div>
+            <div hidden=!residual_focus class="residual-equation"><span>"block input"</span><b>"+"</b><span>"attention projected"</span><b>"="</b><span>"attention residual"</span></div>
+            <div hidden=!residual_focus class="residual-strips">{vector_strip(input_strip, residual_scale)}{vector_strip(projected_strip, residual_scale)}{vector_strip(residual_strip, residual_scale)}</div>
+            {residual_focus.then(|| flow_diagram("Value aggregation to residual", "실제 P×V 출력이 projection을 거친 뒤 실제 block input addend와 더해져 attention residual이 됩니다.", vec![
                 FlowNode { label: "P × V", tensor_id: trace.output.id.clone(), shape: trace.output.shape.clone(), tone: "value" },
                 FlowNode { label: "projection", tensor_id: projected.id.clone(), shape: projected.shape.clone(), tone: "score" },
                 FlowNode { label: "+ block input", tensor_id: input.id.clone(), shape: input.shape.clone(), tone: "residual" },
                 FlowNode { label: "attention residual", tensor_id: residual.id.clone(), shape: residual.shape.clone(), tone: "residual" },
-            ])}
-            <p class="output-proof" data-output-error=evidence.output_error>{format!("모든 feature Σₖ(P×V)와 captured attention output의 최대 절대 오차: {:.2e}", evidence.output_error)}</p>
+            ]))}
+            <p hidden=residual_focus class="output-proof" data-output-error=evidence.output_error>{format!("모든 feature Σₖ(P×V)와 captured attention output의 최대 절대 오차: {:.2e}", evidence.output_error)}</p>
         </div>
     }.into_any()
+}
+
+fn selected_feature(state: &AppState, width: usize) -> usize {
+    state.ui.selected_feature.min(width.saturating_sub(1))
+}
+
+fn selected_contributions(
+    values: &[f32],
+    keys: usize,
+    features: usize,
+    selected: usize,
+) -> Vec<f32> {
+    (0..keys)
+        .filter_map(|key| {
+            values
+                .get(key.saturating_mul(features).saturating_add(selected))
+                .copied()
+        })
+        .collect()
+}
+
+fn absolute_limit(values: &[f32]) -> f32 {
+    values
+        .iter()
+        .map(|value| value.abs())
+        .fold(f32::EPSILON, f32::max)
 }

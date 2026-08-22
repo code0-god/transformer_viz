@@ -20,7 +20,7 @@ fn detail_count(state: &AppState) -> String {
         .ui
         .architecture
         .operation
-        .is_some_and(|operation| operation.target().is_some());
+        .is_some_and(|operation| operation.target().1.is_some());
     if !has_trace_target {
         return "0개".to_owned();
     }
@@ -37,22 +37,22 @@ fn detail_count(state: &AppState) -> String {
     format!("{count}개")
 }
 
-fn operation_buttons(state: RwSignal<AppState>, current: &AppState) -> AnyView {
-    if !current
+fn operation_buttons(app_state: RwSignal<AppState>, current: &AppState) -> AnyView {
+    if current
         .ui
         .architecture
         .operation
-        .is_some_and(|operation| operation.target().is_some())
+        .is_none_or(|operation| operation.target().1.is_none())
     {
         return view! { <p class="empty-state">"이 구조 경계에는 연결된 세부 trace tensor가 없습니다."</p> }.into_any();
     }
     let Some(block) = current.block.as_ref() else {
         return view! { <p class="empty-state">"실행 후 현재 단계의 실제 세부 연산을 펼쳐 봅니다."</p> }.into_any();
     };
-    let stage = current.ui.narrative.stage;
+    let concept = current.ui.narrative.stage;
     let selected = current.ui.detail_operation;
     let operations = block.operations.iter().enumerate().filter(|(index, _)| {
-        NarrativeStage::for_detail_operation(*index) == Some(stage)
+        NarrativeStage::for_detail_operation(*index) == Some(concept)
     }).map(|(index, operation)| {
         let tensor_id = operation.tensor.id.clone();
         let event_id = tensor_id.clone();
@@ -64,7 +64,7 @@ fn operation_buttons(state: RwSignal<AppState>, current: &AppState) -> AnyView {
                 type="button"
                 data-detail-tensor-id=tensor_id
                 aria-pressed=(selected == Some(index)).to_string()
-                on:click=move |_| state.update(|next| {
+                on:click=move |_| app_state.update(|next| {
                     let matches_id = next.block.as_ref().and_then(|trace| trace.operations.get(index)).is_some_and(|candidate| candidate.tensor.id == event_id);
                     if matches_id { let _selected = next.ui.select_detail_operation(index); }
                 })

@@ -41,7 +41,7 @@ mod tests {
 
         // When: navigation enters matrix-addressed score, mask, and softmax stages.
         for stage in [
-            NarrativeStage::AttentionScores,
+            NarrativeStage::AttentionScore,
             NarrativeStage::CausalMask,
             NarrativeStage::Softmax,
         ] {

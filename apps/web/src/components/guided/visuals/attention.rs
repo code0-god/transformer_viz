@@ -140,8 +140,7 @@ pub(super) fn softmax(state: RwSignal<AppState>, client: &WorkerClient) -> AnyVi
     let masked_scores = score_row
         .into_iter()
         .zip(allowed_row.iter().copied())
-        .enumerate()
-        .collect::<Vec<_>>();
+        .enumerate();
     let probability_strip = VectorStrip {
         label: "softmax probability row",
         tensor_id: trace.probabilities.id.clone(),
@@ -162,7 +161,7 @@ pub(super) fn softmax(state: RwSignal<AppState>, client: &WorkerClient) -> AnyVi
                 <figure class="masked-score-strip" data-tensor-id=trace.scaled_scores.id.clone() data-softmax-input="masked" data-mask-applied="true">
                     <figcaption><strong>"scaled score + causal mask"</strong><span>"허용 score · 미래 −∞"</span></figcaption>
                     <ol class="masked-score-values" aria-label="mask 적용 후 softmax 입력">
-                        {masked_scores.into_iter().map(|(position, (value, allowed))| view! {
+                        {masked_scores.map(|(position, (value, allowed))| view! {
                             <li class:selected=position == key data-key=position data-masked=(!allowed).to_string()>
                                 <span>{position}</span>
                                 <code>{if allowed { format!("{value:+.6}") } else { "−∞".to_owned() }}</code>

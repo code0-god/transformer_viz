@@ -77,9 +77,6 @@ pub(super) fn selected_tensor(state: &AppState) -> Result<TensorSelection<'_>, S
             },
         });
     }
-    if architecture.target().is_none() {
-        return Err("이 생성 경계에는 연결된 실제 tensor trace ID가 없습니다.".to_owned());
-    }
     if let Some(operation) = selected_operation(state) {
         let lookup = lookup(state);
         let tensor = match operation.operation {
@@ -105,21 +102,38 @@ pub(super) fn selected_tensor(state: &AppState) -> Result<TensorSelection<'_>, S
             .map_err(|error| error.to_string());
     }
     let selection = match state.ui.narrative.stage {
-        NarrativeStage::Embedding => state.summary.as_ref().map(|summary| TensorSelection {
-            tensor: &summary.embeddings.sum,
+        NarrativeStage::TokenEmbedding => state.summary.as_ref().map(|summary| TensorSelection {
+            tensor: &summary.embeddings.token,
             operation: OperationId::Embedding,
         }),
+        NarrativeStage::PositionEmbedding => {
+            state.summary.as_ref().map(|summary| TensorSelection {
+                tensor: &summary.embeddings.position,
+                operation: OperationId::Embedding,
+            })
+        }
         NarrativeStage::Softmax => state.attention.as_ref().map(|trace| TensorSelection {
             tensor: &trace.probabilities,
             operation: OperationId::Attention,
         }),
-        NarrativeStage::LanguageModelHead => None,
-        NarrativeStage::AttentionLayerNorm
+        NarrativeStage::Tokenization
+        | NarrativeStage::LayerNorm
         | NarrativeStage::QueryKeyValue
-        | NarrativeStage::AttentionScores
+        | NarrativeStage::AttentionScore
         | NarrativeStage::CausalMask
         | NarrativeStage::ValueAggregation
-        | NarrativeStage::MlpAndResidual => None,
+        | NarrativeStage::Residual
+        | NarrativeStage::Mlp
+        | NarrativeStage::BlockOutput
+        | NarrativeStage::FinalLayerNorm
+        | NarrativeStage::LanguageModelHead
+        | NarrativeStage::Logits
+        | NarrativeStage::Temperature
+        | NarrativeStage::TopK
+        | NarrativeStage::Sampling
+        | NarrativeStage::GeneratedToken
+        | NarrativeStage::AppendToContext
+        | NarrativeStage::Repeat => None,
     };
     selection.ok_or_else(|| "현재 단계의 실제 tensor trace가 아직 준비되지 않았습니다.".to_owned())
 }
@@ -145,7 +159,7 @@ pub(super) fn feature_width(tensor: &TensorSnapshot) -> Option<usize> {
     }
 }
 
-fn lookup(state: &AppState) -> TraceLookup<'_> {
+const fn lookup(state: &AppState) -> TraceLookup<'_> {
     let mut lookup = TraceLookup::new();
     if let Some(summary) = state.summary.as_ref() {
         lookup = lookup.with_summary(summary);

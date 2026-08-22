@@ -10,7 +10,15 @@ use super::{
     vector::{VectorStrip, shared_scale, vector_strip},
 };
 
-pub(super) fn mlp_residual(state: &AppState) -> AnyView {
+pub(super) fn mlp_transform(state: &AppState) -> AnyView {
+    mlp_stage(state, false)
+}
+
+pub(super) fn block_output(state: &AppState) -> AnyView {
+    mlp_stage(state, true)
+}
+
+fn mlp_stage(state: &AppState, output_focus: bool) -> AnyView {
     let Some(block) = state.block.as_ref() else {
         return facts::waiting("mlp-residual");
     };
@@ -91,19 +99,19 @@ pub(super) fn mlp_residual(state: &AppState) -> AnyView {
         output_strip.clone(),
     ]);
     view! {
-        <div class="stage-visual mlp-visual" data-visual="mlp-residual" data-trace-ready="true">
-            {flow_diagram("MLP expansion and residual flow", "Attention residual is normalized, expanded to four times C, transformed by exact GELU, projected to C, and added back.", vec![
+        <div class="stage-visual mlp-visual" data-testid=if output_focus { "evidence-block-output" } else { "evidence-mlp-transform" } data-visual=if output_focus { "block-output" } else { "mlp-transform" } data-trace-ready="true">
+            {(!output_focus).then(|| flow_diagram("MLP expansion and residual flow", "Attention residual is normalized, expanded to four times C, transformed by exact GELU, projected to C, and added back.", vec![
                 FlowNode { label: "attention residual", tensor_id: residual.id.clone(), shape: residual.shape.clone(), tone: "residual" },
                 FlowNode { label: "LN₂ / input", tensor_id: normalized.id.clone(), shape: input.shape.clone(), tone: "mlp" },
                 FlowNode { label: "hidden 4C", tensor_id: hidden.id.clone(), shape: hidden.shape.clone(), tone: "mlp" },
                 FlowNode { label: "exact GELU", tensor_id: activated.id.clone(), shape: activated.shape.clone(), tone: "mlp" },
                 FlowNode { label: "projected C", tensor_id: projected.id.clone(), shape: projected.shape.clone(), tone: "mlp" },
                 FlowNode { label: "+ block output", tensor_id: output.id.clone(), shape: output.shape.clone(), tone: "residual" },
-            ])}
-            <div class="mlp-strips">{vector_strip(hidden_strip, mlp_scale)}{vector_strip(activated_strip, mlp_scale)}</div>
-            <div class="residual-equation"><span>"attention residual"</span><b>"+"</b><span>"MLP output"</span><b>"="</b><span>"block output"</span></div>
-            <div class="residual-strips">{vector_strip(residual_strip, residual_scale)}{vector_strip(projected_strip, residual_scale)}{vector_strip(output_strip, residual_scale)}</div>
-            <div class="comparison-ledger">{facts::tensor_facts(normalized, "LN₂")}{facts::tensor_facts(input, "MLP input")}{facts::tensor_facts(output, "residual output")}</div>
+            ]))}
+            <div hidden=output_focus class="mlp-strips">{vector_strip(hidden_strip, mlp_scale)}{vector_strip(activated_strip, mlp_scale)}</div>
+            <div hidden=!output_focus class="residual-equation"><span>"attention residual"</span><b>"+"</b><span>"MLP output"</span><b>"="</b><span>"block output"</span></div>
+            <div hidden=!output_focus class="residual-strips">{vector_strip(residual_strip, residual_scale)}{vector_strip(projected_strip, residual_scale)}{vector_strip(output_strip, residual_scale)}</div>
+            <div hidden=!output_focus class="comparison-ledger">{facts::tensor_facts(normalized, "LN₂")}{facts::tensor_facts(input, "MLP input")}{facts::tensor_facts(output, "residual output")}</div>
         </div>
     }.into_any()
 }

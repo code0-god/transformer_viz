@@ -1,10 +1,6 @@
 //! Dedicated production inference Web Worker.
 
 #[cfg(target_arch = "wasm32")]
-#[path = "worker/generation.rs"]
-mod worker_generation;
-
-#[cfg(target_arch = "wasm32")]
 use std::{cell::RefCell, rc::Rc};
 
 #[cfg(target_arch = "wasm32")]
@@ -16,6 +12,8 @@ use transformer_viz_web::runtime::{AssetBundle, WorkerRuntime, error_response};
 #[cfg(target_arch = "wasm32")]
 use transformer_viz_web::runtime_error::RuntimeError;
 #[cfg(target_arch = "wasm32")]
+use transformer_viz_web::runtime_generation::{GenerationKey, GenerationStart};
+#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::{JsCast as _, JsValue, closure::Closure};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen_futures::spawn_local;
@@ -23,7 +21,7 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::{DedicatedWorkerGlobalScope, MessageEvent, Url};
 
 #[cfg(target_arch = "wasm32")]
-use self::worker_generation::{continue_generation, start_generation};
+include!("worker/generation.rs");
 
 #[cfg(target_arch = "wasm32")]
 fn post(scope: &DedicatedWorkerGlobalScope, response: &WorkerResponse) -> bool {
@@ -43,30 +41,6 @@ fn post(scope: &DedicatedWorkerGlobalScope, response: &WorkerResponse) -> bool {
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn fetch_bytes(url: &str) -> Result<Vec<u8>, RuntimeError> {
-    let response = Request::get(url)
-        .send()
-        .await
-        .map_err(|error| RuntimeError::AssetUnavailable(error.to_string()))?;
-    if !response.ok() {
-        return Err(RuntimeError::AssetUnavailable(format!(
-            "HTTP {}: {url}",
-            response.status()
-        )));
-    }
-    response
-        .binary()
-        .await
-        .map_err(|error| RuntimeError::AssetUnavailable(error.to_string()))
-}
-
-#[cfg(target_arch = "wasm32")]
-async fn fetch_text(url: &str) -> Result<String, RuntimeError> {
-    String::from_utf8(fetch_bytes(url).await?)
-        .map_err(|error| RuntimeError::InvalidAsset(error.to_string()))
-}
-
-#[cfg(target_arch = "wasm32")]
 fn resolve(relative: &str, base: &str) -> Result<String, RuntimeError> {
     Url::new_with_base(relative, base)
         .map(|url| url.href())
@@ -74,26 +48,7 @@ fn resolve(relative: &str, base: &str) -> Result<String, RuntimeError> {
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn download_assets(
-    manifest_url: &str,
-    worker_url: &str,
-) -> Result<AssetBundle, RuntimeError> {
-    let manifest_url = resolve(manifest_url, worker_url)?;
-    let manifest = fetch_text(&manifest_url).await?;
-    let (config_name, tokenizer_name, weights_name) = WorkerRuntime::asset_names(&manifest)?;
-    let config = fetch_text(&resolve(&config_name, &manifest_url)?).await?;
-    let tokenizer = fetch_text(&resolve(&tokenizer_name, &manifest_url)?).await?;
-    let weights = fetch_bytes(&resolve(&weights_name, &manifest_url)?).await?;
-    Ok(AssetBundle {
-        manifest,
-        config,
-        tokenizer,
-        weights,
-    })
-}
-
-#[cfg(target_arch = "wasm32")]
-fn request_id(request: &WorkerRequest) -> Option<u64> {
+const fn request_id(request: &WorkerRequest) -> Option<u64> {
     match request {
         WorkerRequest::Initialize { .. } => None,
         WorkerRequest::Run { request_id, .. }
@@ -106,6 +61,68 @@ fn request_id(request: &WorkerRequest) -> Option<u64> {
         | WorkerRequest::InspectToken { request_id, .. }
         | WorkerRequest::Cancel { request_id } => Some(*request_id),
     }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn begin_initialization(
+    scope: &DedicatedWorkerGlobalScope,
+    runtime: &Rc<RefCell<WorkerRuntime>>,
+    manifest_path: String,
+) {
+    let _posted = post(
+        scope,
+        &WorkerResponse::Initializing {
+            phase: "모델 파일 확인 중".to_owned(),
+        },
+    );
+    let task_scope = scope.clone();
+    let task_runtime = Rc::clone(runtime);
+    let worker_url = scope.location().href();
+    spawn_local(async move {
+        let load = async {
+            let manifest_url = resolve(&manifest_path, &worker_url)?;
+            let fetch = |url: String| async move {
+                let response = Request::get(&url)
+                    .send()
+                    .await
+                    .map_err(|error| RuntimeError::AssetUnavailable(error.to_string()))?;
+                if !response.ok() {
+                    return Err(RuntimeError::AssetUnavailable(format!(
+                        "HTTP {}: {url}",
+                        response.status()
+                    )));
+                }
+                response
+                    .binary()
+                    .await
+                    .map_err(|error| RuntimeError::AssetUnavailable(error.to_string()))
+            };
+            let text = |bytes: Vec<u8>| {
+                String::from_utf8(bytes)
+                    .map_err(|error| RuntimeError::InvalidAsset(error.to_string()))
+            };
+            let manifest = text(fetch(manifest_url.clone()).await?)?;
+            let (config_name, tokenizer_name, weights_name) =
+                WorkerRuntime::asset_names(&manifest)?;
+            let config = text(fetch(resolve(&config_name, &manifest_url)?).await?)?;
+            let tokenizer = text(fetch(resolve(&tokenizer_name, &manifest_url)?).await?)?;
+            let weights = fetch(resolve(&weights_name, &manifest_url)?).await?;
+            Ok::<_, RuntimeError>(AssetBundle {
+                manifest,
+                config,
+                tokenizer,
+                weights,
+            })
+        };
+        let response = match load.await {
+            Ok(assets) => task_runtime
+                .borrow_mut()
+                .initialize(&assets)
+                .unwrap_or_else(|error| error_response(None, &error)),
+            Err(error) => error_response(None, &error),
+        };
+        let _posted = post(&task_scope, &response);
+    });
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -131,25 +148,7 @@ fn main() {
             }
         };
         if let WorkerRequest::Initialize { manifest_url } = request {
-            let _posted = post(
-                &message_scope,
-                &WorkerResponse::Initializing {
-                    phase: "모델 파일 확인 중".to_owned(),
-                },
-            );
-            let task_scope = message_scope.clone();
-            let task_runtime = Rc::clone(&message_runtime);
-            let worker_url = message_scope.location().href();
-            spawn_local(async move {
-                let response = match download_assets(&manifest_url, &worker_url).await {
-                    Ok(assets) => task_runtime
-                        .borrow_mut()
-                        .initialize(&assets)
-                        .unwrap_or_else(|error| error_response(None, &error)),
-                    Err(error) => error_response(None, &error),
-                };
-                let _posted = post(&task_scope, &response);
-            });
+            begin_initialization(&message_scope, &message_runtime, manifest_url);
             return;
         }
         match request {
@@ -164,7 +163,7 @@ fn main() {
                 };
                 match start {
                     Ok(start) => {
-                        start_generation(&message_scope, &mut message_runtime.borrow_mut(), start)
+                        start_generation(&message_scope, &mut message_runtime.borrow_mut(), &start);
                     }
                     Err(error) => {
                         let _posted =

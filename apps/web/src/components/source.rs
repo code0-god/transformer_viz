@@ -15,7 +15,7 @@ pub fn source_view(state: RwSignal<AppState>, playback: RwSignal<Playback>) -> i
             <div class="panel-heading"><div><h2 id="source-title">"nanoGPT 소스 연결"</h2><p>"고정된 원본 Python과 현재 Rust 구현을 같은 연산 경계로 연결합니다."</p></div></div>
             {move || selected_entry(state.get(), playback.get()).map_or_else(
                 |error| view! { <p class="empty">{error}</p> }.into_any(),
-                |mapped| source_code(mapped).into_any()
+                |mapped| source_code(&mapped).into_any()
             )}
         </section>
     }
@@ -29,7 +29,7 @@ fn selected_entry(state: AppState, playback: Playback) -> Result<SourceMapEntry,
     entry(operation.operation).map_err(|error| error.to_string())
 }
 
-fn source_code(mapped: SourceMapEntry) -> impl IntoView {
+fn source_code(mapped: &SourceMapEntry) -> impl IntoView {
     let commit = NANOGPT_COMMIT.trim();
     let source_url = format!(
         "https://github.com/karpathy/nanoGPT/blob/{commit}/model.py#L{}-L{}",

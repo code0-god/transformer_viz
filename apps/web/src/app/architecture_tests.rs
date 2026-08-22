@@ -176,17 +176,20 @@ mod tests {
     fn operations_map_only_to_existing_narrative_and_detail_evidence() {
         assert_eq!(
             ArchitectureOperation::Softmax.target(),
-            Some((NarrativeStage::Softmax, Some(7)))
+            (NarrativeStage::Softmax, Some(7))
         );
         assert_eq!(
             ArchitectureOperation::MlpResidual.target(),
-            Some((NarrativeStage::MlpAndResidual, Some(17)))
+            (NarrativeStage::BlockOutput, Some(17))
         );
         assert_eq!(
             ArchitectureOperation::FinalLayerNorm.target(),
-            Some((NarrativeStage::LanguageModelHead, None))
+            (NarrativeStage::FinalLayerNorm, None)
         );
-        assert_eq!(ArchitectureOperation::Repeat.target(), None);
+        assert_eq!(
+            ArchitectureOperation::Repeat.target(),
+            (NarrativeStage::Repeat, None)
+        );
     }
 
     #[test]
