@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository and nanoGPT reference
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          submodules: recursive
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup toolchain install 1.94.0 --profile minimal --component clippy,rustfmt
+          rustup target add wasm32-unknown-unknown --toolchain 1.94.0
+      - name: Install pinned Trunk
+        run: cargo install trunk --version 0.21.14 --locked
+      - name: Run repository gate
+        run: ./scripts/check.sh
