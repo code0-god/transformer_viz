@@ -1,12 +1,12 @@
 //! Pure application state shared by native tests and the Leptos browser shell.
 
 use nanogpt_schema::{
-    AttentionHeadTrace, BlockTrace, ModelMetadata, RunSummary, TokenTrace, WorkerRequest,
-    WorkerResponse,
+    AttentionHeadTrace, BlockTrace, ModelMetadata, RunSummary, TokenKind, TokenTrace,
+    WorkerRequest, WorkerResponse,
 };
 use thiserror::Error;
 
-use super::selection::Selection;
+use super::{selection::Selection, ui_state::ExplorerUiState};
 
 /// User-visible application lifecycle.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -40,6 +40,8 @@ pub struct AppState {
     pub token: Option<TokenTrace>,
     /// Shared selectors.
     pub selection: Selection,
+    /// Browser-only guided explorer state.
+    pub ui: ExplorerUiState,
     next_request_id: u64,
 }
 
@@ -53,6 +55,7 @@ impl Default for AppState {
             attention: None,
             token: None,
             selection: Selection::default(),
+            ui: ExplorerUiState::default(),
             next_request_id: 1,
         }
     }
@@ -88,25 +91,28 @@ impl AppState {
             }
             WorkerResponse::RunComplete { summary, .. } => {
                 let summary = *summary;
-                self.selection.layer = self
-                    .selection
-                    .layer
-                    .min(summary.layers.len().saturating_sub(1));
-                self.selection.token = self
-                    .selection
-                    .token
-                    .min(summary.tokens.len().saturating_sub(1));
-                self.selection.key = self
-                    .selection
-                    .key
-                    .min(summary.tokens.len().saturating_sub(1));
+                self.selection.layer = 0;
+                self.selection.head = 0;
+                let default_token = summary
+                    .tokens
+                    .iter()
+                    .rposition(|token| token.kind == TokenKind::Byte)
+                    .unwrap_or_else(|| summary.tokens.len().saturating_sub(1));
+                self.selection.token = default_token;
+                self.selection.key = default_token;
                 let run_id = summary.run_id;
+                let can_inspect = !summary.layers.is_empty() && !summary.tokens.is_empty();
                 self.summary = Some(summary);
                 self.block = None;
                 self.attention = None;
                 self.token = None;
-                self.status = AppStatus::Running("선택한 블록 추적 중".to_owned());
-                return Ok(vec![self.block_request(run_id)]);
+                self.ui = ExplorerUiState::default();
+                self.ui.prompt_expanded = false;
+                if can_inspect {
+                    self.status = AppStatus::Running("선택한 블록 추적 중".to_owned());
+                    return Ok(vec![self.block_request(run_id)]);
+                }
+                self.status = AppStatus::Complete;
             }
             WorkerResponse::BlockTrace { run_id, trace, .. } => {
                 self.require_run(run_id)?;
@@ -190,23 +196,5 @@ impl AppState {
         let current = self.next_request_id;
         self.next_request_id = self.next_request_id.saturating_add(1);
         current
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::AppState;
-
-    #[test]
-    fn run_clears_stale_trace_and_advances_request_id() {
-        // Given: a fresh explorer state.
-        let mut state = AppState::default();
-
-        // When: two runs are requested.
-        let first = state.run("the cat");
-        let second = state.run("the dog");
-
-        // Then: request IDs are unique and monotonically increasing.
-        assert_ne!(first, second);
     }
 }

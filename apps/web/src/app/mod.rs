@@ -1,7 +1,15 @@
 //! Browser application state and Worker client.
 
+pub mod narrative;
+#[cfg(test)]
+mod narrative_tests;
 pub mod playback;
 pub mod selection;
 pub mod state;
+#[cfg(test)]
+mod state_test_fixtures;
+#[cfg(test)]
+mod state_tests;
+pub mod ui_state;
 #[cfg(target_arch = "wasm32")]
 pub mod worker_client;
