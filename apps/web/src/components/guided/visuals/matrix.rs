@@ -5,7 +5,7 @@ use wasm_bindgen::JsCast as _;
 
 use crate::app::{state::AppState, worker_client::WorkerClient};
 
-use super::super::shell::send_or_error;
+use super::super::{scroll, shell::send_or_error};
 
 #[derive(Debug, Clone, Copy)]
 pub(super) enum MatrixMode {
@@ -62,16 +62,20 @@ pub(super) fn matrix_heatmap(
     let button_spec = spec.clone();
     let mode = spec.mode.name();
     let label = spec.mode.label();
+    let scroll_id = format!("stage-{mode}-matrix-scroll");
+    let effect_scroll_id = scroll_id.clone();
+    let effect_cell_id = format!("stage-{mode}-cell-{}-{}", spec.query, spec.key);
     let grid_style = format!("--matrix-rows: {}; --matrix-cols: {}", spec.rows, spec.cols);
     let value_limit = spec
         .values
         .iter()
         .map(|value| value.abs())
         .fold(f32::EPSILON, f32::max);
+    Effect::new(move |_| scroll::reveal_item(&effect_scroll_id, &effect_cell_id));
     view! {
         <figure class="attention-matrix" data-mode=mode data-tensor-id=spec.tensor_id>
             <figcaption><strong>{label}</strong><span>"행 query · 열 key"</span></figcaption>
-            <div class="matrix-scroll" tabindex="0" aria-label=format!("{label} matrix, 가로 스크롤 가능")>
+            <div id=scroll_id class="matrix-scroll" tabindex="0" aria-label=format!("{label} matrix, 가로 스크롤 가능")>
                 <div class="matrix-frame" style=grid_style>
                     <svg role="img" viewBox=format!("0 0 {} {}", spec.cols, spec.rows)>
                         <title>{format!("선택 헤드 H{} {label} 전체 matrix", spec.head)}</title>

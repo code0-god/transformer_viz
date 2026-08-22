@@ -8,6 +8,8 @@ use crate::app::{
     worker_client::WorkerClient,
 };
 
+use super::scroll;
+
 #[must_use]
 pub(super) fn player_header(state: RwSignal<AppState>) -> impl IntoView {
     view! {
@@ -82,9 +84,16 @@ pub(super) fn prompt_drawer(state: RwSignal<AppState>, client: WorkerClient) -> 
 
 #[must_use]
 pub(super) fn context_bar(state: RwSignal<AppState>, client: WorkerClient) -> impl IntoView {
+    Effect::new(move |_| {
+        if let Some(index) =
+            state.with(|current| current.summary.as_ref().map(|_| current.selection.token))
+        {
+            scroll::reveal_item("token-reel", &format!("context-token-{index}"));
+        }
+    });
     view! {
         <section class="context-bar" aria-label="현재 학습 맥락">
-            <div class="token-reel" aria-label="실제 입력 토큰">
+            <div id="token-reel" class="token-reel" aria-label="실제 입력 토큰">
                 {move || state.get().summary.map_or_else(
                     || view! { <p class="context-empty">"실행하면 실제 토큰 경로가 열립니다."</p> }.into_any(),
                     |summary| summary.tokens.into_iter().enumerate().map(|(index, token)| {
@@ -93,6 +102,7 @@ pub(super) fn context_bar(state: RwSignal<AppState>, client: WorkerClient) -> im
                         let token_id = token.id.0;
                         view! {
                             <button
+                                id=format!("context-token-{index}")
                                 type="button"
                                 class="context-token"
                                 aria-current=move || (state.get().selection.token == index).then_some("true")
@@ -126,42 +136,53 @@ pub(super) fn context_bar(state: RwSignal<AppState>, client: WorkerClient) -> im
 pub(super) fn model_map(state: RwSignal<AppState>, client: WorkerClient) -> impl IntoView {
     view! {
         <nav class="model-map" aria-labelledby="model-map-title">
-            <div class="region-heading"><h2 id="model-map-title">"Model Map"</h2><span>"config"</span></div>
-            {move || state.get().model.map_or_else(
-                || view! { <p class="empty-state">"모델 구성을 불러오는 중입니다."</p> }.into_any(),
-                |model| {
-                    let config = model.config;
-                    view! {
-                        <dl class="config-ledger">
-                            <div><dt>"layers"</dt><dd>{config.n_layer}</dd></div>
-                            <div><dt>"heads"</dt><dd>{config.n_head}</dd></div>
-                            <div><dt>"embedding"</dt><dd>{config.n_embd}</dd></div>
-                            <div><dt>"context"</dt><dd>{config.block_size}</dd></div>
-                            <div><dt>"vocabulary"</dt><dd>{config.vocab_size}</dd></div>
-                        </dl>
-                        <div class="model-path">
-                            <strong>"GPT"</strong>
-                            {(0..config.n_layer).map(|layer| {
-                                let layer_client = client.clone();
-                                view! { <button type="button" disabled=move || model_controls_disabled(&state.get()) aria-current=move || (state.get().selection.layer == layer).then_some("page") on:click=move |_| {
-                                    let mut request = None;
-                                    state.update(|current| request = current.select_layer(layer));
-                                    if let Some(request) = request { send_or_error(state, &layer_client, &request); }
-                                }>{format!("Block {layer}")}</button> }
-                            }).collect_view()}
-                            <span class="map-branch">"Attention heads"</span>
-                            <div class="map-heads">{(0..config.n_head).map(|head| {
-                                let head_client = client.clone();
-                                view! { <button type="button" disabled=move || model_controls_disabled(&state.get()) aria-current=move || (state.get().selection.head == head).then_some("true") on:click=move |_| {
-                                    let mut request = None;
-                                    state.update(|current| request = current.select_head(head));
-                                    if let Some(request) = request { send_or_error(state, &head_client, &request); }
-                                }>{format!("H{head}")}</button> }
-                            }).collect_view()}</div>
-                        </div>
-                    }.into_any()
-                }
-            )}
+            <div class="region-heading">
+                <h2 id="model-map-title">"Model Map"</h2>
+                <button
+                    class="model-map-toggle"
+                    type="button"
+                    aria-expanded=move || state.get().ui.model_map_expanded.to_string()
+                    aria-controls="model-map-body"
+                    on:click=move |_| state.update(|current| current.ui.model_map_expanded = !current.ui.model_map_expanded)
+                >{move || if state.get().ui.model_map_expanded { "모델 맵 닫기" } else { "모델 맵 열기" }}</button>
+            </div>
+            <div id="model-map-body" class="model-map-body" hidden=move || !state.get().ui.model_map_expanded>
+                {move || state.get().model.map_or_else(
+                    || view! { <p class="empty-state">"모델 구성을 불러오는 중입니다."</p> }.into_any(),
+                    |model| {
+                        let config = model.config;
+                        view! {
+                            <dl class="config-ledger">
+                                <div><dt>"layers"</dt><dd>{config.n_layer}</dd></div>
+                                <div><dt>"heads"</dt><dd>{config.n_head}</dd></div>
+                                <div><dt>"embedding"</dt><dd>{config.n_embd}</dd></div>
+                                <div><dt>"context"</dt><dd>{config.block_size}</dd></div>
+                                <div><dt>"vocabulary"</dt><dd>{config.vocab_size}</dd></div>
+                            </dl>
+                            <div class="model-path">
+                                <strong>"GPT"</strong>
+                                {(0..config.n_layer).map(|layer| {
+                                    let layer_client = client.clone();
+                                    view! { <button type="button" disabled=move || model_controls_disabled(&state.get()) aria-current=move || (state.get().selection.layer == layer).then_some("page") on:click=move |_| {
+                                        let mut request = None;
+                                        state.update(|current| request = current.select_layer(layer));
+                                        if let Some(request) = request { send_or_error(state, &layer_client, &request); }
+                                    }>{format!("Block {layer}")}</button> }
+                                }).collect_view()}
+                                <span class="map-branch">"Attention heads"</span>
+                                <div class="map-heads">{(0..config.n_head).map(|head| {
+                                    let head_client = client.clone();
+                                    view! { <button type="button" disabled=move || model_controls_disabled(&state.get()) aria-current=move || (state.get().selection.head == head).then_some("true") on:click=move |_| {
+                                        let mut request = None;
+                                        state.update(|current| request = current.select_head(head));
+                                        if let Some(request) = request { send_or_error(state, &head_client, &request); }
+                                    }>{format!("H{head}")}</button> }
+                                }).collect_view()}</div>
+                            </div>
+                        }.into_any()
+                    }
+                )}
+            </div>
         </nav>
     }
 }

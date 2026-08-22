@@ -15,7 +15,11 @@ use super::stage::stage_copy;
 pub(super) fn stage_rail(state: RwSignal<AppState>) -> impl IntoView {
     let timer_error = RwSignal::new(None::<String>);
     match set_interval_with_handle(
-        move || state.update(|current| current.ui.tick_narrative()),
+        move || {
+            if state.with_untracked(|current| current.ui.narrative.playing) {
+                state.update(|current| current.ui.tick_narrative());
+            }
+        },
         Duration::from_millis(250),
     ) {
         Ok(handle) => on_cleanup(move || handle.clear()),

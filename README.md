@@ -1,40 +1,70 @@
 # Transformer Viz
 
-Transformer Viz is a static Rust/WASM teaching application that exposes the intermediate tensors
-of a small nanoGPT-compatible Transformer in the browser. Its Leptos app and dedicated Worker share
-a versioned serde trace protocol and deterministic educational byte tokenizer.
+Transformer Viz는 작은 nanoGPT-compatible Transformer의 실제 forward trace를 브라우저에서
+아홉 단계로 따라가는 Guided Learning Player입니다. It is a backend-free Rust/WASM teaching app:
+Leptos renders the interface while a dedicated Rust Web Worker performs Candle CPU inference and
+returns versioned, serialized tensor evidence.
+
+![Transformer Viz Guided Learning Player showing the Attention Score stage](docs/images/guided-player.png)
+
+## Guided Player 사용법 / How to use it
+
+1. 상태가 **준비 완료**가 될 때까지 기다립니다 / wait for **Ready**.
+2. 기본 문장 `the cat sat on the` 또는 분석할 문장을 입력하고 **실행**을 누릅니다.
+3. Context Bar에서 현재 query `Q`, key `K`, Layer, Head를 확인합니다.
+4. Stage Rail의 이전/재생/다음 또는 단계 버튼으로 실제 trace를 이동합니다.
+5. Inspector의 **설명 / Tensor / Source** 탭에서 개념, 정확한 값, 고정 nanoGPT 소스를
+   비교합니다.
+6. Model Map에서 레이어와 헤드를 바꾸면 현재 실행의 캐시된 trace를 다시 검사합니다.
+
+The exact nine-stage learning flow is:
+
+1. **Embedding** - token embedding과 position embedding을 더합니다.
+2. **Attention LayerNorm** - attention 입력의 특징 규모를 맞춥니다.
+3. **Q/K/V** - 찾을 정보, 제공할 표지, 전달할 값을 투영합니다.
+4. **Attention Score** - `QK^T / sqrt(d_head)`를 계산합니다.
+5. **Causal Mask** - 미래 key를 hatch와 mask 상태로 차단합니다.
+6. **Softmax** - 허용된 key 사이의 점수를 확률로 정규화합니다.
+7. **Value + Residual** - 확률로 V를 모으고 residual stream에 더합니다.
+8. **MLP + Residual** - 토큰별 비선형 특징 변환을 다시 residual에 더합니다.
+9. **Prediction** - final LayerNorm과 tied embedding head로 Top-10을 확인합니다.
+
+Stage movement, playback, Inspector tabs, feature selection, and the responsive Model Map drawer are
+browser-only actions. Layer/head/token/attention-cell changes request cached trace detail from the
+Worker; they do not rerun the full model.
 
 ## Model and scope
 
-The bundled `nanogpt-edu` model is nanoGPT-compatible, not GPT-2 124M and not a general-purpose
-language model. It has 2 blocks, 4 attention heads, embedding width 64, context length 24,
-vocabulary size 259, bias enabled, and f32 weights. Its byte-fallback tokenizer reserves BOS `0`,
-EOS `1`, and UNK `2`, then maps byte `b` to `b + 3`.
+The bundled `nanogpt-edu` model is nanoGPT-compatible, **not GPT-2 124M and not a general-purpose
+language model**. It has 2 blocks, 4 attention heads, embedding width 64, context length 24,
+vocabulary size 259, bias enabled, and f32 weights. Its deterministic byte-fallback tokenizer
+reserves BOS `0`, EOS `1`, and UNK `2`, then maps byte `b` to `b + 3`.
 
-The Worker performs Candle CPU inference and returns real Q/K/V, causal scores and probabilities,
-residuals, MLP tensors, and full-vocabulary logits. The main thread renders only serialized trace
-data. See [the trace schema](docs/TRACE_SCHEMA.md) and [model format](docs/MODEL_FORMAT.md).
+The Worker returns real embeddings, LayerNorm, Q/K/V, causal scores and probabilities, value
+aggregation, residuals, MLP tensors, final normalization, and full-vocabulary logits. The main
+thread renders only serialized trace data. See [the trace schema](docs/TRACE_SCHEMA.md),
+[architecture](docs/ARCHITECTURE.md), and [model format](docs/MODEL_FORMAT.md).
 
 ## Setup and development
 
 Prerequisites are `rustup`, Cargo, and Git.
 
 ```sh
-git clone --recurse-submodules https://github.com/zerogod/transformer_viz.git
+git clone --recurse-submodules https://github.com/code0-god/transformer_viz.git
 cd transformer_viz
 ./scripts/bootstrap.sh
 cd apps/web
 trunk serve --open
 ```
 
-The bootstrap command initializes the pinned nanoGPT submodule, Rust **1.94.0**, the
-`wasm32-unknown-unknown` target, and Trunk **0.21.14**. The application then runs at
+Bootstrap initializes the pinned nanoGPT submodule, Rust **1.94.0**, the
+`wasm32-unknown-unknown` target, and Trunk **0.21.14**. The app then runs at
 `http://127.0.0.1:8080/`; no backend or Python process is used.
 
 The web application and Worker live in `apps/web`. Schema, tokenizer, model, and trace
-responsibilities live in four separate crates under `crates/`. See
-[the architecture](docs/ARCHITECTURE.md) and the
-[schema/tokenizer decision](docs/adr/0003-schema-and-tokenizer.md).
+responsibilities are separate crates under `crates/`. The Guided Player decision is recorded in
+[ADR 0003](docs/adr/0003-guided-learning-player.md); the existing schema/tokenizer ADR remains at
+[docs/adr/0003-schema-and-tokenizer.md](docs/adr/0003-schema-and-tokenizer.md).
 
 ## Test and release
 
@@ -44,18 +74,20 @@ responsibilities live in four separate crates under `crates/`. See
 ./scripts/build-web.sh /transformer_viz/ # GitHub Pages project subpath
 ```
 
-`check.sh` runs rustfmt, Clippy with `-D warnings`, all workspace tests, a root workspace release
-build, the WASM package check, asset checksum/copy checks, forbidden dependency checks, and a root
-Trunk release. The deployable
-artifact is only `apps/web/dist`; serve that directory with any static file server. It contains
-HTML, CSS, JavaScript loader glue, WebAssembly, and model assets, with no Python or server program.
+`check.sh` runs rustfmt, strict Clippy, workspace tests, a workspace release build, the WASM package
+check, asset integrity/copy checks, forbidden dependency checks, and a root Trunk release. The only
+deployable artifact is `apps/web/dist`: static HTML, CSS, JavaScript loader glue, WebAssembly, and
+same-origin model assets, with no Python or server program.
 
-## Deployment
+## Static deployment
 
-`.github/workflows/ci.yml` runs the full gate for pushes and pull requests. The Pages workflow
-builds with public URL `/transformer_viz/`, uploads `apps/web/dist`, and deploys it through GitHub
-Pages. Repository Pages must use **GitHub Actions** as its source. Runtime Worker, model, and glue
-URLs resolve from the document base and remain same-origin for both `/` and the project subpath.
+`.github/workflows/ci.yml` runs the repository gate for pushes and pull requests. The Pages workflow
+builds with public URL `/transformer_viz/`, uploads `apps/web/dist`, and deploys through GitHub
+Pages. Repository Pages must use **GitHub Actions** as its source.
+
+Application, Worker, model, tokenizer, and glue URLs resolve from the document base. Root hosting
+and project-subpath hosting therefore preserve the same browser Worker flow and same-origin asset
+policy. Browser support requires module Workers and WebAssembly.
 
 ## Measured artifact
 
@@ -73,33 +105,30 @@ Measurements use the committed model and a Trunk 0.21.14 release built on macOS 
 For prompt `the cat sat on the`, the deterministic reference continuation is `mat`. The first
 three Top-3 token IDs are `[112, 107, 1]` (`m`, `h`, EOS), followed by `[100, 119, 1]` (`a`, `t`,
 EOS), then `[119, 100, 35]` (`t`, `a`, space). The expected continuation byte is in Top-3 at every
-step; this is a fixture quality check, not a claim of broad language quality.
+step; this is a fixture quality check, not a broad language-quality claim.
 
 A single warm Worker run for that prompt reported **0.70 ms** model/trace execution on an Apple M5
 Pro using Chrome 151.0.7922.172 on macOS 26.5.2. It excludes asset download and WASM startup and is
-an environment-specific observation, not a benchmark. Full per-tensor error measurements and
-fixture provenance are in [the parity report](docs/NUMERICAL_PARITY.md).
+an environment-specific observation, not a benchmark. Full tensor errors and fixture provenance are
+in [the numerical parity report](docs/NUMERICAL_PARITY.md).
 
-## Regenerating reference assets
+## Reference assets and implementation
 
 Python is needed only to retrain or regenerate golden files. Follow
-[the reference tool instructions](tools/reference/README.md), then run `./scripts/check.sh` to prove
-the public model copy, checksums, Rust parity, WASM target, and static release agree.
-
-## Reference implementation
+[tools/reference/README.md](tools/reference/README.md), then run `./scripts/check.sh` to prove model
+copies, checksums, Rust parity, WASM target, and static release agree.
 
 `reference/nanoGPT` is a read-only Git submodule pinned to an immutable upstream commit. It is a
-reference for compatibility and golden fixtures, not a runtime dependency. Provenance and license
-details are recorded in [reference/NANOGPT_SOURCE.md](reference/NANOGPT_SOURCE.md) and
+compatibility and golden-fixture reference, not a runtime dependency. Provenance and license details
+are in [reference/NANOGPT_SOURCE.md](reference/NANOGPT_SOURCE.md) and
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Limits
 
-- Inputs are limited to 24 tokens including BOS/EOS; byte tokenization makes non-ASCII text use
-  multiple tokens.
+- Inputs are limited to 24 tokens including BOS/EOS; non-ASCII text uses multiple byte tokens.
 - CPU f32 inference favors transparency over throughput; only one tiny educational model ships.
-- Browser support requires module Workers and WebAssembly. Runtime assets must stay same-origin.
-- Source links point to the pinned upstream reference, but inference never calls an external API.
+- Runtime assets must stay same-origin; inference never calls an external API.
+- Source links point to pinned upstream code and license records.
 
 ## License
 

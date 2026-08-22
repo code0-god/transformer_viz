@@ -2,6 +2,7 @@
 
 mod inspector;
 mod rail;
+mod scroll;
 mod shell;
 mod stage;
 mod visuals;
@@ -20,8 +21,8 @@ pub fn guided_player(state: RwSignal<AppState>, client: WorkerClient) -> impl In
             {shell::context_bar(state, client.clone())}
             {stage::main_stage(state, client.clone())}
             {rail::stage_rail(state)}
-            {shell::model_map(state, client)}
             {inspector::inspector(state)}
+            {shell::model_map(state, client)}
         </div>
     }
 }
