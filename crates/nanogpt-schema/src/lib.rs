@@ -1,6 +1,7 @@
 //! Versioned shared contracts for model assets, traces, and Worker messages.
 
 mod config;
+mod generation;
 mod protocol;
 mod tensor;
 mod token;
@@ -9,6 +10,7 @@ mod trace;
 pub use config::{
     AssetDescriptor, GptConfig, ModelManifest, ModelMetadata, TokenizerConfig, TokenizerKind,
 };
+pub use generation::{GenerationConfig, SamplingMode, Temperature, TopK};
 pub use protocol::{WorkerErrorCode, WorkerRequest, WorkerResponse};
 pub use tensor::{FiniteF32, MaskSnapshot, TensorSnapshot, TensorStats};
 pub use token::{EncodedTokens, TokenId, TokenInfo, TokenKind};
@@ -61,6 +63,9 @@ pub enum SchemaError {
     /// A message or trace uses another schema version.
     #[error("unsupported schema version '{0}'; expected {TRACE_SCHEMA_VERSION}")]
     UnsupportedVersion(String),
+    /// Sampling temperature is zero, negative, NaN, or infinite.
+    #[error("temperature must be positive and finite")]
+    InvalidTemperature,
     /// A required numeric configuration field is zero.
     #[error("{field} must be greater than zero")]
     ZeroValue {

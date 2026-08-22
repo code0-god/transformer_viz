@@ -12,6 +12,7 @@ mod model;
 /// Internal forward-request validation.
 #[doc(hidden)]
 pub mod request;
+mod sampling;
 /// Internal trace selection and dispatch.
 #[doc(hidden)]
 pub mod trace;
@@ -24,6 +25,9 @@ pub use attention::CausalSelfAttention;
 pub use head::TiedLmHead;
 pub use layers::{Block, Mlp};
 pub use model::Gpt;
+pub use sampling::{
+    SamplingDecision, SamplingError, SamplingInterval, derive_step_seed, sample_final_logits,
+};
 
 /// Errors produced while loading or evaluating a model.
 #[derive(Debug, Error)]
@@ -81,7 +85,7 @@ pub struct TopKCandidate {
     pub token_id: TokenId,
     /// Raw model logit.
     pub logit: f32,
-    /// Full-vocabulary softmax probability.
+    /// Associated normalized probability.
     pub probability: f32,
 }
 
