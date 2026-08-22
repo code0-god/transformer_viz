@@ -15,36 +15,47 @@ project subpath.
 ## Users
 
 Primary users are Korean-speaking learners who understand basic programming or machine-learning
-terms but cannot yet follow a Transformer forward pass from tensor to tensor. They use the app to
-connect a selected token, layer, head, and attention cell to real model values and source code.
+terms but cannot yet connect autoregressive text generation to one concrete Transformer forward
+pass. They use the app to generate a continuation, select any generated token, and follow that
+token's context through architecture, math, tensors, sampling, and source code.
 
 ## Product Purpose
 
-Transformer Viz makes one tiny nanoGPT-compatible Transformer forward pass inspectable. Success
-means a learner can move through nine guided concepts and explain what the selected layer, head,
-query, and key are doing without first decoding an instrumentation dashboard.
+Transformer Viz shows a tiny nanoGPT-compatible Transformer generating text one token at a time,
+then makes the exact forward pass that produced any selected token inspectable. Success means a
+learner can explain how context, architecture, attention, language-model logits, and sampling
+combined to select that token and why it enters the next step's context.
 
 ## Positioning
 
-The product teaches with the real browser-executed model trace: actual embedding, LayerNorm,
-Q/K/V, score, mask, probability, value aggregation, residual, MLP, final normalization, logits,
-and source correspondence. It does not substitute mock traces, decorative animation, or
-pre-authored replay data.
+The product teaches with real Worker-executed generation and model traces: actual embedding,
+LayerNorm, Q/K/V, score, mask, probability, value aggregation, residual, MLP, final
+normalization, logits, temperature, Top-K, categorical sampling, context append, and source
+correspondence. It does not substitute mock generation, decorative animation, or pre-authored
+replay data. It describes output as text generation or a generated continuation, never as an
+assistant answer.
 
 ## Operating Context
 
-Users open one static URL, wait for Worker and model readiness, run a sentence, then navigate the
-guided stages with keyboard or pointer controls. They may inspect exact tensor values and pinned
-nanoGPT/Rust source without leaving the current learning stage. The default educational prompt is
-`the cat sat on the`.
+Users open one static URL, wait for Worker and model readiness, enter a prompt, choose generation
+settings, and watch tokens stream into the continuation. Selecting a generated token replays that
+step's stored context without sampling again. Generate, Architecture, and Inspect remain linked
+inside one Explorer state. The default educational prompt is `the cat sat on the`.
 
 ## Capabilities and Constraints
 
 - Tiny educational model: 2 blocks, 4 heads, embedding width 64, context length 24, vocabulary 259.
 - Batch size 1, CPU f32, explicit causal attention, tied token embedding and language-model head.
-- Input is limited to 24 byte-fallback tokens including boundaries.
+- Prompt and generated context are limited by `block_size`; generation stops before overflow
+  rather than introducing an implicit sliding window.
+- Generation supports Greedy or deterministic seeded Sample mode, max-new-token, temperature,
+  and Top-K settings. Invalid UI values are clamped at the trust boundary.
+- Generation stores compact step summaries. Detailed tensors are reconstructed only when a user
+  selects a generation step.
+- This educational runtime has no KV cache. Every new token runs the full current context through
+  the Transformer again.
 - Model weights, tokenizer, pinned nanoGPT submodule, and Python golden fixtures are immutable for
-  the Guided Learning Player redesign.
+  the Interactive Learning Lab redesign.
 - Runtime assets remain same-origin. No backend, external API, server inference, CDN, WebGPU, or
   thread-based inference is introduced.
 - React, TypeScript, D3, npm frontend dependencies, Canvas-only information, mock traces, and
@@ -76,8 +87,12 @@ available and none may be fabricated.
 1. Teach one concept at a time; keep current operation unmistakable.
 2. Use real trace values first; statistics and source are supporting evidence.
 3. Preserve continuity across score, mask, softmax, value aggregation, and residual flow.
-4. Keep model computation and numerical parity independent from UI navigation.
-5. Make exact tensor detail available without forcing every learner to see it at once.
+4. Keep model computation and numerical parity independent from navigation and sampling UI.
+5. Make exact tensor detail available without retaining every generation step's full trace.
+6. Separate model prediction from generation strategy: Temperature, Top-K, and Sampling are not
+   Transformer Block operations.
+7. Show that a generated token enters attention only on the following generation step.
+8. Make the append-and-repeat loop visible; never imply hidden KV-cache reuse.
 
 ## Accessibility & Inclusion
 

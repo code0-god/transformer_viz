@@ -1,28 +1,35 @@
-# Transformer Viz Guided Player Design System
+# Transformer Viz Interactive Learning Lab Design System
 
 ## 0. Research Log
 
 - Embedded references: Claude, IBM Carbon, and Observable-style data tools were shortlisted; the warm editorial Claude direction was selected for dense model evidence without a generic monitoring-console appearance.
 - Lazyweb: Observe, Coralogix, and Impact screens were reviewed. The useful grammar was a compact status layer, one dominant analysis surface, and narrow supporting rails; the blank Impact capture was rejected.
 - StyleGallery: `scroll-body-shell`, `panel-layout`, `main-with-rail`, and `reel` define the bounded desktop shell, dominant stage, supporting Inspector, and horizontal Stage Rail. The Inspector owns desktop vertical scroll; the document owns mobile vertical scroll.
-- Interaction references: beui button, tab, and disclosure mechanisms informed explicit press, roving-tab, and Model Map disclosure states. Reduced motion preserves state changes without interpolation.
+- Interaction references: beui StatefulButton and Tabs source informed Generate/Stop label swaps, loading semantics, mode indication, explicit press feedback, and reduced-motion fallbacks. CSS implements the mechanism without importing its React/Motion stack.
 - Imagen drafts: unavailable in this tool environment. The real trace visualization remains the focal artifact rather than a decorative substitute.
 
 ## 1. Identity and Information Architecture
 
-Transformer Viz is a warm scientific notebook with oscilloscope precision. It makes a tiny Transformer inspectable rather than magical. Terracotta marks the selected computational path across parchment surfaces; real tensor values and source correspondence provide proof.
+Transformer Viz is a warm scientific notebook with oscilloscope precision. It shows a tiny
+Transformer writing forward in time, then lets a learner travel backward through the exact
+computation that selected one token. Terracotta marks the selected computational path; muted gold
+marks generation and context growth; real tensors and source correspondence provide proof.
 
 The source and learning order is fixed:
 
 1. Header
-2. Prompt
-3. Context Bar
-4. Main Stage
-5. Stage Rail
-6. Inspector
-7. Model Map
+2. Generate controls
+3. Decoded continuation and raw token timeline
+4. Breadcrumb and current generation context
+5. Architecture Map
+6. Main Learning Canvas
+7. Inspector
+8. Guided progression
 
-Main Stage is the primary learning surface. Inspector is supporting evidence. Model Map is orientation. Stage Rail is transport. CSS may reposition regions on larger viewports but must not alter source or focus order.
+Generate is the entry experience. Architecture Map is orientation and free navigation. Main
+Learning Canvas is the dominant explanation. Inspector is exact evidence. Guided progression is
+the recommended route. Guided and Explore select the same architecture nodes and reuse the same
+canvas and Inspector components.
 
 ## 2. Color
 
@@ -49,6 +56,8 @@ Main Stage is the primary learning surface. Inspector is supporting evidence. Mo
 | Residual | `--residual` | `#a66616` | Residual additions |
 | MLP | `--mlp` | `#147369` | MLP expansion and projection |
 | Prediction | `--prediction-ink`, `--prediction-gold` | `#25231f`, `#a77a1f` | Tied head and ranked output |
+| Generation | `--generation` | `var(--prediction-gold)` | Generated tokens, sampling, append/repeat |
+| Generated soft | `--generation-soft` | `#efe0b7` | Generated-token timeline background |
 
 Q, K, V, selected, completed, future, and masked states never depend on color alone. Mask uses hatch plus the word `mask`; Q/K/V use letters and distinct shapes.
 
@@ -64,21 +73,24 @@ Q, K, V, selected, completed, future, and masked states never depend on color al
 
 ### Desktop, 1200px and wider
 
-- `.guided-player` is a bounded `100dvb` scroll-body shell with no document scroll at 1440x900.
-- Rows are Header, Prompt, Context, Workspace, and Stage Rail.
-- Workspace areas are Model Map, dominant Main Stage, and Inspector with intrinsic-safe tracks: `minmax(12rem,.62fr) minmax(32rem,1.9fr) minmax(19rem,.86fr)`.
-- Main Stage stays fully visible. Inspector alone owns vertical evidence scroll. Stage Rail closes the viewport.
-- Model Map toggle is hidden and map content is always visible.
+- `.learning-lab` is a bounded `100dvb` scroll-body shell with no document scroll at 1440x900.
+- Rows are Header, Generate, Timeline, Breadcrumb, Workspace, and Guided controls.
+- Workspace areas are Architecture Map, dominant Main Canvas, and Inspector with intrinsic-safe
+  tracks: `minmax(13rem,.7fr) minmax(32rem,1.9fr) minmax(19rem,.86fr)`.
+- Timeline owns horizontal token overflow. Inspector owns vertical evidence scroll. Main Canvas
+  stays visible while architecture and generation context change.
 
 ### Tablet, 768-1199px
 
-- Model Map becomes a compact full-width disclosure row.
+- Architecture Map becomes a compact full-width disclosure row.
 - Main Stage and Inspector form two columns; Inspector is 280-340px, targeting 300px.
-- Token strip owns horizontal overflow. Expanded Model Map content is bounded and scrollable.
+- Generation timeline remains above the workspace. Expanded Architecture Map is bounded and
+  scrollable.
 
 ### Mobile, 767px and narrower
 
-- The document owns vertical scroll and follows source order: Main Stage, Stage Rail, Inspector, Model Map.
+- The document owns vertical scroll and follows source order: Generate, Timeline, Breadcrumb,
+  Main Canvas, Architecture drawer, Inspector, Guided controls.
 - No squeezed three-column layout is permitted. The page never exceeds the viewport width.
 - Heatmaps own a bounded local two-axis scrollport so 44px selected cells stay visible. Stage Rail, token strip, tensor slices, source lines, math tables, and flow diagrams own only their required horizontal overflow.
 - Heatmap cells remain at least 44x44px; `.matrix-scroll` scrolls rather than shrinking them.
@@ -87,39 +99,56 @@ Every grid/flex child that may scroll uses `min-block-size: 0` and `min-inline-s
 
 ## 5. Components
 
-### Header, Prompt, and Context
+### Header and Explorer Modes
 
 - Header pairs product identity with a polite lifecycle live region.
-- Prompt is a labelled disclosure with textarea, run action, disabled/loading state, and visible recovery copy.
-- Context is a horizontal token reel with selected query/key markers and current Layer/Head coordinates.
+- Guided and Explore form an ARIA tablist with one tab stop. Guided changes nodes through the
+  curriculum; Explore changes them through Architecture Map. Both preserve current generation step.
+
+### Generate and Timeline
+
+- Generate contains labelled prompt, Max new tokens, Temperature, Top-K, Sampling mode, Seed,
+  Generate, and Stop controls.
+- Generate/Stop is one stateful action surface with idle, running, stopped, complete, and error
+  feedback. Press feedback uses short transform-only motion; reduced motion removes interpolation.
+- Decoded text leads. Raw tokens remain available below it. Prompt and generated tokens differ by
+  label, group boundary, marker, and surface treatment, never by color alone.
+- Each generated token is a real button. Selection exposes generation step, context, selected next
+  token, probability, layer, head, and query position.
+- Context usage shows `used / block_size`; ContextLimit explains why generation stopped.
 
 ### Main Stage
 
-The nine `NarrativeStage` variants and order are authoritative:
+The curriculum has four grouped parts and twenty-one ordered steps:
 
-1. Embedding
-2. Attention LayerNorm
-3. Q/K/V
-4. Attention Score
-5. Causal Mask
-6. Softmax
-7. Value + Residual
-8. MLP + Residual
-9. Prediction
+1. Input representation: Tokenization, Token Embedding, Position Embedding.
+2. Transformer Block: LayerNorm, Q/K/V, Attention Score, Causal Mask, Softmax, Value
+   Aggregation, Residual, MLP, Block Output.
+3. Prediction: Final LayerNorm, LM Head, Logits.
+4. Generation: Temperature, Top-K, Sampling, Generated Token, Append to Context, Repeat.
 
 Each stage contains position, title, purpose, formula, one dominant real-trace visualization, exact evidence, and the bridge to the next concept. Stage heading uses `aria-live="polite"`. Every SVG visualization has `title` and `desc`, with equivalent HTML values nearby.
 
 ### Stage Rail
 
-Previous, play/pause, Next, speed, and nine labelled stage buttons form one keyboard-reachable reel. Current stage uses `aria-current="step"`; completed and future states also differ by text/border. Autoplay is false at load, manually stoppable, advances on a deterministic 250ms clock, and stops at stage nine. Paused playback does not update full application state.
+Previous, play/pause, Next, speed, and grouped part/step controls form one keyboard-reachable
+progression. Only current part expands into individual steps; the interface never shows twenty-one
+equal buttons in one row. Current step uses `aria-current="step"`. Autoplay is false at load and
+stops at Repeat.
+
+### Architecture Map
+
+- GPT level shows Embedding, Block × `n_layer`, Final LayerNorm, tied LM Head, and Generation.
+- Block level shows LN1, Attention, Residual, LN2, MLP, and Residual.
+- Attention level shows Q/K/V, QKᵀ, Scale, Mask, Softmax, ×V, Merge Heads, and Projection.
+- Generation level shows Logits, Temperature, Top-K, Softmax, Sample, Append, and Repeat.
+- Every node is a button. Layer/head counts and dimensions come from `ModelMetadata.config`.
+- Breadcrumb items are buttons and permit direct return to every ancestor.
+- Generated-token loop arrow visibly reconnects Repeat to the full GPT forward path.
 
 ### Inspector
 
 Explanation, Tensor, and Source use an ARIA tablist with one tab stop, wrapping Arrow keys, Home, and End. A current-stage detail disclosure exposes the existing 18 operation boundaries without becoming a second transport. Inspector actions preserve the narrative stage and do not request Worker data unless an actual layer/head/token/cell selection requires cached replay.
-
-### Model Map
-
-Configuration values come from `ModelMetadata.config`; layers and heads are never hard-coded. Below 1200px, `.model-map-toggle` controls `.model-map-body` with `aria-expanded` and `aria-controls`, collapsed by default. Disclosure changes are browser-only. Layer/head controls remain disabled before a run and during Worker activity.
 
 ### Visualization Primitives
 
@@ -128,10 +157,19 @@ Configuration values come from `ModelMetadata.config`; layers and heads are neve
 - Tensor Flow: labelled shapes and paths plus an equivalent ordered HTML summary.
 - Tensor Viewer: stable tensor ID, operation, shape, semantic axes, row-major flat index, selected value, bounded slice, and full score/value contribution tables.
 - Source Correspondence: pinned nanoGPT lines, commit, MIT link, and Rust counterpart in a bounded source viewport.
+- Sampling Distribution: filtered logit, probability, cumulative interval, deterministic random
+  value, and selected marker with an equivalent ordered HTML table.
+- Why This Token: context, candidate distribution, selected interval, and direct link into the
+  Transformer architecture.
 
 ## 6. Interaction and Motion
 
-`--micro` is `120ms ease-out`; `--standard` is `220ms ease-in-out`. Motion only communicates interaction or trace arrival and uses transform, opacity, or filter. Stage movement retains initiator focus. `prefers-reduced-motion: reduce` makes transitions and animation effectively zero while preserving every state and playback control.
+`--micro` is `120ms ease-out`; `--standard` is `220ms ease-in-out`. Generate/Stop labels crossfade
+inside a stable button. The active Guided/Explore indicator moves within its tablist. Newly streamed
+tokens use one opacity/translate arrival marker; later tokens do not replay prior animations.
+Motion only communicates state or relationship and uses transform, opacity, or filter. Focus stays
+with the initiating control. Reduced motion makes every transition effectively zero while
+preserving token streaming and state changes.
 
 ## 7. Accessibility Constraints
 
@@ -139,10 +177,15 @@ Configuration values come from `ModelMetadata.config`; layers and heads are neve
 - Every visible button, textarea, and link has a minimum 44x44px target.
 - Visible `:focus-visible` uses a 2px focus ring with offset.
 - Skip link targets Main Stage. Lifecycle and stage changes are polite live regions; errors use alert semantics.
+- Generation updates use one polite live region; each token is not announced as a separate alert.
+- Stop remains keyboard reachable while generation is active. Mode tabs, breadcrumbs,
+  architecture nodes, generated tokens, and grouped curriculum all have visible focus.
 - Heatmaps implement grid semantics and roving keyboard focus. Inspector tabs implement tablist/tab/tabpanel semantics.
 - CJK copy must not clip at 390, 1024, or 1440px widths.
 - Autoplay never starts automatically and all motion remains manually stoppable.
 
 ## 8. Accepted Debt
 
-None for this phase. Model arithmetic, Worker protocol behavior, static deployment boundaries, and numerical parity remain outside visual-state ownership and unchanged.
+None accepted. Model arithmetic, weights, tokenizer, static deployment boundaries, and numerical
+parity remain unchanged. Generation quality is intentionally limited by the small educational
+model and is stated in the UI.
