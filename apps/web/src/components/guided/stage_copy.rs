@@ -127,7 +127,7 @@ const fn level_copy(level: ArchitectureLevel) -> StageCopy {
             title: "Generation loop",
             purpose: "logits를 다음 토큰으로 바꾸고 문맥에 붙여 전체 forward를 반복합니다.",
             formula: "logits → temperature → top-k → softmax → sample → append → repeat",
-            bridge: "샘플링 trace가 없는 경계는 구조와 설정만 정확히 표시합니다.",
+            bridge: "생성된 토큰을 선택하면 보존된 compact step으로 각 경계를 하나씩 검증합니다.",
         },
     }
 }
@@ -222,11 +222,34 @@ const fn operation_purpose(operation: ArchitectureOperation) -> &'static str {
 }
 
 const fn operation_bridge(operation: ArchitectureOperation) -> &'static str {
-    if matches!(operation, ArchitectureOperation::Repeat) {
-        "이 모델은 KV cache 없이 늘어난 전체 문맥을 다시 계산합니다."
-    } else if operation.target().is_none() {
-        "이 경계는 설정과 수식만 표시하며 존재하지 않는 trace 값을 만들지 않습니다."
-    } else {
-        "Architecture Map 또는 학습 경로에서 연결된 실제 연산을 계속 탐색하세요."
+    use ArchitectureOperation as O;
+    match operation {
+        O::Logits => "다음: 적용 temperature로 후보 raw logit의 상대적 선명도를 조정합니다.",
+        O::Temperature => "다음: 적용 Top-K로 보존할 후보 집합을 제한합니다.",
+        O::TopK => "다음: 저장된 후보 확률을 합이 1인 분포로 읽습니다.",
+        O::GenerationSoftmax => "다음: Greedy 또는 저장된 random draw로 토큰 하나를 선택합니다.",
+        O::Sample => "다음: 선택한 token ID를 정확한 pre-selection context 끝에 붙입니다.",
+        O::Append => "다음: 늘어난 전체 prefix로 GPT forward를 반복합니다.",
+        O::Repeat => "KV cache 없이 늘어난 전체 문맥을 다시 계산합니다.",
+        O::Embedding
+        | O::FinalLayerNorm
+        | O::LanguageModelHead
+        | O::AttentionLayerNorm
+        | O::AttentionResidual
+        | O::MlpLayerNorm
+        | O::Mlp
+        | O::MlpResidual
+        | O::Query
+        | O::Key
+        | O::Value
+        | O::QueryKeyProduct
+        | O::Scale
+        | O::Mask
+        | O::Softmax
+        | O::ValueProduct
+        | O::MergeHeads
+        | O::Projection => {
+            "Architecture Map 또는 학습 경로에서 연결된 실제 연산을 계속 탐색하세요."
+        }
     }
 }

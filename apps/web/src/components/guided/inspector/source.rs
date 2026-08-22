@@ -4,18 +4,46 @@ use leptos::prelude::*;
 use nanogpt_schema::OperationId;
 
 use crate::{
-    app::{architecture::ArchitectureOperation, state::AppState},
+    app::{
+        architecture::{ArchitectureOperation, source_operation_precedence},
+        state::AppState,
+    },
     source_map::{NANOGPT_COMMIT, NANOGPT_MODEL_SOURCE, entry},
 };
 
 use super::selected_operation;
 
 pub(super) fn panel(state: &AppState) -> AnyView {
-    if state.summary.is_none() {
-        return empty("실행 후 현재 단계의 고정 nanoGPT 소스를 표시합니다.".to_owned());
+    if state.ui.architecture.operation.is_some_and(|operation| {
+        matches!(
+            operation,
+            ArchitectureOperation::Temperature
+                | ArchitectureOperation::TopK
+                | ArchitectureOperation::GenerationSoftmax
+                | ArchitectureOperation::Sample
+                | ArchitectureOperation::Append
+                | ArchitectureOperation::Repeat
+        )
+    }) {
+        return empty("이 샘플링 경계에는 replay tensor/source ID를 만들지 않습니다. 선택한 compact step과 적용 설정이 증거입니다.".to_owned());
     }
-    let operation = if let Some(operation) = selected_operation(state) {
-        operation.operation
+    if state.summary.is_none() {
+        return empty(
+            if state.ui.architecture.operation == Some(ArchitectureOperation::Logits)
+                && state.generation.selected_step.is_some()
+            {
+                "현재 선택한 생성 step의 replay가 연결되면 고정 nanoGPT 소스를 표시합니다."
+                    .to_owned()
+            } else {
+                "실행 후 현재 단계의 고정 nanoGPT 소스를 표시합니다.".to_owned()
+            },
+        );
+    }
+    let legacy = selected_operation(state).map(|operation| operation.operation);
+    let operation = if let Some(operation) =
+        source_operation_precedence(state.ui.architecture.operation, legacy)
+    {
+        operation
     } else {
         let Some(architecture) = state.ui.architecture.operation else {
             return empty("아키텍처 연산을 선택하면 연결된 고정 소스를 표시합니다.".to_owned());

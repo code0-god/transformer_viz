@@ -10,7 +10,7 @@ pub(crate) use catalog::{
     ArchitectureLevel, ArchitectureNodeKind, ArchitectureOperation, SummaryEvidence,
 };
 
-use nanogpt_schema::{GptConfig, WorkerRequest};
+use nanogpt_schema::{GptConfig, OperationId, WorkerRequest};
 
 use super::{narrative::NarrativeStage, state::AppState};
 
@@ -113,6 +113,42 @@ impl ArchitectureMapState {
         };
         self.level = level;
         self.operation = Some(operation);
+    }
+}
+
+pub(crate) const fn source_operation_precedence(
+    architecture: Option<ArchitectureOperation>,
+    legacy: Option<OperationId>,
+) -> Option<OperationId> {
+    match architecture {
+        Some(ArchitectureOperation::Logits) => Some(OperationId::Logits),
+        Some(
+            ArchitectureOperation::Embedding
+            | ArchitectureOperation::FinalLayerNorm
+            | ArchitectureOperation::LanguageModelHead
+            | ArchitectureOperation::AttentionLayerNorm
+            | ArchitectureOperation::AttentionResidual
+            | ArchitectureOperation::MlpLayerNorm
+            | ArchitectureOperation::Mlp
+            | ArchitectureOperation::MlpResidual
+            | ArchitectureOperation::Query
+            | ArchitectureOperation::Key
+            | ArchitectureOperation::Value
+            | ArchitectureOperation::QueryKeyProduct
+            | ArchitectureOperation::Scale
+            | ArchitectureOperation::Mask
+            | ArchitectureOperation::Softmax
+            | ArchitectureOperation::ValueProduct
+            | ArchitectureOperation::MergeHeads
+            | ArchitectureOperation::Projection
+            | ArchitectureOperation::Temperature
+            | ArchitectureOperation::TopK
+            | ArchitectureOperation::GenerationSoftmax
+            | ArchitectureOperation::Sample
+            | ArchitectureOperation::Append
+            | ArchitectureOperation::Repeat,
+        )
+        | None => legacy,
     }
 }
 

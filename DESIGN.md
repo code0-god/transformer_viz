@@ -157,8 +157,12 @@ Explanation, Tensor, and Source use an ARIA tablist with one tab stop, wrapping 
 - Tensor Flow: labelled shapes and paths plus an equivalent ordered HTML summary.
 - Tensor Viewer: stable tensor ID, operation, shape, semantic axes, row-major flat index, selected value, bounded slice, and full score/value contribution tables.
 - Source Correspondence: pinned nanoGPT lines, commit, MIT link, and Rust counterpart in a bounded source viewport.
-- Sampling Distribution: filtered logit, probability, cumulative interval, deterministic random
-  value, and selected marker with an equivalent ordered HTML table.
+- Sampling Distribution: one selected Generation operation owns the canvas at a time. Raw Logits,
+  Temperature, Top-K, and Softmax stay outcome-neutral; only Sample marks the selected outcome.
+  Sample marker geometry uses the stored selected interval, while candidate CDF columns are labelled
+  as derived. Greedy shows neutral probabilities with no interval hatch or random marker. Append owns
+  the before + token → after equation; Repeat owns after/next parity and full-prefix-forward evidence.
+  Charts pair with an equivalent ordered HTML table. Compact Inspector facts remain operation-specific.
 - Why This Token: context, candidate distribution, selected interval, and direct link into the
   Transformer architecture.
 
@@ -182,6 +186,11 @@ preserving token streaming and state changes.
   architecture nodes, generated tokens, and grouped curriculum all have visible focus.
 - Heatmaps implement grid semantics and roving keyboard focus. Inspector tabs implement tablist/tab/tabpanel semantics.
 - CJK copy must not clip at 390, 1024, or 1440px widths.
+- Generation visuals require an explicitly selected generated token. Sampling-only operations never
+  invent tensor IDs; Logits names a replay tensor only while exact selected-step replay is bound.
+- The sampling visual alone owns local vertical evidence scroll in the fixed desktop shell. Its SVG is
+  named by title/description but is not a tab stop; exact adjacent values are keyboard reachable and
+  decorative meters are hidden from assistive technology.
 - Autoplay never starts automatically and all motion remains manually stoppable.
 
 ## 8. Accepted Debt

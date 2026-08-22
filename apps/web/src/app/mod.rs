@@ -5,6 +5,14 @@ pub mod architecture;
 #[cfg(test)]
 mod architecture_tests;
 pub mod generation;
+#[cfg(any(test, target_arch = "wasm32"))]
+#[doc(hidden)]
+#[path = "../components/guided/visuals/generation_sampling/sampling_contract.rs"]
+pub mod generation_sampling_contract;
+#[cfg(any(test, target_arch = "wasm32"))]
+#[doc(hidden)]
+#[path = "../components/guided/visuals/generation_sampling/projection.rs"]
+pub mod generation_sampling_projection;
 #[cfg(test)]
 mod generation_tests;
 #[cfg(test)]
@@ -14,6 +22,8 @@ pub mod narrative;
 mod narrative_tests;
 pub mod playback;
 pub mod selection;
+#[cfg(test)]
+mod source_precedence_tests;
 pub mod state;
 mod state_generation;
 mod state_response;

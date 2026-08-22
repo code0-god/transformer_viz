@@ -42,6 +42,11 @@ fn stage_position(state: &AppState) -> String {
 
 fn evidence_title(state: &AppState) -> &'static str {
     match state.ui.architecture.operation {
+        Some(operation)
+            if visuals::generation_sampling::is_generation_sampling_operation(operation) =>
+        {
+            "선택한 생성 step 증거"
+        }
         Some(operation) if operation.target().is_some() => "현재 trace 증거",
         Some(_) | None => "구조와 설정",
     }
@@ -49,6 +54,11 @@ fn evidence_title(state: &AppState) -> &'static str {
 
 fn stage_evidence(state: RwSignal<AppState>, client: &WorkerClient) -> AnyView {
     match state.with(|current| current.ui.architecture.operation) {
+        Some(operation)
+            if visuals::generation_sampling::is_generation_sampling_operation(operation) =>
+        {
+            state.with(|current| visuals::generation_sampling::visual(current, operation))
+        }
         Some(operation) if operation.target().is_none() => generation_orientation(state, operation),
         Some(_) => visuals::stage_visual(state, client),
         None => level_orientation(state),

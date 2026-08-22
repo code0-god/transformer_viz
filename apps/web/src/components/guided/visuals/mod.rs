@@ -4,6 +4,7 @@ mod attention;
 mod embedding;
 mod facts;
 mod flow;
+pub(super) mod generation_sampling;
 mod matrix;
 mod mlp;
 mod prediction;

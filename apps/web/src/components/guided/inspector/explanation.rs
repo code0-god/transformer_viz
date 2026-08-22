@@ -4,19 +4,24 @@ use leptos::prelude::*;
 
 use crate::app::{narrative::NarrativeStage, state::AppState};
 
-use super::super::stage_copy::{focus_bridge, focus_formula, focus_purpose, focus_title};
+use super::super::{
+    stage_copy::{focus_bridge, focus_formula, focus_purpose, focus_title},
+    visuals::generation_sampling,
+};
 
 pub(super) fn panel(state: &AppState) -> AnyView {
-    let evidence = state.ui.architecture.operation.map_or(
-        "연산을 선택하기 전에는 level 구조와 모델 설정만 표시합니다.",
-        |operation| {
-            if operation.target().is_some() {
-                evidence_prompt(state.ui.narrative.stage)
-            } else {
-                "이 생성 경계에는 아직 연결된 trace tensor ID가 없으며 구조와 설정만 표시합니다."
-            }
-        },
-    );
+    let evidence = generation_sampling::explanation(state).unwrap_or_else(|| {
+        state.ui.architecture.operation.map_or(
+            "연산을 선택하기 전에는 level 구조와 모델 설정만 표시합니다.",
+            |operation| {
+                if operation.target().is_some() {
+                    evidence_prompt(state.ui.narrative.stage)
+                } else {
+                    "이 경계에는 연결된 trace tensor ID가 없습니다."
+                }
+            },
+        )
+    });
     view! {
         <article class="inspector-copy" data-testid="inspector-explanation">
             <h3>{focus_title(state)}</h3>

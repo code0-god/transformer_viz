@@ -10,9 +10,18 @@ use crate::{
     trace_lookup::selected_head_token_slice,
 };
 
+use super::super::visuals::generation_sampling;
 use super::{feature_width, selected_tensor};
 
 pub(super) fn panel(state: RwSignal<AppState>, current: &AppState) -> AnyView {
+    if current
+        .ui
+        .architecture
+        .operation
+        .is_some_and(generation_sampling::is_generation_sampling_operation)
+    {
+        return generation_sampling::inspector_evidence(current);
+    }
     if current.ui.narrative.stage == NarrativeStage::CausalMask {
         return mask_panel(current);
     }

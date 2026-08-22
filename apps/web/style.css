@@ -337,6 +337,50 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 .prediction-visual .top-k-list { overflow: visible; }
 .sr-only { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
+/* Generation sampling */
+.generation-selection-required { display: grid; gap: var(--s2); padding: var(--s5); border: 1px dashed var(--generation); background: var(--generation-soft); text-align: start; }
+.generation-selection-required p { margin: 0; color: var(--ink); }
+.sampling-visual { overflow-y: auto; overscroll-behavior-block: contain; padding-inline-end: var(--s1); scrollbar-gutter: stable; }
+.sampling-stack { display: grid; gap: var(--s3); min-block-size: min-content; }
+.derived-math, .sampling-verdict { margin: 0; padding: var(--s2) var(--s3); background: var(--generation-soft); color: var(--ink); font-size: .75rem; }
+.sampling-table-scroll { block-size: clamp(132px, 22dvb, 200px); min-block-size: 132px; max-block-size: 200px; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.sampling-values { border-collapse: collapse; min-inline-size: 100%; font-size: .75rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sampling-values th, .sampling-values td { min-block-size: 44px; padding: var(--s2); border-block-end: 1px solid var(--hairline); text-align: start; }
+.sampling-values th { position: sticky; inset-block-start: 0; z-index: 1; background: var(--surface-strong); color: var(--ink); font-size: .75rem; }
+.sampling-values tr.selected { background: repeating-linear-gradient(-45deg, var(--generation-soft), var(--generation-soft) 6px, var(--surface) 6px, var(--surface) 9px); outline: 2px solid var(--generation); outline-offset: -2px; }
+.sampling-values td[data-column="candidate"] { max-inline-size: 12ch; overflow: hidden; text-overflow: ellipsis; }
+.sampling-meter-cell { display: grid; grid-template-columns: auto minmax(64px, 1fr); gap: var(--s2); align-items: center; }
+.sampling-meter { inline-size: 100%; min-inline-size: 64px; accent-color: var(--generation); }
+.candidate-mark { display: inline-grid; place-items: center; min-block-size: 28px; padding-inline: var(--s1); border: 1px solid var(--hairline); font-size: .75rem; font-weight: 700; }
+.sampling-values tr.selected .candidate-mark { border-color: var(--generation); color: var(--generation); }
+.sampling-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); margin: 0; }
+.sampling-summary div { padding: var(--s2); border-block: 1px solid var(--hairline); }
+.sampling-summary dt { color: var(--ink-muted); font-size: .65rem; }
+.sampling-summary dd { margin: var(--s1) 0 0; font-weight: 700; }
+.sampling-distribution { display: block; inline-size: 100%; min-block-size: 88px; border: 1px solid var(--hairline); background: var(--surface); }
+.sampling-distribution rect { fill: var(--probability-low); stroke: var(--surface); stroke-width: .25; }
+.sampling-distribution rect.selected { fill: var(--generation-soft); stroke: var(--generation); }
+.sampling-distribution .selected-pattern { display: none; fill: url("#selected-sampling-hatch"); stroke: none; }
+.sampling-distribution .selected-pattern.visible { display: block; }
+.sampling-distribution pattern line { stroke: var(--generation); stroke-width: 1; }
+.sampling-distribution text { fill: var(--ink); font-size: 3px; font-weight: 800; }
+.random-marker { stroke: var(--focus); stroke-width: 1.2; stroke-dasharray: 2 1; vector-effect: non-scaling-stroke; }
+.context-equation { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); min-inline-size: 0; }
+.context-equation > span, .context-equation > b { font-size: .75rem; }
+.context-equation > ol { display: flex; gap: var(--s1); max-inline-size: 100%; margin: 0; padding: var(--s1); overflow-x: auto; list-style: none; background: var(--surface-strong); }
+.context-equation li { display: inline-grid; place-items: center; flex: 0 0 44px; min-inline-size: 44px; min-block-size: 44px; }
+.appended-token { min-block-size: 44px; padding: var(--s3); border: 1px dashed var(--generation); background: var(--generation-soft); font-weight: 700; }
+.repeat-contexts { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: var(--s3); align-items: center; }
+.repeat-contexts section { min-inline-size: 0; }
+.repeat-contexts ol { display: flex; gap: var(--s1); margin: var(--s2) 0 0; padding: var(--s1); overflow-x: auto; list-style: none; background: var(--surface-strong); }
+.repeat-contexts li { display: inline-grid; place-items: center; flex: 0 0 44px; min-inline-size: 44px; min-block-size: 44px; }
+.repeat-contexts p { margin: var(--s2) 0 0; }
+.sampling-inspector dl { display: grid; gap: var(--s1); margin: 0; }
+.sampling-inspector dl div { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--s2); padding-block: var(--s1); border-block-end: 1px solid var(--hairline); }
+.sampling-inspector dt { color: var(--ink-muted); font-size: .68rem; }
+.sampling-inspector dd { min-inline-size: 0; margin: 0; overflow-wrap: anywhere; font-size: .7rem; }
+.sampling-inspector p { margin: var(--s3) 0 0; font-size: .75rem; }
+
 /* 10. inspector */
 .inspector { grid-area: inspector; overflow-y: auto; overscroll-behavior-block: contain; padding: var(--s4); border-block: 1px solid var(--hairline); background: var(--surface); scrollbar-gutter: stable; }
 .inspector-tabs { display: grid; grid-template-columns: repeat(3, 1fr); border-block-end: 1px solid var(--hairline); }
@@ -490,6 +534,8 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
   .top-k-list { grid-template-columns: minmax(0, 1fr); max-block-size: 240px; }
   .softmax-transform, .tied-head, .prediction-ledger, .value-visual .value-strips, .residual-strips { grid-template-columns: minmax(0, 1fr); }
   .softmax-transform > span { justify-self: center; }
+  .repeat-contexts { grid-template-columns: minmax(0, 1fr); }
+  .repeat-contexts > span { justify-self: center; transform: rotate(90deg); }
   .flow-diagram { overflow-x: auto; }
   .flow-diagram svg { min-inline-size: 620px; }
 }
