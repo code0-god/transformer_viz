@@ -143,7 +143,7 @@ python3 scripts/measure-static-transfer.py /tmp/transformer-viz-release-root
 | Learned parameters | 118,208 |
 | `model.safetensors` | 475,432 bytes |
 | Model SHA-256 | `8fd76c662da0d0cb9fe1035cb205b1a071ad95f9e22d116578a0a8bec0754be9` |
-| Static `dist` size | 4,001,546 bytes uncompressed; 1,461,818 bytes deterministic per-resource gzip |
+| Static `dist` size | 4,009,016 bytes uncompressed; 1,463,220 bytes deterministic per-resource gzip |
 | Largest native/Python absolute error | `2.86102295e-6` (logits) |
 | Parity tolerance | absolute + relative `1e-4` |
 
