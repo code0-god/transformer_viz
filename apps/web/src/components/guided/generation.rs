@@ -4,7 +4,7 @@ use leptos::prelude::*;
 use nanogpt_schema::SamplingMode;
 
 use crate::app::{
-    generation::{GenerationForm, GenerationPhase},
+    generation::{GenerationForm, GenerationPhase, MAX_BROWSER_SEED},
     state::{AppState, AppStatus},
     worker_client::WorkerClient,
 };
@@ -37,6 +37,7 @@ pub(super) fn generation_controls(
     let (top_k, set_top_k) = signal(defaults.top_k);
     let (mode, set_mode) = signal(defaults.mode);
     let (seed, set_seed) = signal(defaults.seed);
+    let seed_max = || MAX_BROWSER_SEED.to_string();
 
     let generate = generate_handler(
         state,
@@ -97,7 +98,7 @@ pub(super) fn generation_controls(
                         <option value="greedy" selected=move || mode.get() == SamplingMode::Greedy>"Greedy"</option>
                     </select>
                 </label>
-                {number_field("seed", "Seed", seed, set_seed, "0", || u64::MAX.to_string(), "1")}
+                {number_field("seed", "Seed", seed, set_seed, "0", seed_max, "1")}
                 <div class="generation-actions">
                     <button
                         type="button"

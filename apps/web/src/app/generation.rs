@@ -3,7 +3,7 @@
 #[cfg(any(test, target_arch = "wasm32"))]
 pub mod form;
 #[cfg(any(test, target_arch = "wasm32"))]
-pub(crate) use form::GenerationForm;
+pub(crate) use form::{GenerationForm, MAX_BROWSER_SEED};
 
 use nanogpt_schema::{GenerationConfig, GenerationStepSummary, GenerationStopReason, TokenInfo};
 

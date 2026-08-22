@@ -179,7 +179,8 @@ pub(super) fn send_or_error(
     request: &WorkerRequest,
 ) {
     if let Err(error) = client.send(request) {
-        state.update(|current| current.status = AppStatus::Error(error.to_string()));
+        let message = error.to_string();
+        state.update(|current| current.request_send_failed(request, &message));
     }
 }
 

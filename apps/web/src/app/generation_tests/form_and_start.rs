@@ -24,6 +24,37 @@ fn form_defaults_and_boundary_clamping_are_exact() -> TestResult {
 }
 
 #[test]
+fn browser_seed_clamps_to_javascript_safe_integer() -> TestResult {
+    let form = GenerationForm {
+        seed: u64::MAX.to_string(),
+        ..GenerationForm::default()
+    };
+
+    let parsed = form.parse(24, 259)?;
+
+    assert_eq!(parsed.seed, crate::app::generation::MAX_BROWSER_SEED);
+    Ok(())
+}
+
+#[test]
+fn local_send_failure_releases_pending_generation() -> TestResult {
+    let mut state = AppState::default();
+    let request = state.begin_generation("cat", config()?);
+    assert!(state.generation.pending.is_some());
+
+    state.request_send_failed(&request, "POST_SENTINEL");
+
+    assert!(state.generation.pending.is_none());
+    assert_eq!(state.generation.phase, GenerationPhase::Idle);
+    assert_eq!(state.generation.error.as_deref(), Some("POST_SENTINEL"));
+    assert_eq!(
+        state.status,
+        crate::app::state::AppStatus::Error("POST_SENTINEL".to_owned())
+    );
+    Ok(())
+}
+
+#[test]
 fn invalid_pending_replacement_preserves_active_history() -> TestResult {
     // Given: active A with one streamed token and pending replacement B.
     let mut state = AppState::default();

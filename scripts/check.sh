@@ -86,4 +86,9 @@ PYTHONPATH="${ROOT_DIR}/scripts" \
   python3 "${ROOT_DIR}/scripts/browser_worker_integrity.py" \
   --root "${CHECK_DIST_DIR}/browser-root"
 
+printf '%s\n' '==> generation transport rollback'
+PYTHONPATH="${ROOT_DIR}/scripts" \
+  python3 "${ROOT_DIR}/scripts/browser_generation_transport.py" \
+  --root "${CHECK_DIST_DIR}/browser-root"
+
 printf '%s\n' 'All checks passed.'

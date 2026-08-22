@@ -35,6 +35,26 @@ impl AppState {
     }
 
     #[cfg(any(test, target_arch = "wasm32"))]
+    pub(crate) fn request_send_failed(&mut self, request: &WorkerRequest, message: &str) {
+        let request_id = match request {
+            WorkerRequest::Initialize { .. } => None,
+            WorkerRequest::Run { request_id, .. }
+            | WorkerRequest::Generate { request_id, .. }
+            | WorkerRequest::StopGeneration { request_id, .. }
+            | WorkerRequest::ContinueGeneration { request_id, .. }
+            | WorkerRequest::InspectGenerationStep { request_id, .. }
+            | WorkerRequest::InspectBlock { request_id, .. }
+            | WorkerRequest::InspectAttentionHead { request_id, .. }
+            | WorkerRequest::InspectToken { request_id, .. }
+            | WorkerRequest::Cancel { request_id } => Some(*request_id),
+        };
+        if let Some(request_id) = request_id {
+            self.apply_generation_error(request_id, message);
+        }
+        self.status = AppStatus::Error(message.to_owned());
+    }
+
+    #[cfg(any(test, target_arch = "wasm32"))]
     #[must_use]
     pub(crate) fn stop_generation(&self) -> Option<WorkerRequest> {
         let active = self.generation.active?;

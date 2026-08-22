@@ -2,6 +2,9 @@
 
 use nanogpt_schema::{GenerationConfig, SamplingMode, SchemaError, Temperature, TopK};
 
+/// Largest integer preserved exactly by the browser's JavaScript transport.
+pub(crate) const MAX_BROWSER_SEED: u64 = 9_007_199_254_740_991;
+
 /// Editable generation settings at the browser trust boundary.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct GenerationForm {
@@ -54,7 +57,7 @@ impl GenerationForm {
             temperature: Temperature::new(temperature)?,
             top_k: TopK::new(top_k)?,
             mode: self.mode,
-            seed: self.seed.parse::<u64>().unwrap_or(42),
+            seed: self.seed.parse::<u64>().unwrap_or(42).min(MAX_BROWSER_SEED),
         })
     }
 }
