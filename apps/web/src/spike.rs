@@ -141,6 +141,7 @@ pub fn handle_worker_request(request: WorkerRequest) -> Result<WorkerResponse, S
         }
         WorkerRequest::Generate { .. }
         | WorkerRequest::StopGeneration { .. }
+        | WorkerRequest::InspectGenerationStep { .. }
         | WorkerRequest::InspectBlock { .. }
         | WorkerRequest::InspectAttentionHead { .. }
         | WorkerRequest::InspectToken { .. }

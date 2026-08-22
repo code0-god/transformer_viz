@@ -23,11 +23,15 @@ mod tests;
 #[path = "runtime_generation_tests.rs"]
 mod generation_tests;
 
+#[cfg(test)]
+#[path = "runtime_generation_replay_tests.rs"]
+mod generation_replay_tests;
+
 #[derive(Debug)]
-struct CachedRun {
-    run_id: u64,
-    tokens: Vec<TokenInfo>,
-    layer_inputs: Vec<Tensor>,
+pub(crate) struct CachedRun {
+    pub(crate) run_id: u64,
+    pub(crate) tokens: Vec<TokenInfo>,
+    pub(crate) layer_inputs: Vec<Tensor>,
 }
 
 /// Stateful request processor retaining one model and one recent run.
@@ -70,6 +74,11 @@ impl WorkerRuntime {
             WorkerRequest::Generate { .. } | WorkerRequest::StopGeneration { .. } => {
                 Err(RuntimeError::InvalidSelector)
             }
+            WorkerRequest::InspectGenerationStep {
+                request_id,
+                generation_run_id,
+                step_index,
+            } => self.inspect_generation_step(request_id, generation_run_id, step_index),
             WorkerRequest::InspectBlock {
                 request_id,
                 run_id,
@@ -129,8 +138,7 @@ impl WorkerRuntime {
         let duration_ms = FiniteF32::new(timer.elapsed_ms())?;
         let layer_inputs = capture.cached_layer_inputs();
         let summary = capture.summary(run_id, encoded.tokens.clone(), &output, duration_ms)?;
-        self.next_run_id = run_id;
-        self.cached = Some(CachedRun {
+        self.commit_cached_run(CachedRun {
             run_id,
             tokens: encoded.tokens,
             layer_inputs,
@@ -246,6 +254,11 @@ impl WorkerRuntime {
             .as_ref()
             .filter(|cached| cached.run_id == run_id)
             .ok_or(RuntimeError::StaleRun)
+    }
+
+    pub(crate) fn commit_cached_run(&mut self, cached: CachedRun) {
+        self.next_run_id = cached.run_id;
+        self.cached = Some(cached);
     }
 
     /// Returns model-relative asset names from a parsed manifest.

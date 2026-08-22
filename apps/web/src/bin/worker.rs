@@ -99,6 +99,7 @@ fn request_id(request: &WorkerRequest) -> Option<u64> {
         WorkerRequest::Run { request_id, .. }
         | WorkerRequest::Generate { request_id, .. }
         | WorkerRequest::StopGeneration { request_id }
+        | WorkerRequest::InspectGenerationStep { request_id, .. }
         | WorkerRequest::InspectBlock { request_id, .. }
         | WorkerRequest::InspectAttentionHead { request_id, .. }
         | WorkerRequest::InspectToken { request_id, .. }

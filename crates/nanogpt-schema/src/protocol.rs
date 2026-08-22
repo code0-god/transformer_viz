@@ -34,6 +34,15 @@ pub enum WorkerRequest {
         /// Active generation request to stop.
         request_id: u64,
     },
+    /// Replay one stored generation step with a full summary trace.
+    InspectGenerationStep {
+        /// Correlates the response with this request.
+        request_id: u64,
+        /// Streamed generation run to inspect.
+        generation_run_id: u64,
+        /// Zero-based generated-token index.
+        step_index: usize,
+    },
     /// Inspect one cached Transformer block.
     InspectBlock {
         /// Correlates the response with this request.
@@ -134,6 +143,19 @@ pub enum WorkerResponse {
         run_id: u64,
         /// Stable terminal reason.
         reason: GenerationStopReason,
+    },
+    /// A stored generation step was replayed as a fresh inspectable trace.
+    GenerationStepTrace {
+        /// Correlated replay request.
+        request_id: u64,
+        /// Streamed generation run containing the historical step.
+        generation_run_id: u64,
+        /// Zero-based historical step index.
+        step_index: usize,
+        /// Unchanged historical token-selection summary.
+        step: GenerationStepSummary,
+        /// Fresh full-context trace with its own inspectable run ID.
+        summary: Box<RunSummary>,
     },
     /// Inference completed and can be inspected by run ID.
     RunComplete {

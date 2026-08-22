@@ -11,6 +11,7 @@ fn worker_request_variants_round_trip_with_exact_u64_flow() -> Result<(), serde_
         json!({"type":"run","request_id":4_294_967_296_u64,"text":"the cat"}),
         json!({"type":"generate","request_id":7,"text":"the cat","config":{"max_new_tokens":24,"temperature":1.0,"top_k":20,"mode":"sample","seed":42}}),
         json!({"type":"stop_generation","request_id":7}),
+        json!({"type":"inspect_generation_step","request_id":8,"generation_run_id":11,"step_index":0}),
         json!({"type":"inspect_block","request_id":3,"run_id":20,"layer":1}),
         json!({"type":"inspect_attention_head","request_id":4,"run_id":20,"layer":1,"head":2}),
         json!({"type":"inspect_token","request_id":5,"run_id":20,"layer":1,"head":2,"token":3}),

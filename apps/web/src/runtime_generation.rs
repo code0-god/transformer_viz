@@ -204,6 +204,34 @@ impl WorkerRuntime {
         Ok(responses)
     }
 
+    pub(crate) fn generation_step(
+        &self,
+        generation_run_id: u64,
+        step_index: usize,
+    ) -> Result<GenerationStepSummary, RuntimeError> {
+        let run = self
+            .generation
+            .as_ref()
+            .filter(|run| run.run_id == generation_run_id)
+            .ok_or(RuntimeError::StaleRun)?;
+        run.steps
+            .get(step_index)
+            .cloned()
+            .ok_or(RuntimeError::InvalidSelector)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn corrupt_first_generation_candidate(&mut self) -> Result<(), RuntimeError> {
+        let candidate = self
+            .generation
+            .as_mut()
+            .and_then(|run| run.steps.first_mut())
+            .and_then(|step| step.candidates.first_mut())
+            .ok_or(RuntimeError::InvalidSelector)?;
+        candidate.logit = FiniteF32::new(candidate.logit.get() + 1.0)?;
+        Ok(())
+    }
+
     /// Stops the matching active request at completed-forward granularity.
     #[must_use]
     pub fn stop_generation(&mut self, request_id: u64) -> Option<WorkerResponse> {

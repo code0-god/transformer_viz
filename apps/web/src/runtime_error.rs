@@ -59,6 +59,9 @@ pub enum RuntimeError {
     /// A selector is outside the cached run.
     #[error("선택한 레이어, 헤드 또는 토큰 범위가 올바르지 않습니다")]
     InvalidSelector,
+    /// A generation replay disagreed with its stored raw-logit candidates.
+    #[error("생성 단계 재실행 결과가 저장된 후보와 일치하지 않습니다")]
+    GenerationReplayMismatch,
     /// The request was cancelled.
     #[error("요청이 취소되었습니다")]
     Cancelled,
@@ -78,7 +81,10 @@ impl RuntimeError {
             | Self::InputTooLong { .. }
             | Self::InvalidSelector => WorkerErrorCode::InvalidRequest,
             Self::Tokenizer(_) => WorkerErrorCode::Tokenization,
-            Self::Model(_) | Self::Tensor(_) | Self::Sampling(_) => WorkerErrorCode::Inference,
+            Self::Model(_)
+            | Self::Tensor(_)
+            | Self::Sampling(_)
+            | Self::GenerationReplayMismatch => WorkerErrorCode::Inference,
             Self::NotInitialized | Self::StaleRun => WorkerErrorCode::NotInitialized,
             Self::Cancelled => WorkerErrorCode::Cancelled,
         }

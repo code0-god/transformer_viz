@@ -137,7 +137,8 @@ impl AppState {
             }
             WorkerResponse::GenerationStarted { .. }
             | WorkerResponse::TokenGenerated { .. }
-            | WorkerResponse::GenerationFinished { .. } => {}
+            | WorkerResponse::GenerationFinished { .. }
+            | WorkerResponse::GenerationStepTrace { .. } => {}
             WorkerResponse::Error { message, .. } => self.status = AppStatus::Error(message),
         }
         Ok(Vec::new())
