@@ -17,9 +17,13 @@ pub mod runtime_trace;
 pub mod runtime_trace_support;
 pub mod source_map;
 pub mod spike;
+pub mod tensor_address;
 pub mod trace_lookup;
 pub mod visualization;
 
+#[cfg(test)]
+#[path = "tensor_address_tests.rs"]
+mod tensor_address_tests;
 #[cfg(test)]
 #[path = "trace_lookup_tests.rs"]
 mod trace_lookup_tests;

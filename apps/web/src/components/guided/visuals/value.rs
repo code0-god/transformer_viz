@@ -34,7 +34,10 @@ pub(super) fn value_residual(state: &AppState) -> AnyView {
     ) else {
         return facts::error_state("selected attention residual row");
     };
-    let selected_feature = 0;
+    let selected_feature = state
+        .ui
+        .selected_feature
+        .min(evidence.features.saturating_sub(1));
     let key_contributions = (0..evidence.keys)
         .filter_map(|key| {
             evidence

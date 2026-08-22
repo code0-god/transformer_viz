@@ -16,6 +16,28 @@ pub enum InspectorTab {
     Source,
 }
 
+impl InspectorTab {
+    /// Resolves one supported roving-tab keyboard command.
+    #[must_use]
+    pub fn after_key(self, key: &str) -> Option<Self> {
+        match key {
+            "Home" => Some(Self::Explanation),
+            "End" => Some(Self::Source),
+            "ArrowLeft" => Some(match self {
+                Self::Explanation => Self::Source,
+                Self::Tensor => Self::Explanation,
+                Self::Source => Self::Tensor,
+            }),
+            "ArrowRight" => Some(match self {
+                Self::Explanation => Self::Tensor,
+                Self::Tensor => Self::Source,
+                Self::Source => Self::Explanation,
+            }),
+            _ => None,
+        }
+    }
+}
+
 /// Pure browser-only state for the guided explorer shell.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ExplorerUiState {
@@ -48,25 +70,25 @@ impl Default for ExplorerUiState {
 
 impl ExplorerUiState {
     /// Selects a narrative stage without crossing the Worker boundary.
-    pub fn select_stage(&mut self, stage: NarrativeStage) {
+    pub const fn select_stage(&mut self, stage: NarrativeStage) {
         self.narrative.select(stage);
         self.sync_detail_operation();
     }
 
     /// Moves to the previous narrative stage without a Worker request.
-    pub fn previous_stage(&mut self) {
+    pub const fn previous_stage(&mut self) {
         self.narrative.previous();
         self.sync_detail_operation();
     }
 
     /// Moves to the next narrative stage without a Worker request.
-    pub fn next_stage(&mut self) {
+    pub const fn next_stage(&mut self) {
         self.narrative.next();
         self.sync_detail_operation();
     }
 
     /// Starts or pauses the browser-only narrative clock.
-    pub fn toggle_narrative(&mut self) {
+    pub const fn toggle_narrative(&mut self) {
         self.narrative.toggle();
         self.sync_detail_operation();
     }
@@ -77,14 +99,41 @@ impl ExplorerUiState {
     }
 
     /// Advances the narrative clock and keeps legacy detail selection aligned.
-    pub fn tick_narrative(&mut self) {
+    pub const fn tick_narrative(&mut self) {
         self.narrative.tick();
         self.sync_detail_operation();
     }
 
-    fn sync_detail_operation(&mut self) {
-        self.detail_operation = DETAIL_OPERATION_STAGES
-            .iter()
-            .position(|stage| *stage == self.narrative.stage);
+    /// Selects an actual operation only when it belongs to the current stage.
+    #[must_use]
+    pub fn select_detail_operation(&mut self, index: usize) -> bool {
+        if DETAIL_OPERATION_STAGES.get(index) == Some(&self.narrative.stage) {
+            self.detail_operation = Some(index);
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Selects and clamps a feature to the active tensor width.
+    #[must_use]
+    pub fn select_feature(&mut self, feature: usize, width: usize) -> Option<usize> {
+        let selected = width.checked_sub(1).map(|last| feature.min(last))?;
+        self.selected_feature = selected;
+        Some(selected)
+    }
+
+    const fn sync_detail_operation(&mut self) {
+        self.detail_operation = match self.narrative.stage {
+            NarrativeStage::Embedding
+            | NarrativeStage::Softmax
+            | NarrativeStage::LanguageModelHead => None,
+            NarrativeStage::AttentionLayerNorm => Some(1),
+            NarrativeStage::QueryKeyValue => Some(2),
+            NarrativeStage::AttentionScores => Some(6),
+            NarrativeStage::CausalMask => Some(7),
+            NarrativeStage::ValueAggregation => Some(8),
+            NarrativeStage::MlpAndResidual => Some(12),
+        };
     }
 }

@@ -100,10 +100,10 @@ Base unit is 4px. Tokens: `--s1: 4px`, `--s2: 8px`, `--s3: 12px`, `--s4: 16px`, 
 - **Accessibility**: stage changes announce through a polite live region; SVG has title/description and equivalent HTML values.
 
 ### Inspector
-- **Structure**: Explanation, Tensor, and Source tabs with one visible tabpanel.
-- **States**: selected tab, keyboard focus, loading trace, typed empty state, source failure.
-- **Accessibility**: ARIA tablist/tab/tabpanel contract with roving keyboard focus; tab selection never changes narrative stage.
-- **Layout**: owns desktop vertical scroll; source and tables own only horizontal overflow.
+- **Structure**: Explanation, Tensor, and Source tabs with one visible tabpanel, followed by one collapsed current-stage Detail Operation Disclosure.
+- **States**: selected tab, keyboard focus, selected stable tensor operation, selected global feature, loading trace, typed empty state, source failure.
+- **Accessibility**: ARIA tablist/tab/tabpanel contract with wrapping Arrow keys plus Home/End roving focus; operation and feature buttons expose pressed state; either selection preserves narrative stage, playback, lifecycle status, and focus context.
+- **Layout**: owns desktop vertical scroll; the bounded math tables, feature/slice reels, and pinned source viewport own their named horizontal scroll. Inspector remains supporting evidence and never duplicates the Main Stage diagram.
 
 ### Stage Rail
 - **Structure**: Previous, play/pause, Next, speed selector, and nine labelled stage buttons.
@@ -161,10 +161,11 @@ Base unit is 4px. Tokens: `--s1: 4px`, `--s2: 8px`, `--s3: 12px`, `--s4: 16px`, 
 - **Accessibility**: semantic definition lists and explicit error text.
 
 ### Tensor Viewer
-- **Structure**: tensor identity/shape/dtype, statistics, high-precision selected value, bounded row-major slice.
-- **Variants**: scalar, vector, matrix, higher-rank slice.
-- **Accessibility**: real table for matrix values and explicit row/column labels.
-- **Layout**: intrinsic grid; no canvas-only information.
+- **Structure**: stable tensor identity/label/shape/dtype/operation, statistics, typed semantic axes, checked flat index, high-precision selected value, global feature selectors, and bounded row-major slice.
+- **Variants**: rank-1 vector, `[B,T,C]` token-feature, captured `[1,1,T,D]` head-token-feature, and `[1,1,T,T]` query-key matrix cell; malformed boundaries become typed visible empty states.
+- **Evidence tables**: Attention Score shows every `Qᵢ`, `Kᵢ`, product, sum, captured raw, scaling, and error; Value + Residual shows every real key by every head feature plus per-feature sum and captured output without truncation.
+- **Accessibility**: semantic pressed feature controls, table captions, scoped row/column headers, and selected row/feature styling that does not depend on color alone.
+- **Layout**: identity remains in flow; slices and full evidence tables own bounded horizontal overflow, and large tables also own a named bounded vertical viewport.
 
 ### Source Correspondence
 - **Structure**: original nanoGPT symbol, pinned SHA, highlighted numbered `model.py` range, MIT link, and Rust file/symbol counterpart.

@@ -34,7 +34,7 @@ pub(super) fn prediction(state: &AppState) -> AnyView {
         tensor_id: normalized.id.clone(),
         values,
         tone: "prediction",
-        selected_feature: 0,
+        selected_feature: state.ui.selected_feature,
     };
     let scale = shared_scale(std::slice::from_ref(&strip));
     let vocabulary = model.config.vocab_size;

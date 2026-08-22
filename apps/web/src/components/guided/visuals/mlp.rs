@@ -54,35 +54,35 @@ pub(super) fn mlp_residual(state: &AppState) -> AnyView {
         tensor_id: hidden.id.clone(),
         values: hidden_row,
         tone: "mlp",
-        selected_feature: 0,
+        selected_feature: state.ui.selected_feature,
     };
     let activated_strip = VectorStrip {
         label: "exact GELU(4C)",
         tensor_id: activated.id.clone(),
         values: activated_row,
         tone: "mlp",
-        selected_feature: 0,
+        selected_feature: state.ui.selected_feature,
     };
     let projected_strip = VectorStrip {
         label: "projected C · MLP addend",
         tensor_id: projected.id.clone(),
         values: projected_row,
         tone: "mlp",
-        selected_feature: 0,
+        selected_feature: state.ui.selected_feature,
     };
     let residual_strip = VectorStrip {
         label: "attention residual addend",
         tensor_id: residual.id.clone(),
         values: residual_row,
         tone: "residual",
-        selected_feature: 0,
+        selected_feature: state.ui.selected_feature,
     };
     let output_strip = VectorStrip {
         label: "block output result",
         tensor_id: output.id.clone(),
         values: output_row,
         tone: "residual",
-        selected_feature: 0,
+        selected_feature: state.ui.selected_feature,
     };
     let mlp_scale = shared_scale(&[hidden_strip.clone(), activated_strip.clone()]);
     let residual_scale = shared_scale(&[

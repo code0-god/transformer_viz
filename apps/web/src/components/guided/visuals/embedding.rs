@@ -27,21 +27,21 @@ pub(super) fn embedding(state: &AppState) -> AnyView {
             tensor_id: trace.token.id.clone(),
             values,
             tone: "token",
-            selected_feature: 0,
+            selected_feature: state.ui.selected_feature,
         }),
         embedding_row(&trace.position, token).map(|values| VectorStrip {
             label: "Position",
             tensor_id: trace.position.id.clone(),
             values,
             tone: "position",
-            selected_feature: 0,
+            selected_feature: state.ui.selected_feature,
         }),
         embedding_row(&trace.sum, token).map(|values| VectorStrip {
             label: "Sum",
             tensor_id: trace.sum.id.clone(),
             values,
             tone: "score",
-            selected_feature: 0,
+            selected_feature: state.ui.selected_feature,
         }),
     ];
     let [Ok(token_strip), Ok(position_strip), Ok(sum_strip)] = rows else {
@@ -82,14 +82,14 @@ pub(super) fn attention_norm(state: &AppState) -> AnyView {
         tensor_id: input.id.clone(),
         values: input_values,
         tone: "residual",
-        selected_feature: 0,
+        selected_feature: state.ui.selected_feature,
     };
     let after = VectorStrip {
         label: "After LN₁",
         tensor_id: normalized.id.clone(),
         values: normalized_values,
         tone: "query",
-        selected_feature: 0,
+        selected_feature: state.ui.selected_feature,
     };
     let scale = shared_scale(&[before.clone(), after.clone()]);
     view! {

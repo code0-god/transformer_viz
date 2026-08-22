@@ -25,21 +25,21 @@ pub(super) fn query_key_value(state: &AppState) -> AnyView {
             tensor_id: trace.query.id.clone(),
             values,
             tone: "query",
-            selected_feature: 0,
+            selected_feature: state.ui.selected_feature,
         }),
         bhtd_row(&trace.key, key).map(|values| VectorStrip {
             label: "K · 제공할 표지",
             tensor_id: trace.key.id.clone(),
             values,
             tone: "key",
-            selected_feature: 0,
+            selected_feature: state.ui.selected_feature,
         }),
         bhtd_row(&trace.value, key).map(|values| VectorStrip {
             label: "V · 전달할 내용",
             tensor_id: trace.value.id.clone(),
             values,
             tone: "value",
-            selected_feature: 0,
+            selected_feature: state.ui.selected_feature,
         }),
     ];
     let [Ok(query_strip), Ok(key_strip), Ok(value_strip)] = rows else {
@@ -75,7 +75,7 @@ pub(super) fn scores(state: RwSignal<AppState>, client: &WorkerClient) -> AnyVie
         tensor_id: trace.raw_scores.id.clone(),
         values: score.contributions.clone(),
         tone: "score",
-        selected_feature: 0,
+        selected_feature: current.ui.selected_feature,
     };
     let scale = shared_scale(std::slice::from_ref(&contribution));
     view! {

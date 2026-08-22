@@ -1,5 +1,7 @@
 //! Browser application state and Worker client.
 
+#[cfg(test)]
+mod inspector_state_tests;
 pub mod narrative;
 #[cfg(test)]
 mod narrative_tests;
