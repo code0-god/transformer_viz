@@ -96,12 +96,15 @@ impl TraceCapture {
             .tensors
             .iter()
             .filter(|item| item.layer == Some(layer))
-            .map(|item| OperationTrace {
-                operation: item.operation,
-                source: source(item.operation),
-                output: item.snapshot.stats.clone(),
+            .map(|item| {
+                Ok(OperationTrace {
+                    operation: item.operation,
+                    source: source(item.operation)?,
+                    tensor: item.snapshot.clone(),
+                    output: item.snapshot.stats.clone(),
+                })
             })
-            .collect();
+            .collect::<Result<Vec<_>, RuntimeError>>()?;
         Ok(BlockTrace {
             schema_version: SchemaVersion::current(),
             run_id,
@@ -114,7 +117,7 @@ impl TraceCapture {
                 hidden: self.layer_named(layer, "mlp_hidden")?.clone(),
                 activated: self.layer_named(layer, "mlp_activated")?.clone(),
                 output: self.layer_named(layer, "mlp_output")?.clone(),
-                source: source(nanogpt_schema::OperationId::Mlp),
+                source: source(nanogpt_schema::OperationId::Mlp)?,
             },
             output: self.layer_named(layer, "block_output")?.clone(),
         })
@@ -137,7 +140,7 @@ impl TraceCapture {
             mask: self.mask.clone().ok_or(RuntimeError::InvalidSelector)?,
             probabilities: self.layer_named(layer, "attention_probabilities")?.clone(),
             output: self.layer_named(layer, "attention_output")?.clone(),
-            source: source(nanogpt_schema::OperationId::Attention),
+            source: source(nanogpt_schema::OperationId::Attention)?,
         })
     }
 
@@ -248,7 +251,7 @@ fn logits_trace(output: &ForwardOutput) -> Result<LogitsTrace, RuntimeError> {
     Ok(LogitsTrace {
         logits,
         top_k,
-        source: source(nanogpt_schema::OperationId::Logits),
+        source: source(nanogpt_schema::OperationId::Logits)?,
     })
 }
 
@@ -264,11 +267,6 @@ fn token_display(id: u32) -> String {
     }
 }
 
-fn source(operation: nanogpt_schema::OperationId) -> SourceReference {
-    SourceReference {
-        file: "reference/nanoGPT/model.py".to_owned(),
-        symbol: format!("{operation:?}"),
-        start_line: 1,
-        end_line: 1,
-    }
+fn source(operation: nanogpt_schema::OperationId) -> Result<SourceReference, RuntimeError> {
+    Ok(crate::source_map::source_reference(operation)?)
 }

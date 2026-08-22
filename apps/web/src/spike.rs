@@ -2,8 +2,8 @@
 
 use candle_core::{D, Device, Tensor};
 use nanogpt_schema::{
-    FiniteF32, LayerSummary, LogitsTrace, ModelMetadata, RunSummary, SchemaVersion,
-    SourceReference, TensorSnapshot, TokenizerConfig, WorkerErrorCode,
+    FiniteF32, LayerSummary, LogitsTrace, ModelMetadata, OperationId, RunSummary, SchemaVersion,
+    TensorSnapshot, TokenizerConfig, WorkerErrorCode,
 };
 pub use nanogpt_schema::{WorkerRequest, WorkerResponse};
 use nanogpt_tokenizer::{Tokenizer, TokenizerError};
@@ -43,6 +43,9 @@ pub enum SpikeError {
     /// Tokenizer configuration or decoding failed.
     #[error("tokenization failed: {0}")]
     Tokenizer(#[from] TokenizerError),
+    /// Generated source correspondence is invalid.
+    #[error("source map is invalid: {0}")]
+    SourceMap(#[from] crate::source_map::SourceMapError),
     /// This phase does not have a cached model trace for inspection.
     #[error("inspection is not available before model initialization")]
     UnsupportedInspection,
@@ -104,12 +107,7 @@ pub fn handle_worker_request(request: WorkerRequest) -> Result<WorkerResponse, S
             let tokenizer = Tokenizer::new(TokenizerConfig::byte_fallback(WORKER_TOKEN_LIMIT))?;
             let tokens = tokenizer.encode(&text).tokens;
             let spike = run_candle_spike()?;
-            let source = SourceReference {
-                file: "reference/nanoGPT/model.py".to_owned(),
-                start_line: 52,
-                end_line: 76,
-                symbol: "CausalSelfAttention.forward".to_owned(),
-            };
+            let source = crate::source_map::source_reference(OperationId::Attention)?;
             let summary = RunSummary {
                 schema_version: SchemaVersion::current(),
                 run_id: request_id,
@@ -147,7 +145,9 @@ pub fn worker_error(error: &SpikeError) -> WorkerResponse {
         request_id: None,
         code: match error {
             SpikeError::Tokenizer(_) => WorkerErrorCode::Tokenization,
-            SpikeError::Candle(_) | SpikeError::Schema(_) => WorkerErrorCode::Inference,
+            SpikeError::Candle(_) | SpikeError::Schema(_) | SpikeError::SourceMap(_) => {
+                WorkerErrorCode::Inference
+            }
             SpikeError::UnsupportedInspection => WorkerErrorCode::NotInitialized,
         },
         message: error.to_string(),

@@ -82,6 +82,8 @@ pub struct OperationTrace {
     pub operation: OperationId,
     /// Canonical nanoGPT source location.
     pub source: SourceReference,
+    /// Real output tensor at this operation boundary.
+    pub tensor: TensorSnapshot,
     /// Output statistics.
     pub output: TensorStats,
 }

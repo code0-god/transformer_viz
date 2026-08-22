@@ -11,6 +11,7 @@ pub mod runtime_error;
 pub mod runtime_timer;
 #[doc(hidden)]
 pub mod runtime_trace;
+pub mod source_map;
 pub mod spike;
 pub mod visualization;
 

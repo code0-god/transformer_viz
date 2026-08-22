@@ -68,6 +68,7 @@ fn trace_worker_response_contains_every_exact_variant() -> Result<(), Box<dyn st
         operations: vec![OperationTrace {
             operation: OperationId::Embedding,
             source: source(),
+            tensor: snapshot("embedding")?,
             output: stats()?,
         }],
         attention_residual: snapshot("attention_residual")?,

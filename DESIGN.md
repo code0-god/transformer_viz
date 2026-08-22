@@ -97,6 +97,18 @@ Base unit is 4px. Tokens: `--s1: 4px`, `--s2: 8px`, `--s3: 12px`, `--s4: 16px`, 
 - **Accessibility**: real table for matrix values and explicit row/column labels.
 - **Layout**: intrinsic grid; no canvas-only information.
 
+### Source Correspondence
+- **Structure**: original nanoGPT symbol, pinned SHA, highlighted numbered `model.py` range, MIT link, and Rust file/symbol counterpart.
+- **States**: one active range synchronized to the selected playback operation; parse failure is a visible typed error.
+- **Accessibility**: semantic code lines expose line numbers as text; the active range uses weight and a left rule in addition to colour.
+- **Layout**: bounded source viewport owns horizontal overflow, while document scroll remains the vertical owner.
+
+### Data-path Transport
+- **Structure**: 18 numbered real Worker tensor boundaries with 처음/이전/재생·정지/다음/마지막 controls and 0.5x/1x/2x rate selection.
+- **States**: paused, playing, first bound, last bound, and selected operation.
+- **Accessibility**: transport is a labelled group, current step uses `aria-current`, and a polite live region announces formula, shape, and tensor.
+- **Motion**: a deterministic 250ms clock advances explanatory state; reduced motion keeps the same state transitions without animated interpolation.
+
 ## 6. Motion & Interaction
 
 | Token | Value | Usage |
@@ -104,7 +116,7 @@ Base unit is 4px. Tokens: `--s1: 4px`, `--s2: 8px`, `--s3: 12px`, `--s4: 16px`, 
 | `--micro` | `120ms ease-out` | Press, focus, selected state |
 | `--standard` | `220ms ease-in-out` | Real trace panel arrival |
 
-Motion communicates state changes only. Buttons translate by 1px while pressed; trace panels fade in when Worker data arrives. `prefers-reduced-motion: reduce` removes transitions and transforms.
+Motion communicates state changes only. Buttons translate by 1px while pressed; trace panels fade in when Worker data arrives. Playback advances real data-path state on a deterministic 250ms clock at a rate-derived cadence. `prefers-reduced-motion: reduce` removes transitions and transforms without disabling playback or hiding state.
 
 ## 7. Depth & Surface
 
@@ -125,4 +137,4 @@ Mixed warm ring and tonal-shift strategy. Standard panels use a 1px warm hairlin
 
 | Item | Location | Why accepted | Owner / Exit |
 |---|---|---|---|
-| Source code and 18-step playback are informative placeholders | Source and playback panels | Their complete behavior is explicitly Phase I; Phase H reserves stable semantic locations without fake data | Phase I replaces both with real source-map and playback state |
+| None | — | Phase I replaced the reserved source/playback locations with pinned source correspondence and real trace transport | Reassess when a new operation is added |

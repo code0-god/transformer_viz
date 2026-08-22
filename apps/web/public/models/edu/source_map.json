@@ -1,62 +1,92 @@
 {
   "attention": {
     "file": "reference/model.py",
-    "line_end": 67,
-    "line_start": 67,
+    "label": "CausalSelfAttention.forward",
+    "line_end": 75,
+    "line_start": 61,
+    "rust_file": "crates/nanogpt-model/src/attention.rs",
+    "rust_symbol": "CausalSelfAttention::forward",
     "symbol": "attention"
   },
   "attention_layer_norm": {
     "file": "reference/model.py",
+    "label": "Block.forward",
     "line_end": 104,
     "line_start": 104,
+    "rust_file": "crates/nanogpt-model/src/layers.rs",
+    "rust_symbol": "Block::forward",
     "symbol": "attention_layer_norm"
   },
   "attention_residual": {
     "file": "reference/model.py",
+    "label": "Block.forward",
     "line_end": 104,
     "line_start": 104,
+    "rust_file": "crates/nanogpt-model/src/layers.rs",
+    "rust_symbol": "Block::forward",
     "symbol": "attention_residual"
   },
   "embedding": {
     "file": "reference/model.py",
-    "line_end": 177,
+    "label": "GPT.forward",
+    "line_end": 179,
     "line_start": 177,
+    "rust_file": "crates/nanogpt-model/src/model.rs",
+    "rust_symbol": "Gpt::embed",
     "symbol": "embedding"
   },
   "final_layer_norm": {
     "file": "reference/model.py",
+    "label": "GPT.forward",
     "line_end": 182,
-    "line_start": 182,
+    "line_start": 180,
+    "rust_file": "crates/nanogpt-model/src/model.rs",
+    "rust_symbol": "Gpt::finish_forward",
     "symbol": "final_layer_norm"
   },
   "logits": {
     "file": "reference/model.py",
+    "label": "GPT.forward",
     "line_end": 190,
-    "line_start": 190,
+    "line_start": 184,
+    "rust_file": "crates/nanogpt-model/src/model.rs",
+    "rust_symbol": "Gpt::finish_forward",
     "symbol": "logits"
   },
   "mlp": {
     "file": "reference/model.py",
-    "line_end": 88,
+    "label": "MLP.forward",
+    "line_end": 92,
     "line_start": 88,
+    "rust_file": "crates/nanogpt-model/src/layers.rs",
+    "rust_symbol": "Mlp::forward",
     "symbol": "mlp"
   },
   "mlp_layer_norm": {
     "file": "reference/model.py",
+    "label": "Block.forward",
     "line_end": 105,
     "line_start": 105,
+    "rust_file": "crates/nanogpt-model/src/layers.rs",
+    "rust_symbol": "Block::forward",
     "symbol": "mlp_layer_norm"
   },
   "mlp_residual": {
     "file": "reference/model.py",
+    "label": "Block.forward",
     "line_end": 105,
     "line_start": 105,
+    "rust_file": "crates/nanogpt-model/src/layers.rs",
+    "rust_symbol": "Block::forward",
     "symbol": "mlp_residual"
   },
   "query_key_value": {
     "file": "reference/model.py",
-    "line_end": 56,
+    "label": "CausalSelfAttention.forward",
+    "line_end": 59,
     "line_start": 56,
+    "rust_file": "crates/nanogpt-model/src/attention.rs",
+    "rust_symbol": "CausalSelfAttention::forward",
     "symbol": "query_key_value"
   }
 }

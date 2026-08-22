@@ -2,11 +2,11 @@
 
 use leptos::prelude::*;
 
-use crate::app::state::AppState;
+use crate::app::{playback::Playback, state::AppState};
 
 /// Selected block operation flow and residual comparison.
 #[must_use]
-pub fn block_view(state: RwSignal<AppState>) -> impl IntoView {
+pub fn block_view(state: RwSignal<AppState>, playback: RwSignal<Playback>) -> impl IntoView {
     view! {
         <section class="panel block-panel" aria-labelledby="block-title">
             <div class="panel-heading"><div><h2 id="block-title">"Transformer 블록"</h2><p>"정규화, 어텐션, MLP와 두 잔차 연결을 순서대로 봅니다."</p></div><span class="coordinate">{move || format!("L{}", state.get().selection.layer)}</span></div>
@@ -14,8 +14,8 @@ pub fn block_view(state: RwSignal<AppState>) -> impl IntoView {
                 || view! { <p class="empty">"블록을 선택하면 Worker가 캐시된 입력에서 실제 연산을 재생합니다."</p> }.into_any(),
                 |trace| view! {
                     <div class="operation-flow" role="list" aria-label="블록 연산 순서">
-                        {trace.operations.into_iter().map(|operation| view! {
-                            <div class="operation" role="listitem"><strong>{operation_name(operation.operation)}</strong><span>{format!("μ {:.4} / σ {:.4}", operation.output.mean.get(), operation.output.std.get())}</span></div>
+                        {trace.operations.into_iter().enumerate().map(|(index, operation)| view! {
+                            <button type="button" class="operation" class:active=move || playback.get().step == index role="listitem" aria-current=move || (playback.get().step == index).then_some("step") on:click=move |_| playback.update(|value| value.select(index))><strong>{operation_name(operation.operation)}</strong><span>{operation.tensor.label}</span><span>{format!("μ {:.4} / σ {:.4}", operation.output.mean.get(), operation.output.std.get())}</span></button>
                         }).collect_view()}
                     </div>
                     <div class="residual-grid">

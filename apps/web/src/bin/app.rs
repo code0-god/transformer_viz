@@ -5,14 +5,17 @@ use leptos::{mount::mount_to_body, prelude::*};
 #[cfg(target_arch = "wasm32")]
 use transformer_viz_web::{
     app::{
+        playback::Playback,
         state::{AppState, AppStatus},
         worker_client::WorkerClient,
     },
     components::{
         attention::attention_view,
-        auxiliary::{logits_view, playback_placeholder, source_placeholder},
+        auxiliary::logits_view,
         block::block_view,
         chrome::{header, model_overview, prompt_panel, token_timeline},
+        playback::playback_view,
+        source::source_view,
         tensor::tensor_view,
     },
 };
@@ -20,6 +23,7 @@ use transformer_viz_web::{
 #[cfg(target_arch = "wasm32")]
 fn app() -> impl IntoView {
     let state = RwSignal::new(AppState::default());
+    let playback = RwSignal::new(Playback::default());
     let response_state = state;
     let error_state = state;
     let client = WorkerClient::start(
@@ -45,8 +49,8 @@ fn app() -> impl IntoView {
                 {token_timeline(state, client.clone())}
                 <div class="workspace-grid">
                     <aside class="workspace-overview">{model_overview(state, client.clone())}</aside>
-                    <div class="workspace-detail">{block_view(state)}{attention_view(state, client)}</div>
-                    <aside class="workspace-inspector">{tensor_view(state)}{logits_view(state)}{source_placeholder()}{playback_placeholder()}</aside>
+                    <div class="workspace-detail">{block_view(state, playback)}{attention_view(state, client)}</div>
+                    <aside class="workspace-inspector">{tensor_view(state)}{logits_view(state)}{source_view(state, playback)}{playback_view(state, playback)}</aside>
                 </div>
             </main>
             <footer><p>"모든 추론과 trace 생성은 브라우저의 Rust Web Worker에서 실행됩니다."</p></footer>

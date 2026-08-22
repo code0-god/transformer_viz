@@ -24,6 +24,9 @@ pub enum RuntimeError {
     /// Shared schema conversion failed.
     #[error("추적 데이터가 올바르지 않습니다: {0}")]
     Schema(#[from] nanogpt_schema::SchemaError),
+    /// Generated source correspondence is invalid.
+    #[error("소스 연결 정보가 올바르지 않습니다: {0}")]
+    SourceMap(#[from] crate::source_map::SourceMapError),
     /// Tokenizer loading or encoding failed.
     #[error("토큰 처리에 실패했습니다: {0}")]
     Tokenizer(#[from] nanogpt_tokenizer::TokenizerError),
@@ -63,7 +66,9 @@ impl RuntimeError {
     #[must_use]
     pub const fn code(&self) -> WorkerErrorCode {
         match self {
-            Self::AssetUnavailable(_) | Self::InvalidAsset(_) => WorkerErrorCode::AssetUnavailable,
+            Self::AssetUnavailable(_) | Self::InvalidAsset(_) | Self::SourceMap(_) => {
+                WorkerErrorCode::AssetUnavailable
+            }
             Self::ChecksumMismatch { .. } => WorkerErrorCode::ChecksumMismatch,
             Self::Schema(_)
             | Self::EmptyInput
