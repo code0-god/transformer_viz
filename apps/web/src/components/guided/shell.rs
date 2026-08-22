@@ -1,4 +1,4 @@
-//! Header, prompt disclosure, context, and configuration-driven model map.
+//! Header, prompt disclosure, and current token context.
 
 use leptos::prelude::*;
 use nanogpt_schema::WorkerRequest;
@@ -131,65 +131,6 @@ pub(super) fn context_bar(state: RwSignal<AppState>, client: WorkerClient) -> im
             </div>
         </section>
     }
-}
-
-#[must_use]
-pub(super) fn model_map(state: RwSignal<AppState>, client: WorkerClient) -> impl IntoView {
-    view! {
-        <nav class="model-map" aria-labelledby="model-map-title">
-            <div class="region-heading">
-                <h2 id="model-map-title">"Model Map"</h2>
-                <button
-                    class="model-map-toggle"
-                    type="button"
-                    aria-expanded=move || state.with(|current| current.ui.model_map_expanded.to_string())
-                    aria-controls="model-map-body"
-                    on:click=move |_| state.update(|current| current.ui.model_map_expanded = !current.ui.model_map_expanded)
-                >{move || state.with(|current| if current.ui.model_map_expanded { "모델 맵 닫기" } else { "모델 맵 열기" })}</button>
-            </div>
-            <div id="model-map-body" class="model-map-body" hidden=move || state.with(|current| !current.ui.model_map_expanded)>
-                {move || state.with(|current| current.model.as_ref().map_or_else(
-                    || view! { <p class="empty-state">"모델 구성을 불러오는 중입니다."</p> }.into_any(),
-                    |model| {
-                        let config = &model.config;
-                        view! {
-                            <dl class="config-ledger">
-                                <div><dt>"layers"</dt><dd>{config.n_layer}</dd></div>
-                                <div><dt>"heads"</dt><dd>{config.n_head}</dd></div>
-                                <div><dt>"embedding"</dt><dd>{config.n_embd}</dd></div>
-                                <div><dt>"context"</dt><dd>{config.block_size}</dd></div>
-                                <div><dt>"vocabulary"</dt><dd>{config.vocab_size}</dd></div>
-                            </dl>
-                            <div class="model-path">
-                                <strong>"GPT"</strong>
-                                {(0..config.n_layer).map(|layer| {
-                                    let layer_client = client.clone();
-                                    view! { <button type="button" disabled=move || state.with(model_controls_disabled) aria-current=move || state.with(|current| (current.selection.layer == layer).then_some("page")) on:click=move |_| {
-                                        let mut request = None;
-                                        state.update(|current| request = current.select_layer(layer));
-                                        if let Some(request) = request { send_or_error(state, &layer_client, &request); }
-                                    }>{format!("Block {layer}")}</button> }
-                                }).collect_view()}
-                                <span class="map-branch">"Attention heads"</span>
-                                <div class="map-heads">{(0..config.n_head).map(|head| {
-                                    let head_client = client.clone();
-                                    view! { <button type="button" disabled=move || state.with(model_controls_disabled) aria-current=move || state.with(|current| (current.selection.head == head).then_some("true")) on:click=move |_| {
-                                        let mut request = None;
-                                        state.update(|current| request = current.select_head(head));
-                                        if let Some(request) = request { send_or_error(state, &head_client, &request); }
-                                    }>{format!("H{head}")}</button> }
-                                }).collect_view()}</div>
-                            </div>
-                        }.into_any()
-                    }
-                ))}
-            </div>
-        </nav>
-    }
-}
-
-const fn model_controls_disabled(state: &AppState) -> bool {
-    state.summary.is_none() || matches!(state.status, AppStatus::Loading(_) | AppStatus::Running(_))
 }
 
 pub(super) fn send_or_error(

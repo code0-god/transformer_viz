@@ -1,10 +1,12 @@
 //! Guided Learning Player components backed by real Worker traces.
 
+mod architecture;
 mod inspector;
 mod rail;
 mod scroll;
 mod shell;
 mod stage;
+mod stage_copy;
 mod visuals;
 
 use leptos::prelude::*;
@@ -20,9 +22,9 @@ pub fn guided_player(state: RwSignal<AppState>, client: WorkerClient) -> impl In
             {shell::prompt_drawer(state, client.clone())}
             {shell::context_bar(state, client.clone())}
             {stage::main_stage(state, client.clone())}
-            {rail::stage_rail(state)}
+            {architecture::architecture_map(state, client)}
             {inspector::inspector(state)}
-            {shell::model_map(state, client)}
+            {rail::stage_rail(state)}
         </div>
     }
 }

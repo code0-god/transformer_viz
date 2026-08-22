@@ -4,19 +4,27 @@ use leptos::prelude::*;
 
 use crate::app::{narrative::NarrativeStage, state::AppState};
 
-use super::super::stage::stage_copy;
+use super::super::stage_copy::{focus_bridge, focus_formula, focus_purpose, focus_title};
 
 pub(super) fn panel(state: &AppState) -> AnyView {
-    let copy = stage_copy(state.ui.narrative.stage);
-    let evidence = evidence_prompt(state.ui.narrative.stage);
+    let evidence = state.ui.architecture.operation.map_or(
+        "연산을 선택하기 전에는 level 구조와 모델 설정만 표시합니다.",
+        |operation| {
+            if operation.target().is_some() {
+                evidence_prompt(state.ui.narrative.stage)
+            } else {
+                "이 생성 경계에는 아직 연결된 trace tensor ID가 없으며 구조와 설정만 표시합니다."
+            }
+        },
+    );
     view! {
         <article class="inspector-copy" data-testid="inspector-explanation">
-            <h3>{copy.title}</h3>
-            <p class="explanation-purpose">{copy.purpose}</p>
+            <h3>{focus_title(state)}</h3>
+            <p class="explanation-purpose">{focus_purpose(state)}</p>
             <dl>
-                <div><dt>"계산"</dt><dd><code>{copy.formula}</code></dd></div>
+                <div><dt>"계산"</dt><dd><code>{focus_formula(state)}</code></dd></div>
                 <div><dt>"지금 확인할 실제 증거"</dt><dd>{evidence}</dd></div>
-                <div><dt>"다음 연결"</dt><dd>{copy.bridge}</dd></div>
+                <div><dt>"다음 연결"</dt><dd>{focus_bridge(state)}</dd></div>
             </dl>
         </article>
     }

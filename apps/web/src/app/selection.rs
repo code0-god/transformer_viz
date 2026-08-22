@@ -23,12 +23,17 @@ impl AppState {
     pub fn select_layer(&mut self, layer: usize) -> Option<WorkerRequest> {
         self.selection.layer = clamp_index(layer, self.layer_count());
         self.selection.head = clamp_index(self.selection.head, self.head_count());
+        #[cfg(any(test, target_arch = "wasm32"))]
+        {
+            self.ui.architecture.layer = self.selection.layer;
+            self.ui.architecture.head = self.selection.head;
+        }
         self.clamp_token_coordinates();
+        let run_id = self.current_run()?;
         self.block = None;
         self.attention = None;
         self.token = None;
         self.status = super::state::AppStatus::Running("선택한 블록 추적 중".to_owned());
-        let run_id = self.current_run()?;
         Some(self.block_request(run_id))
     }
 
@@ -36,11 +41,15 @@ impl AppState {
     #[must_use]
     pub fn select_head(&mut self, head: usize) -> Option<WorkerRequest> {
         self.selection.head = clamp_index(head, self.head_count());
+        #[cfg(any(test, target_arch = "wasm32"))]
+        {
+            self.ui.architecture.head = self.selection.head;
+        }
         self.clamp_token_coordinates();
+        let run_id = self.current_run()?;
         self.attention = None;
         self.token = None;
         self.status = super::state::AppStatus::Running("어텐션 헤드 추적 중".to_owned());
-        let run_id = self.current_run()?;
         Some(self.head_request(run_id))
     }
 
@@ -68,9 +77,14 @@ impl AppState {
     }
 
     fn layer_count(&self) -> usize {
-        self.summary
-            .as_ref()
-            .map_or(1, |summary| summary.layers.len())
+        self.model.as_ref().map_or_else(
+            || {
+                self.summary
+                    .as_ref()
+                    .map_or(1, |summary| summary.layers.len())
+            },
+            |model| model.config.n_layer,
+        )
     }
 
     fn token_count(&self) -> usize {
@@ -80,16 +94,21 @@ impl AppState {
     }
 
     fn head_count(&self) -> usize {
-        self.block
-            .as_ref()
-            .and_then(|trace| {
-                trace
-                    .operations
-                    .iter()
-                    .find(|operation| operation.operation == OperationId::QueryKeyValue)
-            })
-            .and_then(|operation| operation.tensor.shape.get(1).copied())
-            .unwrap_or(1)
+        self.model.as_ref().map_or_else(
+            || {
+                self.block
+                    .as_ref()
+                    .and_then(|trace| {
+                        trace
+                            .operations
+                            .iter()
+                            .find(|operation| operation.operation == OperationId::QueryKeyValue)
+                    })
+                    .and_then(|operation| operation.tensor.shape.get(1).copied())
+                    .unwrap_or(1)
+            },
+            |model| model.config.n_head,
+        )
     }
 
     fn clamp_token_coordinates(&mut self) {

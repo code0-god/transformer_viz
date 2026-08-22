@@ -16,6 +16,14 @@ pub(super) fn detail_operations(state: RwSignal<AppState>) -> impl IntoView {
 }
 
 fn detail_count(state: &AppState) -> String {
+    let has_trace_target = state
+        .ui
+        .architecture
+        .operation
+        .is_some_and(|operation| operation.target().is_some());
+    if !has_trace_target {
+        return "0개".to_owned();
+    }
     let count = state.block.as_ref().map_or(0, |block| {
         block
             .operations
@@ -30,6 +38,14 @@ fn detail_count(state: &AppState) -> String {
 }
 
 fn operation_buttons(state: RwSignal<AppState>, current: &AppState) -> AnyView {
+    if !current
+        .ui
+        .architecture
+        .operation
+        .is_some_and(|operation| operation.target().is_some())
+    {
+        return view! { <p class="empty-state">"이 구조 경계에는 연결된 세부 trace tensor가 없습니다."</p> }.into_any();
+    }
     let Some(block) = current.block.as_ref() else {
         return view! { <p class="empty-state">"실행 후 현재 단계의 실제 세부 연산을 펼쳐 봅니다."</p> }.into_any();
     };

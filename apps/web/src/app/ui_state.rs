@@ -1,5 +1,7 @@
 //! Pure browser-only state for the guided explorer shell.
 
+#[cfg(any(test, target_arch = "wasm32"))]
+use super::architecture::{ArchitectureMapState, ArchitectureNodeKind};
 use super::narrative::{
     DETAIL_OPERATION_STAGES, NarrativePlayback, NarrativeSpeed, NarrativeStage,
 };
@@ -43,6 +45,9 @@ impl InspectorTab {
 pub struct ExplorerUiState {
     /// Nine-stage narrative cursor and playback transport.
     pub narrative: NarrativePlayback,
+    /// Active architecture hierarchy path and operation.
+    #[cfg(any(test, target_arch = "wasm32"))]
+    pub(crate) architecture: ArchitectureMapState,
     /// Active inspector tab.
     pub inspector_tab: InspectorTab,
     /// Whether the prompt editor is expanded.
@@ -59,6 +64,8 @@ impl Default for ExplorerUiState {
     fn default() -> Self {
         Self {
             narrative: NarrativePlayback::default(),
+            #[cfg(any(test, target_arch = "wasm32"))]
+            architecture: ArchitectureMapState::default(),
             inspector_tab: InspectorTab::Explanation,
             prompt_expanded: true,
             model_map_expanded: false,
@@ -72,25 +79,38 @@ impl ExplorerUiState {
     /// Selects a narrative stage without crossing the Worker boundary.
     pub const fn select_stage(&mut self, stage: NarrativeStage) {
         self.narrative.select(stage);
-        self.sync_detail_operation();
+        self.sync_stage_selection();
+    }
+
+    /// Selects one hierarchy node and synchronizes existing narrative evidence.
+    #[cfg(any(test, target_arch = "wasm32"))]
+    pub(crate) const fn navigate_architecture(&mut self, node: ArchitectureNodeKind) {
+        self.architecture.navigate(node);
+        self.detail_operation = None;
+        if let ArchitectureNodeKind::Operation(operation) = node
+            && let Some((stage, detail)) = operation.target()
+        {
+            self.narrative.select(stage);
+            self.detail_operation = detail;
+        }
     }
 
     /// Moves to the previous narrative stage without a Worker request.
     pub const fn previous_stage(&mut self) {
         self.narrative.previous();
-        self.sync_detail_operation();
+        self.sync_stage_selection();
     }
 
     /// Moves to the next narrative stage without a Worker request.
     pub const fn next_stage(&mut self) {
         self.narrative.next();
-        self.sync_detail_operation();
+        self.sync_stage_selection();
     }
 
     /// Starts or pauses the browser-only narrative clock.
     pub const fn toggle_narrative(&mut self) {
         self.narrative.toggle();
-        self.sync_detail_operation();
+        self.sync_stage_selection();
     }
 
     /// Changes the browser-only narrative playback speed.
@@ -101,7 +121,7 @@ impl ExplorerUiState {
     /// Advances the narrative clock and keeps legacy detail selection aligned.
     pub const fn tick_narrative(&mut self) {
         self.narrative.tick();
-        self.sync_detail_operation();
+        self.sync_stage_selection();
     }
 
     /// Selects an actual operation only when it belongs to the current stage.
@@ -123,7 +143,9 @@ impl ExplorerUiState {
         Some(selected)
     }
 
-    const fn sync_detail_operation(&mut self) {
+    const fn sync_stage_selection(&mut self) {
+        #[cfg(any(test, target_arch = "wasm32"))]
+        self.architecture.sync_stage(self.narrative.stage);
         self.detail_operation = match self.narrative.stage {
             NarrativeStage::Embedding
             | NarrativeStage::CausalMask

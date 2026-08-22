@@ -1,5 +1,9 @@
 //! Browser application state and Worker client.
 
+#[cfg(any(test, target_arch = "wasm32"))]
+pub mod architecture;
+#[cfg(test)]
+mod architecture_tests;
 #[cfg(test)]
 mod inspector_state_tests;
 pub mod narrative;

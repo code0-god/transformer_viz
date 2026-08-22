@@ -4,7 +4,7 @@ use leptos::prelude::*;
 use nanogpt_schema::OperationId;
 
 use crate::{
-    app::{narrative::NarrativeStage, state::AppState},
+    app::{architecture::ArchitectureOperation, state::AppState},
     source_map::{NANOGPT_COMMIT, NANOGPT_MODEL_SOURCE, entry},
 };
 
@@ -14,9 +14,19 @@ pub(super) fn panel(state: &AppState) -> AnyView {
     if state.summary.is_none() {
         return empty("실행 후 현재 단계의 고정 nanoGPT 소스를 표시합니다.".to_owned());
     }
-    let operation = selected_operation(state)
-        .map(|trace| trace.operation)
-        .unwrap_or_else(|| default_operation(state.ui.narrative.stage));
+    let operation = if let Some(operation) = selected_operation(state) {
+        operation.operation
+    } else {
+        let Some(architecture) = state.ui.architecture.operation else {
+            return empty("아키텍처 연산을 선택하면 연결된 고정 소스를 표시합니다.".to_owned());
+        };
+        let Some(operation) = source_operation(architecture) else {
+            return empty(
+                "이 생성 경계에는 대응하는 기존 trace/source 연산이 없습니다.".to_owned(),
+            );
+        };
+        operation
+    };
     let mapped = match entry(operation) {
         Ok(mapped) => mapped,
         Err(error) => return empty(error.to_string()),
@@ -60,17 +70,26 @@ pub(super) fn panel(state: &AppState) -> AnyView {
     }.into_any()
 }
 
-const fn default_operation(stage: NarrativeStage) -> OperationId {
-    match stage {
-        NarrativeStage::Embedding => OperationId::Embedding,
-        NarrativeStage::AttentionLayerNorm => OperationId::AttentionLayerNorm,
-        NarrativeStage::QueryKeyValue => OperationId::QueryKeyValue,
-        NarrativeStage::AttentionScores
-        | NarrativeStage::CausalMask
-        | NarrativeStage::Softmax
-        | NarrativeStage::ValueAggregation => OperationId::Attention,
-        NarrativeStage::MlpAndResidual => OperationId::MlpLayerNorm,
-        NarrativeStage::LanguageModelHead => OperationId::FinalLayerNorm,
+const fn source_operation(operation: ArchitectureOperation) -> Option<OperationId> {
+    use ArchitectureOperation as O;
+    match operation {
+        O::Embedding => Some(OperationId::Embedding),
+        O::FinalLayerNorm => Some(OperationId::FinalLayerNorm),
+        O::LanguageModelHead | O::Logits => Some(OperationId::Logits),
+        O::AttentionLayerNorm => Some(OperationId::AttentionLayerNorm),
+        O::AttentionResidual => Some(OperationId::AttentionResidual),
+        O::MlpLayerNorm => Some(OperationId::MlpLayerNorm),
+        O::Mlp => Some(OperationId::Mlp),
+        O::MlpResidual => Some(OperationId::MlpResidual),
+        O::Query | O::Key | O::Value => Some(OperationId::QueryKeyValue),
+        O::QueryKeyProduct
+        | O::Scale
+        | O::Mask
+        | O::Softmax
+        | O::ValueProduct
+        | O::MergeHeads
+        | O::Projection => Some(OperationId::Attention),
+        O::Temperature | O::TopK | O::GenerationSoftmax | O::Sample | O::Append | O::Repeat => None,
     }
 }
 

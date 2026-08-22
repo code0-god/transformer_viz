@@ -10,7 +10,10 @@ use leptos::prelude::*;
 use nanogpt_schema::{OperationId, OperationTrace, TensorSnapshot};
 
 use crate::{
-    app::{narrative::NarrativeStage, state::AppState, ui_state::InspectorTab},
+    app::{
+        architecture::SummaryEvidence, narrative::NarrativeStage, state::AppState,
+        ui_state::InspectorTab,
+    },
     trace_lookup::TraceLookup,
 };
 
@@ -55,6 +58,28 @@ pub(super) fn inspector(state: RwSignal<AppState>) -> impl IntoView {
 }
 
 pub(super) fn selected_tensor(state: &AppState) -> Result<TensorSelection<'_>, String> {
+    let architecture = state.ui.architecture.operation.ok_or_else(|| {
+        "아키텍처 연산을 선택하면 연결된 실제 tensor trace를 표시합니다.".to_owned()
+    })?;
+    if let Some(evidence) = architecture.summary_evidence() {
+        let summary = state
+            .summary
+            .as_ref()
+            .ok_or_else(|| "실행 후 실제 summary tensor를 표시합니다.".to_owned())?;
+        return Ok(match evidence {
+            SummaryEvidence::FinalLayerNorm => TensorSelection {
+                tensor: &summary.final_layer_norm,
+                operation: OperationId::FinalLayerNorm,
+            },
+            SummaryEvidence::Logits => TensorSelection {
+                tensor: &summary.logits.logits,
+                operation: OperationId::Logits,
+            },
+        });
+    }
+    if architecture.target().is_none() {
+        return Err("이 생성 경계에는 연결된 실제 tensor trace ID가 없습니다.".to_owned());
+    }
     if let Some(operation) = selected_operation(state) {
         let lookup = lookup(state);
         let tensor = match operation.operation {
@@ -88,12 +113,7 @@ pub(super) fn selected_tensor(state: &AppState) -> Result<TensorSelection<'_>, S
             tensor: &trace.probabilities,
             operation: OperationId::Attention,
         }),
-        NarrativeStage::LanguageModelHead => {
-            state.summary.as_ref().map(|summary| TensorSelection {
-                tensor: &summary.final_layer_norm,
-                operation: OperationId::FinalLayerNorm,
-            })
-        }
+        NarrativeStage::LanguageModelHead => None,
         NarrativeStage::AttentionLayerNorm
         | NarrativeStage::QueryKeyValue
         | NarrativeStage::AttentionScores

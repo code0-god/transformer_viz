@@ -1,14 +1,27 @@
 //! Reusable Worker detail fixtures for application-state tests.
 
+use std::{error::Error, io};
+
 use nanogpt_schema::{
     AttentionHeadTrace, BlockTrace, LogitsTrace, MaskSnapshot, MlpTrace, OperationId,
-    OperationTrace, SchemaVersion, TokenId, TokenInfo, TokenKind, TokenTrace, WorkerResponse,
+    OperationTrace, RunSummary, SchemaVersion, TokenId, TokenInfo, TokenKind, TokenTrace,
+    WorkerRequest, WorkerResponse,
 };
 
 use crate::{
     source_map,
     spike::{self, SpikeError},
 };
+
+pub(super) fn run_summary() -> Result<RunSummary, Box<dyn Error>> {
+    match spike::handle_worker_request(WorkerRequest::Run {
+        request_id: 7,
+        text: "ab".to_owned(),
+    })? {
+        WorkerResponse::RunComplete { summary, .. } => Ok(*summary),
+        _ => Err(io::Error::other("spike did not return a run summary").into()),
+    }
+}
 
 fn tensor() -> Result<nanogpt_schema::TensorSnapshot, SpikeError> {
     let mut tensor = spike::run_candle_spike()?.gelu;

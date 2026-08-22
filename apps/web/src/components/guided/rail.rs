@@ -9,7 +9,7 @@ use crate::app::{
     state::AppState,
 };
 
-use super::stage::stage_copy;
+use super::stage_copy::stage_copy;
 
 #[must_use]
 pub(super) fn stage_rail(state: RwSignal<AppState>) -> impl IntoView {
