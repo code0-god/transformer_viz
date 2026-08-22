@@ -127,7 +127,8 @@ compact transport, and local horizontal reels.
 
 ## Measured artifact
 
-Measurements use a fresh, final-ish root release (`./scripts/build-web.sh / /tmp/transformer-viz-release-root`)
+Measurements use a fresh, final pre-record-candidate root release
+(`./scripts/build-web.sh / /tmp/transformer-viz-release-root`)
 built with Trunk 0.21.14 on macOS 26.5.2 arm64. **Uncompressed** is the sum of emitted regular-file
 sizes. **Compressed** models static transfer: `scripts/measure-static-transfer.py` sorts relative
 regular-file paths, gzip-compresses each file independently at level 9 with an empty filename and
@@ -143,7 +144,7 @@ python3 scripts/measure-static-transfer.py /tmp/transformer-viz-release-root
 | Learned parameters | 118,208 |
 | `model.safetensors` | 475,432 bytes |
 | Model SHA-256 | `8fd76c662da0d0cb9fe1035cb205b1a071ad95f9e22d116578a0a8bec0754be9` |
-| Static `dist` size | 4,009,016 bytes uncompressed; 1,463,220 bytes deterministic per-resource gzip |
+| Static `dist` size | 4,012,429 bytes uncompressed; 1,464,031 bytes deterministic per-resource gzip |
 | Largest native/Python absolute error | `2.86102295e-6` (logits) |
 | Parity tolerance | absolute + relative `1e-4` |
 

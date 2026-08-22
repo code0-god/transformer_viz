@@ -3,13 +3,55 @@
 Run this acceptance from the repository root on the pinned toolchain. A release is accepted only
 when every automated command and every real-browser item below passes against the same tree.
 
-| Contract | Acceptance scope | Status before frozen-tree evidence |
+| Contract | Acceptance scope | Final status |
 |---|---|---|
-| C001 | Happy generation path: ready Worker, default prompt `the cat`, exact generated-token stream and replay, 21-step Guided/Explore path, real tensor/source evidence, and no main-thread freeze or console panic | **PENDING** |
-| C002 | Sampling/seed/stop edge contracts: deterministic modes, context limits, replacement and cancellation, stale-credit rejection, exact replay without resampling, finite/masked evidence, and recoverable Korean errors | **PENDING** |
-| C003 | Full regression: numerical parity, schema/runtime tests, responsive/reflow/a11y/static root+subpath browser checks, Lighthouse and independent reviews, asset integrity, release gates, exact-tree receipts, and cleanup | **PENDING** |
+| C001 | Happy generation path: ready Worker, default prompt `the cat`, exact generated-token stream and replay, 21-step Guided/Explore path, real tensor/source evidence, and no main-thread freeze or console panic | **PASS** |
+| C002 | Sampling/seed/stop edge contracts: deterministic modes, context limits, replacement and cancellation, stale-credit rejection, exact replay without resampling, finite/masked evidence, and recoverable Korean errors | **PASS** |
+| C003 | Full regression: numerical parity, schema/runtime tests, responsive/reflow/a11y/static root+subpath browser checks, Lighthouse and independent reviews, asset integrity, release gates, exact-tree receipts, and cleanup | **PASS** |
 
-No row may be changed to PASS until its receipts are captured from the final committed tree.
+The runtime/UI certification is bound to pre-record commit
+`6af8436985e48cb201cdb885f2eabc5b728e7e0c` and tree
+`121ee92f24a9e60ab21ee6bdf66d5203a5a55843`. The verification-record commit
+changes only this document and `README.md`; generated post-commit evidence proves every non-record
+tracked blob and runtime/source subtree remains byte-identical. Its hash is intentionally recorded
+outside tracked content to avoid a self-reference.
+
+Frozen evidence:
+
+- C001 manifest:
+  `.omo/evidence/generation/c001/manifest.json`, SHA-256
+  `ce5d5851d7bfe8f26a41d6553b6d7123a54ebe598f48db1da8ffc420cdb347aa`.
+- C002 manifest:
+  `.omo/evidence/generation/c002/manifest.json`, SHA-256
+  `7e4397fde5fc2b18efce65eee8b773f822a0800c998cffeb19880bcaa8e01180`.
+- C001/C002 parent audit:
+  `.omo/evidence/generation/final/c001-c002-exact-tree-audit.txt`.
+- C003 executable-gate packet:
+  `.omo/evidence/generation/c003-failed-st_01a02b89-6af8436`; its failed
+  publication correctly recorded the stale-doc/history blockers closed by this record. Final C003
+  is published after this commit under `.omo/evidence/generation/c003/`.
+- Exact-candidate visual packet:
+  `.omo/evidence/generation/.visual-staging-st_01a02a85-6af8436-finalrecapture`,
+  top-manifest SHA-256
+  `4127d90f2eadb5b7620ac50bb002bb50c79f43a3efae291c171533b4398ef224`.
+- Independent goal-readiness `st_01a02bb9`, visual/design `st_01a02bba` (0.97),
+  accessibility-persona `st_01a02bbb` (0.93), hands-on QA `st_01a02b6f`,
+  corrective code `st_01a02b70`, security `st_01a02b73`, and corrected context
+  `st_01a02b71` reviews: PASS.
+
+The final root bundle measures **4,012,429 bytes uncompressed** and **1,464,031 bytes
+deterministic per-resource gzip**. Six mobile Lighthouse performance runs have median LCP
+**1388.257 ms**, below the 2500 ms gate; six separate accessibility runs score 1.0.
+
+Independent browser review also found and closed a transport wedge: a seed above JavaScript's safe
+integer range could fail WASM serialization after pending state was recorded, and a local Worker
+`postMessage` exception could leave that state active. Commit
+`6af8436985e48cb201cdb885f2eabc5b728e7e0c` bounds browser seeds to
+`9_007_199_254_740_991` and rolls back the correlated pending request on local send failure.
+Corrective Rust tests, `scripts/browser_generation_transport.py`, `scripts/check.sh`, corrective
+code review, and repeated real-Chrome probes pass: the maximum input clamps and generates one
+token; forced send failure shows a recoverable Korean error with Generate enabled and
+`aria-busy=false`.
 
 ## Release and source binding
 
@@ -153,48 +195,47 @@ equivalent).
 - Two independent review lanes inspect the frozen tree and fresh screenshots: one functional/
   accessibility/source-correspondence review and one visual/CJK/responsive review. Record reviewer
   IDs, findings, disposition, and confidence; the implementation author is not either lane.
-- Preserve exactly the nine existing atomic phase commits after base `49e72ae`, ending at
-  `241ebafb55a0b12f885e6eb4345b730790195836`, unchanged. Also preserve the first audit hardening
-  commit `6f84e45b50a5b3b3a8a9f0f39f186c76046fc81e` unchanged on top of them.
-- Preserve the second quality hardening commit
-  `3929833b870e16fc90226696b446d5839805a85f` unchanged on top of `6f84e45`.
-- Preserve the mobile visual, design-contract, and browser-regression repair commit
-  `27baccd3c9bf8ab8b3d2a470ee9c636c6583dacf` unchanged on top of `3929833`.
-- Put the measured static-transfer correction in exactly one documentation repair commit on top of
-  `27baccd`. After its frozen receipts pass, one verification-record commit may change only this
-  document from PENDING to PASS and update its final history receipt. Commit only tracked source,
-  documentation, and verifier changes; never commit `.omo` evidence or dist.
-- Do not amend, squash, rebase, reset, or otherwise rewrite any of the preserved commits. The final
-  accepted history must contain exactly fourteen commits after `49e72ae`: nine phase commits, two
-  hardening commits, the certification repair commit, the measured-facts documentation repair, and
-  the verification-record commit. The measurement-repaired candidate has thirteen commits before
-  that final record. Run:
+- Preserve the nine implementation commits through
+  `241ebafb55a0b12f885e6eb4345b730790195836`, followed unchanged by:
+  `6f84e45b50a5b3b3a8a9f0f39f186c76046fc81e` (first release hardening),
+  `3929833b870e16fc90226696b446d5839805a85f` (second quality hardening),
+  `27baccd3c9bf8ab8b3d2a470ee9c636c6583dacf` (certification repair),
+  `fddfeadca2bbabc06a2fd9b1ee96bcd56b5b062c` (measured-facts repair), and
+  `6af8436985e48cb201cdb885f2eabc5b728e7e0c` (seed-transport repair).
+- One fresh verification-record commit may then change only `README.md` and this document.
+- Do not amend, squash, rebase, reset, or otherwise rewrite preserved commits. Final accepted
+  history contains exactly 15 commits after `49e72ae`: nine implementation commits, five
+  remediation/release commits, and one verification-record commit. Run:
 
 ```sh
-test "$(git rev-parse HEAD^^)" = 27baccd3c9bf8ab8b3d2a470ee9c636c6583dacf
-test "$(git rev-parse HEAD^^^)" = 3929833b870e16fc90226696b446d5839805a85f
-test "$(git rev-parse HEAD^^^^)" = 6f84e45b50a5b3b3a8a9f0f39f186c76046fc81e
-test "$(git rev-parse HEAD^^^^^)" = 241ebafb55a0b12f885e6eb4345b730790195836
-test "$(git rev-list --count 49e72ae..HEAD^^^^^)" -eq 9
-test "$(git rev-list --count 49e72ae..HEAD^^^^)" -eq 10
-test "$(git rev-list --count 49e72ae..HEAD^^^)" -eq 11
-test "$(git rev-list --count 49e72ae..HEAD^^)" -eq 12
-test "$(git rev-list --count 49e72ae..HEAD^)" -eq 13
-test "$(git rev-list --count 49e72ae..HEAD)" -eq 14
-git log --reverse --format='%H %s' 49e72ae..HEAD^^^^^ | tee .omo/evidence/phase9/nine-phase-commits.txt
-git log -1 --format='%H %s' HEAD^^^^ | tee .omo/evidence/phase9/first-audit-hardening-commit.txt
-git log -1 --format='%H %s' HEAD^^^ | tee .omo/evidence/phase9/second-quality-hardening-commit.txt
-git log -1 --format='%H %s' HEAD^^ | tee .omo/evidence/phase9/certification-repair-commit.txt
-git log -1 --format='%H %s' HEAD^ | tee .omo/evidence/phase9/measured-facts-repair-commit.txt
-git log -1 --format='%H %s' HEAD | tee .omo/evidence/phase9/verification-record-commit.txt
-git log --reverse --format='%H %s' 49e72ae..HEAD | tee .omo/evidence/phase9/fourteen-post-base-commits.txt
-git rev-parse HEAD HEAD^{tree} | tee .omo/evidence/phase9/exact-tree.txt
-git status --short | tee .omo/evidence/phase9/final-status.txt
-test ! -s .omo/evidence/phase9/final-status.txt
-git remote -v | tee .omo/evidence/phase9/remotes-no-push.txt
+test "$(git rev-parse HEAD^)" = 6af8436985e48cb201cdb885f2eabc5b728e7e0c
+test "$(git rev-parse HEAD^^)" = fddfeadca2bbabc06a2fd9b1ee96bcd56b5b062c
+test "$(git rev-parse HEAD^^^)" = 27baccd3c9bf8ab8b3d2a470ee9c636c6583dacf
+test "$(git rev-parse HEAD^^^^)" = 3929833b870e16fc90226696b446d5839805a85f
+test "$(git rev-parse HEAD^^^^^)" = 6f84e45b50a5b3b3a8a9f0f39f186c76046fc81e
+test "$(git rev-parse HEAD^^^^^^)" = 241ebafb55a0b12f885e6eb4345b730790195836
+test "$(git rev-list --count 49e72ae..HEAD^^^^^^)" -eq 9
+test "$(git rev-list --count 49e72ae..HEAD^^^^^)" -eq 10
+test "$(git rev-list --count 49e72ae..HEAD^^^^)" -eq 11
+test "$(git rev-list --count 49e72ae..HEAD^^^)" -eq 12
+test "$(git rev-list --count 49e72ae..HEAD^^)" -eq 13
+test "$(git rev-list --count 49e72ae..HEAD^)" -eq 14
+test "$(git rev-list --count 49e72ae..HEAD)" -eq 15
+git log --reverse --format='%H %s' 49e72ae..HEAD^^^^^^ | tee .omo/evidence/generation/final/nine-phase-commits.txt
+git log -1 --format='%H %s' HEAD^^^^^ | tee .omo/evidence/generation/final/first-audit-hardening-commit.txt
+git log -1 --format='%H %s' HEAD^^^^ | tee .omo/evidence/generation/final/second-quality-hardening-commit.txt
+git log -1 --format='%H %s' HEAD^^^ | tee .omo/evidence/generation/final/certification-repair-commit.txt
+git log -1 --format='%H %s' HEAD^^ | tee .omo/evidence/generation/final/measured-facts-repair-commit.txt
+git log -1 --format='%H %s' HEAD^ | tee .omo/evidence/generation/final/seed-transport-fix-commit.txt
+git log -1 --format='%H %s' HEAD | tee .omo/evidence/generation/final/verification-record-commit.txt
+git log --reverse --format='%H %s' 49e72ae..HEAD | tee .omo/evidence/generation/final/fifteen-post-base-commits.txt
+git rev-parse HEAD HEAD^{tree} | tee .omo/evidence/generation/final/exact-tree.txt
+git status --short | tee .omo/evidence/generation/final/final-status.txt
+test ! -s .omo/evidence/generation/final/final-status.txt
+git remote -v | tee .omo/evidence/generation/final/remotes-no-push.txt
 ```
 
-The release record must state that no push was performed.
+No push was performed.
 
 ## Cleanup receipt
 
@@ -204,7 +245,7 @@ test-result directories, and temporary profiles are absent, and no generated ser
 Include changed-file scope, Rust pure-LOC counts (all changed production/test modules <=250),
 screenshot hashes, Lighthouse summaries, independent verdicts, the exact-tree stamp, preserved
 nine-phase history receipt, both hardening receipts, certification and measured-facts repair
-receipts, fourteen-commit stamp, and cleanup checks in `.omo/evidence/phase9/cleanup.txt`. The final
-tracked worktree must be clean; do not push. The certification, measured-facts, and
-verification-record commits may contain only the tracked files named above, never generated
-evidence or dist output.
+receipts, seed-transport repair receipt, 15-commit stamp, non-record blob equality, and cleanup
+checks in `.omo/evidence/generation/final/cleanup.txt`. The final tracked worktree must be clean; do
+not push. The verification-record commit contains only `README.md` and
+`docs/FINAL_VERIFICATION.md`; generated evidence and dist output are never committed.
