@@ -2,6 +2,9 @@
 
 - Status: Accepted
 - Date: 2026-08-22
+- Numbering note: this deliberate duplicate remains `0003` because the user required the exact
+  filename `docs/adr/0003-guided-learning-player.md`; references should include the ADR title or
+  filename to distinguish it from `0003-schema-and-tokenizer.md`.
 
 ## Context
 

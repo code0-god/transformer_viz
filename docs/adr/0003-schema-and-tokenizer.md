@@ -2,6 +2,9 @@
 
 - Status: Accepted
 - Date: 2026-08-22
+- Superseded in part: [ADR 0003: Guided Learning Player](0003-guided-learning-player.md) extends the
+  schema to `1.1.0`; the tokenizer decision and the historical `1.0.0` contract recorded here remain
+  unchanged.
 
 ## Context
 
@@ -12,8 +15,9 @@ WASM builds, preserve arbitrary UTF-8, expose original pieces, and stay small en
 
 ## Decision
 
-`nanogpt-schema` owns trace schema version `1.0.0`; run summaries, block traces, and token traces
-carry a checked `SchemaVersion`. Worker request and response enums are explicitly
+At the time of this decision, `nanogpt-schema` owned trace schema version `1.0.0`; run summaries,
+block traces, and token traces carry a checked `SchemaVersion`. Worker request and response enums
+are explicitly
 tagged, reject unknown fields, and use `u64` request/run IDs. Their public variants match the browser
 binding directly rather than routing through compatibility aliases.
 

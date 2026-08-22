@@ -14,7 +14,7 @@ edition = "2024"
 keywords = ["education", "transformer", "visualization", "wasm"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/zerogod/transformer_viz"
+repository = "https://github.com/code0-god/transformer_viz"
 rust-version = "1.94.0"
 version = "0.1.0"
 

@@ -6,10 +6,14 @@ manifest location so root and GitHub Pages subpath deployments use the same bund
 
 ## Manifest and configuration
 
-`manifest.json` uses schema `1.0.0`, model ID `nanogpt-edu`, architecture
+`manifest.json` uses schema `1.1.0`, model ID `nanogpt-edu`, architecture
 `nanogpt-compatible`, dtype `f32`, license `CC0-1.0`, and pinned nanoGPT commit
 `3adf61e154c3fe3fca428ad6bc3818b27a3b8291`. It binds the config, tokenizer, and weight filenames,
 the exact weight SHA-256, parameter count 118,208, and maximum sequence length 24.
+
+Schema 1.1.0 extends the trace and Worker contract only to expose embeddings, final LayerNorm, and
+loaded model configuration that the runtime already computes. It does not change model arithmetic,
+inference order, tokenizer behavior, safetensors layout, weight bytes, or golden parity tolerances.
 
 `config.json` uses upstream nanoGPT names:
 

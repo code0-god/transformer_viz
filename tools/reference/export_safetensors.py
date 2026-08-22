@@ -68,7 +68,7 @@ def main() -> None:
         "model_id": "nanogpt-edu",
         "nanogpt_commit": REFERENCE_COMMIT_PATH.read_text(encoding="utf-8").strip(),
         "parameter_count": parameter_count(model),
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "tokenizer_file": tokenizer.name,
         "weights_file": weights.name,
         "weights_sha256": sha256(weights),

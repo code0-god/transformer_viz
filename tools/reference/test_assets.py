@@ -47,7 +47,7 @@ def test_manifest_and_corpus_use_canonical_contract_when_loaded() -> None:
     # When: the canonical boundary fields and source path are inspected.
     # Then: no nested compatibility shape remains and provenance uses the binding corpus path.
     assert set(manifest) == required
-    assert manifest["schema_version"] == "1.0.0"
+    assert manifest["schema_version"] == "1.1.0"
     assert manifest["model_id"] == "nanogpt-edu"
     assert manifest["display_name"] == "nanoGPT Educational Model"
     assert manifest["architecture"] == "nanogpt-compatible"
