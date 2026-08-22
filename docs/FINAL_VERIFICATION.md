@@ -156,24 +156,32 @@ equivalent).
 - Preserve exactly the nine existing atomic phase commits after base `49e72ae`, ending at
   `241ebafb55a0b12f885e6eb4345b730790195836`, unchanged. Also preserve the first audit hardening
   commit `6f84e45b50a5b3b3a8a9f0f39f186c76046fc81e` unchanged on top of them.
-- Put the changed-Python quality fixes in exactly one second and final quality hardening commit on
-  top of `6f84e45`. Do not create any other commit. Commit only tracked Phase 9 source,
-  documentation, and verifier changes; never commit `.omo` evidence or dist.
+- Preserve the second quality hardening commit
+  `3929833b870e16fc90226696b446d5839805a85f` unchanged on top of `6f84e45`.
+- Put the mobile visual, design-contract, and browser-regression repairs in exactly one certification
+  repair commit on top of `3929833`. After its frozen receipts pass, one verification-record commit
+  may change only this document from PENDING to PASS and update its final history receipt. Commit
+  only tracked source, documentation, and verifier changes; never commit `.omo` evidence or dist.
 - Do not amend, squash, rebase, reset, or otherwise rewrite any of the preserved commits. The final
-  frozen history must contain exactly eleven commits after `49e72ae`: nine phase commits, the first
-  audit hardening commit, and the second/final quality hardening commit. From that eleventh commit,
-  run:
+  accepted history must contain exactly thirteen commits after `49e72ae`: nine phase commits, two
+  hardening commits, the certification repair commit, and the verification-record commit. The
+  certification candidate has twelve commits before that final record. Run:
 
 ```sh
-test "$(git rev-parse HEAD^)" = 6f84e45b50a5b3b3a8a9f0f39f186c76046fc81e
-test "$(git rev-parse HEAD^^)" = 241ebafb55a0b12f885e6eb4345b730790195836
-test "$(git rev-list --count 49e72ae..HEAD^^)" -eq 9
-test "$(git rev-list --count 49e72ae..HEAD^)" -eq 10
-test "$(git rev-list --count 49e72ae..HEAD)" -eq 11
-git log --reverse --format='%H %s' 49e72ae..HEAD^^ | tee .omo/evidence/phase9/nine-phase-commits.txt
-git log -1 --format='%H %s' HEAD^ | tee .omo/evidence/phase9/first-audit-hardening-commit.txt
-git log -1 --format='%H %s' HEAD | tee .omo/evidence/phase9/final-quality-hardening-commit.txt
-git log --reverse --format='%H %s' 49e72ae..HEAD | tee .omo/evidence/phase9/eleven-post-base-commits.txt
+test "$(git rev-parse HEAD^^)" = 3929833b870e16fc90226696b446d5839805a85f
+test "$(git rev-parse HEAD^^^)" = 6f84e45b50a5b3b3a8a9f0f39f186c76046fc81e
+test "$(git rev-parse HEAD^^^^)" = 241ebafb55a0b12f885e6eb4345b730790195836
+test "$(git rev-list --count 49e72ae..HEAD^^^^)" -eq 9
+test "$(git rev-list --count 49e72ae..HEAD^^^)" -eq 10
+test "$(git rev-list --count 49e72ae..HEAD^^)" -eq 11
+test "$(git rev-list --count 49e72ae..HEAD^)" -eq 12
+test "$(git rev-list --count 49e72ae..HEAD)" -eq 13
+git log --reverse --format='%H %s' 49e72ae..HEAD^^^^ | tee .omo/evidence/phase9/nine-phase-commits.txt
+git log -1 --format='%H %s' HEAD^^^ | tee .omo/evidence/phase9/first-audit-hardening-commit.txt
+git log -1 --format='%H %s' HEAD^^ | tee .omo/evidence/phase9/second-quality-hardening-commit.txt
+git log -1 --format='%H %s' HEAD^ | tee .omo/evidence/phase9/certification-repair-commit.txt
+git log -1 --format='%H %s' HEAD | tee .omo/evidence/phase9/verification-record-commit.txt
+git log --reverse --format='%H %s' 49e72ae..HEAD | tee .omo/evidence/phase9/thirteen-post-base-commits.txt
 git rev-parse HEAD HEAD^{tree} | tee .omo/evidence/phase9/exact-tree.txt
 git status --short | tee .omo/evidence/phase9/final-status.txt
 test ! -s .omo/evidence/phase9/final-status.txt
@@ -189,8 +197,7 @@ server stopped, port 8097 has no listener, `apps/web/dist`, `/tmp/transformer-vi
 test-result directories, and temporary profiles are absent, and no generated server process leaked.
 Include changed-file scope, Rust pure-LOC counts (all changed production/test modules <=250),
 screenshot hashes, Lighthouse summaries, independent verdicts, the exact-tree stamp, preserved
-nine-phase history receipt, first audit hardening receipt, final quality hardening receipt,
-eleven-commit stamp, and cleanup checks in `.omo/evidence/phase9/cleanup.txt`. The final tracked
-worktree must be clean; do not push. The second/final quality hardening commit may contain only
-tracked Phase 9 source, documentation, and verifier changes, never generated evidence or dist
-output.
+nine-phase history receipt, both hardening receipts, certification repair receipt,
+thirteen-commit stamp, and cleanup checks in `.omo/evidence/phase9/cleanup.txt`. The final tracked
+worktree must be clean; do not push. The certification repair and verification-record commits may
+contain only the tracked files named above, never generated evidence or dist output.

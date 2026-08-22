@@ -541,10 +541,10 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
   .startup-shell__header { display: grid; align-items: start; }
   .startup-shell__main { grid-template-columns: minmax(0, 1fr); align-self: start; }
   .startup-shell__surface { padding: var(--s5); }
-  .startup-shell__surface h2 { font-size: 1.25rem; }
+  .startup-shell__surface h2 { font-size: 1.25rem; word-break: keep-all; }
   .startup-shell__ledger { grid-template-columns: minmax(0, 1fr); }
   .startup-shell__path { padding: var(--s4); }
-  .startup-shell__path ol { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2); margin-block-start: var(--s4); padding-inline-start: var(--s5); }
+  .startup-shell__path ol { grid-template-columns: minmax(0, 1fr); gap: var(--s2); margin-block-start: var(--s4); padding-inline-start: var(--s5); }
   .guided-player { grid-template-areas: "header" "controls" "timeline" "context" "stage" "transport" "model" "inspector" "rail"; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; block-size: auto; min-block-size: 100dvb; padding: var(--s2) var(--s3) var(--s6); overflow: visible; }
   .generation-heading { display: grid; align-items: start; }
   .generation-model-limit { white-space: normal; }

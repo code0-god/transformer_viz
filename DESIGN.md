@@ -41,11 +41,13 @@ canvas and Inspector components.
 | Ink | `--ink` | `#22221f` | Primary text and prediction structure |
 | Ink muted | `--ink-muted` | `#68665f` | Secondary text |
 | Hairline | `--hairline` | `#d7d1c4` | Structural separation |
+| Control boundary | `--control-boundary` | `#81786a` | Interactive control boundaries |
 | Accent | `--accent` | `#963a22` | Active path and controls |
 | Accent soft | `--accent-soft` | `#f0d3c8` | Selected background |
 | Positive | `--positive` | `#27614f` | Ready and completed states |
 | Warning | `--warning` | `#8a5a12` | Loading and running states |
 | Error | `--error` | `#a12d2d` | Recoverable errors |
+| Future | `--future` | `#68665f` | Inactive future curriculum states |
 | Focus | `--focus` | `#1769aa` | Keyboard focus |
 | Query | `--query` | `#1769aa` | Q circle and query vectors |
 | Key | `--key` | `#27614f` | K square and key vectors |
@@ -53,10 +55,12 @@ canvas and Inspector components.
 | Score | `--score-path` | `#a94327` | QK products and scaled scores |
 | Mask | `--mask-ink` | `#6f6d66` | Hatch and mask text |
 | Probability low/high | `--probability-low`, `--probability-high` | `#f3dfd6`, `#8f2f20` | Sequential probability ramp |
+| Matrix ramp | `--matrix-ramp-start`, `--matrix-ramp-end` | `var(--probability-low)`, `var(--probability-high)` | Attention matrix ramp aliases |
 | Residual | `--residual` | `#a66616` | Residual additions |
 | MLP | `--mlp` | `#147369` | MLP expansion and projection |
 | Prediction | `--prediction-ink`, `--prediction-gold` | `#25231f`, `#a77a1f` | Tied head and ranked output |
-| Generation | `--generation` | `var(--prediction-gold)` | Generated tokens, sampling, append/repeat |
+| Generation | `--generation` | `#76520f` | Generated tokens, sampling, append/repeat |
+| Generation muted | `--generation-muted` | `#57534a` | Secondary generation evidence |
 | Generated soft | `--generation-soft` | `#efe0b7` | Generated-token timeline background |
 
 Q, K, V, selected, completed, future, and masked states never depend on color alone. Mask uses hatch plus the word `mask`; Q/K/V use letters and distinct shapes.
@@ -77,7 +81,7 @@ Q, K, V, selected, completed, future, and masked states never depend on color al
   layout uses `100vh`.
 - Rows are Header, Generate, Timeline, Breadcrumb, Workspace, and Guided controls.
 - Workspace areas are Architecture Map, dominant Main Canvas, and Inspector with intrinsic-safe
-  tracks: `minmax(13rem,.7fr) minmax(32rem,1.9fr) minmax(19rem,.86fr)`.
+  tracks: `minmax(12rem,.62fr) minmax(32rem,1.9fr) minmax(19rem,.86fr)`.
 - Timeline owns horizontal token overflow. Inspector owns vertical evidence scroll. Main Canvas
   stays visible while architecture and generation context change.
 
