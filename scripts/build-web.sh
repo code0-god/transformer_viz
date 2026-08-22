@@ -3,7 +3,7 @@ set -euo pipefail
 
 readonly ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly PUBLIC_URL="${1:-/}"
-readonly DIST_DIR="${ROOT_DIR}/apps/web/dist"
+readonly DIST_DIR="${2:-${ROOT_DIR}/apps/web/dist}"
 
 case "${PUBLIC_URL}" in
   / | /*/) ;;
@@ -14,7 +14,7 @@ case "${PUBLIC_URL}" in
 esac
 
 cd "${ROOT_DIR}/apps/web"
-env NO_COLOR=true trunk build --release --public-url "${PUBLIC_URL}"
+env NO_COLOR=true trunk build --release --public-url "${PUBLIC_URL}" --dist "${DIST_DIR}"
 
 grep -Fq "<base href=\"${PUBLIC_URL}\"" "${DIST_DIR}/index.html"
 for pattern in '*.css' '*.js' '*.wasm' '*.safetensors'; do

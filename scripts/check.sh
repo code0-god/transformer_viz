@@ -2,6 +2,8 @@
 set -euo pipefail
 
 readonly ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly CHECK_DIST_DIR="$(mktemp -d "${TMPDIR:-/tmp}/transformer-viz-check.XXXXXX")"
+trap 'rm -rf "${CHECK_DIST_DIR}"' EXIT
 cd "${ROOT_DIR}"
 
 printf '%s\n' '==> rustfmt'
@@ -35,6 +37,6 @@ if grep -Eiq '(react|typescript|(^|[^[:alnum:]])d3([^[:alnum:]]|$)|npm)' \
 fi
 
 printf '%s\n' '==> root static release'
-"${ROOT_DIR}/scripts/build-web.sh" /
+"${ROOT_DIR}/scripts/build-web.sh" / "${CHECK_DIST_DIR}"
 
 printf '%s\n' 'All checks passed.'

@@ -33,7 +33,7 @@ jobs:
           cargo test --workspace
           cargo check --target wasm32-unknown-unknown -p transformer-viz-web
       - name: Build subpath release
-        run: ./scripts/build-web.sh /transformer_viz/
+        run: ./scripts/build-web.sh /transformer_viz/ apps/web/dist
       - name: Configure Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - name: Upload static artifact
