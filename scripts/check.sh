@@ -15,6 +15,9 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 printf '%s\n' '==> workspace tests'
 cargo test --workspace
 
+printf '%s\n' '==> root workspace release build'
+cargo build --workspace --release
+
 printf '%s\n' '==> browser package (wasm32-unknown-unknown)'
 cargo check --target wasm32-unknown-unknown -p transformer-viz-web
 

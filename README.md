@@ -44,8 +44,9 @@ responsibilities live in four separate crates under `crates/`. See
 ./scripts/build-web.sh /transformer_viz/ # GitHub Pages project subpath
 ```
 
-`check.sh` runs rustfmt, Clippy with `-D warnings`, all workspace tests, the WASM package check,
-asset checksum/copy checks, forbidden dependency checks, and a root Trunk release. The deployable
+`check.sh` runs rustfmt, Clippy with `-D warnings`, all workspace tests, a root workspace release
+build, the WASM package check, asset checksum/copy checks, forbidden dependency checks, and a root
+Trunk release. The deployable
 artifact is only `apps/web/dist`; serve that directory with any static file server. It contains
 HTML, CSS, JavaScript loader glue, WebAssembly, and model assets, with no Python or server program.
 
@@ -64,6 +65,7 @@ Measurements use the committed model and a Trunk 0.21.14 release built on macOS 
 |---|---:|
 | Learned parameters | 118,208 |
 | `model.safetensors` | 475,432 bytes |
+| Model SHA-256 | `8fd76c662da0d0cb9fe1035cb205b1a071ad95f9e22d116578a0a8bec0754be9` |
 | Static `dist` size | 3,201,006 apparent bytes; 3.1 MiB (`du -sh`) |
 | Largest native/Python absolute error | `2.86102295e-6` (logits) |
 | Parity tolerance | absolute + relative `1e-4` |
