@@ -156,7 +156,7 @@ mod tests {
         summary.tokens.retain(|token| token.kind != TokenKind::Byte);
 
         let mut state = AppState::default();
-        state.apply(response)?;
+        let mut requests = state.apply(response)?;
         assert_eq!(state.selection.token, 1);
         assert_eq!(state.selection.key, 1);
 
@@ -166,20 +166,57 @@ mod tests {
         state.ui.inspector_tab = InspectorTab::Tensor;
         state.ui.selected_feature = 3;
 
-        state.apply(block_response()?)?;
+        let WorkerRequest::InspectBlock { request_id, .. } = requests
+            .pop()
+            .ok_or_else(|| io::Error::other("run did not request block detail"))?
+        else {
+            return Err(io::Error::other("run detail was not a block request").into());
+        };
+        let WorkerResponse::BlockTrace { run_id, trace, .. } = block_response()? else {
+            return Err(io::Error::other("block fixture variant").into());
+        };
+        state.apply(WorkerResponse::BlockTrace {
+            request_id,
+            run_id,
+            trace,
+        })?;
         assert_user_selection(&state, 0);
         let request = state
             .select_head(usize::MAX)
             .ok_or_else(|| io::Error::other("loaded block did not produce a head request"))?;
         assert!(matches!(
-            request,
+            &request,
             WorkerRequest::InspectAttentionHead { head: 3, .. }
         ));
         assert_user_selection(&state, 3);
 
-        state.apply(attention_response()?)?;
+        let WorkerRequest::InspectAttentionHead { request_id, .. } = request else {
+            return Err(io::Error::other("head request variant").into());
+        };
+        let WorkerResponse::AttentionHeadTrace { run_id, trace, .. } = attention_response()? else {
+            return Err(io::Error::other("attention fixture variant").into());
+        };
+        let token_requests = state.apply(WorkerResponse::AttentionHeadTrace {
+            request_id,
+            run_id,
+            trace,
+        })?;
         assert_user_selection(&state, 3);
-        state.apply(token_response()?)?;
+        let WorkerRequest::InspectToken { request_id, .. } = token_requests
+            .into_iter()
+            .next()
+            .ok_or_else(|| io::Error::other("head did not request token detail"))?
+        else {
+            return Err(io::Error::other("token request variant").into());
+        };
+        let WorkerResponse::TokenTrace { run_id, trace, .. } = token_response()? else {
+            return Err(io::Error::other("token fixture variant").into());
+        };
+        state.apply(WorkerResponse::TokenTrace {
+            request_id,
+            run_id,
+            trace,
+        })?;
         assert_user_selection(&state, 3);
         assert!(!state.ui.prompt_expanded);
         Ok(())

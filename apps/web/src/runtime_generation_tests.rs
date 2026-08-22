@@ -29,41 +29,62 @@ fn config(max_new_tokens: usize) -> Result<GenerationConfig, RuntimeError> {
     })
 }
 
+fn full_stream(
+    runtime: &mut WorkerRuntime,
+    start: &crate::runtime_generation::GenerationStart,
+) -> Result<Vec<nanogpt_schema::GenerationStepSummary>, RuntimeError> {
+    let mut events = runtime.advance_generation(start.key)?;
+    let mut steps = Vec::new();
+    loop {
+        let terminal = events
+            .iter()
+            .any(|event| matches!(event, WorkerResponse::GenerationFinished { .. }));
+        let credit = events.iter().find_map(|event| match event {
+            WorkerResponse::TokenGenerated {
+                request_id,
+                run_id,
+                step,
+            } => {
+                steps.push(step.clone());
+                Some((*request_id, *run_id, step.index))
+            }
+            _ => None,
+        });
+        if terminal {
+            return Ok(steps);
+        }
+        let (request_id, run_id, step_index) = credit.ok_or(RuntimeError::InvalidSelector)?;
+        events = runtime.continue_generation(request_id, run_id, step_index)?;
+    }
+}
+
 #[test]
 fn started_one_step_and_full_stream_append_context_deterministically() -> Result<(), RuntimeError> {
     // Given: two initialized runtimes with the same prompt and config.
     let mut first = initialized()?;
     let mut second = initialized()?;
-    let first_start = first.start_generation(7, "cat", &config(3)?)?;
-    let second_start = second.start_generation(7, "cat", &config(3)?)?;
+    let expected_config = config(3)?;
+    let first_start = first.start_generation(7, "cat", &expected_config)?;
+    let second_start = second.start_generation(7, "cat", &expected_config)?;
     assert!(matches!(
         first_start.responses.as_slice(),
-        [WorkerResponse::GenerationStarted { request_id: 7, .. }]
+        [WorkerResponse::GenerationStarted {
+            request_id: 7,
+            prompt_tokens,
+            config,
+            context_limit: 24,
+            ..
+        }] if prompt_tokens.iter().map(|token| token.id).collect::<Vec<_>>() == [
+            nanogpt_schema::TokenId(0),
+            nanogpt_schema::TokenId(102),
+            nanogpt_schema::TokenId(100),
+            nanogpt_schema::TokenId(119),
+        ] && config == &expected_config
     ));
 
-    // When: both streams advance to completion one forward at a time.
-    let mut first_steps = Vec::new();
-    let mut second_steps = Vec::new();
-    loop {
-        let events = first.advance_generation(first_start.key)?;
-        let peer = second.advance_generation(second_start.key)?;
-        for event in &events {
-            if let WorkerResponse::TokenGenerated { step, .. } = event {
-                first_steps.push(step.clone());
-            }
-        }
-        for event in &peer {
-            if let WorkerResponse::TokenGenerated { step, .. } = event {
-                second_steps.push(step.clone());
-            }
-        }
-        if events
-            .iter()
-            .any(|event| matches!(event, WorkerResponse::GenerationFinished { .. }))
-        {
-            break;
-        }
-    }
+    // When: both streams advance to completion through exact one-credit requests.
+    let first_steps = full_stream(&mut first, &first_start)?;
+    let second_steps = full_stream(&mut second, &second_start)?;
 
     // Then: prior generated IDs are appended in order and deterministic fields match.
     assert_eq!(first_steps.len(), 3);
@@ -99,6 +120,62 @@ fn started_one_step_and_full_stream_append_context_deterministically() -> Result
         assert_eq!(first_step.selected_interval, second_step.selected_interval);
     }
     assert!(first_steps.iter().all(|step| !step.candidates.is_empty()));
+    Ok(())
+}
+
+#[test]
+fn exact_continue_credit_is_single_use_contiguous_and_terminal_safe() -> Result<(), RuntimeError> {
+    // Given: one active run after its initially authorized forward.
+    let mut runtime = initialized()?;
+    let start = runtime.start_generation(30, "cat", &config(3)?)?;
+    let first = runtime.advance_generation(start.key)?;
+    let (run_id, first_index) = match first.as_slice() {
+        [WorkerResponse::TokenGenerated { run_id, step, .. }] => (*run_id, step.index),
+        _ => return Err(RuntimeError::InvalidSelector),
+    };
+
+    // When/Then: stale identities and future indices cannot spend the credit.
+    assert!(
+        runtime
+            .continue_generation(29, run_id, first_index)?
+            .is_empty()
+    );
+    assert!(
+        runtime
+            .continue_generation(30, run_id + 1, first_index)?
+            .is_empty()
+    );
+    assert!(
+        runtime
+            .continue_generation(30, run_id, first_index + 1)?
+            .is_empty()
+    );
+
+    // The exact credit advances once; its duplicate is stale after the next step commits.
+    let second = runtime.continue_generation(30, run_id, first_index)?;
+    assert!(matches!(
+        second.as_slice(),
+        [WorkerResponse::TokenGenerated { step, .. }] if step.index == 1
+    ));
+    assert!(
+        runtime
+            .continue_generation(30, run_id, first_index)?
+            .is_empty()
+    );
+
+    // The final exact credit emits token then terminal; all post-terminal credits no-op.
+    let terminal = runtime.continue_generation(30, run_id, 1)?;
+    assert!(matches!(
+        terminal.as_slice(),
+        [
+            WorkerResponse::TokenGenerated { step, .. },
+            WorkerResponse::GenerationFinished {
+                reason: GenerationStopReason::MaxNewTokens,
+                ..
+            }
+        ] if step.index == 2
+    ));
+    assert!(runtime.continue_generation(30, run_id, 2)?.is_empty());
     Ok(())
 }
 
@@ -174,8 +251,9 @@ fn stop_replacement_stale_key_and_invalid_replacement_preserve_state() -> Result
 
     // When: invalid B is attempted, then valid B replaces A.
     assert!(runtime.start_generation(11, "", &config(4)?).is_err());
+    assert!(runtime.stop_generation(10, 999).is_none());
     assert!(matches!(
-        runtime.advance_generation(a.key)?.as_slice(),
+        runtime.continue_generation(10, 1, 0)?.as_slice(),
         [WorkerResponse::TokenGenerated { .. }]
     ));
     let b = runtime.start_generation(12, "dog", &config(4)?)?;
@@ -193,19 +271,19 @@ fn stop_replacement_stale_key_and_invalid_replacement_preserve_state() -> Result
         ]
     ));
     assert!(runtime.advance_generation(a.key)?.is_empty());
-    assert!(runtime.stop_generation(10).is_none());
+    assert!(runtime.stop_generation(10, 1).is_none());
     assert!(matches!(
         runtime.advance_generation(b.key)?.as_slice(),
         [WorkerResponse::TokenGenerated { .. }]
     ));
     assert!(matches!(
-        runtime.stop_generation(12),
+        runtime.stop_generation(12, 2),
         Some(WorkerResponse::GenerationFinished {
             reason: GenerationStopReason::UserStopped,
             ..
         })
     ));
-    assert!(runtime.stop_generation(12).is_none());
+    assert!(runtime.stop_generation(12, 2).is_none());
     Ok(())
 }
 

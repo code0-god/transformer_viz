@@ -33,6 +33,17 @@ pub enum WorkerRequest {
     StopGeneration {
         /// Active generation request to stop.
         request_id: u64,
+        /// Exact active generation run to stop.
+        run_id: u64,
+    },
+    /// Authorize one next forward after accepting a streamed token.
+    ContinueGeneration {
+        /// Active generation request to advance.
+        request_id: u64,
+        /// Exact active generation run to advance.
+        run_id: u64,
+        /// Accepted token index granting this single-use credit.
+        step_index: usize,
     },
     /// Replay one stored generation step with a full summary trace.
     InspectGenerationStep {
@@ -125,6 +136,12 @@ pub enum WorkerResponse {
         request_id: u64,
         /// Stable generation run ID.
         run_id: u64,
+        /// Exact tokenized prompt accepted by the runtime.
+        prompt_tokens: Vec<crate::TokenInfo>,
+        /// Runtime-applied generation controls after clamping.
+        config: GenerationConfig,
+        /// Loaded model context limit.
+        context_limit: usize,
     },
     /// One generated token was committed to the stream.
     TokenGenerated {

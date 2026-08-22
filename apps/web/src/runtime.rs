@@ -9,7 +9,7 @@ use nanogpt_schema::{FiniteF32, TokenInfo, TraceMode, WorkerRequest, WorkerRespo
 pub use crate::runtime_assets::AssetBundle;
 use crate::runtime_assets::{LoadedModel, asset_names, load_assets};
 use crate::runtime_error::RuntimeError;
-use crate::runtime_generation::GenerationRun;
+use crate::runtime_generation_control::GenerationRun;
 use crate::runtime_timer::InferenceTimer;
 use crate::runtime_trace::{TokenSelection, TraceCapture};
 
@@ -71,9 +71,9 @@ impl WorkerRuntime {
                 "initialization requires downloaded assets".to_owned(),
             )),
             WorkerRequest::Run { request_id, text } => self.run(request_id, &text),
-            WorkerRequest::Generate { .. } | WorkerRequest::StopGeneration { .. } => {
-                Err(RuntimeError::InvalidSelector)
-            }
+            WorkerRequest::Generate { .. }
+            | WorkerRequest::StopGeneration { .. }
+            | WorkerRequest::ContinueGeneration { .. } => Err(RuntimeError::InvalidSelector),
             WorkerRequest::InspectGenerationStep {
                 request_id,
                 generation_run_id,

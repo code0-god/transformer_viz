@@ -1,9 +1,10 @@
 //! Exact selected-generation-step replay protocol shapes.
 
 use nanogpt_schema::{
-    EmbeddingTrace, FiniteF32, GenerationStepSummary, LogitCandidate, LogitsTrace, RunSummary,
-    SchemaError, SchemaVersion, SourceReference, TensorSnapshot, TokenId, TokenInfo, TokenKind,
-    WorkerRequest, WorkerResponse,
+    EmbeddingTrace, FiniteF32, GenerationConfig, GenerationStepSummary, LogitCandidate,
+    LogitsTrace, RunSummary, SamplingMode, SchemaError, SchemaVersion, SourceReference,
+    Temperature, TensorSnapshot, TokenId, TokenInfo, TokenKind, TopK, WorkerRequest,
+    WorkerResponse,
 };
 use serde_json::json;
 
@@ -77,6 +78,47 @@ fn summary() -> Result<RunSummary, SchemaError> {
         final_layer_norm: snapshot("final_layer_norm")?,
         logits,
     })
+}
+
+#[test]
+fn generation_started_response_has_exact_shape() -> Result<(), Box<dyn std::error::Error>> {
+    // Given: the complete trusted start payload used by the streaming UI.
+    let response = WorkerResponse::GenerationStarted {
+        request_id: 7,
+        run_id: 11,
+        prompt_tokens: vec![token()],
+        config: GenerationConfig {
+            max_new_tokens: 8,
+            temperature: Temperature::new(0.75)?,
+            top_k: TopK::new(12)?,
+            mode: SamplingMode::Sample,
+            seed: 42,
+        },
+        context_limit: 24,
+    };
+    let expected = json!({
+        "type": "generation_started",
+        "request_id": 7,
+        "run_id": 11,
+        "prompt_tokens": [serde_json::to_value(token())?],
+        "config": {
+            "max_new_tokens": 8,
+            "temperature": 0.75,
+            "top_k": 12,
+            "mode": "sample",
+            "seed": 42
+        },
+        "context_limit": 24
+    });
+
+    // When: it crosses serde in both directions.
+    let value = serde_json::to_value(&response)?;
+    let round_trip = serde_json::from_value::<WorkerResponse>(value.clone())?;
+
+    // Then: no field is omitted or accepted under a different shape.
+    assert_eq!(value, expected);
+    assert_eq!(round_trip, response);
+    Ok(())
 }
 
 #[test]

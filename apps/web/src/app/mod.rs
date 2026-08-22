@@ -4,6 +4,9 @@
 pub mod architecture;
 #[cfg(test)]
 mod architecture_tests;
+pub mod generation;
+#[cfg(test)]
+mod generation_tests;
 #[cfg(test)]
 mod inspector_state_tests;
 pub mod narrative;
@@ -12,6 +15,8 @@ mod narrative_tests;
 pub mod playback;
 pub mod selection;
 pub mod state;
+mod state_generation;
+mod state_response;
 #[cfg(test)]
 mod state_test_fixtures;
 #[cfg(test)]

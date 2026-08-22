@@ -23,7 +23,7 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::{DedicatedWorkerGlobalScope, MessageEvent, Url};
 
 #[cfg(target_arch = "wasm32")]
-use self::worker_generation::spawn_generation;
+use self::worker_generation::{continue_generation, start_generation};
 
 #[cfg(target_arch = "wasm32")]
 fn post(scope: &DedicatedWorkerGlobalScope, response: &WorkerResponse) -> bool {
@@ -98,7 +98,8 @@ fn request_id(request: &WorkerRequest) -> Option<u64> {
         WorkerRequest::Initialize { .. } => None,
         WorkerRequest::Run { request_id, .. }
         | WorkerRequest::Generate { request_id, .. }
-        | WorkerRequest::StopGeneration { request_id }
+        | WorkerRequest::StopGeneration { request_id, .. }
+        | WorkerRequest::ContinueGeneration { request_id, .. }
         | WorkerRequest::InspectGenerationStep { request_id, .. }
         | WorkerRequest::InspectBlock { request_id, .. }
         | WorkerRequest::InspectAttentionHead { request_id, .. }
@@ -163,7 +164,7 @@ fn main() {
                 };
                 match start {
                     Ok(start) => {
-                        spawn_generation(message_scope.clone(), Rc::clone(&message_runtime), start)
+                        start_generation(&message_scope, &mut message_runtime.borrow_mut(), start)
                     }
                     Err(error) => {
                         let _posted =
@@ -171,11 +172,25 @@ fn main() {
                     }
                 }
             }
-            WorkerRequest::StopGeneration { request_id } => {
-                if let Some(response) = message_runtime.borrow_mut().stop_generation(request_id) {
+            WorkerRequest::StopGeneration { request_id, run_id } => {
+                if let Some(response) = message_runtime
+                    .borrow_mut()
+                    .stop_generation(request_id, run_id)
+                {
                     let _posted = post(&message_scope, &response);
                 }
             }
+            WorkerRequest::ContinueGeneration {
+                request_id,
+                run_id,
+                step_index,
+            } => continue_generation(
+                &message_scope,
+                &mut message_runtime.borrow_mut(),
+                request_id,
+                run_id,
+                step_index,
+            ),
             synchronous => {
                 let id = request_id(&synchronous);
                 let response = message_runtime

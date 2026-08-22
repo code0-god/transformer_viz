@@ -65,8 +65,10 @@ fn selected_step_replay_is_exact_inspectable_and_generation_neutral() -> Result<
     let original = generated_step(&runtime.advance_generation(start.key)?)?;
     let peer_original = generated_step(&peer.advance_generation(peer_start.key)?)?;
     assert_generation_equal(&original, &peer_original);
-    let second = generated_step(&runtime.advance_generation(start.key)?)?;
-    let peer_second = generated_step(&peer.advance_generation(peer_start.key)?)?;
+    let second =
+        generated_step(&runtime.continue_generation(7, generation_run_id, original.index)?)?;
+    let peer_second =
+        generated_step(&peer.continue_generation(7, generation_run_id, peer_original.index)?)?;
     assert_generation_equal(&second, &peer_second);
 
     // When: step zero is replayed through its generation ID and historical index.
@@ -154,8 +156,9 @@ fn selected_step_replay_is_exact_inspectable_and_generation_neutral() -> Result<
     ));
 
     // And: replay neither appends nor resamples; both peers continue identically.
-    let next = generated_step(&runtime.advance_generation(start.key)?)?;
-    let peer_next = generated_step(&peer.advance_generation(peer_start.key)?)?;
+    let next = generated_step(&runtime.continue_generation(7, generation_run_id, second.index)?)?;
+    let peer_next =
+        generated_step(&peer.continue_generation(7, generation_run_id, peer_second.index)?)?;
     assert_generation_equal(&next, &peer_next);
     assert_eq!(next.index, 2);
     Ok(())

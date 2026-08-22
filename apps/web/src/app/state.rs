@@ -1,12 +1,11 @@
 //! Pure application state shared by native tests and the Leptos browser shell.
 
 use nanogpt_schema::{
-    AttentionHeadTrace, BlockTrace, ModelMetadata, RunSummary, TokenKind, TokenTrace,
-    WorkerRequest, WorkerResponse,
+    AttentionHeadTrace, BlockTrace, ModelMetadata, RunSummary, TokenTrace, WorkerRequest,
 };
 use thiserror::Error;
 
-use super::{selection::Selection, ui_state::ExplorerUiState};
+use super::{generation::GenerationState, selection::Selection, ui_state::ExplorerUiState};
 
 /// User-visible application lifecycle.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -30,19 +29,23 @@ pub struct AppState {
     pub status: AppStatus,
     /// Loaded model identity.
     pub model: Option<ModelMetadata>,
-    /// Last complete run summary.
+    /// Last complete replay summary.
     pub summary: Option<RunSummary>,
     /// Selected block trace.
     pub block: Option<BlockTrace>,
-    /// Selected attention trace.
+    /// Selected attention-head trace.
     pub attention: Option<AttentionHeadTrace>,
     /// Selected token trace.
     pub token: Option<TokenTrace>,
-    /// Shared selectors.
+    /// Shared numeric selectors.
     pub selection: Selection,
-    /// Browser-only guided explorer state.
+    /// Browser-only explorer state.
     pub ui: ExplorerUiState,
+    pub(crate) generation: GenerationState,
     next_request_id: u64,
+    pub(super) pending_block_request: Option<u64>,
+    pub(super) pending_head_request: Option<u64>,
+    pub(super) pending_token_request: Option<u64>,
 }
 
 impl Default for AppState {
@@ -56,7 +59,11 @@ impl Default for AppState {
             token: None,
             selection: Selection::default(),
             ui: ExplorerUiState::default(),
+            generation: GenerationState::default(),
             next_request_id: 1,
+            pending_block_request: None,
+            pending_head_request: None,
+            pending_token_request: None,
         }
     }
 }
@@ -64,87 +71,13 @@ impl Default for AppState {
 /// Invalid state transition at the Worker boundary.
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum StateError {
-    /// A detail response does not belong to the current run.
+    /// A correlated detail response belongs to another replay run.
     #[error("현재 실행과 다른 추적 응답입니다")]
     StaleTrace,
 }
 
 impl AppState {
-    /// Applies one Worker response and returns required follow-up requests.
-    ///
-    /// # Errors
-    /// Returns [`StateError`] when detail data belongs to another run.
-    pub fn apply(&mut self, response: WorkerResponse) -> Result<Vec<WorkerRequest>, StateError> {
-        match response {
-            WorkerResponse::Initializing { phase } => {
-                let starts_worker = phase == "Worker 시작됨";
-                self.status = AppStatus::Loading(phase);
-                if starts_worker {
-                    return Ok(vec![WorkerRequest::Initialize {
-                        manifest_url: "./models/edu/manifest.json".to_owned(),
-                    }]);
-                }
-            }
-            WorkerResponse::Ready { model } => {
-                self.model = Some(model);
-                self.status = AppStatus::Ready;
-            }
-            WorkerResponse::RunComplete { summary, .. } => {
-                let summary = *summary;
-                self.selection.layer = 0;
-                self.selection.head = 0;
-                let default_token = summary
-                    .tokens
-                    .iter()
-                    .rposition(|token| token.kind == TokenKind::Byte)
-                    .unwrap_or_else(|| summary.tokens.len().saturating_sub(1));
-                self.selection.token = default_token;
-                self.selection.key = default_token;
-                let run_id = summary.run_id;
-                let can_inspect = !summary.layers.is_empty() && !summary.tokens.is_empty();
-                self.summary = Some(summary);
-                self.block = None;
-                self.attention = None;
-                self.token = None;
-                self.ui = ExplorerUiState::default();
-                if can_inspect {
-                    self.status = AppStatus::Running("선택한 블록 추적 중".to_owned());
-                    return Ok(vec![self.block_request(run_id)]);
-                }
-                self.ui.prompt_expanded = false;
-                self.status = AppStatus::Complete;
-            }
-            WorkerResponse::BlockTrace { run_id, trace, .. } => {
-                self.require_run(run_id)?;
-                self.block = Some(*trace);
-                self.attention = None;
-                self.token = None;
-                self.status = AppStatus::Running("어텐션 헤드 추적 중".to_owned());
-                return Ok(vec![self.head_request(run_id)]);
-            }
-            WorkerResponse::AttentionHeadTrace { run_id, trace, .. } => {
-                self.require_run(run_id)?;
-                self.attention = Some(*trace);
-                self.token = None;
-                self.status = AppStatus::Running("토큰 세부 값 추적 중".to_owned());
-                return Ok(vec![self.token_request(run_id)]);
-            }
-            WorkerResponse::TokenTrace { run_id, trace, .. } => {
-                self.require_run(run_id)?;
-                self.token = Some(*trace);
-                self.ui.prompt_expanded = false;
-                self.status = AppStatus::Complete;
-            }
-            WorkerResponse::GenerationStarted { .. }
-            | WorkerResponse::TokenGenerated { .. }
-            | WorkerResponse::GenerationFinished { .. }
-            | WorkerResponse::GenerationStepTrace { .. } => {}
-            WorkerResponse::Error { message, .. } => self.status = AppStatus::Error(message),
-        }
-        Ok(Vec::new())
-    }
-
-    /// Creates a run request and clears stale traces.
+    /// Creates a legacy run request for internal compatibility.
     #[must_use]
     pub fn run(&mut self, text: &str) -> WorkerRequest {
         self.status = AppStatus::Running("토큰화 및 추론 중".to_owned());
@@ -162,7 +95,7 @@ impl AppState {
         self.summary.as_ref().map(|summary| summary.run_id)
     }
 
-    fn require_run(&self, run_id: u64) -> Result<(), StateError> {
+    pub(super) fn require_run(&self, run_id: u64) -> Result<(), StateError> {
         if self.current_run() == Some(run_id) {
             Ok(())
         } else {
@@ -170,26 +103,35 @@ impl AppState {
         }
     }
 
-    pub(super) const fn block_request(&mut self, run_id: u64) -> WorkerRequest {
+    pub(super) fn block_request(&mut self, run_id: u64) -> WorkerRequest {
+        let request_id = self.request_id();
+        self.pending_block_request = Some(request_id);
+        self.generation.error = None;
         WorkerRequest::InspectBlock {
-            request_id: self.request_id(),
+            request_id,
             run_id,
             layer: self.selection.layer,
         }
     }
 
-    pub(super) const fn head_request(&mut self, run_id: u64) -> WorkerRequest {
+    pub(super) fn head_request(&mut self, run_id: u64) -> WorkerRequest {
+        let request_id = self.request_id();
+        self.pending_head_request = Some(request_id);
+        self.generation.error = None;
         WorkerRequest::InspectAttentionHead {
-            request_id: self.request_id(),
+            request_id,
             run_id,
             layer: self.selection.layer,
             head: self.selection.head,
         }
     }
 
-    pub(super) const fn token_request(&mut self, run_id: u64) -> WorkerRequest {
+    pub(super) fn token_request(&mut self, run_id: u64) -> WorkerRequest {
+        let request_id = self.request_id();
+        self.pending_token_request = Some(request_id);
+        self.generation.error = None;
         WorkerRequest::InspectToken {
-            request_id: self.request_id(),
+            request_id,
             run_id,
             layer: self.selection.layer,
             head: self.selection.head,
@@ -197,7 +139,7 @@ impl AppState {
         }
     }
 
-    const fn request_id(&mut self) -> u64 {
+    pub(super) const fn request_id(&mut self) -> u64 {
         let current = self.next_request_id;
         self.next_request_id = self.next_request_id.saturating_add(1);
         current

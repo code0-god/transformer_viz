@@ -24,6 +24,14 @@ context, transforms final-position logits through explicit Temperature, Top-K, S
 or deterministic seeded categorical selection, emits one `TokenGenerated` response, appends the
 selected token, then yields before the next step.
 
+`Generate` authorizes the first forward. Every later forward requires one typed
+`ContinueGeneration` credit carrying the exact `request_id`, `run_id`, and preceding step index.
+The UI sends that credit only after accepting the matching contiguous `TokenGenerated` response.
+Continue, Stop, and replacement requests share the same main-to-Worker channel, so a control
+request can be overtaken by at most one already-authorized non-preemptible forward. Duplicate,
+stale, future-index, and post-terminal credits are no-ops. Worker-local timers and self-message
+loops are not used because browser task-source selection does not provide cancellation ordering.
+
 Store only a compact `GenerationStepSummary`: step index, context token IDs, selected token,
 selected logit/probability, Top-K candidates, deterministic random value and cumulative interval,
 and timings. Stop on EOS, configured maximum, context limit, user cancellation, replacement, or
@@ -57,5 +65,7 @@ the algorithms correspond. Differences are described rather than presented as pa
 - Store every step's complete trace: rejected for browser memory cost.
 - Re-run sampling during inspection: rejected because it can change historical selection.
 - Generate on the Leptos main thread: rejected because it blocks interaction and painting.
+- Schedule later forwards with Worker-local timers or self-messages: rejected because they do not
+  order generation work against Stop or replacement messages on another task source.
 - Add a backend, external API, WebGPU, or KV cache: rejected by project scope.
 - Treat highest Top-K item as generation: rejected because it omits configured sampling behavior.

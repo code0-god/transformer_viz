@@ -1,6 +1,6 @@
 //! Typed browser Web Worker client.
 
-use std::{cell::RefCell, rc::Rc};
+use std::rc::Rc;
 
 use nanogpt_schema::{WorkerRequest, WorkerResponse};
 use thiserror::Error;
@@ -37,18 +37,15 @@ impl WorkerClient {
         options.set_type(WorkerType::Module);
         let worker = Worker::new_with_options("./worker_loader.js", &options)
             .map_err(|error| WorkerClientError::Browser(js_error(&error)))?;
-        let transport = Rc::new(RefCell::new(Some(worker.clone())));
-        let message_transport = Rc::clone(&transport);
+        let message_worker = worker.clone();
         let error_handler: Rc<dyn Fn(String)> = Rc::new(on_error);
         let message_error_handler = Rc::clone(&error_handler);
         let on_message = Closure::<dyn FnMut(MessageEvent)>::new(move |event: MessageEvent| {
             match serde_wasm_bindgen::from_value::<WorkerResponse>(event.data()) {
                 Ok(response) => {
                     for request in handler(response) {
-                        if let Some(worker) = message_transport.borrow().as_ref()
-                            && let Ok(value) = serde_wasm_bindgen::to_value(&request)
-                        {
-                            let _result = worker.post_message(&value);
+                        if let Err(error) = send_request(&message_worker, &request) {
+                            message_error_handler(error.to_string());
                         }
                     }
                 }
@@ -71,12 +68,16 @@ impl WorkerClient {
     /// # Errors
     /// Returns [`WorkerClientError`] when serialization or browser posting fails.
     pub fn send(&self, request: &WorkerRequest) -> Result<(), WorkerClientError> {
-        let value = serde_wasm_bindgen::to_value(request)
-            .map_err(|error| WorkerClientError::Encode(error.to_string()))?;
-        self.worker
-            .post_message(&value)
-            .map_err(|error| WorkerClientError::Browser(js_error(&error)))
+        send_request(&self.worker, request)
     }
+}
+
+fn send_request(worker: &Worker, request: &WorkerRequest) -> Result<(), WorkerClientError> {
+    let value = serde_wasm_bindgen::to_value(request)
+        .map_err(|error| WorkerClientError::Encode(error.to_string()))?;
+    worker
+        .post_message(&value)
+        .map_err(|error| WorkerClientError::Browser(js_error(&error)))
 }
 
 fn js_error(value: &JsValue) -> String {

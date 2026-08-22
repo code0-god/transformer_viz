@@ -1,107 +1,73 @@
-//! Streaming generation task scheduling for the inference Worker.
-
-use std::{cell::RefCell, rc::Rc};
+//! One-credit generation dispatch for the inference Worker.
 
 use nanogpt_schema::{WorkerErrorCode, WorkerResponse};
 use transformer_viz_web::runtime::{WorkerRuntime, error_response};
-use transformer_viz_web::runtime_generation::GenerationStart;
-use wasm_bindgen::{JsCast as _, JsValue, closure::Closure};
-use wasm_bindgen_futures::{JsFuture, spawn_local};
-use web_sys::{DedicatedWorkerGlobalScope, MessageChannel, MessageEvent};
+use transformer_viz_web::runtime_generation::{GenerationKey, GenerationStart};
+use web_sys::DedicatedWorkerGlobalScope;
 
 use super::post;
 
-async fn yield_worker_task() -> Result<(), JsValue> {
-    let channel = MessageChannel::new()?;
-    let receiver = channel.port1();
-    let sender = channel.port2();
-    let mut resolve = None;
-    let promise = js_sys::Promise::new(&mut |resolver, _reject| resolve = Some(resolver));
-    let Some(resolve) = resolve else {
-        receiver.close();
-        sender.close();
-        return Err(JsValue::from_str(
-            "MessageChannel resolver was not installed",
-        ));
-    };
-    let callback = Closure::<dyn FnMut(MessageEvent)>::new(move |_event| {
-        let _ignored = resolve.call0(&JsValue::UNDEFINED);
-    });
-    receiver.set_onmessage(Some(callback.as_ref().unchecked_ref()));
-    if let Err(error) = sender.post_message(&JsValue::NULL) {
-        receiver.set_onmessage(None);
-        receiver.close();
-        sender.close();
-        return Err(error);
-    }
-    let result = JsFuture::from(promise).await;
-    receiver.set_onmessage(None);
-    receiver.close();
-    sender.close();
-    result.map(|_value| ())
-}
-
-pub(super) fn spawn_generation(
-    scope: DedicatedWorkerGlobalScope,
-    runtime: Rc<RefCell<WorkerRuntime>>,
+pub(super) fn start_generation(
+    scope: &DedicatedWorkerGlobalScope,
+    runtime: &mut WorkerRuntime,
     start: GenerationStart,
 ) {
     let key = start.key;
-    for response in &start.responses {
-        if !post(&scope, response) {
-            let _abandoned = runtime.borrow_mut().fail_generation(key);
-            return;
+    if !post_all(scope, &start.responses) {
+        let _abandoned = runtime.fail_generation(key);
+        return;
+    }
+    match runtime.advance_generation(key) {
+        Ok(events) => {
+            if !post_all(scope, &events) {
+                let _abandoned = runtime.fail_generation(key);
+            }
+        }
+        Err(error) => fail_initial(scope, runtime, key, &error),
+    }
+}
+
+pub(super) fn continue_generation(
+    scope: &DedicatedWorkerGlobalScope,
+    runtime: &mut WorkerRuntime,
+    request_id: u64,
+    run_id: u64,
+    step_index: usize,
+) {
+    match runtime.continue_generation(request_id, run_id, step_index) {
+        Ok(events) => {
+            if !post_all(scope, &events) {
+                let _abandoned = runtime.fail_generation_identity(request_id, run_id);
+            }
+        }
+        Err(error) => {
+            let _error_posted = post(scope, &error_response(Some(request_id), &error));
+            if let Some(terminal) = runtime.fail_generation_identity(request_id, run_id) {
+                let _terminal_posted = post(scope, &terminal);
+            }
         }
     }
-    spawn_local(async move {
-        loop {
-            let advance = {
-                let mut runtime = runtime.borrow_mut();
-                runtime.advance_generation(key)
-            };
-            let events = match advance {
-                Ok(events) => events,
-                Err(error) => {
-                    let terminal = runtime.borrow_mut().fail_generation(key);
-                    let _error_posted =
-                        post(&scope, &error_response(Some(key.request_id()), &error));
-                    if let Some(terminal) = terminal {
-                        let _terminal_posted = post(&scope, &terminal);
-                    }
-                    return;
-                }
-            };
-            if events.is_empty() {
-                return;
-            }
-            let terminal = events
-                .iter()
-                .any(|event| matches!(event, WorkerResponse::GenerationFinished { .. }));
-            for event in &events {
-                if !post(&scope, event) {
-                    let _abandoned = runtime.borrow_mut().fail_generation(key);
-                    return;
-                }
-            }
-            if terminal {
-                return;
-            }
-            if let Err(error) = yield_worker_task().await {
-                web_sys::console::error_1(&error);
-                let terminal = runtime.borrow_mut().fail_generation(key);
-                let _error_posted = post(
-                    &scope,
-                    &WorkerResponse::Error {
-                        request_id: Some(key.request_id()),
-                        code: WorkerErrorCode::Inference,
-                        message: "생성 작업을 예약하지 못했습니다".to_owned(),
-                    },
-                );
-                if let Some(terminal) = terminal {
-                    let _terminal_posted = post(&scope, &terminal);
-                }
-                return;
-            }
-        }
-    });
+}
+
+fn post_all(scope: &DedicatedWorkerGlobalScope, events: &[WorkerResponse]) -> bool {
+    events.iter().all(|event| post(scope, event))
+}
+
+fn fail_initial(
+    scope: &DedicatedWorkerGlobalScope,
+    runtime: &mut WorkerRuntime,
+    key: GenerationKey,
+    error: &impl std::fmt::Display,
+) {
+    let _error_posted = post(
+        scope,
+        &WorkerResponse::Error {
+            request_id: Some(key.request_id()),
+            code: WorkerErrorCode::Inference,
+            message: error.to_string(),
+        },
+    );
+    if let Some(terminal) = runtime.fail_generation(key) {
+        let _terminal_posted = post(scope, &terminal);
+    }
 }
