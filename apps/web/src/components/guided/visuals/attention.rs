@@ -128,13 +128,20 @@ pub(super) fn softmax(state: RwSignal<AppState>, client: &WorkerClient) -> AnyVi
         Ok(values) => values,
         Err(error) => return facts::error_state(error.to_string()),
     };
-    let score_strip = VectorStrip {
-        label: "masked score row",
-        tensor_id: trace.scaled_scores.id.clone(),
-        values: score_row,
-        tone: "score",
-        selected_feature: key,
+    let Some(mask_start) = query.checked_mul(cols) else {
+        return facts::error_state("softmax mask row");
     };
+    let Some(mask_end) = mask_start.checked_add(score_row.len()) else {
+        return facts::error_state("softmax mask row");
+    };
+    let Some(allowed_row) = trace.mask.allowed.get(mask_start..mask_end) else {
+        return facts::error_state("softmax mask row");
+    };
+    let masked_scores = score_row
+        .into_iter()
+        .zip(allowed_row.iter().copied())
+        .enumerate()
+        .collect::<Vec<_>>();
     let probability_strip = VectorStrip {
         label: "softmax probability row",
         tensor_id: trace.probabilities.id.clone(),
@@ -142,7 +149,7 @@ pub(super) fn softmax(state: RwSignal<AppState>, client: &WorkerClient) -> AnyVi
         tone: "probability",
         selected_feature: key,
     };
-    let scale = shared_scale(&[score_strip.clone(), probability_strip.clone()]);
+    let scale = shared_scale(std::slice::from_ref(&probability_strip));
     let future_max = row
         .future
         .iter()
@@ -151,7 +158,21 @@ pub(super) fn softmax(state: RwSignal<AppState>, client: &WorkerClient) -> AnyVi
         .fold(0.0_f32, f32::max);
     view! {
         <div class="stage-visual softmax-visual" data-visual="softmax" data-trace-ready="true">
-            <div class="softmax-transform">{vector_strip(score_strip, scale)}<span>"softmax →"</span>{vector_strip(probability_strip, scale)}</div>
+            <div class="softmax-transform">
+                <figure class="masked-score-strip" data-tensor-id=trace.scaled_scores.id.clone() data-softmax-input="masked" data-mask-applied="true">
+                    <figcaption><strong>"scaled score + causal mask"</strong><span>"허용 score · 미래 −∞"</span></figcaption>
+                    <ol class="masked-score-values" aria-label="mask 적용 후 softmax 입력">
+                        {masked_scores.into_iter().map(|(position, (value, allowed))| view! {
+                            <li class:selected=position == key data-key=position data-masked=(!allowed).to_string()>
+                                <span>{position}</span>
+                                <code>{if allowed { format!("{value:+.6}") } else { "−∞".to_owned() }}</code>
+                            </li>
+                        }).collect_view()}
+                    </ol>
+                </figure>
+                <span>"softmax →"</span>
+                {vector_strip(probability_strip, scale)}
+            </div>
             {matrix_heatmap(MatrixSpec { tensor_id: trace.probabilities.id.clone(), rows, cols, values, allowed: trace.mask.allowed.clone(), mode: MatrixMode::Probability, query, key, interactive: true, head: current.selection.head }, state, client)}
             <dl class="math-proof"><div data-row-sum=row.sum><dt>"선택 행 ΣP"</dt><dd>{format!("{:.8}", row.sum)}</dd></div><div><dt>"미래 확률 max"</dt><dd>{format!("{future_max:.8}")}</dd></div><div><dt>"증명"</dt><dd>"허용 key 합 ≈ 1 · 미래 key = 0"</dd></div></dl>
         </div>

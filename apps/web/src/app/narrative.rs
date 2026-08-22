@@ -70,9 +70,9 @@ impl NarrativeStage {
 /// Exhaustive one-to-one assignment of the existing 18 detail-operation indices.
 ///
 /// Embedding owns summary tensors and no legacy block operation. The legacy trace
-/// combines masking and softmax at operation 7, so that boundary belongs to masking.
-/// Softmax and the language-model head use dedicated traces instead of claiming a
-/// duplicate detail index.
+/// combines masking and softmax at operation 7, so that boundary belongs to Softmax.
+/// Causal Mask uses its dedicated boolean trace, while the language-model head uses
+/// summary tensors instead of claiming a duplicate detail index.
 pub const DETAIL_OPERATION_STAGES: [NarrativeStage; 18] = [
     NarrativeStage::AttentionLayerNorm,
     NarrativeStage::AttentionLayerNorm,

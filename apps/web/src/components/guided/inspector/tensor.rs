@@ -108,7 +108,15 @@ fn mask_panel(state: &AppState) -> AnyView {
 
 fn address<'a>(state: &AppState, tensor: &'a TensorSnapshot) -> Result<TensorAddress<'a>, String> {
     let feature = state.ui.selected_feature;
-    let query = state.selection.token;
+    let query = if state.ui.narrative.stage == NarrativeStage::LanguageModelHead {
+        state
+            .summary
+            .as_ref()
+            .and_then(|summary| summary.tokens.len().checked_sub(1))
+            .ok_or_else(|| "Prediction token 주소를 계산할 수 없습니다.".to_owned())?
+    } else {
+        state.selection.token
+    };
     let key = state.selection.key;
     let result = match tensor.shape.len() {
         1 => TensorAddress::vector(tensor, feature, 4),

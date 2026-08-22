@@ -236,6 +236,14 @@ textarea { inline-size: 100%; min-block-size: 44px; max-block-size: 88px; resize
 .mask-verdict, .output-proof { margin: 0; padding: var(--s2); background: var(--surface-strong); color: var(--ink); font-size: .75rem; }
 .softmax-transform { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--s2); }
 .softmax-transform > span { color: var(--score-path); font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: .72rem; font-weight: 700; }
+.masked-score-strip { min-inline-size: 0; margin: 0; padding-block-end: var(--s2); border-block-end: 1px solid var(--hairline); }
+.masked-score-strip figcaption { display: flex; justify-content: space-between; gap: var(--s2); margin-block-end: var(--s1); font-size: .75rem; }
+.masked-score-strip figcaption span { color: var(--ink-muted); font-size: .7rem; }
+.masked-score-values { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 0; padding: 0; list-style: none; }
+.masked-score-values li { display: grid; gap: 0; padding: 2px 4px; background: var(--surface-strong); color: var(--ink-muted); font-size: .58rem; text-align: center; }
+.masked-score-values li[data-masked="true"] { background: repeating-linear-gradient(-45deg, var(--surface), var(--surface) 3px, var(--hairline) 3px, var(--hairline) 4px); color: var(--mask-ink); }
+.masked-score-values li.selected { outline: 2px solid var(--ink); outline-offset: -2px; }
+.masked-score-values code { font-size: .55rem; }
 .softmax-visual { grid-template-columns: minmax(0, 1.5fr) minmax(208px, .5fr); }
 .softmax-visual .softmax-transform, .softmax-visual .math-proof { grid-column: 1; }
 .softmax-visual .attention-matrix { grid-column: 2; grid-row: 1 / span 2; }
