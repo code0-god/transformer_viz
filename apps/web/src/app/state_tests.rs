@@ -2,6 +2,8 @@
 
 #[cfg(test)]
 mod tests {
+    use std::{error::Error, io};
+
     use nanogpt_schema::{TokenKind, WorkerRequest, WorkerResponse};
 
     use crate::app::{
@@ -14,12 +16,13 @@ mod tests {
         spike,
     };
 
-    fn run_response(text: &str) -> WorkerResponse {
+    type TestResult = Result<(), Box<dyn Error>>;
+
+    fn run_response(text: &str) -> Result<WorkerResponse, spike::SpikeError> {
         spike::handle_worker_request(WorkerRequest::Run {
             request_id: 7,
             text: text.to_owned(),
         })
-        .expect("the deterministic spike run should succeed")
     }
 
     fn assert_user_selection(state: &AppState, head: usize) {
@@ -78,7 +81,7 @@ mod tests {
     }
 
     #[test]
-    fn run_complete_defaults_to_last_byte_and_clamps_old_coordinates() {
+    fn run_complete_defaults_to_last_byte_and_clamps_old_coordinates() -> TestResult {
         let mut state = AppState::default();
         state.selection.layer = usize::MAX;
         state.selection.head = usize::MAX;
@@ -89,9 +92,7 @@ mod tests {
         state.ui.selected_feature = 42;
         state.ui.detail_operation = Some(7);
 
-        let requests = state
-            .apply(run_response("ab"))
-            .expect("run completion should apply");
+        let requests = state.apply(run_response("ab")?)?;
 
         assert_eq!(state.selection.layer, 0);
         assert_eq!(state.selection.head, 0);
@@ -103,52 +104,50 @@ mod tests {
         assert_eq!(state.ui.detail_operation, None);
         assert!(state.ui.prompt_expanded);
         assert_eq!(requests.len(), 1);
+        Ok(())
     }
 
     #[test]
-    fn selector_requests_clamp_to_loaded_run_bounds() {
+    fn selector_requests_clamp_to_loaded_run_bounds() -> TestResult {
         let mut state = AppState::default();
-        state
-            .apply(run_response("ab"))
-            .expect("run completion should apply");
+        state.apply(run_response("ab")?)?;
 
         let layer_request = state
             .select_layer(usize::MAX)
-            .expect("a loaded run should produce a block request");
+            .ok_or_else(|| io::Error::other("loaded run did not produce a block request"))?;
         assert!(matches!(
             layer_request,
             WorkerRequest::InspectBlock { layer: 0, .. }
         ));
         let head_request = state
             .select_head(usize::MAX)
-            .expect("a loaded run should produce a head request");
+            .ok_or_else(|| io::Error::other("loaded run did not produce a head request"))?;
         assert!(matches!(
             head_request,
             WorkerRequest::InspectAttentionHead { head: 0, .. }
         ));
         let token_request = state
             .select_cell(usize::MAX, usize::MAX)
-            .expect("a loaded run should produce a token request");
+            .ok_or_else(|| io::Error::other("loaded run did not produce a token request"))?;
         assert!(matches!(
             token_request,
             WorkerRequest::InspectToken { token: 3, .. }
         ));
         assert_eq!(state.selection.token, 3);
         assert_eq!(state.selection.key, 3);
+        Ok(())
     }
 
     #[test]
-    fn bos_eos_only_completion_is_safe_and_detail_trace_preserves_user_coordinate() {
-        let mut response = run_response("ab");
+    fn bos_eos_only_completion_is_safe_and_detail_trace_preserves_user_coordinate() -> TestResult {
+        let mut response = run_response("ab")?;
         let WorkerResponse::RunComplete { summary, .. } = &mut response else {
-            panic!("spike must return a run completion");
+            return Err(io::Error::other("spike did not return a run completion").into());
         };
         summary.tokens.retain(|token| token.kind != TokenKind::Byte);
 
         let mut state = AppState::default();
-        state
-            .apply(response)
-            .expect("special-token-only summary should be accepted");
+        state.apply(response)?;
         assert_eq!(state.selection.token, 1);
         assert_eq!(state.selection.key, 1);
 
@@ -158,28 +157,23 @@ mod tests {
         state.ui.inspector_tab = InspectorTab::Tensor;
         state.ui.selected_feature = 3;
 
-        state
-            .apply(block_response())
-            .expect("block detail should apply");
+        state.apply(block_response()?)?;
         assert_user_selection(&state, 0);
         let request = state
             .select_head(usize::MAX)
-            .expect("the loaded block should produce a head request");
+            .ok_or_else(|| io::Error::other("loaded block did not produce a head request"))?;
         assert!(matches!(
             request,
             WorkerRequest::InspectAttentionHead { head: 3, .. }
         ));
         assert_user_selection(&state, 3);
 
-        state
-            .apply(attention_response())
-            .expect("head detail should apply");
+        state.apply(attention_response()?)?;
         assert_user_selection(&state, 3);
-        state
-            .apply(token_response())
-            .expect("token detail should apply");
+        state.apply(token_response()?)?;
         assert_user_selection(&state, 3);
         assert!(!state.ui.prompt_expanded);
+        Ok(())
     }
 
     #[test]
