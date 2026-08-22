@@ -8,7 +8,7 @@
   "model_id": "nanogpt-edu",
   "nanogpt_commit": "3adf61e154c3fe3fca428ad6bc3818b27a3b8291",
   "parameter_count": 118208,
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "tokenizer_file": "tokenizer.json",
   "weights_file": "model.safetensors",
   "weights_sha256": "8fd76c662da0d0cb9fe1035cb205b1a071ad95f9e22d116578a0a8bec0754be9"

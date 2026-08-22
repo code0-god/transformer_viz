@@ -13,15 +13,15 @@ pub use protocol::{WorkerErrorCode, WorkerRequest, WorkerResponse};
 pub use tensor::{FiniteF32, MaskSnapshot, TensorSnapshot, TensorStats};
 pub use token::{EncodedTokens, TokenId, TokenInfo, TokenKind};
 pub use trace::{
-    AttentionHeadTrace, BlockTrace, LayerSummary, LogitCandidate, LogitsTrace, MlpTrace,
-    OperationId, OperationTrace, RunSummary, SourceReference, TokenTrace, TraceMode,
+    AttentionHeadTrace, BlockTrace, EmbeddingTrace, LayerSummary, LogitCandidate, LogitsTrace,
+    MlpTrace, OperationId, OperationTrace, RunSummary, SourceReference, TokenTrace, TraceMode,
 };
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 /// Current serialized trace and Worker protocol version.
-pub const TRACE_SCHEMA_VERSION: &str = "1.0.0";
+pub const TRACE_SCHEMA_VERSION: &str = "1.1.0";
 
 /// A schema version proven to match this build.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

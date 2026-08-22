@@ -31,8 +31,20 @@ fn worker_request_variants_round_trip_with_exact_u64_flow() -> Result<(), serde_
 #[test]
 fn state_and_error_response_variants_round_trip_with_exact_tags() -> Result<(), serde_json::Error> {
     // Given: exact non-trace response JSON.
-    let model =
-        json!({"name":"tiny","corpus":"fixture","nanogpt_commit":"abc","parameter_count":42});
+    let model = json!({
+        "name":"tiny",
+        "corpus":"fixture",
+        "nanogpt_commit":"abc",
+        "parameter_count":42,
+        "config": {
+            "block_size":24,
+            "vocab_size":259,
+            "n_layer":2,
+            "n_head":4,
+            "n_embd":64,
+            "bias":true
+        }
+    });
     let values = [
         json!({"type":"initializing","phase":"weights"}),
         json!({"type":"ready","model":model}),

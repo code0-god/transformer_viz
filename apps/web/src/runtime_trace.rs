@@ -3,12 +3,13 @@
 use candle_core::Tensor;
 use nanogpt_model::{CausalMask, ForwardOutput, TraceSink, TraceTensor};
 use nanogpt_schema::{
-    AttentionHeadTrace, BlockTrace, FiniteF32, LayerSummary, LogitCandidate, LogitsTrace,
-    MaskSnapshot, MlpTrace, OperationTrace, RunSummary, SchemaVersion, SourceReference,
-    TensorSnapshot, TokenInfo, TokenTrace,
+    AttentionHeadTrace, BlockTrace, EmbeddingTrace, FiniteF32, LayerSummary, MaskSnapshot,
+    MlpTrace, OperationTrace, RunSummary, SchemaVersion, TensorSnapshot, TokenInfo, TokenTrace,
 };
 
 use crate::runtime_error::RuntimeError;
+pub(crate) use crate::runtime_trace_support::TokenSelection;
+use crate::runtime_trace_support::{logits_trace, snapshot, source};
 
 #[derive(Debug)]
 struct CapturedTensor {
@@ -65,8 +66,13 @@ impl TraceCapture {
         duration_ms: FiniteF32,
     ) -> Result<RunSummary, RuntimeError> {
         self.finish()?;
-        self.named("embedding_sum")?;
-        self.named("final_layer_norm")?;
+        let embeddings = EmbeddingTrace {
+            token: self.named("token_embeddings")?.clone(),
+            position: self.named("position_embeddings")?.clone(),
+            sum: self.named("embedding_sum")?.clone(),
+            source: source(nanogpt_schema::OperationId::Embedding)?,
+        };
+        let final_layer_norm = self.named("final_layer_norm")?.clone();
         let mut layers = Vec::new();
         for layer in 0..self.layer_count() {
             layers.push(LayerSummary {
@@ -86,6 +92,8 @@ impl TraceCapture {
             tokens,
             layers,
             duration_ms,
+            embeddings,
+            final_layer_norm,
             logits: logits_trace(output)?,
         })
     }
@@ -205,68 +213,4 @@ impl TraceCapture {
             .max()
             .map_or(0, |layer| layer + 1)
     }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct TokenSelection<'a> {
-    pub run_id: u64,
-    pub layer: usize,
-    pub head: usize,
-    pub token: usize,
-    pub tokens: &'a [TokenInfo],
-}
-
-fn snapshot(name: &str, tensor: &Tensor) -> Result<TensorSnapshot, RuntimeError> {
-    let raw = tensor.contiguous()?.flatten_all()?.to_vec1::<f32>()?;
-    let values = raw
-        .into_iter()
-        .map(FiniteF32::new)
-        .collect::<Result<Vec<_>, _>>()?;
-    Ok(TensorSnapshot::new(
-        name.to_owned(),
-        tensor.dims().to_vec(),
-        values,
-    )?)
-}
-
-fn logits_trace(output: &ForwardOutput) -> Result<LogitsTrace, RuntimeError> {
-    let values = output
-        .top_k
-        .iter()
-        .map(|candidate| FiniteF32::new(candidate.logit))
-        .collect::<Result<Vec<_>, _>>()?;
-    let logits = TensorSnapshot::new("top_10_logits".to_owned(), vec![values.len()], values)?;
-    let top_k = output
-        .top_k
-        .iter()
-        .map(|candidate| {
-            Ok(LogitCandidate {
-                token_id: candidate.token_id,
-                display: token_display(candidate.token_id.0),
-                logit: FiniteF32::new(candidate.logit)?,
-                probability: FiniteF32::new(candidate.probability)?,
-            })
-        })
-        .collect::<Result<Vec<_>, RuntimeError>>()?;
-    Ok(LogitsTrace {
-        logits,
-        top_k,
-        source: source(nanogpt_schema::OperationId::Logits)?,
-    })
-}
-
-fn token_display(id: u32) -> String {
-    match id {
-        0 => "<BOS>".to_owned(),
-        1 => "<EOS>".to_owned(),
-        2 => "<UNK>".to_owned(),
-        3..=258 => {
-            char::from_u32(id - 3).map_or_else(|| "<?>".to_owned(), |value| value.to_string())
-        }
-        _ => "<?>".to_owned(),
-    }
-}
-
-fn source(operation: nanogpt_schema::OperationId) -> Result<SourceReference, RuntimeError> {
-    Ok(crate::source_map::source_reference(operation)?)
 }

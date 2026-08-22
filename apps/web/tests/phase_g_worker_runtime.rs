@@ -3,6 +3,7 @@
 use nanogpt_schema::{WorkerErrorCode, WorkerRequest, WorkerResponse};
 use transformer_viz_web::runtime::{AssetBundle, WorkerRuntime, error_response};
 use transformer_viz_web::runtime_error::RuntimeError;
+use transformer_viz_web::trace_lookup::TraceLookup;
 
 fn assets() -> AssetBundle {
     AssetBundle {
@@ -11,6 +12,42 @@ fn assets() -> AssetBundle {
         tokenizer: include_str!("../public/models/edu/tokenizer.json").to_owned(),
         weights: include_bytes!("../public/models/edu/model.safetensors").to_vec(),
     }
+}
+
+#[test]
+fn ready_metadata_and_summary_expose_loaded_config_and_stable_tensors() -> Result<(), RuntimeError>
+{
+    let mut runtime = WorkerRuntime::default();
+    let ready = runtime.initialize(&assets())?;
+    let WorkerResponse::Ready { model } = ready else {
+        return Err(RuntimeError::InvalidSelector);
+    };
+    assert_eq!(model.config.n_layer, 2);
+    assert_eq!(model.config.n_head, 4);
+    assert_eq!(model.config.n_embd, 64);
+
+    let response = runtime.handle(WorkerRequest::Run {
+        request_id: 1,
+        text: "cat".to_owned(),
+    })?;
+    let WorkerResponse::RunComplete { summary, .. } = response else {
+        return Err(RuntimeError::InvalidSelector);
+    };
+    assert_eq!(summary.embeddings.token.id, "token_embeddings");
+    assert_eq!(summary.embeddings.position.id, "position_embeddings");
+    assert_eq!(summary.embeddings.sum.id, "embedding_sum");
+    assert_eq!(summary.final_layer_norm.id, "final_layer_norm");
+    let lookup = TraceLookup::new().with_summary(&summary);
+    assert_eq!(
+        lookup.embeddings().map(|trace| trace.sum.id.as_str()),
+        Some("embedding_sum")
+    );
+    assert_eq!(
+        lookup.final_layer_norm().map(|tensor| tensor.id.as_str()),
+        Some("final_layer_norm")
+    );
+    assert_eq!(lookup.logits().map(|trace| trace.top_k.len()), Some(10));
+    Ok(())
 }
 
 fn initialized() -> Result<WorkerRuntime, RuntimeError> {

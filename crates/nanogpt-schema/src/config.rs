@@ -70,6 +70,8 @@ pub struct ModelMetadata {
     pub nanogpt_commit: String,
     /// Learned parameter count.
     pub parameter_count: u64,
+    /// Loaded model architecture parameters.
+    pub config: GptConfig,
 }
 
 /// Deterministic tokenizer algorithm identifier.

@@ -1,4 +1,4 @@
-# Trace schema 1.0.0
+# Trace schema 1.1.0
 
 `nanogpt-schema` is the machine-consumed contract shared by the Leptos app, Worker, native tests,
 and model trace capture. Serde enums use a snake-case `type` discriminator and reject unknown
@@ -14,8 +14,12 @@ user-readable message, and one stable code: `unsupported_version`, `invalid_requ
 `not_initialized`, `asset_unavailable`, `checksum_mismatch`, `tokenization`, `inference`, or
 `cancelled`.
 
-`run_complete` returns tokens, per-layer statistics, measured execution time, and logits Top-K.
-Detailed requests address a cached run ID. This keeps the initial response bounded while allowing
+`run_complete` returns tokens, per-layer statistics, measured execution time, the captured
+`token_embeddings`, `position_embeddings`, `embedding_sum`, and `final_layer_norm` tensors, and
+logits Top-K. The embedding tensors are grouped in `EmbeddingTrace`; final normalization and logits
+remain direct summary fields. Ready metadata includes the loaded `GptConfig`, so consumers do not
+hard-code architecture dimensions. Detailed requests address a cached run ID. This keeps the
+initial response bounded while allowing
 the UI to replay a block, head, or token without transferring every tensor eagerly.
 
 ## Tensor and mask representation
@@ -28,6 +32,12 @@ rejects NaN and infinity before JSON serialization.
 allowed. A blocked future position is therefore distinct from a valid score or probability of
 zero. Attention detail exposes Q, K, V, raw QK-transpose scores, scaled scores, mask, softmax
 probabilities, and Attention-times-V output.
+
+Browser runtime consumers use `TraceLookup` to address tensors by stable `TensorSnapshot.id`, not
+`BlockTrace.operations` positions. Operation lookup takes both `OperationId` and tensor ID because
+one operation can emit multiple tensors. Missing responses, IDs, invalid shapes, and out-of-range
+selectors return typed errors. Checked helpers interpret `[B,T,C]` and `[B,H,T,D]` tensors and
+select token/head rows without model arithmetic.
 
 ## Source-linked operations
 

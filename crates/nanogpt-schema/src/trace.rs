@@ -2,7 +2,6 @@ use crate::{
     FiniteF32, MaskSnapshot, SchemaVersion, TensorSnapshot, TensorStats, TokenId, TokenInfo,
 };
 use serde::{Deserialize, Serialize};
-
 /// Exact amount and selector of trace detail requested from inference.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
@@ -33,7 +32,6 @@ pub enum TraceMode {
         token: usize,
     },
 }
-
 /// Stable identifier for a nanoGPT forward-pass operation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -59,7 +57,6 @@ pub enum OperationId {
     /// Tied language-model head.
     Logits,
 }
-
 /// Canonical source code location for an educational operation.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -73,7 +70,6 @@ pub struct SourceReference {
     /// Last one-based line.
     pub end_line: usize,
 }
-
 /// Source-linked operation summary.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -87,7 +83,6 @@ pub struct OperationTrace {
     /// Output statistics.
     pub output: TensorStats,
 }
-
 /// Summary of one Transformer layer.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -103,7 +98,6 @@ pub struct LayerSummary {
     /// Layer output statistics.
     pub output: TensorStats,
 }
-
 /// Detailed values for one causal attention head.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -131,7 +125,6 @@ pub struct AttentionHeadTrace {
     /// Canonical source location.
     pub source: SourceReference,
 }
-
 /// Detailed MLP expansion, activation, and projection values.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -149,7 +142,6 @@ pub struct MlpTrace {
     /// Canonical source location.
     pub source: SourceReference,
 }
-
 /// One candidate from the model's output distribution.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -163,7 +155,6 @@ pub struct LogitCandidate {
     /// Softmax probability.
     pub probability: FiniteF32,
 }
-
 /// Final logits and ranked candidate tokens.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -175,7 +166,19 @@ pub struct LogitsTrace {
     /// Canonical source location.
     pub source: SourceReference,
 }
-
+/// Token, position, and summed embeddings captured at model input.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EmbeddingTrace {
+    /// Token embedding lookup output.
+    pub token: TensorSnapshot,
+    /// Position embedding lookup output.
+    pub position: TensorSnapshot,
+    /// Element-wise embedding sum emitted by the model.
+    pub sum: TensorSnapshot,
+    /// Canonical source location.
+    pub source: SourceReference,
+}
 /// Summary returned after a complete inference run.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -190,10 +193,13 @@ pub struct RunSummary {
     pub layers: Vec<LayerSummary>,
     /// Measured model inference duration in milliseconds.
     pub duration_ms: FiniteF32,
+    /// Input embedding tensors captured by stable ID.
+    pub embeddings: EmbeddingTrace,
+    /// Final layer-normalization output captured by stable ID.
+    pub final_layer_norm: TensorSnapshot,
     /// Final output distribution.
     pub logits: LogitsTrace,
 }
-
 /// Detailed trace for one Transformer block.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -213,7 +219,6 @@ pub struct BlockTrace {
     /// Block output after residual addition.
     pub output: TensorSnapshot,
 }
-
 /// Detailed trace for one token selection.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

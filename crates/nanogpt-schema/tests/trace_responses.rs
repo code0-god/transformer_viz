@@ -1,9 +1,9 @@
 //! Exact trace-bearing Worker response variants.
 
 use nanogpt_schema::{
-    AttentionHeadTrace, BlockTrace, FiniteF32, LogitsTrace, MaskSnapshot, MlpTrace, OperationId,
-    OperationTrace, RunSummary, SchemaError, SchemaVersion, SourceReference, TensorSnapshot,
-    TensorStats, TokenId, TokenInfo, TokenKind, TokenTrace, WorkerResponse,
+    AttentionHeadTrace, BlockTrace, EmbeddingTrace, FiniteF32, LogitsTrace, MaskSnapshot, MlpTrace,
+    OperationId, OperationTrace, RunSummary, SchemaError, SchemaVersion, SourceReference,
+    TensorSnapshot, TensorStats, TokenId, TokenInfo, TokenKind, TokenTrace, WorkerResponse,
 };
 use serde_json::json;
 
@@ -106,6 +106,13 @@ fn trace_worker_response_contains_every_exact_variant() -> Result<(), Box<dyn st
         tokens: vec![token_info()],
         layers: Vec::new(),
         duration_ms: FiniteF32::new(0.0)?,
+        embeddings: EmbeddingTrace {
+            token: snapshot("token_embeddings")?,
+            position: snapshot("position_embeddings")?,
+            sum: snapshot("embedding_sum")?,
+            source: source(),
+        },
+        final_layer_norm: snapshot("final_layer_norm")?,
         logits: logits()?,
     };
     let responses = [

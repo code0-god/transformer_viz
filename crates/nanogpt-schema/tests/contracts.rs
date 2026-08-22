@@ -1,9 +1,9 @@
 //! Exact Phase C public names and finite snapshot contracts.
 
 use nanogpt_schema::{
-    AttentionHeadTrace, BlockTrace, FiniteF32, GptConfig, LayerSummary, LogitsTrace, MaskSnapshot,
-    MlpTrace, OperationId, RunSummary, SchemaError, SourceReference, TRACE_SCHEMA_VERSION,
-    TensorSnapshot, TensorStats, TokenInfo, TokenTrace,
+    AttentionHeadTrace, BlockTrace, EmbeddingTrace, FiniteF32, GptConfig, LayerSummary,
+    LogitsTrace, MaskSnapshot, MlpTrace, ModelMetadata, OperationId, RunSummary, SchemaError,
+    SourceReference, TRACE_SCHEMA_VERSION, TensorSnapshot, TensorStats, TokenInfo, TokenTrace,
 };
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json::json;
@@ -15,6 +15,7 @@ fn every_required_binding_type_is_a_concrete_serde_contract() {
     // Given: the complete public type list consumed by model, Worker, and UI crates.
     // When: each type is constrained as an independently serializable concrete type.
     assert_serde_contract::<GptConfig>();
+    assert_serde_contract::<EmbeddingTrace>();
     assert_serde_contract::<TokenInfo>();
     assert_serde_contract::<RunSummary>();
     assert_serde_contract::<LayerSummary>();
@@ -82,8 +83,56 @@ fn tensor_snapshot_mask_and_source_preserve_finite_explicit_fields()
     assert_eq!(value["tensor"]["stats"]["mean"], json!(0.5));
     assert_eq!(value["mask"]["allowed"], json!([true, false, true, true]));
     assert_eq!(value["source"]["start_line"], 52);
-    assert_eq!(TRACE_SCHEMA_VERSION, "1.0.0");
+    assert_eq!(TRACE_SCHEMA_VERSION, "1.1.0");
     Ok(())
+}
+
+#[test]
+fn guided_learning_contract_carries_embeddings_and_real_model_config()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tensor = TensorSnapshot::new(
+        "token_embeddings".to_owned(),
+        vec![1],
+        vec![FiniteF32::new(0.0)?],
+    )?;
+    let embedding = EmbeddingTrace {
+        token: tensor.clone(),
+        position: tensor.clone(),
+        sum: tensor,
+        source: SourceReference {
+            file: "model.py".to_owned(),
+            symbol: "transformer.wte".to_owned(),
+            start_line: 1,
+            end_line: 1,
+        },
+    };
+    let config = GptConfig {
+        block_size: 24,
+        vocab_size: 259,
+        n_layer: 2,
+        n_head: 4,
+        n_embd: 16,
+        bias: true,
+    };
+    let metadata = ModelMetadata {
+        name: "edu".to_owned(),
+        corpus: "test".to_owned(),
+        nanogpt_commit: "abc".to_owned(),
+        parameter_count: 1,
+        config: config.clone(),
+    };
+    assert_eq!(embedding.token.id, "token_embeddings");
+    assert_eq!(metadata.config, config);
+    Ok(())
+}
+
+#[test]
+fn old_schema_version_remains_rejected() {
+    let result = serde_json::from_value::<nanogpt_schema::SchemaVersion>(json!("1.0.0"));
+    assert!(matches!(
+        result,
+        Err(error) if error.to_string().contains("unsupported schema version '1.0.0'")
+    ));
 }
 
 #[test]

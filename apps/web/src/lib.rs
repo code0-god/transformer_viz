@@ -11,9 +11,16 @@ pub mod runtime_error;
 pub mod runtime_timer;
 #[doc(hidden)]
 pub mod runtime_trace;
+#[doc(hidden)]
+pub mod runtime_trace_support;
 pub mod source_map;
 pub mod spike;
+pub mod trace_lookup;
 pub mod visualization;
+
+#[cfg(test)]
+#[path = "trace_lookup_tests.rs"]
+mod trace_lookup_tests;
 
 use thiserror::Error;
 

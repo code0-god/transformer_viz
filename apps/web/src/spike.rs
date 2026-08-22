@@ -2,8 +2,8 @@
 
 use candle_core::{D, Device, Tensor};
 use nanogpt_schema::{
-    FiniteF32, LayerSummary, LogitsTrace, ModelMetadata, OperationId, RunSummary, SchemaVersion,
-    TensorSnapshot, TokenizerConfig, WorkerErrorCode,
+    EmbeddingTrace, FiniteF32, GptConfig, LayerSummary, LogitsTrace, ModelMetadata, OperationId,
+    RunSummary, SchemaVersion, TensorSnapshot, TokenizerConfig, WorkerErrorCode,
 };
 pub use nanogpt_schema::{WorkerRequest, WorkerResponse};
 use nanogpt_tokenizer::{Tokenizer, TokenizerError};
@@ -108,6 +108,7 @@ pub fn handle_worker_request(request: WorkerRequest) -> Result<WorkerResponse, S
             let tokens = tokenizer.encode(&text).tokens;
             let spike = run_candle_spike()?;
             let source = crate::source_map::source_reference(OperationId::Attention)?;
+            let embedding_source = crate::source_map::source_reference(OperationId::Embedding)?;
             let summary = RunSummary {
                 schema_version: SchemaVersion::current(),
                 run_id: request_id,
@@ -120,6 +121,13 @@ pub fn handle_worker_request(request: WorkerRequest) -> Result<WorkerResponse, S
                     output: spike.layer_norm.stats.clone(),
                 }],
                 duration_ms: FiniteF32::new(0.0)?,
+                embeddings: EmbeddingTrace {
+                    token: spike.matmul.clone(),
+                    position: spike.reshape.clone(),
+                    sum: spike.transpose.clone(),
+                    source: embedding_source,
+                },
+                final_layer_norm: spike.layer_norm,
                 logits: LogitsTrace {
                     logits: spike.gelu,
                     top_k: Vec::new(),
@@ -164,5 +172,13 @@ pub fn spike_model_metadata() -> ModelMetadata {
             .trim()
             .to_owned(),
         parameter_count: 0,
+        config: GptConfig {
+            block_size: WORKER_TOKEN_LIMIT,
+            vocab_size: 259,
+            n_layer: 1,
+            n_head: 1,
+            n_embd: 2,
+            bias: true,
+        },
     }
 }

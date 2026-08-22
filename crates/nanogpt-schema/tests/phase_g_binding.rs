@@ -1,8 +1,8 @@
 //! Exact machine-consumed Phase G trace binding fields.
 
 use nanogpt_schema::{
-    FiniteF32, LogitsTrace, MaskSnapshot, RunSummary, SchemaVersion, SourceReference,
-    TensorSnapshot,
+    EmbeddingTrace, FiniteF32, LogitsTrace, MaskSnapshot, RunSummary, SchemaVersion,
+    SourceReference, TensorSnapshot,
 };
 use serde_json::json;
 
@@ -60,6 +60,18 @@ fn run_summary_serializes_finite_duration_ms() -> Result<(), Box<dyn std::error:
         tokens: Vec::new(),
         layers: Vec::new(),
         duration_ms: FiniteF32::new(12.5)?,
+        embeddings: EmbeddingTrace {
+            token: snapshot.clone(),
+            position: snapshot.clone(),
+            sum: snapshot.clone(),
+            source: SourceReference {
+                file: "model.py".to_owned(),
+                start_line: 1,
+                end_line: 1,
+                symbol: "embedding".to_owned(),
+            },
+        },
+        final_layer_norm: snapshot.clone(),
         logits: LogitsTrace {
             logits: snapshot,
             top_k: Vec::new(),

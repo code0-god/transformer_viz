@@ -59,6 +59,7 @@ pub(super) fn load_assets(
         corpus: "CC0 educational corpus".to_owned(),
         nanogpt_commit: manifest.nanogpt_commit,
         parameter_count: manifest.parameter_count,
+        config: config.clone(),
     };
     Ok((
         LoadedModel {
