@@ -94,8 +94,8 @@ fn cell_detail(
         <article class="cell-detail" aria-live="polite"><h3>{format!("선택 셀 q{query} × k{key}")}</h3>
             <dl class="detail-grid">
                 <div><dt>"head"</dt><dd>{head}</dd></div><div><dt>"D"</dt><dd>{head_size}</dd></div><div><dt>"√D scale"</dt><dd>{format!("1 / {:.6}", head_scale(head_size))}</dd></div>
-                <div><dt>"Q"</dt><dd>{vector_preview(&trace.query, query, head_size)}</dd></div><div><dt>"K"</dt><dd>{vector_preview(&trace.key, key, head_size)}</dd></div>
-                <div><dt>"Q·K"</dt><dd>{format_precise(raw)}</dd></div><div><dt>"scaled score"</dt><dd>{format_precise(scaled)}</dd></div><div><dt>"mask"</dt><dd>{if allowed { "허용" } else { "미래 차단" }}</dd></div><div><dt>"probability"</dt><dd>{format_precise(probability)}</dd></div>
+                <div><dt>"Q"</dt><dd>{vector_preview(&trace.query, query, head_size)}</dd></div><div><dt>"K"</dt><dd>{vector_preview(&trace.key, key, head_size)}</dd></div><div><dt>"V"</dt><dd>{vector_preview(&trace.value, key, head_size)}</dd></div>
+                <div><dt>"raw QKᵀ"</dt><dd>{format_precise(raw)}</dd></div><div><dt>"scaled score"</dt><dd>{format_precise(scaled)}</dd></div><div><dt>"mask"</dt><dd>{if allowed { "허용" } else { "미래 차단" }}</dd></div><div><dt>"softmax probability"</dt><dd>{format_precise(probability)}</dd></div><div><dt>"Attention × V"</dt><dd>{vector_preview(&trace.output, query, head_size)}</dd></div>
             </dl>
         </article>
     }
