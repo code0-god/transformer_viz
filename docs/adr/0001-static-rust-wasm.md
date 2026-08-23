@@ -1,6 +1,6 @@
 # ADR 0001: Static Rust/WASM application
 
-- Status: Accepted
+- Status: Superseded in UI-renderer scope by ADR 0006; static Rust/WASM Worker retained
 - Date: 2026-08-21
 
 ## Context

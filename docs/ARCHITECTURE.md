@@ -1,46 +1,45 @@
 # Architecture
 
-Transformer Viz is a backend-free static application. Leptos renders the Explorer on the main
-thread while a dedicated Rust/WASM Worker owns tokenization, Candle CPU inference, model weights,
-and trace capture. Tensor work therefore cannot block browser interaction.
+Transformer Viz is a backend-free static application. React renders semantic architecture and
+generation UI on the main thread while a dedicated Rust/WASM module Worker owns tokenization,
+Candle CPU inference, model weights, sampling, generation, and trace capture. Tensor work cannot
+block browser interaction.
 
 ## Workspace boundaries
 
-- `nanogpt-schema`: versioned model configuration, trace, request, and response contracts.
+- `apps/web`: React, strict TypeScript, Vite, KaTeX, semantic SVG, CSS, protocol guards, and
+  browser-only UI state.
+- `apps/worker`: Rust/WASM module Worker entry, bounded asset loading, request routing, generation
+  credits, and retained trace replay.
+- `nanogpt-schema`: canonical model configuration, trace, request, and response DTOs. `ts-rs`
+  generates the committed TypeScript bindings.
 - `nanogpt-tokenizer`: deterministic UTF-8 byte-fallback tokenization.
-- `nanogpt-model`: explicit nanoGPT-compatible Transformer and static asset loading.
+- `nanogpt-model`: explicit nanoGPT-compatible Candle Transformer and sampling.
 - `nanogpt-trace`: intermediate tensor capture and operation boundaries.
-- `transformer-viz-web`: Leptos CSR shell, Guided/Explore state, trace lookup/addressing, and Worker
-  binary. Native tests invoke the same runtime handler compiled into Worker WASM.
 
-Dependencies point inward from the web package to those responsibility crates. The pinned
-`reference/nanoGPT` submodule is outside the Cargo graph; it supplies provenance and golden fixtures
-only.
+The web package does not belong to the Cargo workspace and does not implement numerical behavior.
+The Worker depends inward on responsibility crates. The pinned `reference/nanoGPT` submodule is
+outside the Cargo graph and supplies provenance and golden fixtures only.
 
 ## Runtime flow
 
-1. Trunk loads the Leptos CSR application and starts `worker_loader.js` as a module Worker.
-2. The application sends a base-relative manifest URL through the typed serde protocol.
-3. The Worker resolves config, tokenizer, and safetensors relative to the manifest, fetches them
-   from the same origin, verifies SHA-256, and constructs the Candle CPU model.
-4. A run tokenizes UTF-8, executes the explicit forward path, returns `RunSummary`, and caches the
-   selected-layer input. Follow-up block/head/token requests replay from that cached run.
-5. Worker state flows through `TraceLookup` and the shared Guided/Explore focus into Main Canvas,
-   Inspector, Architecture Map, and Stage Rail.
-6. Guided presents 21 concepts in four groups. Explore addresses the same evidence through the
-   architecture hierarchy. The retained 18 detail boundaries remain stage-linked Inspector detail;
-   they are not a second curriculum.
+1. Vite loads the React module and creates the hashed TypeScript module Worker.
+2. React sends an absolute same-origin manifest URL through the generated typed protocol.
+3. The Worker derives the deployment model directory from its own URL, rejects redirects and URL
+   escapes, bounds streamed responses, verifies SHA-256, and constructs the Candle CPU model.
+4. Generation tokenizes UTF-8, executes one full-prefix forward, returns compact typed summaries,
+   and spends one exact continuation credit per accepted step.
+5. Selecting a generated step asks the Worker to reconstruct its retained full-forward trace
+   without sampling again.
+6. React renders validated metadata/trace data in Root, Transformer Block, and Self-Attention
+   surfaces. Unknown payloads and Worker script-load errors become visible error state.
 
 ## Browser-only and Worker-owned state
 
-Curriculum step, mode, playback position/speed, Inspector tab, selected feature, and Architecture
-Map disclosure are browser-only UI state. Previous/Next, group and step buttons, autoplay ticks,
-Inspector tabs, feature selectors, mode tabs, and Architecture Map disclosure do not send Worker
-requests.
-
-Layer, head, token, and interactive attention-cell changes may request detail for the current run.
-Those requests use cached trace replay; they do not rerun tokenization or the full model. Controls
-that need trace data remain disabled before a run and while the Worker is active.
+Architecture depth, selected layer/head/operation, form text, and responsive disclosure are
+browser-only state. Root/Block/Attention navigation and breadcrumbs do not send Worker requests.
+Current values come only from model metadata or a selected trace; unavailable trace values remain
+pending rather than being inferred.
 
 Generation is an exact one-credit state machine. A valid start authorizes one initial forward. Each
 accepted generated step grants only the matching continuation credit; stale request/run/step
@@ -73,29 +72,26 @@ The complete `OperationId` mapping is:
 | `FinalLayerNorm` / `final_layer_norm` | `GPT.forward` | 180-182 | `crates/nanogpt-model/src/model.rs` | `Gpt::finish_forward` |
 | `Logits` / `logits` | `GPT.forward` | 184-190 | `crates/nanogpt-model/src/model.rs` | `Gpt::finish_forward` |
 
-The 18 retained detail boundaries are tensor snapshots within these ten canonical operation
-identities: repeated Q/K/V, attention score/mask/probability/value, and MLP intermediate evidence
-share their owning `OperationId` and therefore its canonical source range. UI concepts such as
-tokenization, temperature, Top-K, generation softmax, sampling, append, and repeat are educational
-or generation-policy boundaries outside nanoGPT `model.py`; they deliberately have no invented
-`OperationId` or sampling source ID.
+Trace snapshots such as Q/K/V, attention score/mask/probability/value, and MLP intermediates share
+their owning `OperationId` and canonical source range. Tokenization, temperature, Top-K, sampling,
+append, and repeat are generation-policy boundaries outside nanoGPT `model.py`; they deliberately
+have no invented `OperationId` or sampling source ID.
 
 ## Rendering and scroll boundaries
 
-At 1280px and wider, the application is exactly one dynamic viewport (`100dvb`): Architecture Map,
-Main Canvas, and Inspector are three columns, Stage Rail closes the shell, the document does not
-scroll, and only named local regions overflow. From 768px through 1279px, Architecture Map is a
-closed-by-default keyboard disclosure drawer, Main Canvas and Inspector remain two columns, and
-Stage Rail follows below. Below 768px, document vertical scrolling returns, major regions become one
-column, Architecture Map remains a drawer, the compact transport is sticky, and reels/matrices own
-their horizontal overflow. No layout uses `100vh`.
+Root, Block, and Attention use deterministic SVG geometry with semantic HTML annotations. Desktop
+keeps diagrams and annotations readable without document horizontal overflow. Tablet and mobile
+allow named diagram regions to scroll inline while the document flows vertically. Startup,
+ready/error state, generation controls, Korean copy, and KaTeX formulas remain unclipped at 390x844.
+Breakpoints never change Worker ownership or model state.
 
 ## Deployment boundary
 
-The deliverable is `apps/web/dist`, produced by Trunk. Application, Worker, glue modules, model
-assets, and source-map data use base-relative same-origin URLs. `scripts/build-web.sh` validates both
-root and slash-delimited project-subpath builds. No backend, external model download, CDN, or Python
-runtime belongs in the deployed application.
+The deliverable is `apps/web/dist`, produced by Vite through `scripts/build-web.sh`. Application,
+Worker, WASM, KaTeX fonts, model assets, and source records use one configured same-origin base.
+Both `/` and `/transformer_viz/` releases pass static CSP policy and real-Chrome Worker checks. The
+HTML has one external module script and no inline script. No backend, CDN, external model download,
+or Python runtime belongs in the deployed application.
 
 ## Notation boundary
 
@@ -107,6 +103,9 @@ Worker protocol, persisted trace identity, numerical parity, or nanoGPT source m
 
 - Rust `1.94.0`
 - WASM target `wasm32-unknown-unknown`
-- Trunk `0.21.14`
+- wasm-bindgen CLI `0.2.127`
+- Node `22.22.0`
+- pnpm `11.22.0`
+- Binaryen `123.0.0`
 
-These values are mirrored in `rust-toolchain.toml`, bootstrap scripts, and workflows.
+These values are mirrored in toolchain files, package metadata, bootstrap scripts, and workflows.

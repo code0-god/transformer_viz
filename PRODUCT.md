@@ -8,9 +8,9 @@ web
 
 ## Stack
 
-Rust 1.94.0, Leptos CSR, WebAssembly, Rust Web Worker, Candle CPU f32 inference, Trunk 0.21.14,
-SVG, HTML, and CSS. Deployment is static-only and supports both root hosting and a GitHub Pages
-project subpath.
+React 19, strict TypeScript, Vite 8, KaTeX 0.18, Rust 1.94.0, WebAssembly, a Rust module Web
+Worker, Candle CPU f32 inference, SVG, HTML, and CSS. Deployment is static-only and supports both
+root hosting and a GitHub Pages project subpath.
 
 ## Users
 
@@ -39,8 +39,8 @@ assistant answer.
 
 Users open one static URL, wait for Worker and model readiness, enter a prompt, choose generation
 settings, and watch tokens stream into the continuation. Selecting a generated token replays that
-step's stored context without sampling again. Generate, Architecture, and Inspect remain linked
-inside one Explorer state. The default C001 educational prompt is `the cat`; the legacy
+step's stored context without sampling again. Generate and Architecture remain linked inside one
+React state. The default educational prompt is `the cat`; the legacy
 `the cat sat on the` phrase remains only as the full-forward golden/parity fixture.
 
 ## Capabilities and Constraints
@@ -59,8 +59,8 @@ inside one Explorer state. The default C001 educational prompt is `the cat`; the
   the Interactive Learning Lab redesign.
 - Runtime assets remain same-origin. No backend, external API, server inference, CDN, WebGPU, or
   thread-based inference is introduced.
-- React, TypeScript, D3, npm frontend dependencies, Canvas-only information, mock traces, and
-  arbitrary JSON replay are outside product scope.
+- D3, Canvas-only information, mock traces, arbitrary JSON replay, and TypeScript numerical
+  inference are outside product scope.
 - The model is nanoGPT-compatible, not GPT-2 124M and not a general-purpose language model.
 
 ## Brand Commitments
@@ -77,7 +77,6 @@ competitive, or promotional.
   `THIRD_PARTY_NOTICES.md`
 - Existing architecture and trace contracts: `docs/ARCHITECTURE.md`,
   `docs/TRACE_SCHEMA.md`
-- Pre-redesign Chrome evidence: `.omo/evidence/guided/baseline/`
 - Existing complete repository gate: `scripts/check.sh`
 
 No testimonials, customer claims, production-scale benchmarks, or broad model-quality claims are

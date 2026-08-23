@@ -1,6 +1,6 @@
 # ADR 0002: Candle in the browser Worker
 
-- Status: Accepted
+- Status: Accepted for Candle Worker; loader mechanism superseded by ADR 0006
 - Date: 2026-08-21
 
 ## Context

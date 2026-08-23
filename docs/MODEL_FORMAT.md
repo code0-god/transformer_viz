@@ -1,7 +1,7 @@
 # Educational model format
 
 The canonical bundle is `assets/models/edu`; `apps/web/public/models/edu` must be byte-identical.
-At release time Trunk copies it to `dist/models/edu`. All manifest filenames are relative to the
+At release time Vite copies it to `dist/models/edu`. All manifest filenames are relative to the
 manifest location so root and GitHub Pages subpath deployments use the same bundle.
 
 ## Manifest and configuration

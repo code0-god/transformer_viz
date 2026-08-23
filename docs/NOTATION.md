@@ -242,6 +242,24 @@ Value MatMul, attention probability와 Value의 행렬곱
 Scale, score를 head dimension 제곱근으로 나누기
 ```
 
+## KaTeX source policy
+
+`apps/web/src/domain/*Notation.ts` is the semantic source. Each trusted catalog entry provides:
+
+- `tex`: canonical KaTeX input,
+- `plainText`: diagram/fallback and exact non-math comparison text,
+- `accessibleName`: the operation meaning announced to assistive technology.
+
+`formulaCatalog` is the only route into `MathFormula`. KaTeX renders with `trust: false` and
+`htmlAndMathml`; browser gates require the matching MathML formula semantics. Prompt text,
+generated text, Worker errors, source excerpts, and arbitrary runtime strings are never rendered by
+KaTeX. A catalog render error falls back to `plainText` without changing protocol or model state.
+
+Diagram labels continue to use the canonical plain-text forms such as `@` and `ᵀ`. KaTeX TeX may
+use semantic equivalents such as adjacency for matrix multiplication and `^{\mathsf T}` for
+transpose. Tests compare the correct representation for each surface rather than extracting
+KaTeX's visual text nodes.
+
 ## Forbidden notation
 
 - `Q × Kᵀ`

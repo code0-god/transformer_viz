@@ -1,50 +1,41 @@
-# ADR 0006: Staged React UI renderer migration
+# ADR 0006: React UI renderer with Rust/WASM Worker
 
-- Status: Accepted
+- Status: Accepted and implemented
 - Date: 2026-08-23
 
 ## Context
 
-Root Architecture now needs richer SVG geometry, drill-down navigation, responsive panels,
-heatmaps, and controlled transitions. Rust remains the source of truth for model inference,
-tokenization, sampling, generation, trace capture, and Worker behavior. Rewriting those numerical
-paths in TypeScript would create two implementations and break parity guarantees.
+Root Architecture, Transformer Block, and Self-Attention need semantic SVG drill-down, responsive
+panels, accessible math, and deterministic browser interaction. Rust remains source of truth for
+tokenization, Candle inference, sampling, generation, and traces. Implementing numerical paths in
+TypeScript would create a second model and break parity guarantees.
 
-An isolated feasibility spike in `spikes/react-root-architecture` proved that Vite, React, and
-TypeScript can:
-
-- build a static relative-path SPA,
-- consume the canonical educational `config.json`,
-- render `Transformer Block × N` from `GptConfig.n_layer`,
-- keep `GptConfig` synchronized from Rust through `ts-rs`,
-- pass strict TypeScript, Biome, Bun, Vite, and real-Chrome checks.
-
-The spike did not replace the Leptos application or connect the production Worker protocol.
+A temporary React feasibility project established Vite/SVG viability. Production promotion was
+gated on typed real-Worker messages, generation/trace parity, root/subpath builds, CSP, browser
+readiness, and Worker integrity.
 
 ## Decision
 
-Proceed with a staged UI-renderer migration to Vite, React, TypeScript, semantic SVG, and CSS.
-Keep the Rust/WASM Worker and every numerical subsystem unchanged.
+Ship React 19, strict TypeScript, Vite 8, semantic SVG, CSS, and KaTeX on the main thread. Keep all
+numerical work in the separate Rust/WASM module Worker.
 
-Use `nanogpt-schema` as the canonical protocol definition. Generate TypeScript bindings with
-`ts-rs`; committed bindings must stay synchronized through Rust tests.
+Use `nanogpt-schema` as canonical protocol definition and generate committed TypeScript DTOs with
+`ts-rs`. Validate every Worker response before reducing it into React state. Treat architecture
+navigation as browser-only state; never infer missing trace values.
 
-Keep Leptos as the shipping UI until the React shell:
+KaTeX accepts only the trusted formula catalog. Each formula has canonical TeX, plain text, and an
+accessible label. Prompt/generated text and Worker strings never enter KaTeX.
 
-1. reproduces the approved Root Architecture,
-2. receives real typed Worker messages,
-3. matches generation and trace results for the same inputs,
-4. passes root and GitHub Pages subpath builds,
-5. passes browser readiness and Worker integrity gates.
-
-Only then may Leptos UI code be removed.
+The release gate proved the production React shell at `/` and `/transformer_viz/` with the real
+Worker, generation, replay, Root/Block/Attention navigation, KaTeX MathML, and failure handling.
+After that gate, the previous UI renderer and temporary feasibility project were removed.
 
 ## Consequences
 
-UI state, SVG geometry, responsive layout, navigation, panels, and animation may move to
-TypeScript. Candle, model loading, tokenizer output, sampling semantics, generation, traces,
-weights, and golden parity remain Rust-owned.
+UI state, SVG geometry, responsive layout, navigation, and formula presentation belong to
+TypeScript. Candle, model loading, tokenizer output, sampling semantics, generation credits,
+traces, weights, and golden parity remain Rust-owned.
 
-The repository temporarily carries two renderers. The spike stays isolated and non-production
-until parity gates promote it. No Block drill-down or attention detail begins before Root
-Architecture review.
+Cargo workspace contains Worker and numerical crates, not the web renderer. Vite is the only
+shipping web build. Generated schema freshness, Rust/TypeScript gates, static asset policy, and
+real-Chrome checks prevent either side of the boundary from drifting.

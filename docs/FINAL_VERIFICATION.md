@@ -1,251 +1,97 @@
-# Final verification: 21-step Guided + Explore Explorer
+# Final verification: React/Vite UI with Rust/WASM Worker
 
-Run this acceptance from the repository root on the pinned toolchain. A release is accepted only
-when every automated command and every real-browser item below passes against the same tree.
+Run acceptance from repository root with Node 22.22.0 active. No single green build substitutes for
+the real-browser checks in `scripts/check.sh`.
 
-| Contract | Acceptance scope | Final status |
-|---|---|---|
-| C001 | Happy generation path: ready Worker, default prompt `the cat`, exact generated-token stream and replay, 21-step Guided/Explore path, real tensor/source evidence, and no main-thread freeze or console panic | **PASS** |
-| C002 | Sampling/seed/stop edge contracts: deterministic modes, context limits, replacement and cancellation, stale-credit rejection, exact replay without resampling, finite/masked evidence, and recoverable Korean errors | **PASS** |
-| C003 | Full regression: numerical parity, schema/runtime tests, responsive/reflow/a11y/static root+subpath browser checks, Lighthouse and independent reviews, asset integrity, release gates, exact-tree receipts, and cleanup | **PASS** |
+## Deliverable contract
 
-The runtime/UI certification is bound to pre-record commit
-`6af8436985e48cb201cdb885f2eabc5b728e7e0c` and tree
-`121ee92f24a9e60ab21ee6bdf66d5203a5a55843`. The verification-record commit
-changes only this document and `README.md`; generated post-commit evidence proves every non-record
-tracked blob and runtime/source subtree remains byte-identical. Its hash is intentionally recorded
-outside tracked content to avoid a self-reference.
+- React/TypeScript/Vite is the only shipping UI.
+- Rust/WASM module Worker exclusively owns tokenization, Candle inference, generation, sampling,
+  and trace reconstruction.
+- Generated `ts-rs` DTOs and runtime guards enforce the typed boundary.
+- Root Architecture, Transformer Block, Self-Attention, Prompt/Generate/Stop, decoded
+  continuation, and selected-step replay use real model state.
+- `/` and `/transformer_viz/` releases contain only same-origin static runtime assets.
+- KaTeX renders only trusted catalog formulas and emits MathML; prompt/runtime strings remain text.
+- Previous UI renderer/build files and temporary feasibility project are absent.
 
-Frozen evidence:
-
-- C001 manifest:
-  `.omo/evidence/generation/c001/manifest.json`, SHA-256
-  `ce5d5851d7bfe8f26a41d6553b6d7123a54ebe598f48db1da8ffc420cdb347aa`.
-- C002 manifest:
-  `.omo/evidence/generation/c002/manifest.json`, SHA-256
-  `7e4397fde5fc2b18efce65eee8b773f822a0800c998cffeb19880bcaa8e01180`.
-- C001/C002 parent audit:
-  `.omo/evidence/generation/final/c001-c002-exact-tree-audit.txt`.
-- C003 executable-gate packet:
-  `.omo/evidence/generation/c003-failed-st_01a02b89-6af8436`; its failed
-  publication correctly recorded the stale-doc/history blockers closed by this record. Final C003
-  is published after this commit under `.omo/evidence/generation/c003/`.
-- Exact-candidate visual packet:
-  `.omo/evidence/generation/.visual-staging-st_01a02a85-6af8436-finalrecapture`,
-  top-manifest SHA-256
-  `4127d90f2eadb5b7620ac50bb002bb50c79f43a3efae291c171533b4398ef224`.
-- Independent goal-readiness `st_01a02bb9`, visual/design `st_01a02bba` (0.97),
-  accessibility-persona `st_01a02bbb` (0.93), hands-on QA `st_01a02b6f`,
-  corrective code `st_01a02b70`, security `st_01a02b73`, and corrected context
-  `st_01a02b71` reviews: PASS.
-
-The final root bundle measures **4,012,429 bytes uncompressed** and **1,464,031 bytes
-deterministic per-resource gzip**. Six mobile Lighthouse performance runs have median LCP
-**1388.257 ms**, below the 2500 ms gate; six separate accessibility runs score 1.0.
-
-Independent browser review also found and closed a transport wedge: a seed above JavaScript's safe
-integer range could fail WASM serialization after pending state was recorded, and a local Worker
-`postMessage` exception could leave that state active. Commit
-`6af8436985e48cb201cdb885f2eabc5b728e7e0c` bounds browser seeds to
-`9_007_199_254_740_991` and rolls back the correlated pending request on local send failure.
-Corrective Rust tests, `scripts/browser_generation_transport.py`, `scripts/check.sh`, corrective
-code review, and repeated real-Chrome probes pass: the maximum input clamps and generates one
-token; forced send failure shows a recoverable Korean error with Generate enabled and
-`aria-busy=false`.
-
-## Release and source binding
-
-- nanoGPT upstream: `karpathy/nanoGPT` (MIT).
-- Pinned full commit from `reference/NANOGPT_COMMIT`:
-  `3adf61e154c3fe3fca428ad6bc3818b27a3b8291`.
-- Repository-pinned canonical source: `reference/nanoGPT/model.py`.
-- Public byte-identical source/license copies: `apps/web/public/reference/model.py` and
-  `apps/web/public/reference/LICENSE`.
-- Public/deployed reference checksum manifest: `apps/web/public/reference/SHA256SUMS`.
-- Serialized deployed source-map path (unchanged): `reference/model.py`.
-- Runtime source authority: `apps/web/public/models/edu/source_map.json`.
-- The source map contains exactly the ten `OperationId` entries documented in
-  `docs/ARCHITECTURE.md`; the 18 retained operation-detail boundaries resolve through those ten
-  ranges. Generation sampling concepts must not manufacture source IDs.
-
-## Executable automated gate
-
-Run each command from the repository root and preserve its output in the release evidence:
+## Canonical command
 
 ```sh
-cargo fmt --all -- --check
-cargo test --workspace
-cargo test -p nanogpt-model --test golden_parity
-uv run --python 3.12 tools/reference/test_assets.py
-cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo clippy --target wasm32-unknown-unknown -p transformer-viz-web --all-features -- -D warnings
-cargo build --workspace --release
-cargo check --target wasm32-unknown-unknown -p transformer-viz-web
-for asset in config.json manifest.json model.safetensors SHA256SUMS source_map.json tokenizer.json; do cmp "assets/models/edu/$asset" "apps/web/public/models/edu/$asset"; done
-(cd assets/models/edu && shasum -a 256 -c SHA256SUMS)
-for asset in model.py LICENSE; do cmp "reference/nanoGPT/$asset" "apps/web/public/reference/$asset"; done
-(cd apps/web/public/reference && shasum -a 256 -c SHA256SUMS)
-./scripts/build-web.sh / /tmp/transformer-viz-final-dist # includes real-Chrome Worker readiness
+./scripts/bootstrap.sh
 ./scripts/check.sh
 ```
 
-`scripts/check.sh` is the canonical one-command gate. It runs formatting, native workspace strict
-Clippy, WASM-target strict Clippy, workspace tests, native release, WASM check, canonical asset
-comparison/checksums, dependency policy, and an isolated Trunk release. Its temporary dist directory
-is removed by its EXIT trap. Remove `/tmp/transformer-viz-final-dist` after browser acceptance.
+`check.sh` covers:
 
-Run Pyright separately for the audit-hardening Python files. The canonical browser/release scripts
-use the base Python 3 environment; they belong to the same release surface whose runtime gates also
-require Chrome/Chromium as documented in the README. The optional reference tools require their
-pinned packages, so analyze them in an isolated `uv` environment:
+1. exact Node/pnpm/wasm-bindgen/Binaryen versions and frozen dependencies,
+2. generated TypeScript binding freshness,
+3. Biome, TypeScript, and Vitest,
+4. rustfmt, native/WASM strict Clippy, workspace tests, release build, and Worker target check,
+5. canonical model/reference copies, checksums, source pin, and golden parity,
+6. root and project-subpath Vite builds,
+7. compiled Worker manifest trust anchor,
+8. CSP and same-origin JS/CSS/WASM/KaTeX font/model/reference policy,
+9. real-Chrome readiness and Worker script-load/redirect/bounded-response failures,
+10. real generation, replay transport, Root/Block/Attention navigation, notation, responsive
+    layout, and no document overflow.
 
-```sh
-pyright $(git diff --name-only 241ebaf..HEAD -- 'scripts/*.py')
-uv run --isolated --python 3.12 --with pyright --with-requirements tools/reference/requirements.txt pyright $(git diff --name-only 241ebaf..HEAD -- 'tools/reference/*.py')
-```
-
-The isolated reference-tool command does not add Python packages, `uv`, or Pyright to the deployed
-static app's prerequisites. It also does not change the canonical release prerequisites: Python 3
-and Chrome/Chromium remain required for the browser/release gates.
-
-## Isolated static and browser gates
-
-Build root and project-subpath bundles into separate hosts:
+## Focused commands
 
 ```sh
-rm -rf /tmp/transformer-viz-root /tmp/transformer-viz-subpath
+pnpm --dir apps/web lint
+pnpm --dir apps/web typecheck
+pnpm --dir apps/web test
+
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo clippy --target wasm32-unknown-unknown -p transformer-viz-worker --all-features -- -D warnings
+cargo test --workspace
+cargo test -p nanogpt-model --test golden_parity
+cargo build --workspace --release
+cargo check --target wasm32-unknown-unknown -p transformer-viz-worker
+
 ./scripts/build-web.sh / /tmp/transformer-viz-root
-./scripts/build-web.sh /transformer_viz/ /tmp/transformer-viz-subpath/transformer_viz
+./scripts/build-web.sh /transformer_viz/ /tmp/transformer-viz-subpath
 ```
 
-Serve each host in turn (server command in one terminal, verifier in a second), then stop it. The
-verifier requires same-origin/base-prefix requests, zero failed requests/console/page errors, exact
-breakpoints, keyboard behavior, reduced motion, Chrome AX landmarks, sticky geometry, and captures.
+`build-web.sh` itself runs binding freshness, Worker build/optimization, TypeScript gates, canonical
+asset checks, static policy, and real-Chrome readiness.
 
-```sh
-python3 -m http.server 8097 --bind 127.0.0.1 --directory /tmp/transformer-viz-root
-./scripts/browser_responsive.py --url http://127.0.0.1:8097/ --evidence .omo/evidence/phase9/root
-python3 -m http.server 8098 --bind 127.0.0.1 --directory /tmp/transformer-viz-subpath
-./scripts/browser_responsive.py --url http://127.0.0.1:8098/transformer_viz/ --evidence .omo/evidence/phase9/subpath
-```
+## Manual browser acceptance
 
-With the corresponding server running, capture both Lighthouse profiles:
+Use the built artifact through Chrome, not a mock:
 
-```sh
-lighthouse http://127.0.0.1:8097/ --quiet --chrome-flags='--headless=new' --output=json --output-path=.omo/evidence/phase9/lighthouse-mobile.json
-lighthouse http://127.0.0.1:8097/ --quiet --preset=desktop --chrome-flags='--headless=new' --output=json --output-path=.omo/evidence/phase9/lighthouse-desktop.json
-```
+1. Wait for Model Ready.
+2. Generate from a prompt and observe streamed continuation.
+3. Stop an active generation and start another.
+4. Select a generated step and verify replay does not generate another token.
+5. Drill Root → Transformer Block → Self-Attention.
+6. Select layer, head, Score MatMul, Causal Mask, and Value MatMul; return through breadcrumbs and
+   verify selections/prompt persist.
+7. Confirm formulas expose KaTeX/MathML while prompt/output remain literal.
+8. Repeat at desktop and 390x844 with no horizontal document overflow or clipped error detail.
+9. Confirm a blocked module Worker shows an alert and leaves Generate disabled.
 
-## Guided + Explore acceptance
+## Numerical and provenance acceptance
 
-- Guided exposes exactly 21 ordered concepts in exactly four groups: Input representation (3),
-  Transformer Block (9), Prediction (3), and Generation (6). Exactly one group reel is visible.
-- Previous, Next, autoplay, speed, group selection, direct step selection, and mode switching share
-  one curriculum cursor. The current step has text/shape treatment in addition to color and remains
-  visible in its local reel.
-- Guided and Explore are tabs for the same labeled tabpanel. Explore selects the shared architecture,
-  evidence, Inspector, and source focus; switching modes does not fork trace state.
-- Inspector exposes keyboard-operable Explanation, Tensor, and Source tabpanels. Architecture Map
-  and Inspector source correspondence agree with the canonical ten-entry map.
-- Starting generation grants exactly one initial forward credit. Each accepted step grants one exact
-  continuation credit. Stop, replacement, stale callbacks, replay, and replay errors cannot spend or
-  mint credit; replay shows retained evidence without resampling.
+- Golden prompt: `the cat sat on the`.
+- Elementwise contract: `abs(error) <= 1e-4 + 1e-4 * abs(Python)`.
+- Token IDs, masks, future-zero cells, shapes, and Top-K IDs match exactly.
+- Canonical nanoGPT commit equals `reference/NANOGPT_COMMIT`.
+- Model/reference copies and SHA-256 manifests verify byte-for-byte.
 
-## Responsive browser acceptance
+Measured tensor errors and fixture hashes live in [NUMERICAL_PARITY.md](NUMERICAL_PARITY.md).
 
-Test the exact breakpoint boundaries 1280/1279 and 768/767, plus 1440x900, 1024x768,
-720x450 (the 200%-zoom layout equivalent), 390x844, and 320px wide (the WCAG 400%-reflow
-equivalent).
+## Release receipt
 
-- **Desktop, >=1280:** the shell is exactly one `100dvb` viewport and never `100vh`; the document has
-  no horizontal or vertical scrollbar. Header, generation setup/timeline, context, Architecture Map,
-  Main Canvas, Inspector, and Stage Rail fit. Architecture Map/Main Canvas/Inspector remain three
-  columns. Only intended local regions scroll and the active curriculum step stays visible.
-- **Tablet, 768-1279:** Architecture Map is a keyboard-accessible drawer, closed by default, whose
-  open/close causes no Worker request or focus theft. Main Canvas and Inspector remain two columns;
-  Stage Rail is below them. Generation controls reflow without clipping or page-width overflow.
-- **Mobile, <768:** document vertical scrolling is enabled; all major regions are one column;
-  Architecture Map remains a drawer. DOM, focus, AX, and visual order is Main Canvas, compact
-  transport, Architecture Map, Inspector, then curriculum. The transport starts outside the initial
-  viewport and remains bottom-pinned through Architecture Map and Inspector scrolling; curriculum
-  alone owns the named navigation landmark. Step/token reels scroll locally on the inline axis. At
-  390x844 there is no horizontal document
-  overflow, clipped control, or clipped Korean/CJK copy.
-- Capture `desktop-1440x900.png`, `tablet-1024x768.png`, and `mobile-390x844.png`, plus waiting and
-  dense replay-backed Main Canvas captures at 1280x800 and 1440x900. Dense evidence must contribute
-  to the outer canvas scroll range without hidden `.stage-visual` clipping. Record zero page/Worker
-  console, exception, HTTP, and loading errors under `.omo/evidence/phase9/`.
+Before handoff, record:
 
-## Accessibility and visual acceptance
+- `git status --short`,
+- root artifact uncompressed and deterministic per-resource gzip sizes,
+- Worker WASM size,
+- exact commands and exit codes,
+- screenshots for Root, Block, Attention desktop/mobile,
+- any validator that could not run and why.
 
-- All visible interactive targets are at least 44px in both axes and have visible keyboard focus.
-- Mode and Inspector tabs retain tablist/tab/tabpanel semantics and roving keyboard behavior.
-- Current step and selected speed have non-color cues. Q/K/V and mask/sampling meanings retain
-  shape, label, pattern, or text cues in addition to color.
-- `prefers-reduced-motion: reduce` removes meaningful transitions/animations.
-- Revealing the active rail item scrolls its local reel without moving focus.
-- Korean/CJK uses wrapping that does not split or clip readable copy at 390px.
-
-## Manual, independent, and frozen-tree gates
-
-- In Chrome at 390x844 and 1440x900, set page zoom to 200%; complete Generate/Stop, generated-token
-  replay, mode/Inspector tabs, Architecture drawer, and rail transport with no clipped content or
-  horizontal document overflow. Repeat with OS/browser reduced motion and record the computed
-  reduction plus usable state changes.
-- Two independent review lanes inspect the frozen tree and fresh screenshots: one functional/
-  accessibility/source-correspondence review and one visual/CJK/responsive review. Record reviewer
-  IDs, findings, disposition, and confidence; the implementation author is not either lane.
-- Preserve the nine implementation commits through
-  `241ebafb55a0b12f885e6eb4345b730790195836`, followed unchanged by:
-  `6f84e45b50a5b3b3a8a9f0f39f186c76046fc81e` (first release hardening),
-  `3929833b870e16fc90226696b446d5839805a85f` (second quality hardening),
-  `27baccd3c9bf8ab8b3d2a470ee9c636c6583dacf` (certification repair),
-  `fddfeadca2bbabc06a2fd9b1ee96bcd56b5b062c` (measured-facts repair), and
-  `6af8436985e48cb201cdb885f2eabc5b728e7e0c` (seed-transport repair).
-- One fresh verification-record commit may then change only `README.md` and this document.
-- Do not amend, squash, rebase, reset, or otherwise rewrite preserved commits. Final accepted
-  history contains exactly 15 commits after `49e72ae`: nine implementation commits, five
-  remediation/release commits, and one verification-record commit. Run:
-
-```sh
-test "$(git rev-parse HEAD^)" = 6af8436985e48cb201cdb885f2eabc5b728e7e0c
-test "$(git rev-parse HEAD^^)" = fddfeadca2bbabc06a2fd9b1ee96bcd56b5b062c
-test "$(git rev-parse HEAD^^^)" = 27baccd3c9bf8ab8b3d2a470ee9c636c6583dacf
-test "$(git rev-parse HEAD^^^^)" = 3929833b870e16fc90226696b446d5839805a85f
-test "$(git rev-parse HEAD^^^^^)" = 6f84e45b50a5b3b3a8a9f0f39f186c76046fc81e
-test "$(git rev-parse HEAD^^^^^^)" = 241ebafb55a0b12f885e6eb4345b730790195836
-test "$(git rev-list --count 49e72ae..HEAD^^^^^^)" -eq 9
-test "$(git rev-list --count 49e72ae..HEAD^^^^^)" -eq 10
-test "$(git rev-list --count 49e72ae..HEAD^^^^)" -eq 11
-test "$(git rev-list --count 49e72ae..HEAD^^^)" -eq 12
-test "$(git rev-list --count 49e72ae..HEAD^^)" -eq 13
-test "$(git rev-list --count 49e72ae..HEAD^)" -eq 14
-test "$(git rev-list --count 49e72ae..HEAD)" -eq 15
-git log --reverse --format='%H %s' 49e72ae..HEAD^^^^^^ | tee .omo/evidence/generation/final/nine-phase-commits.txt
-git log -1 --format='%H %s' HEAD^^^^^ | tee .omo/evidence/generation/final/first-audit-hardening-commit.txt
-git log -1 --format='%H %s' HEAD^^^^ | tee .omo/evidence/generation/final/second-quality-hardening-commit.txt
-git log -1 --format='%H %s' HEAD^^^ | tee .omo/evidence/generation/final/certification-repair-commit.txt
-git log -1 --format='%H %s' HEAD^^ | tee .omo/evidence/generation/final/measured-facts-repair-commit.txt
-git log -1 --format='%H %s' HEAD^ | tee .omo/evidence/generation/final/seed-transport-fix-commit.txt
-git log -1 --format='%H %s' HEAD | tee .omo/evidence/generation/final/verification-record-commit.txt
-git log --reverse --format='%H %s' 49e72ae..HEAD | tee .omo/evidence/generation/final/fifteen-post-base-commits.txt
-git rev-parse HEAD HEAD^{tree} | tee .omo/evidence/generation/final/exact-tree.txt
-git status --short | tee .omo/evidence/generation/final/final-status.txt
-test ! -s .omo/evidence/generation/final/final-status.txt
-git remote -v | tee .omo/evidence/generation/final/remotes-no-push.txt
-```
-
-No push was performed.
-
-## Cleanup receipt
-
-The acceptance evidence must record that browser contexts and temporary profiles closed, the local
-server stopped, port 8097 has no listener, `apps/web/dist`, `/tmp/transformer-viz-final-dist`, browser
-test-result directories, and temporary profiles are absent, and no generated server process leaked.
-Include changed-file scope, Rust pure-LOC counts (all changed production/test modules <=250),
-screenshot hashes, Lighthouse summaries, independent verdicts, the exact-tree stamp, preserved
-nine-phase history receipt, both hardening receipts, certification and measured-facts repair
-receipts, seed-transport repair receipt, 15-commit stamp, non-record blob equality, and cleanup
-checks in `.omo/evidence/generation/final/cleanup.txt`. The final tracked worktree must be clean; do
-not push. The verification-record commit contains only `README.md` and
-`docs/FINAL_VERIFICATION.md`; generated evidence and dist output are never committed.
+Do not commit `apps/web/dist`, temporary browser profiles, or generated evidence directories.
