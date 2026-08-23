@@ -133,10 +133,10 @@ contains 76 regular files:
 
 | Measurement | Value |
 |---|---:|
-| Uncompressed | 4,105,325 bytes |
-| Deterministic per-resource gzip (`-9n`) | 1,959,197 bytes |
+| Uncompressed | 4,116,680 bytes |
+| Deterministic per-resource gzip (`-9n`) | 1,960,648 bytes |
 | Worker WASM | 1,941,051 bytes |
-| Artifact manifest SHA-256 | `f77d2bd4b6ab79f90596c677927d35864640619c88693e52853959d4e138bf63` |
+| Artifact manifest SHA-256 | `4f2ffa19711927e1a5f065529aee1636b9c3a936408910926ea0d613b01f60c6` |
 
 Reproduce with `python3 scripts/measure-static-transfer.py /tmp/transformer-viz-release-root`.
 
