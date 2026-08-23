@@ -7,10 +7,10 @@ use super::{AssetBundle, RuntimeError, WorkerRuntime};
 
 fn assets() -> AssetBundle {
     AssetBundle {
-        manifest: include_str!("../../web/public/models/edu/manifest.json").to_owned(),
-        config: include_str!("../../web/public/models/edu/config.json").to_owned(),
-        tokenizer: include_str!("../../web/public/models/edu/tokenizer.json").to_owned(),
-        weights: include_bytes!("../../web/public/models/edu/model.safetensors").to_vec(),
+        manifest: include_str!("../../../assets/models/edu/manifest.json").to_owned(),
+        config: include_str!("../../../assets/models/edu/config.json").to_owned(),
+        tokenizer: include_str!("../../../assets/models/edu/tokenizer.json").to_owned(),
+        weights: include_bytes!("../../../assets/models/edu/model.safetensors").to_vec(),
     }
 }
 

@@ -7,7 +7,7 @@ use serde::Deserialize;
 use thiserror::Error;
 
 const NANOGPT_MODEL_SOURCE: &str = include_str!("../../../reference/nanoGPT/model.py");
-const SOURCE_MAP_JSON: &str = include_str!("../../web/public/models/edu/source_map.json");
+const SOURCE_MAP_JSON: &str = include_str!("../../../assets/models/edu/source_map.json");
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
