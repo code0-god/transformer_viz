@@ -88,7 +88,8 @@ export function correlateResponse(
       active,
       response.type === "generation_step_trace" &&
         response.generation_run_id === active.generationRunId &&
-        response.step_index === active.stepIndex,
+        response.step_index === active.stepIndex &&
+        response.step.index === active.stepIndex,
       true,
     );
   if (active.kind === "inspect-block")

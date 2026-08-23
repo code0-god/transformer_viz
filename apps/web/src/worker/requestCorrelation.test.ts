@@ -1,5 +1,5 @@
 import type { WorkerResponse } from "../generated/schema";
-import { generationStep } from "../test/workerFixtures";
+import { generationStep, runSummary } from "../test/workerFixtures";
 import { activeRequestFor, correlateResponse } from "./requestCorrelation";
 
 test("retains generation run correlation until the matching finish", () => {
@@ -63,4 +63,22 @@ test("records inspect selectors with the allocated request", () => {
     layer: 1,
     head: 3,
   });
+});
+
+test("rejects a replay whose nested step index disagrees", () => {
+  const active = activeRequestFor({
+    type: "inspect_generation_step",
+    request_id: 6,
+    generation_run_id: 9,
+    step_index: 2,
+  });
+  const result = correlateResponse(active, {
+    type: "generation_step_trace",
+    request_id: 6,
+    generation_run_id: 9,
+    step_index: 2,
+    step: generationStep(1),
+    summary: runSummary(12),
+  });
+  expect(result).toMatchObject({ accepted: false, terminal: false });
 });
