@@ -28,14 +28,14 @@ export function Header({ status }: HeaderProps) {
     <header className="architecture-header">
       <div className="brand-lockup">
         <h1>Transformer Viz</h1>
-        <p>Explore how a GPT-style Transformer generates text.</p>
+        <p>GPT형 Transformer가 텍스트를 생성하는 과정을 탐색합니다.</p>
       </div>
       <div
         className={isError ? "lifecycle lifecycle-error" : "lifecycle"}
         role={isError ? "alert" : "status"}
         aria-live={isError ? "assertive" : "polite"}
       >
-        <span className="status-badge" data-status={status.type}>
+        <span id="status" className="status-badge" data-status={status.type}>
           {copy.label}
         </span>
         <span className="lifecycle-detail">{copy.detail}</span>

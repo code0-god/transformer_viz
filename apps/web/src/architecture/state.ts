@@ -50,12 +50,7 @@ function openBlock(
 ): ArchitectureState {
   const selectedLayer = clampIndex(state.selectedLayer, layerCount);
   if (selectedLayer === null) return initialArchitectureState;
-  return {
-    ...state,
-    view: "transformer-block",
-    selectedLayer,
-    selectedNodeId: "transformer-block",
-  };
+  return { ...state, view: "transformer-block", selectedLayer };
 }
 
 function openAttention(
@@ -67,13 +62,7 @@ function openAttention(
   const selectedHead = clampIndex(state.selectedHead, headCount);
   if (selectedLayer === null || selectedHead === null)
     return initialArchitectureState;
-  return {
-    ...state,
-    view: "self-attention",
-    selectedLayer,
-    selectedHead,
-    selectedNodeId: "self-attention",
-  };
+  return { ...state, view: "self-attention", selectedLayer, selectedHead };
 }
 
 function activateNode(
@@ -96,16 +85,11 @@ function navigateBreadcrumb(
 ): ArchitectureState {
   switch (action.view) {
     case "root":
-      return { ...state, view: "root", selectedNodeId: null };
+      return { ...state, view: "root" };
     case "transformer-block": {
       const selectedLayer = clampIndex(state.selectedLayer, action.layerCount);
       if (selectedLayer === null) return initialArchitectureState;
-      return {
-        ...state,
-        view: "transformer-block",
-        selectedLayer,
-        selectedNodeId: "self-attention",
-      };
+      return { ...state, view: "transformer-block", selectedLayer };
     }
     case "self-attention":
       return state;

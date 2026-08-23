@@ -32,7 +32,7 @@ export function ContinuationPanel({
       className="continuation-panel"
       aria-labelledby="continuation-title"
     >
-      <h2 id="continuation-title">Continuation</h2>
+      <h2 id="continuation-title">Decoded continuation</h2>
       <dl className="decoded-text">
         <div>
           <dt>Decoded prompt</dt>

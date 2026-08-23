@@ -1,63 +1,66 @@
+import {
+  type ArchitectureAction,
+  type ArchitectureState,
+  architectureReducer,
+  initialArchitectureState,
+} from "../architecture";
 import type {
   GenerationConfig,
   GenerationStepSummary,
-  WorkerRequest,
   WorkerResponse,
 } from "../generated/schema";
 import {
   beginGeneration,
   createGenerationState,
-  type GenerationResult,
   type GenerationState,
   inspectGenerationStep,
   safeId,
-  stopGeneration,
 } from "./generationState";
 import {
   createWorkerState,
   reduceWorkerResponse,
-  registerWorkerRequest,
+  registerGenerationRequest,
+  registerReplayRequest,
+  rejectWorkerPayload,
   type WorkerState,
 } from "./workerState";
 
 export type AppState = Readonly<{
   worker: WorkerState;
   generation: GenerationState;
-  nextRequestId: number;
+  architecture: ArchitectureState;
 }>;
+
 export type AppAction =
-  | Readonly<{ type: "generate"; prompt: string; config: GenerationConfig }>
-  | Readonly<{ type: "stop" }>
-  | Readonly<{ type: "select_generation_step"; stepIndex: number }>
-  | Readonly<{ type: "request"; request: Readonly<WorkerRequest> }>
-  | Readonly<{ type: "response"; response: WorkerResponse }>;
-export type AppResult = Readonly<{
-  state: AppState;
-  requests: ReadonlyArray<Readonly<WorkerRequest>>;
-}>;
+  | Readonly<{
+      type: "generation-requested";
+      requestId: number;
+      prompt: string;
+      config: GenerationConfig;
+    }>
+  | Readonly<{
+      type: "replay-requested";
+      requestId: number;
+      stepIndex: number;
+    }>
+  | Readonly<{ type: "worker-response"; response: WorkerResponse }>
+  | Readonly<{ type: "worker-payload-rejected" }>
+  | Readonly<{ type: "client-error"; message: string }>
+  | Readonly<{ type: "architecture"; action: ArchitectureAction }>;
 
 export function createAppState(): AppState {
   return {
     worker: createWorkerState(),
     generation: createGenerationState(),
-    nextRequestId: 1,
+    architecture: initialArchitectureState,
   };
 }
 
-function withRequests(
-  state: AppState,
-  requests: ReadonlyArray<Readonly<WorkerRequest>>,
-): AppResult {
-  return {
-    state: {
-      ...state,
-      worker: requests.reduce(registerWorkerRequest, state.worker),
-    },
-    requests,
-  };
-}
-
-function exactActive(state: GenerationState, requestId: number, runId: number) {
+function exactActive(
+  state: GenerationState,
+  requestId: number,
+  runId: number,
+): boolean {
   return (
     state.active?.requestId.value === requestId &&
     state.active.runId.value === runId
@@ -67,7 +70,7 @@ function exactActive(state: GenerationState, requestId: number, runId: number) {
 function sameStep(
   left: Readonly<GenerationStepSummary>,
   right: GenerationStepSummary,
-) {
+): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
@@ -75,33 +78,37 @@ function generationError(
   state: GenerationState,
   requestId: number | null,
   message: string,
-): GenerationResult {
-  if (requestId === null) return { state, requests: [] };
+): GenerationState {
+  if (requestId === null) return state;
   if (state.pending?.requestId.value === requestId) {
-    const next: GenerationState =
-      state.phase === "running" && state.active !== null
-        ? { ...state, pending: null, error: message }
-        : { ...createGenerationState(), phase: "error", error: message };
-    return { state: next, requests: [] };
+    return state.phase === "running" && state.active !== null
+      ? { ...state, pending: null, error: message }
+      : { ...createGenerationState(), phase: "error", error: message };
   }
-  if (state.active?.requestId.value === requestId)
-    return {
-      state: { ...state, phase: "error", error: message, stopReason: "error" },
-      requests: [],
-    };
-  if (state.pendingReplay?.requestId.value === requestId)
-    return {
-      state: { ...state, pendingReplay: null, error: message },
-      requests: [],
-    };
-  return { state, requests: [] };
+  if (state.active?.requestId.value === requestId) {
+    return { ...state, phase: "error", error: message, stopReason: "error" };
+  }
+  if (state.pendingReplay?.requestId.value === requestId) {
+    return { ...state, pendingReplay: null, error: message };
+  }
+  return state;
+}
+
+export function acceptsTokenResponse(
+  state: GenerationState,
+  response: Extract<WorkerResponse, { type: "token_generated" }>,
+): boolean {
+  return (
+    state.phase === "running" &&
+    exactActive(state, response.request_id, response.run_id) &&
+    response.step.index === state.steps.length
+  );
 }
 
 export function reduceGenerationResponse(
   state: GenerationState,
   response: WorkerResponse,
-): GenerationResult {
-  const unchanged = (): GenerationResult => ({ state, requests: [] });
+): GenerationState {
   switch (response.type) {
     case "generation_started": {
       const requestId = safeId(response.request_id);
@@ -111,46 +118,26 @@ export function reduceGenerationResponse(
         runId === null ||
         state.pending?.requestId.value !== requestId.value
       )
-        return unchanged();
+        return state;
       return {
-        state: {
-          ...createGenerationState(),
-          phase: "running",
-          active: { requestId, runId },
-          promptText: state.pending.prompt,
-          promptTokens: response.prompt_tokens,
-          config: response.config,
-          contextLimit: response.context_limit,
-        },
-        requests: [],
+        ...createGenerationState(),
+        phase: "running",
+        active: { requestId, runId },
+        promptText: state.pending.prompt,
+        promptTokens: response.prompt_tokens,
+        config: response.config,
+        contextLimit: response.context_limit,
       };
     }
     case "token_generated":
-      if (
-        state.phase !== "running" ||
-        !exactActive(state, response.request_id, response.run_id) ||
-        response.step.index !== state.steps.length
-      )
-        return unchanged();
-      return {
-        state: { ...state, steps: [...state.steps, response.step] },
-        requests: [
-          {
-            type: "continue_generation",
-            request_id: response.request_id,
-            run_id: response.run_id,
-            step_index: response.step.index,
-          },
-        ],
-      };
+      return acceptsTokenResponse(state, response)
+        ? { ...state, steps: [...state.steps, response.step] }
+        : state;
     case "generation_finished":
       return state.phase === "running" &&
         exactActive(state, response.request_id, response.run_id)
-        ? {
-            state: { ...state, phase: "complete", stopReason: response.reason },
-            requests: [],
-          }
-        : unchanged();
+        ? { ...state, phase: "complete", stopReason: response.reason }
+        : state;
     case "generation_step_trace": {
       const replay = state.pendingReplay;
       const historical = state.steps[response.step_index];
@@ -162,16 +149,13 @@ export function reduceGenerationResponse(
         replay.stepIndex !== response.step_index ||
         !sameStep(historical, response.step)
       )
-        return unchanged();
+        return state;
       return {
-        state: {
-          ...state,
-          pendingReplay: null,
-          selectedStep: response.step_index,
-          replaySummary: response.summary,
-          error: null,
-        },
-        requests: [],
+        ...state,
+        pendingReplay: null,
+        selectedStep: response.step_index,
+        replaySummary: response.summary,
+        error: null,
       };
     }
     case "error":
@@ -182,61 +166,49 @@ export function reduceGenerationResponse(
     case "block_trace":
     case "attention_head_trace":
     case "token_trace":
-      return unchanged();
+      return state;
   }
 }
 
-export function appReducer(state: AppState, action: AppAction): AppResult {
+export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
-    case "generate": {
-      const result = beginGeneration(
-        state.generation,
-        state.nextRequestId,
-        action.prompt,
-        action.config,
-      );
-      return withRequests(
-        {
-          ...state,
-          generation: result.state,
-          nextRequestId: state.nextRequestId + 1,
-        },
-        result.requests,
-      );
-    }
-    case "stop": {
-      const request = stopGeneration(state.generation);
-      return request === null
-        ? { state, requests: [] }
-        : withRequests(state, [request]);
-    }
-    case "select_generation_step": {
-      const result = inspectGenerationStep(
-        state.generation,
-        state.nextRequestId,
-        action.stepIndex,
-      );
-      const nextRequestId =
-        result.requests.length === 0
-          ? state.nextRequestId
-          : state.nextRequestId + 1;
-      return withRequests(
-        { ...state, generation: result.state, nextRequestId },
-        result.requests,
-      );
-    }
-    case "request":
-      return withRequests(state, [action.request]);
-    case "response": {
-      const generation = reduceGenerationResponse(
-        state.generation,
-        action.response,
-      );
-      const worker = reduceWorkerResponse(state.worker, action.response);
-      return withRequests(
-        { ...state, generation: generation.state, worker },
-        generation.requests,
-      );
-    }
+    case "generation-requested":
+      return {
+        ...state,
+        worker: registerGenerationRequest(state.worker),
+        generation: beginGeneration(
+          state.generation,
+          action.requestId,
+          action.prompt,
+        ),
+      };
+    case "replay-requested":
+      return {
+        ...state,
+        worker: registerReplayRequest(state.worker),
+        generation: inspectGenerationStep(
+          state.generation,
+          action.requestId,
+          action.stepIndex,
+        ),
+      };
+    case "worker-response":
+      return {
+        ...state,
+        worker: reduceWorkerResponse(state.worker, action.response),
+        generation: reduceGenerationResponse(state.generation, action.response),
+      };
+    case "worker-payload-rejected":
+      return { ...state, worker: rejectWorkerPayload(state.worker) };
+    case "client-error":
+      return {
+        ...state,
+        worker: rejectWorkerPayload(state.worker, action.message),
+      };
+    case "architecture":
+      return {
+        ...state,
+        architecture: architectureReducer(state.architecture, action.action),
+      };
   }
 }

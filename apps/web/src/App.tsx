@@ -1,10 +1,91 @@
-import type { ReactElement } from "react";
+import { type ReactElement, useLayoutEffect, useState } from "react";
+import { AppProvider, useAppContext } from "./app/AppContext";
+import {
+  defaultGenerationForm,
+  type GenerationForm,
+} from "./app/generationState";
+import { ArchitectureExplorer } from "./architecture";
+import { ContinuationPanel } from "./components/ContinuationPanel";
+import { Header } from "./components/Header";
+import { PromptPanel } from "./components/PromptPanel";
+import { createInferenceWorker } from "./worker/createWorker";
+import type { WorkerTransport } from "./worker/WorkerClient";
+import type { CleanupScheduler } from "./worker/workerLifecycle";
 
-export function App(): ReactElement {
+export interface AppProps {
+  readonly createWorker?: () => WorkerTransport;
+  readonly manifestUrl?: string;
+  readonly cleanupScheduler?: CleanupScheduler;
+}
+
+export function modelManifestUrl(baseUrl = document.baseURI): string {
+  return new URL("models/edu/manifest.json", baseUrl).href;
+}
+
+function AppSurface(): ReactElement {
+  const { state, commands } = useAppContext();
+  const [prompt, setPrompt] = useState("Once upon a time");
+  const [form, setForm] = useState<GenerationForm>(defaultGenerationForm);
+  const config = state.worker.model?.config;
+  const replaySequenceLength =
+    state.generation.replaySummary?.tokens.length ?? null;
+
+  useLayoutEffect(() => {
+    document.getElementById("startup-shell")?.remove();
+  }, []);
+
   return (
-    <main>
-      <h1>Transformer Viz</h1>
-      <p>React shipping migration 준비 중</p>
-    </main>
+    <>
+      <a className="skip-link" href="#architecture-main">
+        Architecture로 건너뛰기
+      </a>
+      <div className="architecture-app">
+        <Header status={state.worker.status} />
+        <main id="architecture-main" className="architecture-main">
+          <PromptPanel
+            prompt={prompt}
+            form={form}
+            limits={{
+              blockSize: config?.block_size ?? 1,
+              vocabSize: config?.vocab_size ?? 1,
+            }}
+            generation={state.generation}
+            disabled={state.worker.model === null}
+            onPromptChange={setPrompt}
+            onFormChange={setForm}
+            onGenerate={commands.generate}
+            onStop={commands.stop}
+          />
+          <ContinuationPanel
+            generation={state.generation}
+            onSelectStep={commands.replayStep}
+          />
+          <ArchitectureExplorer
+            model={state.worker.model}
+            state={state.architecture}
+            replaySequenceLength={replaySequenceLength}
+            navigate={commands.navigateArchitecture}
+          />
+        </main>
+      </div>
+    </>
+  );
+}
+
+export function App({
+  createWorker = createInferenceWorker,
+  manifestUrl = modelManifestUrl(),
+  cleanupScheduler,
+}: AppProps): ReactElement {
+  return (
+    <AppProvider
+      createWorker={createWorker}
+      manifestUrl={manifestUrl}
+      {...(cleanupScheduler === undefined
+        ? {}
+        : { scheduler: cleanupScheduler })}
+    >
+      <AppSurface />
+    </AppProvider>
   );
 }

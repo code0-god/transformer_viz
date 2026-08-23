@@ -1,3 +1,5 @@
+export type { ArchitectureExplorerProps } from "./ArchitectureExplorer";
+export { ArchitectureExplorer } from "./ArchitectureExplorer";
 export type {
   ArchitectureNodeProps,
   DrillDownIndicator,

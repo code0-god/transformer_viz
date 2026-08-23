@@ -31,7 +31,7 @@ describe("architecture navigation", () => {
 
     expect(block.view).toBe("transformer-block");
     expect(attention.view).toBe("self-attention");
-    expect(attention.selectedNodeId).toBe("self-attention");
+    expect(attention.selectedNodeId).toBeNull();
   });
 
   test("breadcrumb navigation returns while preserving layer and head", () => {
@@ -58,6 +58,7 @@ describe("architecture navigation", () => {
       view: "root",
       selectedLayer: 2,
       selectedHead: 3,
+      selectedNodeId: "attention-softmax",
     });
   });
 

@@ -32,33 +32,33 @@ export function registerWorkerRequest(
   state: WorkerState,
   request: Readonly<WorkerRequest>,
 ): WorkerState {
-  switch (request.type) {
-    case "run":
-      return {
-        ...state,
-        status: { type: "running", detail: "Running prompt" },
-        pendingRunRequestId: request.request_id,
-      };
-    case "generate":
-      return {
-        ...state,
-        status: { type: "running", detail: "Starting generation" },
-      };
-    case "inspect_generation_step":
-      return {
-        ...state,
-        status: { type: "running", detail: "Loading generation step" },
-      };
-    case "initialize":
-      return { ...state, status: { type: "loading", phase: "Loading model" } };
-    case "stop_generation":
-    case "continue_generation":
-    case "inspect_block":
-    case "inspect_attention_head":
-    case "inspect_token":
-    case "cancel":
-      return state;
-  }
+  if (request.type !== "run") return state;
+  return {
+    ...state,
+    status: { type: "running", detail: "Running prompt" },
+    pendingRunRequestId: request.request_id,
+  };
+}
+
+export function registerGenerationRequest(state: WorkerState): WorkerState {
+  return {
+    ...state,
+    status: { type: "running", detail: "Starting generation" },
+  };
+}
+
+export function registerReplayRequest(state: WorkerState): WorkerState {
+  return {
+    ...state,
+    status: { type: "running", detail: "Loading generation step" },
+  };
+}
+
+export function rejectWorkerPayload(
+  state: WorkerState,
+  message = "Worker returned an invalid response",
+): WorkerState {
+  return { ...state, status: { type: "error", message } };
 }
 
 export function reduceWorkerResponse(
@@ -79,10 +79,7 @@ export function reduceWorkerResponse(
     case "generation_finished":
       return { ...state, status: { type: "complete" } };
     case "generation_step_trace":
-      return {
-        ...state,
-        status: { type: "running", detail: "Generation step selected" },
-      };
+      return { ...state, status: { type: "complete" } };
     case "run_complete":
       return state.pendingRunRequestId === response.request_id
         ? {

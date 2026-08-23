@@ -5,7 +5,6 @@ import type {
   RunSummary,
   SamplingMode,
   TokenInfo,
-  WorkerRequest,
 } from "../generated/schema";
 
 export type SafeId = Readonly<{ kind: "safe-id"; value: number }>;
@@ -43,11 +42,6 @@ export type GenerationState = Readonly<{
   replaySummary: Readonly<RunSummary> | null;
   error: string | null;
 }>;
-export type GenerationResult = Readonly<{
-  state: GenerationState;
-  requests: ReadonlyArray<Readonly<WorkerRequest>>;
-}>;
-
 export const defaultGenerationForm: GenerationForm = {
   maxNewTokens: "24",
   temperature: "1.0",
@@ -128,62 +122,34 @@ export function beginGeneration(
   state: GenerationState,
   requestIdValue: number,
   prompt: string,
-  config: GenerationConfig,
-): GenerationResult {
+): GenerationState {
   const requestId = safeId(requestIdValue);
-  if (requestId === null) return { state, requests: [] };
-  return {
-    state: { ...state, pending: { requestId, prompt }, error: null },
-    requests: [
-      { type: "generate", request_id: requestId.value, text: prompt, config },
-    ],
-  };
-}
-
-export function stopGeneration(
-  state: GenerationState,
-): Readonly<WorkerRequest> | null {
-  if (state.phase !== "running" || state.active === null) return null;
-  return {
-    type: "stop_generation",
-    request_id: state.active.requestId.value,
-    run_id: state.active.runId.value,
-  };
+  return requestId === null
+    ? state
+    : { ...state, pending: { requestId, prompt }, error: null };
 }
 
 export function inspectGenerationStep(
   state: GenerationState,
   requestIdValue: number,
   stepIndex: number,
-): GenerationResult {
+): GenerationState {
   const requestId = safeId(requestIdValue);
   if (
     requestId === null ||
     state.active === null ||
     state.steps[stepIndex] === undefined
-  ) {
-    return { state, requests: [] };
-  }
-  const pendingReplay = {
-    requestId,
-    generationRunId: state.active.runId,
-    stepIndex,
-  };
+  )
+    return state;
   return {
-    state: {
-      ...state,
-      selectedStep: stepIndex,
-      pendingReplay,
-      replaySummary: null,
-      error: null,
+    ...state,
+    selectedStep: stepIndex,
+    pendingReplay: {
+      requestId,
+      generationRunId: state.active.runId,
+      stepIndex,
     },
-    requests: [
-      {
-        type: "inspect_generation_step",
-        request_id: requestId.value,
-        generation_run_id: state.active.runId.value,
-        step_index: stepIndex,
-      },
-    ],
+    replaySummary: null,
+    error: null,
   };
 }
