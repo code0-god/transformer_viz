@@ -1,0 +1,220 @@
+.architecture-block-screen,
+.architecture-detail {
+  display: grid;
+  gap: var(--s4, 1rem);
+}
+
+.architecture-breadcrumb {
+  overflow-x: auto;
+}
+
+.architecture-breadcrumb ol,
+.architecture-breadcrumb li {
+  display: flex;
+  align-items: center;
+  gap: var(--s2, 0.5rem);
+}
+
+.architecture-breadcrumb ol {
+  min-inline-size: 100%;
+  inline-size: max-content;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.architecture-breadcrumb button {
+  min-block-size: 44px;
+  padding: 0.25rem 0.65rem;
+  border-color: transparent;
+  background: transparent;
+  color: var(--accent, #315d99);
+}
+
+.architecture-breadcrumb-current {
+  color: var(--ink-muted, #625f59);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.architecture-intro,
+.architecture-detail-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s5, 1.25rem);
+}
+
+.architecture-intro {
+  align-items: start;
+}
+
+.architecture-intro h2 {
+  color: var(--accent, #315d99);
+}
+
+.architecture-intro p,
+.architecture-detail-toolbar > div > p:last-child {
+  color: var(--ink-muted, #625f59);
+  font-size: 0.8rem;
+}
+
+.architecture-back-button {
+  min-block-size: 44px;
+  padding: 0.5rem 0.8rem;
+  border-color: var(--hairline, #d8d3ca);
+  background: var(--surface, #fff);
+  color: var(--accent, #315d99);
+  white-space: nowrap;
+}
+
+.architecture-detail-toolbar {
+  align-items: end;
+  padding: var(--s4, 1rem);
+  border: 1px solid var(--hairline, #d8d3ca);
+  border-radius: 14px;
+  background: var(--block-soft, #e5edf7);
+}
+
+.architecture-detail-kicker {
+  color: #315d99;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.architecture-layer-selector {
+  display: grid;
+  gap: var(--s1, 0.25rem);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.architecture-layer-selector legend {
+  color: var(--ink-muted, #625f59);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.architecture-layer-selector > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1, 0.25rem);
+}
+
+.architecture-layer-selector button {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding: 0.4rem;
+  border-color: var(--hairline, #d8d3ca);
+  background: var(--surface, #fff);
+  color: var(--ink-muted, #625f59);
+}
+
+.architecture-layer-selector button.selected {
+  border-color: #7096c7;
+  background: var(--block-soft, #e5edf7);
+  color: #315d99;
+  box-shadow: inset 0 0 0 1px #7096c7;
+}
+
+.architecture-visual-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem);
+  align-items: center;
+  gap: clamp(var(--s4, 1rem), 3vw, var(--s7, 2rem));
+}
+
+.architecture-figure {
+  display: grid;
+  gap: var(--s2, 0.5rem);
+  min-inline-size: 0;
+  margin: 0;
+}
+
+.architecture-svg-scroll {
+  inline-size: 100%;
+  overflow-x: auto;
+  background: var(--surface, #fff);
+}
+
+.architecture-detail-diagram {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 48rem;
+  min-inline-size: 42rem;
+  block-size: auto;
+  margin-inline: auto;
+}
+
+.architecture-detail-diagram text {
+  fill: var(--ink, #292722);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 750;
+  pointer-events: none;
+}
+
+.architecture-detail-diagram .architecture-node-subtitle {
+  fill: var(--ink-muted, #625f59);
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.architecture-detail-state rect {
+  fill: var(--surface, #fff);
+  stroke: var(--hairline, #d8d3ca);
+  stroke-width: 1.5;
+}
+
+.architecture-block-module rect {
+  stroke-width: 1.4;
+}
+
+.architecture-block-normalization rect {
+  fill: var(--normalization-soft, #fff4d6);
+  stroke: #d6a94b;
+}
+
+.architecture-block-attention rect,
+.architecture-block-mlp rect {
+  fill: #e5edf7;
+  stroke: #7096c7;
+}
+
+.architecture-residual-add {
+  fill: var(--surface, #fff);
+  stroke: var(--line, #706c64);
+  stroke-width: 1.5;
+}
+
+.architecture-detail-diagram .architecture-add-label {
+  font-size: 17px;
+}
+
+.architecture-detail-flow,
+.architecture-detail-residual {
+  fill: none;
+  stroke: var(--ink, #292722);
+  stroke-width: 1.7;
+  marker-end: url("#block-detail-arrow");
+}
+
+.architecture-detail-residual {
+  stroke: var(--line, #706c64);
+  stroke-width: 1.6;
+}
+
+.architecture-residual-junction {
+  fill: var(--ink, #292722);
+  stroke: var(--surface, #fff);
+  stroke-width: 1.5;
+}
+
+.architecture-figure figcaption {
+  color: var(--ink-muted, #625f59);
+  font-size: 0.72rem;
+  text-align: center;
+}
