@@ -8,11 +8,11 @@ use gloo_net::http::Request;
 #[cfg(target_arch = "wasm32")]
 use nanogpt_schema::{ModelManifest, WorkerErrorCode, WorkerRequest, WorkerResponse};
 #[cfg(target_arch = "wasm32")]
-use transformer_viz_web::runtime::{AssetBundle, WorkerRuntime, error_response};
+use transformer_viz_worker::runtime::{AssetBundle, WorkerRuntime, error_response};
 #[cfg(target_arch = "wasm32")]
-use transformer_viz_web::runtime_error::RuntimeError;
+use transformer_viz_worker::runtime_error::RuntimeError;
 #[cfg(target_arch = "wasm32")]
-use transformer_viz_web::runtime_generation::{GenerationKey, GenerationStart};
+use transformer_viz_worker::runtime_generation::{GenerationKey, GenerationStart};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::{JsCast as _, JsValue, closure::Closure};
 #[cfg(target_arch = "wasm32")]

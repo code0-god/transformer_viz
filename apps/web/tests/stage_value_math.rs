@@ -2,8 +2,8 @@
 
 use nanogpt_schema::{AttentionHeadTrace, TensorSnapshot, WorkerRequest, WorkerResponse};
 use transformer_viz_web::guided_math::{GuidedMathError, value_evidence};
-use transformer_viz_web::runtime::{AssetBundle, WorkerRuntime};
-use transformer_viz_web::runtime_error::RuntimeError;
+use transformer_viz_worker::runtime::{AssetBundle, WorkerRuntime};
+use transformer_viz_worker::runtime_error::RuntimeError;
 
 fn assets() -> AssetBundle {
     AssetBundle {

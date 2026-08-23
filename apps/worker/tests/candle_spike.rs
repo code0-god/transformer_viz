@@ -1,7 +1,7 @@
 //! Phase B Candle operation contract retained beside the exact Worker schema.
 
 use nanogpt_schema::FiniteF32;
-use transformer_viz_web::spike::run_candle_spike;
+use transformer_viz_worker::spike::run_candle_spike;
 
 fn assert_close(actual: &[FiniteF32], expected: &[f32]) {
     assert_eq!(actual.len(), expected.len());

@@ -29,14 +29,14 @@ impl AssetPolicy {
     }
 
     fn manifest_url(&self, supplied: &str, worker_url: &str) -> Result<String, RuntimeError> {
-        if !transformer_viz_web::asset_policy::canonical_manifest_request(supplied) {
+        if !transformer_viz_worker::asset_policy::canonical_manifest_request(supplied) {
             return Err(policy_error("unexpected manifest location"));
         }
         self.resolve_and_validate(supplied, worker_url, "manifest.json")
     }
 
     fn child_url(&self, filename: &str, manifest_url: &str) -> Result<String, RuntimeError> {
-        if !transformer_viz_web::asset_policy::canonical_child_filename(filename) {
+        if !transformer_viz_worker::asset_policy::canonical_child_filename(filename) {
             return Err(policy_error("unexpected manifest child filename"));
         }
         self.resolve_and_validate(filename, manifest_url, filename)
@@ -65,7 +65,7 @@ impl AssetPolicy {
         base: &str,
         filename: &str,
     ) -> Result<String, RuntimeError> {
-        if transformer_viz_web::asset_policy::has_url_escape(supplied) {
+        if transformer_viz_worker::asset_policy::has_url_escape(supplied) {
             return Err(policy_error("encoded, escaped, or fragmented asset URL"));
         }
         let href = parse_url(supplied, base)?.href();
@@ -114,7 +114,7 @@ fn fetch_bounded<'a>(
             .map_err(|_| {
                 RuntimeError::AssetUnavailable("invalid asset Content-Length".to_owned())
             })?;
-        if !transformer_viz_web::asset_policy::bounded_asset_size(declared, maximum, None) {
+        if !transformer_viz_worker::asset_policy::bounded_asset_size(declared, maximum, None) {
             return Err(RuntimeError::AssetUnavailable(
                 "asset Content-Length violates fixed bounds".to_owned(),
             ));
@@ -154,7 +154,7 @@ fn fetch_bounded<'a>(
                 .ok_or_else(|| {
                     RuntimeError::AssetUnavailable("asset allocation overflow".to_owned())
                 })?;
-            if !transformer_viz_web::asset_policy::bounded_asset_size(next_size, maximum, None) {
+            if !transformer_viz_worker::asset_policy::bounded_asset_size(next_size, maximum, None) {
                 return Err(RuntimeError::AssetUnavailable(
                     "asset stream exceeds fixed bounds".to_owned(),
                 ));
@@ -171,7 +171,7 @@ fn fetch_bounded<'a>(
         let actual = u64::try_from(bytes.len()).map_err(|_| {
             RuntimeError::AssetUnavailable("asset allocation exceeds u64".to_owned())
         })?;
-        if !transformer_viz_web::asset_policy::bounded_asset_size(actual, maximum, exact_size) {
+        if !transformer_viz_worker::asset_policy::bounded_asset_size(actual, maximum, exact_size) {
             return Err(RuntimeError::AssetUnavailable(
                 "downloaded asset size violates manifest bounds".to_owned(),
             ));

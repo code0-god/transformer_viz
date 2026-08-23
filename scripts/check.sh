@@ -14,8 +14,9 @@ printf '%s\n' '==> Clippy (native workspace)'
 # below because Cargo cannot compile native-only transitive dependencies for the WASM target.
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 
-printf '%s\n' '==> Clippy (WASM browser package)'
+printf '%s\n' '==> Clippy (WASM packages)'
 cargo clippy --target wasm32-unknown-unknown -p transformer-viz-web --all-features -- -D warnings
+cargo clippy --target wasm32-unknown-unknown -p transformer-viz-worker --all-features -- -D warnings
 
 printf '%s\n' '==> workspace tests'
 cargo test --workspace
@@ -23,8 +24,9 @@ cargo test --workspace
 printf '%s\n' '==> root workspace release build'
 cargo build --workspace --release
 
-printf '%s\n' '==> browser package (wasm32-unknown-unknown)'
+printf '%s\n' '==> WASM packages (wasm32-unknown-unknown)'
 cargo check --target wasm32-unknown-unknown -p transformer-viz-web
+cargo check --target wasm32-unknown-unknown -p transformer-viz-worker
 
 printf '%s\n' '==> canonical assets'
 for asset in config.json manifest.json model.safetensors SHA256SUMS source_map.json tokenizer.json; do
@@ -43,7 +45,7 @@ root = pathlib.Path('.')
 model = root / 'assets/models/edu'
 manifest_bytes = (model / 'manifest.json').read_bytes()
 manifest = json.loads(manifest_bytes)
-worker_source = (root / 'apps/web/src/bin/worker/assets.rs').read_text()
+worker_source = (root / 'apps/worker/src/bin/worker/assets.rs').read_text()
 assert hashlib.sha256(manifest_bytes).hexdigest() in worker_source
 for kind in ('config', 'tokenizer', 'weights'):
     asset = model / manifest[f'{kind}_file']

@@ -1,16 +1,15 @@
 //! Production Worker runtime and one-run trace cache contracts.
 
 use nanogpt_schema::{WorkerErrorCode, WorkerRequest, WorkerResponse};
-use transformer_viz_web::runtime::{AssetBundle, WorkerRuntime, error_response};
-use transformer_viz_web::runtime_error::RuntimeError;
-use transformer_viz_web::trace_lookup::TraceLookup;
+use transformer_viz_worker::runtime::{AssetBundle, WorkerRuntime, error_response};
+use transformer_viz_worker::runtime_error::RuntimeError;
 
 fn assets() -> AssetBundle {
     AssetBundle {
-        manifest: include_str!("../public/models/edu/manifest.json").to_owned(),
-        config: include_str!("../public/models/edu/config.json").to_owned(),
-        tokenizer: include_str!("../public/models/edu/tokenizer.json").to_owned(),
-        weights: include_bytes!("../public/models/edu/model.safetensors").to_vec(),
+        manifest: include_str!("../../web/public/models/edu/manifest.json").to_owned(),
+        config: include_str!("../../web/public/models/edu/config.json").to_owned(),
+        tokenizer: include_str!("../../web/public/models/edu/tokenizer.json").to_owned(),
+        weights: include_bytes!("../../web/public/models/edu/model.safetensors").to_vec(),
     }
 }
 
@@ -37,16 +36,7 @@ fn ready_metadata_and_summary_expose_loaded_config_and_stable_tensors() -> Resul
     assert_eq!(summary.embeddings.position.id, "position_embeddings");
     assert_eq!(summary.embeddings.sum.id, "embedding_sum");
     assert_eq!(summary.final_layer_norm.id, "final_layer_norm");
-    let lookup = TraceLookup::new().with_summary(&summary);
-    assert_eq!(
-        lookup.embeddings().map(|trace| trace.sum.id.as_str()),
-        Some("embedding_sum")
-    );
-    assert_eq!(
-        lookup.final_layer_norm().map(|tensor| tensor.id.as_str()),
-        Some("final_layer_norm")
-    );
-    assert_eq!(lookup.logits().map(|trace| trace.top_k.len()), Some(10));
+    assert_eq!(summary.logits.top_k.len(), 10);
     Ok(())
 }
 

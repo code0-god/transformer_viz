@@ -8,10 +8,8 @@ use nanogpt_schema::{
     WorkerRequest, WorkerResponse,
 };
 
-use crate::{
-    source_map,
-    spike::{self, SpikeError},
-};
+use crate::source_map;
+use transformer_viz_worker::spike;
 
 pub(super) fn run_summary() -> Result<RunSummary, Box<dyn Error>> {
     match spike::handle_worker_request(WorkerRequest::Run {
@@ -23,13 +21,13 @@ pub(super) fn run_summary() -> Result<RunSummary, Box<dyn Error>> {
     }
 }
 
-fn tensor() -> Result<nanogpt_schema::TensorSnapshot, SpikeError> {
+fn tensor() -> Result<nanogpt_schema::TensorSnapshot, Box<dyn Error>> {
     let mut tensor = spike::run_candle_spike()?.gelu;
     tensor.shape = vec![1, 4, 1, 1];
     Ok(tensor)
 }
 
-pub(super) fn block_response() -> Result<WorkerResponse, SpikeError> {
+pub(super) fn block_response() -> Result<WorkerResponse, Box<dyn Error>> {
     let tensor = tensor()?;
     Ok(WorkerResponse::BlockTrace {
         request_id: 8,
@@ -58,7 +56,7 @@ pub(super) fn block_response() -> Result<WorkerResponse, SpikeError> {
     })
 }
 
-pub(super) fn attention_response() -> Result<WorkerResponse, SpikeError> {
+pub(super) fn attention_response() -> Result<WorkerResponse, Box<dyn Error>> {
     let tensor = tensor()?;
     Ok(WorkerResponse::AttentionHeadTrace {
         request_id: 9,
@@ -83,7 +81,7 @@ pub(super) fn attention_response() -> Result<WorkerResponse, SpikeError> {
     })
 }
 
-pub(super) fn token_response() -> Result<WorkerResponse, SpikeError> {
+pub(super) fn token_response() -> Result<WorkerResponse, Box<dyn Error>> {
     let tensor = tensor()?;
     let logits_source = source_map::source_reference(OperationId::Logits)?;
     Ok(WorkerResponse::TokenTrace {

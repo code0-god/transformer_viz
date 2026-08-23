@@ -2496,17 +2496,31 @@ dependencies = [
 name = "transformer-viz-web"
 version = "0.1.0"
 dependencies = [
+ "console_error_panic_hook",
+ "leptos",
+ "nanogpt-schema",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "thiserror 2.0.16",
+ "transformer-viz-worker",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "transformer-viz-worker"
+version = "0.1.0"
+dependencies = [
  "candle-core",
  "candle-nn",
  "console_error_panic_hook",
  "getrandom 0.3.4",
  "gloo-net",
  "js-sys",
- "leptos",
  "nanogpt-model",
  "nanogpt-schema",
  "nanogpt-tokenizer",
- "nanogpt-trace",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",

@@ -69,7 +69,7 @@ def test_manifest_and_corpus_use_canonical_contract_when_loaded() -> None:
     assert manifest["config_file"] == "config.json"
     assert manifest["tokenizer_file"] == "tokenizer.json"
     manifest_digest = hashlib.sha256((MODEL / "manifest.json").read_bytes()).hexdigest()
-    worker_source = (ROOT / "apps/web/src/bin/worker/assets.rs").read_text()
+    worker_source = (ROOT / "apps/worker/src/bin/worker/assets.rs").read_text()
     assert manifest_digest in worker_source
     assert CORPUS.is_file()
     assert not (ROOT / "assets/corpus/edu.txt").exists()

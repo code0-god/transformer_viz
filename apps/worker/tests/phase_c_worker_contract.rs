@@ -1,7 +1,7 @@
 //! Exact Phase C integration through the shared Worker handler.
 
 use nanogpt_schema::{TokenId, WorkerResponse};
-use transformer_viz_web::spike::{WorkerRequest, handle_worker_request};
+use transformer_viz_worker::spike::{WorkerRequest, handle_worker_request};
 
 #[test]
 fn run_summary_uses_u64_request_and_native_wasm_tokenizer() -> Result<(), Box<dyn std::error::Error>>

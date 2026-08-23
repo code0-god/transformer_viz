@@ -6,15 +6,13 @@ mod tests {
 
     use nanogpt_schema::{TokenKind, WorkerRequest, WorkerResponse};
 
+    use crate::app::narrative::{NARRATIVE_STAGE_COUNT, NarrativeSpeed, NarrativeStage};
     use crate::app::{
         state::AppState,
         state_test_fixtures::{attention_response, block_response, token_response},
         ui_state::{ExplorerUiState, InspectorTab},
     };
-    use crate::{
-        app::narrative::{NARRATIVE_STAGE_COUNT, NarrativeSpeed, NarrativeStage},
-        spike,
-    };
+    use transformer_viz_worker::spike;
 
     type TestResult = Result<(), Box<dyn Error>>;
 

@@ -1,29 +1,11 @@
-//! Browser application protocol and Candle spike.
+//! Leptos browser application and shared Worker protocol presentation.
 
 pub mod app;
-#[doc(hidden)]
-pub mod asset_policy;
 #[cfg(target_arch = "wasm32")]
 pub mod components;
 pub mod guided_math;
 mod guided_math_types;
-pub mod runtime;
-#[doc(hidden)]
-pub mod runtime_assets;
-pub mod runtime_error;
-#[doc(hidden)]
-pub mod runtime_generation;
-#[doc(hidden)]
-pub mod runtime_generation_control;
-pub mod runtime_generation_replay;
-#[doc(hidden)]
-pub mod runtime_timer;
-#[doc(hidden)]
-pub mod runtime_trace;
-#[doc(hidden)]
-pub mod runtime_trace_support;
 pub mod source_map;
-pub mod spike;
 pub mod tensor_address;
 pub mod trace_lookup;
 pub mod visualization;
