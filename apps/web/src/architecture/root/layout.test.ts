@@ -30,7 +30,7 @@ describe("Root architecture geometry", () => {
     ]);
     expect(RESIDUAL_JUNCTIONS).toEqual([
       { x: 500, y: 368 },
-      { x: 500, y: 584 },
+      { x: 500, y: 590 },
     ]);
   });
 

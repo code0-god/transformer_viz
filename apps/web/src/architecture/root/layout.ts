@@ -43,7 +43,7 @@ export const RESIDUAL_JUNCTIONS: readonly [
   Readonly<{ x: number; y: number }>,
 ] = [
   { x: CENTER_X, y: 368 },
-  { x: CENTER_X, y: 584 },
+  { x: CENTER_X, y: 590 },
 ];
 export const RESIDUAL_RAIL_X = 700;
 

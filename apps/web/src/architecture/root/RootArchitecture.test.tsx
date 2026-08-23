@@ -64,7 +64,7 @@ describe("RootArchitecture", () => {
     ).toHaveAttribute("d", "M 500 368 H 700 V 560 H 518");
     expect(
       container.querySelector('[data-connector="add1-output-to-add2"]'),
-    ).toHaveAttribute("d", "M 500 584 H 700 V 776 H 518");
+    ).toHaveAttribute("d", "M 500 590 H 700 V 776 H 518");
   });
 
   test("paints named connectors after their targets and junctions after paths", () => {
