@@ -1,6 +1,6 @@
 # ADR 0003: Guided Learning Player
 
-- Status: Accepted
+- Status: Superseded by ADR 0006
 - Date: 2026-08-22
 - Numbering note: this deliberate duplicate remains `0003` because the user required the exact
   filename `docs/adr/0003-guided-learning-player.md`; references should include the ADR title or

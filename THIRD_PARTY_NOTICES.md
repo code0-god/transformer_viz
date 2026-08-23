@@ -12,6 +12,18 @@ unmodified license text is available at:
 Source provenance and the immutable upstream revision are documented in
 `reference/NANOGPT_SOURCE.md`.
 
+## Educational model and corpus
+
+The bundled educational model assets and training corpus are dedicated under CC0 1.0:
+
+| Material | License record |
+|---|---|
+| `nanogpt-edu` model assets | `assets/models/edu/manifest.json` (`license: CC0-1.0`) |
+| Educational corpus | `assets/corpus/LICENSE.md` |
+
+The release build verifies the canonical model assets byte-for-byte. CC0 terms are available at
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+
 ## Browser runtime
 
 Versions and licenses are verified from the frozen pnpm installation:

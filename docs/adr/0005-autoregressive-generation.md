@@ -1,6 +1,6 @@
 # ADR 0005: Autoregressive generation and step replay
 
-- Status: Accepted
+- Status: Accepted for Worker generation/replay; curriculum UI superseded by ADR 0006
 - Date: 2026-08-22
 
 ADR 0004 already records reproducible static deployment, so this decision uses the next available
@@ -42,10 +42,9 @@ context to run one traced forward without sampling again. The selected token rem
 summary value. Replay logits and Top-K must match generation within the existing numerical
 tolerance.
 
-Render one config-driven Architecture Map with GPT, Block, Attention, and Generation levels.
-Guided and Explore select the same architecture-node state, Main Canvas, Inspector, and source
-mapping. The final curriculum steps show Generated Token, Append to Context, position growth, full
-forward repeat, and the absence of KV-cache reuse.
+Render one config-driven React architecture surface with Root, Transformer Block, and
+Self-Attention drill-down beside Prompt, Generate, Stop, continuation, and selected-step replay.
+Architecture navigation remains browser-only state; replay asks the Worker for retained evidence.
 
 Use “text generation”, “generated continuation”, and “generated token”. Do not present output as an
 assistant answer or instruction-following response.
