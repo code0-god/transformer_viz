@@ -1,0 +1,38 @@
+.architecture-node {
+  cursor: pointer;
+  outline: none;
+}
+
+.architecture-node--static,
+.architecture-node.is-disabled {
+  cursor: default;
+}
+
+.architecture-node__focus-outline {
+  fill: transparent;
+  pointer-events: none;
+  stroke: transparent;
+  stroke-width: 2;
+}
+
+.architecture-node:hover:not(.architecture-node--static, .is-disabled) .architecture-node__focus-outline {
+  stroke: color-mix(in srgb, currentColor 45%, transparent);
+}
+
+.architecture-node:focus-visible .architecture-node__focus-outline {
+  stroke: currentColor;
+  stroke-dasharray: 4 3;
+}
+
+.architecture-node.is-selected .architecture-node__focus-outline {
+  stroke: currentColor;
+  stroke-width: 3;
+}
+
+.architecture-node.is-disabled {
+  opacity: 0.55;
+}
+
+.architecture-node__drill-down {
+  pointer-events: none;
+}
