@@ -309,13 +309,22 @@ button.primary {
   padding: var(--s4);
   box-shadow: var(--shadow);
 }
+.architecture-breadcrumb { overflow-x: auto; }
 .architecture-breadcrumb ol {
   display: flex;
   align-items: center;
   gap: var(--s2);
+  min-inline-size: 100%;
+  inline-size: max-content;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+.architecture-breadcrumb li {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--s2);
 }
 .architecture-breadcrumb button {
   min-block-size: 44px;
@@ -325,6 +334,8 @@ button.primary {
   color: var(--accent);
 }
 .architecture-breadcrumb-current { display: flex; gap: var(--s2); color: var(--ink-muted); font-size: .78rem; }
+.architecture-breadcrumb button,
+.architecture-breadcrumb-current { white-space: nowrap; }
 .architecture-back-button {
   min-block-size: 44px;
   padding: .5rem .8rem;
@@ -365,7 +376,7 @@ button.primary {
 .architecture-annotation {
   display: grid;
   gap: var(--s4);
-  align-self: center;
+  align-self: start;
   padding: var(--s5);
   border: 1px solid color-mix(in srgb, #d89a45 55%, var(--hairline));
   border-radius: 16px;
@@ -650,6 +661,108 @@ button.primary {
   color: var(--ink);
   font-size: .73rem;
 }
+.architecture-attention-toolbar { align-items: end; }
+.architecture-attention-selectors {
+  display: flex;
+  align-items: end;
+  gap: var(--s4);
+}
+.architecture-attention-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem);
+  align-items: start;
+}
+.architecture-attention-figure { min-inline-size: 0; }
+.architecture-attention-diagram {
+  max-inline-size: 56rem;
+  min-inline-size: 50rem;
+}
+.architecture-attention-state rect {
+  fill: var(--surface);
+  stroke: var(--hairline);
+  stroke-width: 1.5;
+}
+.architecture-attention-operation rect,
+.architecture-attention-split rect {
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+.architecture-attention-projection rect {
+  fill: var(--projection-soft);
+  stroke: #9d83bd;
+}
+.architecture-attention-query rect { fill: var(--block-soft); stroke: #7096c7; }
+.architecture-attention-key rect { fill: var(--embedding-soft); stroke: #78a27d; }
+.architecture-attention-value rect { fill: var(--token-soft); stroke: #c67a64; }
+.architecture-attention-split rect { fill: color-mix(in srgb, var(--surface) 88%, var(--block-soft)); }
+.architecture-attention-score rect,
+.architecture-attention-scale rect { fill: var(--normalization-soft); stroke: #d6a94b; }
+.architecture-attention-mask rect { fill: var(--token-soft); stroke: #c67a64; }
+.architecture-attention-softmax rect,
+.architecture-attention-aggregation rect { fill: var(--sampling-soft); stroke: #d58d35; }
+.architecture-attention-merge rect { fill: var(--block-soft); stroke: #7096c7; }
+.architecture-attention-flow {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.7;
+  marker-end: url("#attention-detail-arrow");
+}
+.architecture-attention-connector-label {
+  fill: #8f4f3d !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+}
+.architecture-annotation.architecture-attention-annotation {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+}
+.architecture-attention-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s2);
+  margin: 0;
+}
+.architecture-attention-facts div {
+  padding: var(--s2);
+  border-block-start: 1px solid var(--hairline);
+}
+.architecture-attention-facts dt {
+  color: var(--ink-muted);
+  font-size: .7rem;
+  font-weight: 700;
+}
+.architecture-attention-facts dd {
+  margin: .2rem 0 0;
+  color: var(--ink);
+  font-size: .8rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.architecture-attention-formula,
+.architecture-attention-operation {
+  display: grid;
+  gap: var(--s2);
+  padding-block-start: var(--s3);
+  border-block-start: 1px solid var(--hairline);
+}
+.architecture-attention-formula span,
+.architecture-attention-operation > span {
+  color: var(--ink-muted);
+  font-size: .72rem;
+  font-weight: 750;
+}
+.architecture-attention-formula code {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: .75rem;
+  line-height: 1.6;
+}
+.architecture-attention-operation strong { font-size: .88rem; }
+.architecture-attention-operation p {
+  color: var(--ink-muted);
+  font-size: .76rem;
+  line-height: 1.55;
+  word-break: keep-all;
+}
 
 .fatal-error {
   display: grid;
@@ -673,6 +786,7 @@ button.primary {
   .architecture-annotation ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .architecture-diagram { min-inline-size: 50rem; }
   .architecture-detail-diagram { min-inline-size: 42rem; }
+  .architecture-attention-diagram { min-inline-size: 50rem; }
   .lifecycle-detail { display: none; }
   .lifecycle-error .lifecycle-detail { display: block; }
 }
@@ -700,6 +814,9 @@ button.primary {
   .architecture-annotation { grid-template-columns: minmax(0, 1fr); }
   .architecture-annotation ul { grid-template-columns: minmax(0, 1fr); }
   .architecture-diagram { min-inline-size: 36rem; }
+  .architecture-attention-toolbar { align-items: stretch; flex-direction: column; }
+  .architecture-attention-selectors { flex-wrap: wrap; }
+  .architecture-attention-diagram { min-inline-size: 50rem; }
 }
 
 @media (hover: none) {

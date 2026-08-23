@@ -2,6 +2,10 @@
 
 use std::ops::Range;
 
+mod node;
+
+pub use node::{ArchitectureNodeCapability, ArchitectureNodeId};
+
 /// Architecture depth shown by the shared canvas.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum ArchitectureView {
@@ -10,137 +14,59 @@ pub enum ArchitectureView {
     Root,
     /// One Pre-LN Transformer block.
     TransformerBlock,
-}
-
-/// Stable identity for every architecture node in the current hierarchy.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ArchitectureNodeId {
-    /// GPT root breadcrumb identity.
-    Root,
-    /// Current token sequence.
-    InputContext,
-    /// Token embedding lookup.
-    TokenEmbedding,
-    /// Position embedding lookup.
-    PositionEmbedding,
-    /// Embedding merge addition.
-    EmbeddingAdd,
-    /// Initial hidden state.
-    HiddenState,
-    /// Repeated Transformer block.
-    TransformerBlock,
-    /// First Pre-LN normalization.
-    LayerNorm1,
-    /// Causal multi-head self-attention.
+    /// Causal multi-head self-attention internals.
     SelfAttention,
-    /// First residual addition.
-    Residual1,
-    /// Second Pre-LN normalization.
-    LayerNorm2,
-    /// Feed-forward network.
-    Mlp,
-    /// Second residual addition.
-    Residual2,
-    /// Final hidden-state normalization.
-    FinalLayerNorm,
-    /// Vocabulary projection.
-    LmHead,
-    /// Per-token scores.
-    Logits,
-    /// Sampling stage.
-    TokenSelection,
-    /// Sampled token.
-    GeneratedToken,
-    /// Context append operation.
-    AppendContext,
 }
 
-impl ArchitectureNodeId {
-    /// Stable machine-readable value used by browser contracts.
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::Root => "root",
-            Self::InputContext => "input-context",
-            Self::TokenEmbedding => "token-embedding",
-            Self::PositionEmbedding => "position-embedding",
-            Self::EmbeddingAdd => "embedding-add",
-            Self::HiddenState => "hidden-state",
-            Self::TransformerBlock => "transformer-block",
-            Self::LayerNorm1 => "layer-norm-1",
-            Self::SelfAttention => "self-attention",
-            Self::Residual1 => "residual-1",
-            Self::LayerNorm2 => "layer-norm-2",
-            Self::Mlp => "mlp",
-            Self::Residual2 => "residual-2",
-            Self::FinalLayerNorm => "final-layer-norm",
-            Self::LmHead => "lm-head",
-            Self::Logits => "logits",
-            Self::TokenSelection => "token-selection",
-            Self::GeneratedToken => "generated-token",
-            Self::AppendContext => "append-context",
-        }
-    }
-
-    /// Interaction supported by this node in the current release.
-    #[must_use]
-    pub const fn capability(self) -> ArchitectureNodeCapability {
-        match self {
-            Self::TransformerBlock => ArchitectureNodeCapability::DrillDown,
-            Self::InputContext
-            | Self::TokenEmbedding
-            | Self::PositionEmbedding
-            | Self::LayerNorm1
-            | Self::SelfAttention
-            | Self::Residual1
-            | Self::LayerNorm2
-            | Self::Mlp
-            | Self::Residual2
-            | Self::FinalLayerNorm
-            | Self::LmHead
-            | Self::Logits
-            | Self::TokenSelection
-            | Self::GeneratedToken
-            | Self::AppendContext => ArchitectureNodeCapability::Selectable,
-            Self::Root | Self::EmbeddingAdd | Self::HiddenState => {
-                ArchitectureNodeCapability::Static
-            }
-        }
-    }
-
-    /// Whether activating the node enters a deeper architecture view.
-    #[must_use]
-    pub const fn can_open(self) -> bool {
-        matches!(self.capability(), ArchitectureNodeCapability::DrillDown)
-    }
-}
-
-/// User action available on an architecture node.
+/// Config-derived shape values shown by Self-Attention Architecture.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ArchitectureNodeCapability {
-    /// Node is structural and has no direct action.
-    Static,
-    /// Node can become the current selection.
-    Selectable,
-    /// Node opens an implemented child architecture.
-    DrillDown,
+pub struct AttentionArchitectureMetadata {
+    model_width: usize,
+    head_count: usize,
+    head_dimension: usize,
+    qkv_width: usize,
 }
 
-impl ArchitectureNodeCapability {
-    /// Stable machine-readable value used by browser contracts.
+impl AttentionArchitectureMetadata {
+    /// Derives exact attention dimensions from validated model config values.
     #[must_use]
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::Static => "static",
-            Self::Selectable => "selectable",
-            Self::DrillDown => "drill-down",
+    pub const fn from_config(model_width: usize, head_count: usize) -> Option<Self> {
+        if head_count == 0 || !model_width.is_multiple_of(head_count) {
+            return None;
         }
+        let Some(qkv_width) = model_width.checked_mul(3) else {
+            return None;
+        };
+        Some(Self {
+            model_width,
+            head_count,
+            head_dimension: model_width / head_count,
+            qkv_width,
+        })
     }
 
-    /// Whether the node needs button semantics.
     #[must_use]
-    pub const fn is_interactive(self) -> bool {
-        !matches!(self, Self::Static)
+    /// Model embedding width C.
+    pub const fn model_width(self) -> usize {
+        self.model_width
+    }
+
+    #[must_use]
+    /// Configured attention head count H.
+    pub const fn head_count(self) -> usize {
+        self.head_count
+    }
+
+    #[must_use]
+    /// Per-head dimension D.
+    pub const fn head_dimension(self) -> usize {
+        self.head_dimension
+    }
+
+    #[must_use]
+    /// Combined projection output width 3C.
+    pub const fn qkv_width(self) -> usize {
+        self.qkv_width
     }
 }
 
@@ -149,6 +75,7 @@ impl ArchitectureNodeCapability {
 pub struct ArchitectureOverviewState {
     view: ArchitectureView,
     selected_layer: usize,
+    selected_head: usize,
     selected_node: Option<ArchitectureNodeId>,
 }
 
@@ -165,6 +92,12 @@ impl ArchitectureOverviewState {
         self.selected_layer
     }
 
+    /// Configured attention head retained across architecture navigation.
+    #[must_use]
+    pub const fn selected_head(self) -> usize {
+        self.selected_head
+    }
+
     /// Current node selection.
     #[must_use]
     pub const fn selected_node(self) -> Option<ArchitectureNodeId> {
@@ -179,7 +112,7 @@ impl ArchitectureOverviewState {
 
     /// Opens the implemented Transformer Block detail.
     pub const fn open_transformer_block(&mut self, layer_count: usize) {
-        if let Some(layer) = clamp_layer(self.selected_layer, layer_count) {
+        if let Some(layer) = clamp_index(self.selected_layer, layer_count) {
             self.selected_layer = layer;
             self.selected_node = Some(ArchitectureNodeId::TransformerBlock);
             self.view = ArchitectureView::TransformerBlock;
@@ -188,23 +121,62 @@ impl ArchitectureOverviewState {
         }
     }
 
+    /// Returns to Transformer Block while retaining layer and head coordinates.
+    pub const fn select_transformer_block(&mut self, layer_count: usize) {
+        if let Some(layer) = clamp_index(self.selected_layer, layer_count) {
+            self.selected_layer = layer;
+            self.selected_node = Some(ArchitectureNodeId::SelfAttention);
+            self.view = ArchitectureView::TransformerBlock;
+        } else {
+            self.select_root();
+        }
+    }
+
+    /// Opens the implemented Self-Attention architecture.
+    pub const fn open_self_attention(&mut self, layer_count: usize, head_count: usize) {
+        let layer = clamp_index(self.selected_layer, layer_count);
+        let head = clamp_index(self.selected_head, head_count);
+        match (layer, head) {
+            (Some(layer), Some(head)) => {
+                self.selected_layer = layer;
+                self.selected_head = head;
+                self.selected_node = Some(ArchitectureNodeId::SelfAttention);
+                self.view = ArchitectureView::SelfAttention;
+            }
+            _ => self.select_root(),
+        }
+    }
+
     /// Changes the retained layer index without changing canvas depth.
     pub const fn select_layer(&mut self, requested_layer: usize, layer_count: usize) {
-        if let Some(layer) = clamp_layer(requested_layer, layer_count) {
+        if let Some(layer) = clamp_index(requested_layer, layer_count) {
             self.selected_layer = layer;
         }
     }
 
+    /// Changes the retained head index without changing canvas depth.
+    pub const fn select_head(&mut self, requested_head: usize, head_count: usize) {
+        if let Some(head) = clamp_index(requested_head, head_count) {
+            self.selected_head = head;
+        }
+    }
+
     /// Activates one node according to its current capability.
-    pub const fn activate_node(&mut self, node: ArchitectureNodeId, layer_count: usize) {
-        match node.capability() {
-            ArchitectureNodeCapability::Static => {}
-            ArchitectureNodeCapability::Selectable => {
+    pub const fn activate_node(
+        &mut self,
+        node: ArchitectureNodeId,
+        layer_count: usize,
+        head_count: usize,
+    ) {
+        match node {
+            ArchitectureNodeId::TransformerBlock => self.open_transformer_block(layer_count),
+            ArchitectureNodeId::SelfAttention => {
+                self.open_self_attention(layer_count, head_count);
+            }
+            _ if matches!(node.capability(), ArchitectureNodeCapability::Selectable) => {
                 self.selected_node = Some(node);
             }
-            ArchitectureNodeCapability::DrillDown => {
-                self.open_transformer_block(layer_count);
-            }
+            _ => {}
         }
     }
 
@@ -219,17 +191,18 @@ impl ArchitectureOverviewState {
                     format!("Transformer Block × {layer_count}"),
                 ]
             }
+            ArchitectureView::SelfAttention => vec![
+                "GPT".to_owned(),
+                format!("Transformer Block × {layer_count}"),
+                "Self-Attention".to_owned(),
+            ],
         }
     }
 }
 
-const fn clamp_layer(requested_layer: usize, layer_count: usize) -> Option<usize> {
-    match layer_count.checked_sub(1) {
-        Some(last_layer) => Some(if requested_layer < last_layer {
-            requested_layer
-        } else {
-            last_layer
-        }),
+const fn clamp_index(requested: usize, count: usize) -> Option<usize> {
+    match count.checked_sub(1) {
+        Some(last) => Some(if requested < last { requested } else { last }),
         None => None,
     }
 }
@@ -238,4 +211,10 @@ const fn clamp_layer(requested_layer: usize, layer_count: usize) -> Option<usize
 #[must_use]
 pub const fn architecture_block_layers(layer_count: usize) -> Range<usize> {
     0..layer_count
+}
+
+/// Exact configured attention head indices.
+#[must_use]
+pub const fn architecture_attention_heads(head_count: usize) -> Range<usize> {
+    0..head_count
 }

@@ -2,10 +2,12 @@
 
 use leptos::prelude::*;
 use wasm_bindgen::JsCast as _;
+mod attention_detail;
 mod block_detail;
 mod diagram;
 mod node;
 
+use attention_detail::attention_detail;
 use block_detail::block_detail;
 use diagram::ready_architecture;
 
@@ -41,7 +43,7 @@ pub(super) fn architecture_overview(state: RwSignal<AppState>) -> impl IntoView 
                 let layer_count = model.as_ref().map_or(0, |model| model.config.n_layer);
                 view! {
                     {architecture_breadcrumb(state, overview, layer_count)}
-                    {architecture_intro(state, overview.view())}
+                    {architecture_intro(state, overview.view(), layer_count)}
                     {model.map_or_else(
                         || error.map_or_else(
                             || view! {
@@ -60,6 +62,9 @@ pub(super) fn architecture_overview(state: RwSignal<AppState>) -> impl IntoView 
                             }
                             ArchitectureView::TransformerBlock => {
                                 block_detail(&model, state, overview).into_any()
+                            }
+                            ArchitectureView::SelfAttention => {
+                                attention_detail(&model, state, overview)
                             }
                         },
                     )}
@@ -102,10 +107,36 @@ fn architecture_breadcrumb(
                     }}
                 </li>
                 {labels.get(1).map(|label| view! {
+                    <li>
+                        <span aria-hidden="true">"›"</span>
+                        {if overview.view() == ArchitectureView::SelfAttention {
+                            view! {
+                                <button
+                                    type="button"
+                                    data-testid="architecture-breadcrumb-block"
+                                    on:click=move |_| select_transformer_block(state, layer_count)
+                                >
+                                    {label.clone()}
+                                </button>
+                            }.into_any()
+                        } else {
+                            view! {
+                                <span
+                                    class="architecture-breadcrumb-current"
+                                    data-testid="architecture-breadcrumb-block"
+                                    aria-current="page"
+                                >
+                                    {label.clone()}
+                                </span>
+                            }.into_any()
+                        }}
+                    </li>
+                })}
+                {labels.get(2).map(|label| view! {
                     <li class="architecture-breadcrumb-current">
                         <span aria-hidden="true">"›"</span>
                         <span
-                            data-testid="architecture-breadcrumb-block"
+                            data-testid="architecture-breadcrumb-attention"
                             aria-current="page"
                         >
                             {label.clone()}
@@ -117,7 +148,11 @@ fn architecture_breadcrumb(
     }
 }
 
-fn architecture_intro(state: RwSignal<AppState>, view: ArchitectureView) -> impl IntoView {
+fn architecture_intro(
+    state: RwSignal<AppState>,
+    view: ArchitectureView,
+    layer_count: usize,
+) -> impl IntoView {
     view! {
         <div class="architecture-intro">
             <div>
@@ -125,6 +160,7 @@ fn architecture_intro(state: RwSignal<AppState>, view: ArchitectureView) -> impl
                     {match view {
                         ArchitectureView::Root => "GPT Architecture",
                         ArchitectureView::TransformerBlock => "Transformer Block",
+                        ArchitectureView::SelfAttention => "Self-Attention",
                     }}
                 </h2>
                 <p>
@@ -135,25 +171,51 @@ fn architecture_intro(state: RwSignal<AppState>, view: ArchitectureView) -> impl
                         ArchitectureView::TransformerBlock => {
                             "하나의 Pre-LN Decoder Block이 attention과 MLP residual을 계산하는 흐름입니다."
                         }
+                        ArchitectureView::SelfAttention => {
+                            "combined QKV projection부터 c_proj output까지 causal attention의 실제 연산 순서입니다."
+                        }
                     }}
                 </p>
             </div>
-            {(view == ArchitectureView::TransformerBlock).then(|| view! {
-                <button
-                    type="button"
-                    class="architecture-back-button"
-                    data-testid="architecture-back-root"
-                    on:click=move |_| select_root(state)
-                >
-                    "← 전체 구조"
-                </button>
-            })}
+            {match view {
+                ArchitectureView::Root => ().into_any(),
+                ArchitectureView::TransformerBlock => view! {
+                    <button
+                        type="button"
+                        class="architecture-back-button"
+                        data-testid="architecture-back-root"
+                        on:click=move |_| select_root(state)
+                    >
+                        "← 전체 구조"
+                    </button>
+                }.into_any(),
+                ArchitectureView::SelfAttention => view! {
+                    <button
+                        type="button"
+                        class="architecture-back-button"
+                        data-testid="architecture-back-block"
+                        on:click=move |_| select_transformer_block(state, layer_count)
+                    >
+                        "← Transformer Block"
+                    </button>
+                }.into_any(),
+            }}
         </div>
     }
 }
 
 fn select_root(state: RwSignal<AppState>) {
     state.update(|current| current.ui.architecture_overview.select_root());
+    focus_architecture_title();
+}
+
+fn select_transformer_block(state: RwSignal<AppState>, layer_count: usize) {
+    state.update(|current| {
+        current
+            .ui
+            .architecture_overview
+            .select_transformer_block(layer_count);
+    });
     focus_architecture_title();
 }
 

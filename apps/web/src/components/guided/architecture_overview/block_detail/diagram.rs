@@ -4,7 +4,9 @@ use leptos::prelude::*;
 
 use crate::app::architecture_overview::ArchitectureNodeId;
 
-use super::super::node::{ArchitectureInteraction, NodeBounds, architecture_node};
+use super::super::node::{
+    ArchitectureInteraction, DrillDownIndicator, NodeBounds, architecture_node,
+};
 
 mod connectors;
 
@@ -152,7 +154,11 @@ fn module_node(
                 radius: 10,
             },
             interaction,
-            None,
+            id.can_open().then_some(DrillDownIndicator {
+                x: MODULE_X + MODULE_WIDTH - 16,
+                y: y + height - 12,
+                label: "자세히 보기 ›",
+            }),
             view! { <g class=format!("architecture-block-module {class}")>
                 <rect x=MODULE_X y=y width=MODULE_WIDTH height=height rx="10"></rect>
                 <text x=CENTER_X y=y + height / 2 - 3 text-anchor="middle">{title}</text>

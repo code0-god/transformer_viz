@@ -48,6 +48,7 @@ pub(super) fn repeated_transformer_block(
             Some(DrillDownIndicator {
                 x: BLOCK_X + BLOCK_WIDTH - 20,
                 y: BLOCK_START_Y + 30,
+                label: "자세히 ›",
             }),
             view! { <g
                 class="architecture-block-group"

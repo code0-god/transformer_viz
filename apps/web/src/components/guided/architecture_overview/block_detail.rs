@@ -20,7 +20,12 @@ pub(super) fn block_detail(
 ) -> impl IntoView {
     let layer_count = model.config.n_layer;
     let selected_layer = overview.selected_layer();
-    let interaction = ArchitectureInteraction::new(state, layer_count, overview.selected_node());
+    let interaction = ArchitectureInteraction::new(
+        state,
+        layer_count,
+        model.config.n_head,
+        overview.selected_node(),
+    );
 
     view! {
         <section

@@ -24,6 +24,7 @@ pub(super) struct NodeBounds {
 pub(super) struct DrillDownIndicator {
     pub x: usize,
     pub y: usize,
+    pub label: &'static str,
 }
 
 /// State-only activation channel shared by every architecture node.
@@ -31,6 +32,7 @@ pub(super) struct DrillDownIndicator {
 pub(super) struct ArchitectureInteraction {
     state: RwSignal<AppState>,
     layer_count: usize,
+    head_count: usize,
     selected: Option<ArchitectureNodeId>,
 }
 
@@ -38,11 +40,13 @@ impl ArchitectureInteraction {
     pub(in crate::components::guided::architecture_overview) const fn new(
         state: RwSignal<AppState>,
         layer_count: usize,
+        head_count: usize,
         selected: Option<ArchitectureNodeId>,
     ) -> Self {
         Self {
             state,
             layer_count,
+            head_count,
             selected,
         }
     }
@@ -57,7 +61,7 @@ impl ArchitectureInteraction {
             current
                 .ui
                 .architecture_overview
-                .activate_node(node, self.layer_count);
+                .activate_node(node, self.layer_count, self.head_count);
         });
         if opens_detail {
             focus_architecture_title();
@@ -128,7 +132,7 @@ pub(super) fn architecture_node(
                     text-anchor="end"
                     aria-hidden="true"
                 >
-                    "자세히 ›"
+                    {position.label}
                 </text>
             })}
         </g>

@@ -21,7 +21,12 @@ pub(super) fn ready_architecture(
     overview: ArchitectureOverviewState,
 ) -> AnyView {
     let config = &model.config;
-    let interaction = ArchitectureInteraction::new(state, config.n_layer, overview.selected_node());
+    let interaction = ArchitectureInteraction::new(
+        state,
+        config.n_layer,
+        config.n_head,
+        overview.selected_node(),
+    );
     view! {
         <p class="architecture-metadata">
             <strong>{model.name.clone()}</strong>
