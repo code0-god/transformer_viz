@@ -130,7 +130,7 @@ def no_kv_scan(root: Path) -> dict[str, Any]:
 
 
 def shipping_sampling_receipt(root: Path) -> dict[str, Any]:
-    """Run shipping Rust tie and replay/full-vocabulary ranking boundaries."""
+    """Run shipping Rust sampling and React replay-state boundaries."""
     tie = command(
         [
             "cargo",
@@ -147,33 +147,22 @@ def shipping_sampling_receipt(root: Path) -> dict[str, Any]:
     )
     replay = command(
         [
-            "cargo",
-            "test",
-            "-p",
-            "transformer-viz-web",
-            "selected_step_replay_is_exact_inspectable_and_generation_neutral",
-        ],
-        root,
-    )
-    stale_history = command(
-        [
-            "cargo",
-            "test",
-            "-p",
-            "transformer-viz-web",
-            "rejected_visible_generation_clears_stale_history_and_replay",
+            "pnpm",
+            "--dir",
+            "apps/web",
+            "exec",
+            "vitest",
+            "run",
+            "src/app/generationState.test.ts",
+            "src/App.test.tsx",
         ],
         root,
     )
     return {
-        "boundary": "shipping Rust sample_final_logits tie + replay reconstruction ranks full model logits",
+        "boundary": "Rust sampling tie plus React replay correlation and stale-response regressions",
         "tie": tie,
         "replay": replay,
-        "staleHistoryRegression": stale_history,
         "passed": tie["returncode"] == 0
         and "1 passed" in tie["stdout"]
-        and replay["returncode"] == 0
-        and "1 passed" in replay["stdout"]
-        and stale_history["returncode"] == 0
-        and "1 passed" in stale_history["stdout"],
+        and replay["returncode"] == 0,
     }

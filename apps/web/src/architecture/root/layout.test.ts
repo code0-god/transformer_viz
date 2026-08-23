@@ -11,7 +11,7 @@ import {
 } from "./layout";
 
 describe("Root architecture geometry", () => {
-  test("ports the exact fixed Leptos layout", () => {
+  test("preserves the approved fixed root layout", () => {
     expect(INPUT).toEqual({ x: 320, y: 24, width: 360, height: 56 });
     expect(EMBEDDINGS).toEqual([
       { x: 220, y: 120, width: 220, height: 54 },

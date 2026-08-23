@@ -1,5 +1,5 @@
-#![cfg(feature = "typescript-bindings")]
 //! Generated TypeScript binding freshness and machine-contract tests.
+#![cfg(feature = "typescript-bindings")]
 
 use nanogpt_schema::export_typescript_bindings;
 use std::collections::BTreeMap;

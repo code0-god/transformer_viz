@@ -27,12 +27,9 @@ printf '%s\n' '==> rustfmt'
 cargo fmt --all -- --check
 
 printf '%s\n' '==> Clippy (native workspace)'
-# Clippy runs natively across every package and target. The browser package is checked separately
-# below because Cargo cannot compile native-only transitive dependencies for the WASM target.
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 
-printf '%s\n' '==> Clippy (WASM packages)'
-cargo clippy --target wasm32-unknown-unknown -p transformer-viz-web --all-features -- -D warnings
+printf '%s\n' '==> Clippy (WASM Worker)'
 cargo clippy --target wasm32-unknown-unknown -p transformer-viz-worker --all-features -- -D warnings
 
 printf '%s\n' '==> workspace tests'
@@ -41,8 +38,7 @@ cargo test --workspace
 printf '%s\n' '==> root workspace release build'
 cargo build --workspace --release
 
-printf '%s\n' '==> WASM packages (wasm32-unknown-unknown)'
-cargo check --target wasm32-unknown-unknown -p transformer-viz-web
+printf '%s\n' '==> WASM Worker (wasm32-unknown-unknown)'
 cargo check --target wasm32-unknown-unknown -p transformer-viz-worker
 
 printf '%s\n' '==> canonical assets'

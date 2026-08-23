@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "apps/web",
     "apps/worker",
     "crates/nanogpt-model",
     "crates/nanogpt-schema",
