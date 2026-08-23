@@ -38,11 +38,17 @@ export function createWorkerLifecycle(
     acquire() {
       cancelCleanup?.();
       cancelCleanup = null;
-      leases += 1;
       if (client === null) {
-        client = new WorkerClient(options.createWorker(), options);
-        client.initialize(options.manifestUrl);
+        const nextClient = new WorkerClient(options.createWorker(), options);
+        try {
+          nextClient.initialize(options.manifestUrl);
+        } catch (error: unknown) {
+          nextClient.dispose();
+          throw error;
+        }
+        client = nextClient;
       }
+      leases += 1;
       return client;
     },
     release() {

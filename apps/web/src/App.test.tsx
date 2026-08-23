@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StrictMode } from "react";
 import { App } from "./App";
@@ -29,12 +29,10 @@ async function readyApp() {
   act(() => {
     result.worker.emit({ type: "ready", model });
   });
-  await waitFor(() => {
-    expect(document.getElementById("status")).toHaveAttribute(
-      "data-status",
-      "ready",
-    );
-  });
+  expect(document.getElementById("status")).toHaveAttribute(
+    "data-status",
+    "ready",
+  );
   return result;
 }
 
@@ -61,8 +59,29 @@ async function startGeneration(
 }
 
 describe("production React Worker integration", () => {
+  test("surfaces a synchronous Worker construction error", () => {
+    render(
+      <App
+        createWorker={() => {
+          throw new Error("WORKER_CONSTRUCTION_SENTINEL");
+        }}
+        manifestUrl="https://example.test/models/edu/manifest.json"
+      />,
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "WORKER_CONSTRUCTION_SENTINEL",
+    );
+    expect(document.getElementById("status")).toHaveAttribute(
+      "data-status",
+      "error",
+    );
+  });
+
   test("owns one initialized Worker under StrictMode and terminates on final cleanup", async () => {
     const { worker, rendered } = renderApp();
+    expect(screen.getByRole("textbox", { name: "Prompt" })).toHaveValue(
+      "the cat",
+    );
     expect(worker.posted).toEqual([
       {
         type: "initialize",
@@ -116,6 +135,29 @@ describe("production React Worker integration", () => {
       request_id: 0,
       run_id: 7,
     });
+  });
+
+  test("shows a correlated generation error in the global lifecycle", async () => {
+    const { worker } = await readyApp();
+    await startGeneration(worker);
+    act(() => {
+      worker.emit({
+        type: "error",
+        request_id: 0,
+        code: "invalid_request",
+        message: "GENERATION_ERROR_SENTINEL",
+      });
+    });
+    expect(document.querySelector(".lifecycle-detail")).toHaveTextContent(
+      "GENERATION_ERROR_SENTINEL",
+    );
+    expect(document.querySelector(".generation-error")).toHaveTextContent(
+      "GENERATION_ERROR_SENTINEL",
+    );
+    expect(document.getElementById("status")).toHaveAttribute(
+      "data-status",
+      "error",
+    );
   });
 
   test("replays a selected generated step and exposes trace-only attention T", async () => {

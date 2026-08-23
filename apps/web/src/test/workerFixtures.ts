@@ -81,7 +81,7 @@ export function token(id: number, display: string): TokenInfo {
   return {
     id,
     display,
-    piece: [id],
+    piece: [...new TextEncoder().encode(display)],
     byte_start: 0,
     byte_end: 1,
     kind: "byte",

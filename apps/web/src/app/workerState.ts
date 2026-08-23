@@ -90,9 +90,14 @@ export function reduceWorkerResponse(
           }
         : state;
     case "error":
-      return response.request_id === null
-        ? { ...state, status: { type: "error", message: response.message } }
-        : state;
+      return {
+        ...state,
+        status: { type: "error", message: response.message },
+        pendingRunRequestId:
+          response.request_id === state.pendingRunRequestId
+            ? null
+            : state.pendingRunRequestId,
+      };
     case "block_trace":
     case "attention_head_trace":
     case "token_trace":

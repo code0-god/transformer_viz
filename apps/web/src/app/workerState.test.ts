@@ -59,16 +59,19 @@ describe("worker lifecycle correlation", () => {
     expect(accepted.pendingRunRequestId).toBeNull();
   });
 
-  test("promotes only uncorrelated Worker errors to global lifecycle errors", () => {
-    const ready = reduceWorkerResponse(createWorkerState(), {
+  test("promotes correlated and uncorrelated Worker errors globally", () => {
+    const correlated = reduceWorkerResponse(createWorkerState(), {
       type: "error",
       request_id: 9,
       code: "inference",
-      message: "stale detail",
+      message: "request failed",
     });
-    expect(ready.status.type).toBe("loading");
+    expect(correlated.status).toEqual({
+      type: "error",
+      message: "request failed",
+    });
 
-    const failed = reduceWorkerResponse(ready, {
+    const failed = reduceWorkerResponse(correlated, {
       type: "error",
       request_id: null,
       code: "asset_unavailable",

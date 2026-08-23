@@ -4,6 +4,11 @@ import type {
   WorkerRequest,
   WorkerResponse,
 } from "../generated/schema";
+import {
+  type ActiveRequest,
+  activeRequestFor,
+  correlateResponse,
+} from "./requestCorrelation";
 
 export interface WorkerTransportEventMap {
   readonly error: Event;
@@ -37,7 +42,7 @@ export interface WorkerClientOptions {
 
 export class WorkerClient {
   readonly #worker: WorkerTransport;
-  readonly #activeRequestIds = new Set<number>();
+  readonly #activeRequests = new Map<number, ActiveRequest>();
   readonly #onError: (error: Error) => void;
   readonly #onResponse: (response: WorkerResponse) => void;
   readonly #onRejected: (data: unknown) => void;
@@ -167,7 +172,7 @@ export class WorkerClient {
   dispose(): void {
     if (this.#disposed) return;
     this.#disposed = true;
-    this.#activeRequestIds.clear();
+    this.#activeRequests.clear();
     this.#worker.removeEventListener("message", this.#listener);
     this.#worker.removeEventListener("error", this.#errorListener);
     this.#worker.terminate();
@@ -180,8 +185,9 @@ export class WorkerClient {
       throw new RangeError(
         "Worker request ID exhausted the safe integer range",
       );
-    this.#post(create(requestId));
-    this.#activeRequestIds.add(requestId);
+    const request = create(requestId);
+    this.#post(request);
+    this.#activeRequests.set(requestId, activeRequestFor(request));
     this.#nextRequestId =
       requestId === Number.MAX_SAFE_INTEGER
         ? Number.MAX_SAFE_INTEGER + 1
@@ -193,7 +199,7 @@ export class WorkerClient {
   }
   #requireActive(requestId: number): void {
     this.#ensureLive();
-    if (!this.#activeRequestIds.has(requestId))
+    if (!this.#activeRequests.has(requestId))
       throw new Error(`Worker request ${requestId} is not active`);
   }
   #ensureLive(): void {
@@ -210,24 +216,22 @@ export class WorkerClient {
         : "request_id" in data
           ? data.request_id
           : null;
-    if (requestId !== null && !this.#activeRequestIds.has(requestId)) {
+    if (requestId === null) {
+      this.#onResponse(data);
+      return;
+    }
+    const active = this.#activeRequests.get(requestId);
+    if (active === undefined) {
       this.#onStaleResponse(data);
       return;
     }
-    if (requestId !== null && isTerminal(data))
-      this.#activeRequestIds.delete(requestId);
+    const correlation = correlateResponse(active, data);
+    if (!correlation.accepted) {
+      this.#onRejected(data);
+      return;
+    }
+    if (correlation.terminal) this.#activeRequests.delete(requestId);
+    else this.#activeRequests.set(requestId, correlation.active);
     this.#onResponse(data);
   }
-}
-
-function isTerminal(response: WorkerResponse): boolean {
-  return (
-    response.type === "run_complete" ||
-    response.type === "block_trace" ||
-    response.type === "attention_head_trace" ||
-    response.type === "token_trace" ||
-    response.type === "generation_step_trace" ||
-    response.type === "generation_finished" ||
-    response.type === "error"
-  );
 }

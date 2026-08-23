@@ -84,7 +84,10 @@ GENERATE = r"""(() => new Promise((resolve, reject) => {
       observer.disconnect();
       clearTimeout(timeout);
       value === 'complete'
-        ? resolve(document.querySelectorAll('.continuation-panel output')[1]?.textContent ?? '')
+        ? resolve({
+            text: document.querySelectorAll('.continuation-panel output')[1]?.textContent ?? '',
+            steps: document.querySelectorAll('.generation-steps button').length,
+          })
         : reject(new Error(status?.textContent));
     }
   };
@@ -172,7 +175,7 @@ def verify(root: Path, entry: str) -> None:
                 and event.get("params", {}).get("name") == "load",
             )
             cdp.evaluate(browser.page_session, READY, True)
-            continuation = cdp.evaluate(browser.page_session, GENERATE, True)
+            generation = cdp.evaluate(browser.page_session, GENERATE, True)
             state = cdp.evaluate(browser.page_session, NAVIGATE, True)
             cdp.evaluate(browser.page_session, "document.fonts.ready", True)
             font_ready = cdp.evaluate(
@@ -207,7 +210,7 @@ def verify(root: Path, entry: str) -> None:
                 and int(response.get("status", 0)) == 200
             }
             if (
-                not continuation
+                generation["steps"] < 1
                 or not state["root"]
                 or not state["block"]
                 or not state["attention"]
@@ -222,7 +225,7 @@ def verify(root: Path, entry: str) -> None:
                 or runtime_errors
             ):
                 raise ReactIntegrationError(
-                    f"React integration failed: continuation={continuation!r}, "
+                    f"React integration failed: generation={generation!r}, "
                     f"state={state}, font_ready={font_ready}, "
                     f"suffixes={sorted(suffixes)}, runtime_errors={runtime_errors}"
                 )

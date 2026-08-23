@@ -13,6 +13,14 @@ import {
 const tokenKinds = new Set(["bos", "byte", "eos", "unknown"]);
 const samplingModes = new Set(["greedy", "sample"]);
 
+function isProbability(value: unknown): value is number {
+  return isFiniteNumber(value) && value >= 0 && value <= 1;
+}
+
+function isNonNegativeNumber(value: unknown): value is number {
+  return isFiniteNumber(value) && value >= 0;
+}
+
 export function isStats(value: unknown): boolean {
   return (
     isRecord(value) &&
@@ -35,12 +43,26 @@ export function isSource(value: unknown): boolean {
 }
 
 export function isSnapshot(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const shape = field(value, "shape");
+  const values = field(value, "values");
+  if (
+    !Array.isArray(shape) ||
+    !shape.every(isSafeId) ||
+    !Array.isArray(values) ||
+    !values.every(isFiniteNumber)
+  ) {
+    return false;
+  }
+  const expectedValues = shape.reduce(
+    (product, dimension) => product * dimension,
+    1,
+  );
   return (
-    isRecord(value) &&
     isString(field(value, "id")) &&
     isString(field(value, "label")) &&
-    isArray(field(value, "shape"), isSafeId) &&
-    isArray(field(value, "values"), isFiniteNumber) &&
+    values.length > 0 &&
+    values.length === expectedValues &&
     isStats(field(value, "stats"))
   );
 }
@@ -63,7 +85,7 @@ export function isCandidate(value: unknown): boolean {
     isSafeId(field(value, "token_id")) &&
     isString(field(value, "display")) &&
     isFiniteNumber(field(value, "logit")) &&
-    isFiniteNumber(field(value, "probability"))
+    isProbability(field(value, "probability"))
   );
 }
 
@@ -77,23 +99,26 @@ export function isLogits(value: unknown): boolean {
 }
 
 export function isGenerationConfig(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const temperature = field(value, "temperature");
+  const topK = field(value, "top_k");
   return (
-    isRecord(value) &&
     isSafeId(field(value, "max_new_tokens")) &&
-    isFiniteNumber(field(value, "temperature")) &&
-    isSafeId(field(value, "top_k")) &&
+    isFiniteNumber(temperature) &&
+    temperature > 0 &&
+    isSafeId(topK) &&
+    topK > 0 &&
     isOneOf(field(value, "mode"), samplingModes) &&
     isSafeId(field(value, "seed"))
   );
 }
 
 function isInterval(value: unknown): boolean {
-  return (
-    value === null ||
-    (isRecord(value) &&
-      isFiniteNumber(field(value, "start")) &&
-      isFiniteNumber(field(value, "end")))
-  );
+  if (value === null) return true;
+  if (!isRecord(value)) return false;
+  const start = field(value, "start");
+  const end = field(value, "end");
+  return isProbability(start) && isProbability(end) && start < end;
 }
 
 export function isStep(value: unknown): boolean {
@@ -103,14 +128,14 @@ export function isStep(value: unknown): boolean {
     isArray(field(value, "context_token_ids"), isSafeId) &&
     isToken(field(value, "generated_token")) &&
     isFiniteNumber(field(value, "selected_logit")) &&
-    isFiniteNumber(field(value, "selected_probability")) &&
+    isProbability(field(value, "selected_probability")) &&
     isArray(field(value, "candidates"), isCandidate) &&
     (field(value, "random") === null ||
       isFiniteNumber(field(value, "random"))) &&
     isInterval(field(value, "selected_interval")) &&
-    isFiniteNumber(field(value, "forward_ms")) &&
-    isFiniteNumber(field(value, "sampling_ms")) &&
-    isFiniteNumber(field(value, "total_ms"))
+    isNonNegativeNumber(field(value, "forward_ms")) &&
+    isNonNegativeNumber(field(value, "sampling_ms")) &&
+    isNonNegativeNumber(field(value, "total_ms"))
   );
 }
 
@@ -118,16 +143,27 @@ export function isModel(value: unknown): boolean {
   if (!isRecord(value)) return false;
   const config = field(value, "config");
   if (!isRecord(config)) return false;
+  const blockSize = field(config, "block_size");
+  const vocabSize = field(config, "vocab_size");
+  const layerCount = field(config, "n_layer");
+  const headCount = field(config, "n_head");
+  const embeddingSize = field(config, "n_embd");
   return (
     isString(field(value, "name")) &&
     isString(field(value, "corpus")) &&
     isString(field(value, "nanogpt_commit")) &&
     isSafeId(field(value, "parameter_count")) &&
-    isSafeId(field(config, "block_size")) &&
-    isSafeId(field(config, "vocab_size")) &&
-    isSafeId(field(config, "n_layer")) &&
-    isSafeId(field(config, "n_head")) &&
-    isSafeId(field(config, "n_embd")) &&
+    isSafeId(blockSize) &&
+    blockSize > 0 &&
+    isSafeId(vocabSize) &&
+    vocabSize > 0 &&
+    isSafeId(layerCount) &&
+    layerCount > 0 &&
+    isSafeId(headCount) &&
+    headCount > 0 &&
+    isSafeId(embeddingSize) &&
+    embeddingSize > 0 &&
+    embeddingSize % headCount === 0 &&
     isBoolean(field(config, "bias"))
   );
 }

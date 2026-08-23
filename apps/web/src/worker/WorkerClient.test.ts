@@ -113,6 +113,27 @@ describe("WorkerClient", () => {
     client.dispose();
   });
 
+  test("rejects a terminal response for the wrong request kind", () => {
+    const worker = new FakeWorker();
+    const responses = vi.fn();
+    const rejected = vi.fn();
+    const client = new WorkerClient(worker, {
+      onResponse: responses,
+      onRejected: rejected,
+    });
+    const requestId = client.run("cat");
+    worker.emit({
+      type: "generation_finished",
+      request_id: requestId,
+      run_id: 7,
+      reason: "user_stopped",
+    });
+    expect(rejected).toHaveBeenCalledOnce();
+    expect(responses).not.toHaveBeenCalled();
+    expect(() => client.cancel(requestId)).not.toThrow();
+    client.dispose();
+  });
+
   test("posts stop and cancel through typed methods", () => {
     const worker = new FakeWorker();
     const client = new WorkerClient(worker);

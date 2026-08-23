@@ -1,4 +1,6 @@
 import type { GenerationState } from "../app/generationState";
+import "./ContinuationPanel.css";
+import { decodeTokenPieces } from "./decodeTokenPieces";
 
 export type ContinuationPanelProps = Readonly<{
   generation: GenerationState;
@@ -23,9 +25,9 @@ export function ContinuationPanel({
   generation,
   onSelectStep,
 }: ContinuationPanelProps) {
-  const continuation = generation.steps
-    .map((step) => step.generated_token.display)
-    .join("");
+  const continuation = decodeTokenPieces(
+    generation.steps.map((step) => step.generated_token.piece),
+  );
   const contextUsed = generation.promptTokens.length + generation.steps.length;
   return (
     <section
@@ -52,7 +54,6 @@ export function ContinuationPanel({
           <li key={step.index}>
             <button
               type="button"
-              style={{ minHeight: 44, minWidth: 44 }}
               aria-label={`Step ${step.index + 1}: token ${step.generated_token.display}`}
               aria-current={
                 generation.selectedStep === step.index ? "step" : undefined

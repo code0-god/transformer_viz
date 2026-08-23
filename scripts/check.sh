@@ -127,4 +127,9 @@ PYTHONPATH="${ROOT_DIR}/scripts" \
   python3 "${ROOT_DIR}/scripts/browser_generation_transport.py" \
   --root "${CHECK_DIST_DIR}/browser-root"
 
+printf '%s\n' '==> generation bytes, Stop, and replay'
+PYTHONPATH="${ROOT_DIR}/scripts" \
+  python3 "${ROOT_DIR}/scripts/browser_react_generation.py" \
+  --root "${CHECK_DIST_DIR}/browser-root"
+
 printf '%s\n' 'All checks passed.'

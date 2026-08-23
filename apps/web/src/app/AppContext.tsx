@@ -100,12 +100,18 @@ export function AppProvider({
   );
 
   useEffect(() => {
-    clientRef.current = lifecycle.acquire();
+    let acquired = false;
+    try {
+      clientRef.current = lifecycle.acquire();
+      acquired = true;
+    } catch (error: unknown) {
+      reportError(error);
+    }
     return () => {
       clientRef.current = null;
-      lifecycle.release();
+      if (acquired) lifecycle.release();
     };
-  }, [lifecycle]);
+  }, [lifecycle, reportError]);
 
   const generate = useCallback(
     (prompt: string, config: GenerationConfig) => {

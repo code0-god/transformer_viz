@@ -82,3 +82,16 @@ test("StrictMode setup-cleanup-setup retains one initialized Worker and final cl
   scheduler.flush();
   expect(workers[0]?.terminations).toBe(1);
 });
+
+test("failed Worker construction does not create a lifecycle lease", () => {
+  const lifecycle = createWorkerLifecycle({
+    createWorker: () => {
+      throw new Error("construction failed");
+    },
+    manifestUrl: "./models/edu/manifest.json",
+  });
+  expect(() => lifecycle.acquire()).toThrow("construction failed");
+  expect(() => lifecycle.release()).toThrow(
+    "Worker lifecycle released without an active lease",
+  );
+});

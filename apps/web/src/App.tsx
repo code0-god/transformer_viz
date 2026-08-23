@@ -27,7 +27,7 @@ export function modelManifestUrl(
 
 function AppSurface(): ReactElement {
   const { state, commands } = useAppContext();
-  const [prompt, setPrompt] = useState("Once upon a time");
+  const [prompt, setPrompt] = useState("the cat");
   const [form, setForm] = useState<GenerationForm>(defaultGenerationForm);
   const config = state.worker.model?.config;
   const replaySequenceLength =
