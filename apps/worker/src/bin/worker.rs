@@ -8,6 +8,8 @@ use gloo_net::http::Request;
 #[cfg(target_arch = "wasm32")]
 use nanogpt_schema::{ModelManifest, WorkerErrorCode, WorkerRequest, WorkerResponse};
 #[cfg(target_arch = "wasm32")]
+use serde::Serialize as _;
+#[cfg(target_arch = "wasm32")]
 use transformer_viz_worker::runtime::{AssetBundle, WorkerRuntime, error_response};
 #[cfg(target_arch = "wasm32")]
 use transformer_viz_worker::runtime_error::RuntimeError;
@@ -27,7 +29,8 @@ include!("worker/generation.rs");
 
 #[cfg(target_arch = "wasm32")]
 fn post(scope: &DedicatedWorkerGlobalScope, response: &WorkerResponse) -> bool {
-    match serde_wasm_bindgen::to_value(response) {
+    let serializer = serde_wasm_bindgen::Serializer::json_compatible();
+    match response.serialize(&serializer) {
         Ok(value) => match scope.post_message(&value) {
             Ok(()) => true,
             Err(error) => {

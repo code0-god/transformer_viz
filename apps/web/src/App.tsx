@@ -18,8 +18,11 @@ export interface AppProps {
   readonly cleanupScheduler?: CleanupScheduler;
 }
 
-export function modelManifestUrl(baseUrl = document.baseURI): string {
-  return new URL("models/edu/manifest.json", baseUrl).href;
+export function modelManifestUrl(
+  baseUrl = import.meta.env.BASE_URL,
+  origin = window.location.origin,
+): string {
+  return new URL(`${baseUrl}models/edu/manifest.json`, `${origin}/`).href;
 }
 
 function AppSurface(): ReactElement {

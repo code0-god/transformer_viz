@@ -19,7 +19,11 @@ impl AssetPolicy {
             return Err(policy_error("invalid Worker URL"));
         }
         let pathname = url.pathname();
-        let Some((deployment_path, _filename)) = pathname.rsplit_once('/') else {
+        let Some(deployment_path) =
+            transformer_viz_worker::asset_policy::deployment_path_from_worker_path(
+                &pathname,
+            )
+        else {
             return Err(policy_error("Worker URL has no deployment base"));
         };
         Ok(Self {
@@ -29,7 +33,11 @@ impl AssetPolicy {
     }
 
     fn manifest_url(&self, supplied: &str, worker_url: &str) -> Result<String, RuntimeError> {
-        if !transformer_viz_worker::asset_policy::canonical_manifest_request(supplied) {
+        let is_absolute =
+            supplied.starts_with("http://") || supplied.starts_with("https://");
+        if !transformer_viz_worker::asset_policy::canonical_manifest_request(supplied)
+            && !is_absolute
+        {
             return Err(policy_error("unexpected manifest location"));
         }
         self.resolve_and_validate(supplied, worker_url, "manifest.json")

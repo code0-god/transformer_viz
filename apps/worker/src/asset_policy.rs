@@ -6,6 +6,20 @@ pub fn canonical_manifest_request(value: &str) -> bool {
     value == "./models/edu/manifest.json"
 }
 
+/// Derives the deployment root from either root-level or Vite `assets/` Worker output.
+#[must_use]
+pub fn deployment_path_from_worker_path(pathname: &str) -> Option<&str> {
+    let (worker_directory, filename) = pathname.rsplit_once('/')?;
+    if filename.is_empty() {
+        return None;
+    }
+    Some(
+        worker_directory
+            .strip_suffix("/assets")
+            .unwrap_or(worker_directory),
+    )
+}
+
 /// Returns whether a manifest child is one of the three canonical educational assets.
 #[must_use]
 pub fn canonical_child_filename(value: &str) -> bool {
@@ -70,5 +84,22 @@ mod tests {
         assert!(!bounded_asset_size(0, 64 * 1024, None));
         assert!(!bounded_asset_size(64 * 1024 + 1, 64 * 1024, None));
         assert!(!bounded_asset_size(106, 64 * 1024, Some(107)));
+    }
+
+    #[test]
+    fn worker_paths_resolve_root_and_project_vite_asset_directories() {
+        assert_eq!(
+            deployment_path_from_worker_path("/assets/worker-entry.js"),
+            Some("")
+        );
+        assert_eq!(
+            deployment_path_from_worker_path("/transformer_viz/assets/worker-entry.js"),
+            Some("/transformer_viz")
+        );
+        assert_eq!(
+            deployment_path_from_worker_path("/transformer_viz/worker.js"),
+            Some("/transformer_viz")
+        );
+        assert_eq!(deployment_path_from_worker_path("/assets/"), None);
     }
 }

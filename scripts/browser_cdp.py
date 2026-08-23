@@ -65,6 +65,28 @@ class Cdp:
             raise CdpError(f"CDP {method} returned a non-object result")
         return result
 
+    def wait_for_event(
+        self,
+        method: str,
+        session_id: str | None = None,
+        predicate: Callable[[dict[str, Any]], bool] | None = None,
+    ) -> dict[str, Any]:
+        """Wait for one exact CDP event using the WebSocket timeout bound."""
+
+        def matches(message: dict[str, Any]) -> bool:
+            return message.get("method") == method and (
+                session_id is None or message.get("sessionId") == session_id
+            ) and (predicate is None or predicate(message))
+
+        for index, event in enumerate(self.events):
+            if matches(event):
+                return self.events.pop(index)
+        while True:
+            message = self.websocket.recv_message()
+            if matches(message):
+                return message
+            self._route_message(message)
+
     def _route_message(self, message: dict[str, Any]) -> None:
         message_id = message.get("id")
         if isinstance(message_id, int):
