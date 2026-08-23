@@ -21,9 +21,7 @@ export function isFiniteNumber(value: unknown): value is number {
 }
 
 export function isSafeId(value: unknown): value is number {
-  return (
-    isFiniteNumber(value) && Number.isSafeInteger(value) && value >= 0
-  );
+  return isFiniteNumber(value) && Number.isSafeInteger(value) && value >= 0;
 }
 
 export function isNullableId(value: unknown): value is number | null {

@@ -39,7 +39,7 @@ body { min-block-size: 100dvb; margin: 0; background: var(--paper); color: var(-
 button, input, textarea, select { color: inherit; font: inherit; }
 button, summary, select { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .48; }
-[hidden] { display: none !important; }
+body [hidden] { display: none; }
 h1, h2, h3, p, dl, dd, figure { margin: 0; }
 button, input, textarea, select, summary { min-block-size: 44px; }
 button, input, textarea, select {
@@ -461,10 +461,10 @@ button.primary {
   stroke: var(--accent);
   stroke-width: 5;
 }
-.architecture-node-drilldown-indicator {
-  fill: var(--accent) !important;
-  font-size: 12px !important;
-  font-weight: 800 !important;
+.architecture-svg text.architecture-node-drilldown-indicator {
+  fill: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
   opacity: 0;
   transition: opacity 150ms ease-out;
 }
@@ -480,7 +480,7 @@ button.primary {
 .architecture-node-embedding rect { fill: var(--embedding-soft); stroke: #78a27d; }
 .architecture-node-hidden rect { fill: var(--surface); stroke: var(--hairline); }
 .architecture-block-frame { fill: var(--block-soft); stroke: #7096c7; stroke-width: 2; }
-.architecture-block-title { fill: #315d99 !important; font-size: 14px !important; }
+.architecture-svg text.architecture-block-title { fill: #315d99; font-size: 14px; }
 .architecture-block-module rect { stroke-width: 1.4; }
 .architecture-block-normalization rect { fill: var(--normalization-soft); stroke: #d6a94b; }
 .architecture-block-attention rect,
@@ -495,7 +495,7 @@ button.primary {
 .architecture-node-token .architecture-node-subtitle { fill: color-mix(in srgb, var(--accent) 70%, var(--ink)); }
 .architecture-node-append rect { fill: var(--ready-soft); stroke: #78a27d; }
 .architecture-add { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
-.architecture-add-label { font-size: 17px !important; }
+.architecture-svg text.architecture-add-label { font-size: 17px; }
 .architecture-flow,
 .architecture-repeat,
 .architecture-merge,
@@ -521,23 +521,25 @@ button.primary {
 }
 .architecture-repeat { stroke: var(--ready); stroke-width: 2.2; stroke-dasharray: 8 7; }
 .architecture-forward-guide { stroke: var(--ink-muted); stroke-dasharray: 5 5; }
-.architecture-forward-label,
-.architecture-repeat-label,
-.architecture-forward-subtitle,
-.architecture-repeat-subtitle {
-  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace !important;
-  font-size: 10px !important;
+.architecture-svg text:is(
+  .architecture-forward-label,
+  .architecture-repeat-label,
+  .architecture-forward-subtitle,
+  .architecture-repeat-subtitle
+) {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 10px;
   letter-spacing: .08em;
 }
-.architecture-forward-label { fill: var(--ink) !important; font-weight: 850 !important; }
-.architecture-forward-subtitle { fill: var(--ink-muted) !important; letter-spacing: 0; }
-.architecture-edge-state {
-  fill: var(--ink-muted) !important;
-  font-size: 11px !important;
-  font-weight: 750 !important;
+.architecture-svg text.architecture-forward-label { fill: var(--ink); font-weight: 850; }
+.architecture-svg text.architecture-forward-subtitle { fill: var(--ink-muted); letter-spacing: 0; }
+.architecture-svg text.architecture-edge-state {
+  fill: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 750;
 }
-.architecture-repeat-label { fill: var(--ready) !important; font-weight: 850 !important; }
-.architecture-repeat-subtitle { fill: var(--ink-muted) !important; letter-spacing: 0; }
+.architecture-svg text.architecture-repeat-label { fill: var(--ready); font-weight: 850; }
+.architecture-svg text.architecture-repeat-subtitle { fill: var(--ink-muted); letter-spacing: 0; }
 .architecture-figure figcaption {
   padding-block-start: var(--s2);
   border-block-start: 1px solid var(--hairline);
@@ -711,10 +713,10 @@ button.primary {
   stroke-width: 1.7;
   marker-end: url("#attention-detail-arrow");
 }
-.architecture-attention-connector-label {
-  fill: #8f4f3d !important;
-  font-size: 12px !important;
-  font-weight: 750 !important;
+svg text.architecture-attention-connector-label {
+  fill: #8f4f3d;
+  font-size: 12px;
+  font-weight: 750;
 }
 .architecture-annotation.architecture-attention-annotation {
   grid-template-columns: minmax(0, 1fr);
@@ -881,14 +883,16 @@ button.primary {
 }
 
 @media (hover: none) {
-  .architecture-node-drilldown-indicator { opacity: 1; }
+  .architecture-svg .architecture-interactive-node--drill-down .architecture-node-drilldown-indicator {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    scroll-behavior: auto !important;
-    transition-duration: .01ms !important;
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
+  :root *, :root *::before, :root *::after {
+    scroll-behavior: auto;
+    transition-duration: .01ms;
+    animation-duration: .01ms;
+    animation-iteration-count: 1;
   }
 }
