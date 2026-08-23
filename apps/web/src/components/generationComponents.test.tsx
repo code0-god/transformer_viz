@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
@@ -106,6 +108,7 @@ describe("controlled generation UI", () => {
           ],
           contextLimit: 8,
           stopReason: "max_new_tokens",
+          selectedStep: 0,
           steps: [
             {
               index: 0,
@@ -137,7 +140,37 @@ describe("controlled generation UI", () => {
     expect(screen.getByText("b", { selector: "output" })).toBeInTheDocument();
     expect(screen.getByText("Stop reason: max_new_tokens")).toBeInTheDocument();
     expect(screen.getByText("2 / 8 tokens")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /step 1/i }));
+    expect(screen.getByText("Probability")).toBeInTheDocument();
+    expect(screen.getByText("0.75")).toBeInTheDocument();
+    const step = screen.getByRole("button", { name: /step 1/i });
+    expect(step).toHaveAttribute("aria-current", "step");
+    await user.click(step);
     expect(onSelectStep).toHaveBeenCalledWith(0);
+  });
+
+  test("keeps continuation CSS current, scoped, and unclamped", () => {
+    const continuationCss = readFileSync(
+      resolve(process.cwd(), "src/components/ContinuationPanel.css"),
+      "utf8",
+    );
+    const globalCss = readFileSync(resolve(process.cwd(), "style.css"), "utf8");
+
+    expect(continuationCss).toContain(".continuation-panel .decoded-text");
+    expect(continuationCss).toContain(".continuation-panel .generation-steps");
+    expect(continuationCss).toContain(".continuation-panel .token-details");
+    expect(continuationCss).not.toMatch(/line-clamp|overflow:\s*hidden/);
+
+    for (const staleSelector of [
+      "generation-timeline",
+      "decoded-output",
+      "token-reel",
+      "raw-token",
+      "generated",
+    ]) {
+      expect(globalCss).not.toContain(`.${staleSelector}`);
+    }
+    expect(globalCss).not.toMatch(
+      /\.architecture-(?:diagram|annotation|breadcrumb|detail)(?:\s|\{|[.:])/,
+    );
   });
 });
