@@ -5,6 +5,7 @@ use leptos::prelude::*;
 use crate::app::{
     architecture_overview::ArchitectureNodeId,
     architecture_overview_layout::{BLOCK_HEIGHT, BLOCK_START_Y, CENTER_X},
+    notation::{block_repeat_label, notation_for},
 };
 
 use super::super::node::{
@@ -64,37 +65,33 @@ pub(super) fn repeated_transformer_block(
                     rx="16"
                 ></rect>
                 <text class="architecture-block-title" x=BLOCK_X + 22 y="374">
-                    {format!("Transformer Block × {layer_count}")}
+                    {block_repeat_label(layer_count)}
                 </text>
 
                 {block_module(
+                    ArchitectureNodeId::LayerNorm1,
                     "architecture-block-normalization",
                     BLOCK_FIRST_MODULE_Y,
                     42,
-                    "LayerNorm 1",
-                    "",
                 )}
                 {block_module(
+                    ArchitectureNodeId::SelfAttention,
                     "architecture-block-attention",
                     ATTENTION_Y,
                     60,
-                    "Causal Multi-Head",
-                    "Self-Attention",
                 )}
                 {residual_add(FIRST_ADD_Y)}
                 {block_module(
+                    ArchitectureNodeId::LayerNorm2,
                     "architecture-block-normalization",
                     SECOND_MODULE_Y,
                     42,
-                    "LayerNorm 2",
-                    "",
                 )}
                 {block_module(
+                    ArchitectureNodeId::Mlp,
                     "architecture-block-mlp",
                     MLP_Y,
                     54,
-                    "MLP",
-                    "Feed Forward",
                 )}
                 {residual_add(SECOND_ADD_Y)}
 
@@ -185,33 +182,18 @@ fn residual_junction(y: usize) -> impl IntoView {
     }
 }
 
-fn block_module(
-    class: &'static str,
-    y: usize,
-    height: usize,
-    title: &'static str,
-    subtitle: &'static str,
-) -> impl IntoView {
-    let title_y = y + if subtitle.is_empty() {
-        height / 2 + 6
-    } else {
-        height / 2 - 2
+fn block_module(id: ArchitectureNodeId, class: &'static str, y: usize, height: usize) -> AnyView {
+    let Some(notation) = notation_for(id) else {
+        return ().into_any();
     };
-    let subtitle_y = y + height / 2 + 17;
+    let title_y = y + height / 2 + 6;
     view! {
         <g class=format!("architecture-block-module {class}")>
             <rect x=MODULE_X y=y width=MODULE_WIDTH height=height rx="8"></rect>
-            <text x=CENTER_X y=title_y text-anchor="middle">{title}</text>
-            <text
-                class="architecture-node-subtitle"
-                x=CENTER_X
-                y=subtitle_y
-                text-anchor="middle"
-            >
-                {subtitle}
-            </text>
+            <text x=CENTER_X y=title_y text-anchor="middle">{notation.title}</text>
         </g>
     }
+    .into_any()
 }
 
 fn residual_add(y: usize) -> impl IntoView {

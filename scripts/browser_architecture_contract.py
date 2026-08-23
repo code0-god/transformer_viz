@@ -74,7 +74,7 @@ REQUIRED_FLOW = (
     "Input Context",
     "Token Embedding",
     "Position Embedding",
-    "Hidden State x₀",
+    "Hidden State X₀",
     "Transformer Block × 2",
     "LayerNorm 1",
     "Causal Multi-Head",

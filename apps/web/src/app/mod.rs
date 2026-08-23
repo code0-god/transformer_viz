@@ -24,6 +24,9 @@ mod inspector_state_tests;
 pub mod narrative;
 #[cfg(test)]
 mod narrative_tests;
+pub mod notation;
+#[cfg(test)]
+mod notation_tests;
 #[cfg(test)]
 mod phase8_review_tests;
 #[cfg(test)]

@@ -12,12 +12,12 @@ import threading
 from functools import partial
 from http.server import ThreadingHTTPServer
 from pathlib import Path
-from typing import Any
 
 from browser_architecture_attention_probes import (
     ATTENTION_DETAIL_PROBE,
     BLOCK_ATTENTION_PROBE,
 )
+from browser_architecture_attention_checks import verify_structure
 from browser_architecture_navigation import (
     QuietHandler,
     capture,
@@ -49,60 +49,6 @@ def hover(browser: ChromeSession, selector: str) -> None:
     )
     cdp.send("Input.dispatchMouseEvent", {"type": "mouseMoved", **point}, session)
     settle(browser)
-
-
-def verify_structure(detail: dict[str, Any], mobile: bool) -> None:
-    require(detail["attention"] and not detail["block"], f"attention route: {detail}")
-    require(
-        detail["breadcrumbBlock"] == "Transformer Block × 2"
-        and detail["breadcrumbAttention"] == "Self-Attention"
-        and detail["breadcrumbCurrent"] == "page",
-        f"attention breadcrumb: {detail}",
-    )
-    require(
-        detail["layerButtons"] == 2 and detail["headButtons"] == 4,
-        f"config selectors: {detail}",
-    )
-    require(detail["oneQkvProjection"] == 1, f"combined QKV: {detail}")
-    require(detail["splitHeadNodes"] == 3, f"head splits: {detail}")
-    require(
-        len(detail["nodeIds"]) == 11
-        and all(value == "selectable" for value in detail["nodeCapabilities"])
-        and all(value == "button" for value in detail["nodeRoles"]),
-        f"attention node contract: {detail}",
-    )
-    starts = detail["qkvStarts"]
-    require(
-        all(
-            abs(point["x"] - starts[0]["x"]) < 0.01
-            and abs(point["y"] - starts[0]["y"]) < 0.01
-            for point in starts
-        ),
-        f"QKV branch origin: {detail}",
-    )
-    require(not detail["hasValueToScores"], f"Value entered scores: {detail}")
-    require(
-        detail["qToScoresEnd"]["y"] == detail["kToScoresEnd"]["y"],
-        f"Q/K score convergence: {detail}",
-    )
-    require(
-        detail["valueToAggregationEnd"]["x"] > detail["qToScoresEnd"]["x"],
-        f"Value aggregation path: {detail}",
-    )
-    require(
-        detail["operationOrder"] == sorted(detail["operationOrder"]),
-        f"attention operation order: {detail}",
-    )
-    require(
-        detail["headDimension16"] and detail["qkvShape"] and detail["formula"],
-        f"attention metadata: {detail}",
-    )
-    require(detail["attentionOutput"], f"missing attention output: {detail}")
-    require(not detail["hasResidual"], f"residual duplicated: {detail}")
-    require(not detail["forbiddenDetail"], f"forbidden detail rendered: {detail}")
-    require(detail["documentOverflow"] == 0, f"document overflow: {detail}")
-    if mobile:
-        require(detail["localOverflow"] > 0, f"mobile lacks local overflow: {detail}")
 
 
 def verify_attention(

@@ -57,7 +57,7 @@ const fn evidence_prompt(stage: NarrativeStage) -> &'static str {
             "선택 query의 전체 확률 합이 1이고 미래 key 확률이 0인지 확인하세요."
         }
         NarrativeStage::ValueAggregation => {
-            "모든 key×feature P×V 합이 captured attention output과 일치하는지 확인하세요."
+            "모든 key별 feature A_h @ V_h 합이 captured attention output과 일치하는지 확인하세요."
         }
         NarrativeStage::Residual => {
             "attention projection과 residual 합의 실제 tensor 경계를 확인하세요."

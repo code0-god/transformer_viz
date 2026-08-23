@@ -2,7 +2,13 @@
 
 use leptos::prelude::*;
 
-use crate::app::architecture_overview::{ArchitectureNodeId, AttentionArchitectureMetadata};
+use crate::app::{
+    architecture_overview::ArchitectureNodeId,
+    notation::{
+        ATTENTION_INPUT_DETAIL, ATTENTION_INPUT_TITLE, ATTENTION_OUTPUT_DETAIL,
+        ATTENTION_OUTPUT_TITLE, ATTENTION_VALUE_CAPTION, HEAD_OUTPUT_DETAIL, HEAD_OUTPUT_TITLE,
+    },
+};
 
 use super::super::node::ArchitectureInteraction;
 
@@ -54,13 +60,7 @@ pub(super) const MERGE_Y: usize = 1235;
 pub(super) const PROJECTION_Y: usize = 1355;
 pub(super) const ATTENTION_OUTPUT_Y: usize = 1470;
 
-pub(super) fn attention_detail_diagram(
-    interaction: ArchitectureInteraction,
-    metadata: AttentionArchitectureMetadata,
-) -> impl IntoView {
-    let model_width = metadata.model_width();
-    let head_count = metadata.head_count();
-    let head_dimension = metadata.head_dimension();
+pub(super) fn attention_detail_diagram(interaction: ArchitectureInteraction) -> impl IntoView {
     view! {
         <figure class="architecture-figure architecture-detail-figure architecture-attention-figure">
             <div
@@ -97,28 +97,28 @@ pub(super) fn attention_detail_diagram(
                         </marker>
                     </defs>
 
-                    {state_node(INPUT_X, INPUT_Y, INPUT_WIDTH, INPUT_HEIGHT, "LN1 Output X", format!("[T, C] · C = {model_width}"))}
-                    {operation_node(ArchitectureNodeId::AttentionQkvProjection, "architecture-attention-projection", QKV_X, QKV_Y, QKV_WIDTH, QKV_HEIGHT, "QKV Projection", format!("Linear C → 3C · [T, {}]", metadata.qkv_width()), interaction)}
-                    {operation_node(ArchitectureNodeId::AttentionQuery, "architecture-attention-query", QUERY_X, COLUMN_Y, COLUMN_WIDTH, COLUMN_HEIGHT, "Query Q", format!("[T, C] = [T, {model_width}]"), interaction)}
-                    {operation_node(ArchitectureNodeId::AttentionKey, "architecture-attention-key", KEY_X, COLUMN_Y, COLUMN_WIDTH, COLUMN_HEIGHT, "Key K", format!("[T, C] = [T, {model_width}]"), interaction)}
-                    {operation_node(ArchitectureNodeId::AttentionValue, "architecture-attention-value", VALUE_X, COLUMN_Y, COLUMN_WIDTH, COLUMN_HEIGHT, "Value V", format!("[T, C] = [T, {model_width}]"), interaction)}
-                    {split_heads_node(QUERY_X, SPLIT_Y, "Split Query Heads", head_count, head_dimension)}
-                    {split_heads_node(KEY_X, SPLIT_Y, "Split Key Heads", head_count, head_dimension)}
-                    {split_heads_node(VALUE_X, SPLIT_Y, "Split Value Heads", head_count, head_dimension)}
-                    {operation_node(ArchitectureNodeId::AttentionScores, "architecture-attention-score", SCORES_X, SCORES_Y, SPINE_WIDTH, SCORES_HEIGHT, "Q × Kᵀ", format!("[T, {head_dimension}] × [{head_dimension}, T] → [T, T]"), interaction)}
-                    {operation_node(ArchitectureNodeId::AttentionScale, "architecture-attention-scale", SCALE_X, SCALE_Y, SCALE_WIDTH, SCALE_HEIGHT, "Scale", format!("1 / √D = 1 / √{head_dimension}"), interaction)}
-                    {operation_node(ArchitectureNodeId::AttentionCausalMask, "architecture-attention-mask", MASK_X, MASK_Y, SPINE_WIDTH, MASK_HEIGHT, "Causal Mask", "future positions blocked · [T, T]".to_owned(), interaction)}
-                    {operation_node(ArchitectureNodeId::AttentionSoftmax, "architecture-attention-softmax", SOFTMAX_X, SOFTMAX_Y, SPINE_WIDTH, SOFTMAX_HEIGHT, "Softmax", "scores → attention probabilities · [T, T]".to_owned(), interaction)}
-                    {operation_node(ArchitectureNodeId::AttentionValueAggregation, "architecture-attention-aggregation", OUTPUT_X, AGGREGATION_Y, OUTPUT_WIDTH, OPERATION_HEIGHT, "× V", "probabilities × Value → [H, T, D]".to_owned(), interaction)}
-                    {state_node(OUTPUT_X, HEAD_OUTPUT_Y, OUTPUT_WIDTH, STATE_HEIGHT, "Head Outputs", format!("[H, T, D] = [{head_count}, T, {head_dimension}]"))}
-                    {operation_node(ArchitectureNodeId::AttentionMergeHeads, "architecture-attention-merge", OUTPUT_X, MERGE_Y, OUTPUT_WIDTH, OPERATION_HEIGHT, "Merge Heads", format!("H × D → C · {head_count} × {head_dimension} → {model_width}"), interaction)}
-                    {operation_node(ArchitectureNodeId::AttentionOutputProjection, "architecture-attention-projection", OUTPUT_X, PROJECTION_Y, OUTPUT_WIDTH, OPERATION_HEIGHT, "Output Projection", format!("c_proj · Linear {model_width} → {model_width}"), interaction)}
-                    {state_node(OUTPUT_X, ATTENTION_OUTPUT_Y, OUTPUT_WIDTH, STATE_HEIGHT, "Attention Output", format!("[T, C] = [T, {model_width}]"))}
+                    {state_node(INPUT_X, INPUT_Y, INPUT_WIDTH, INPUT_HEIGHT, ATTENTION_INPUT_TITLE, ATTENTION_INPUT_DETAIL)}
+                    {operation_node(ArchitectureNodeId::AttentionQkvProjection, "architecture-attention-projection", QKV_X, QKV_Y, QKV_WIDTH, QKV_HEIGHT, interaction)}
+                    {operation_node(ArchitectureNodeId::AttentionQuery, "architecture-attention-query", QUERY_X, COLUMN_Y, COLUMN_WIDTH, COLUMN_HEIGHT, interaction)}
+                    {operation_node(ArchitectureNodeId::AttentionKey, "architecture-attention-key", KEY_X, COLUMN_Y, COLUMN_WIDTH, COLUMN_HEIGHT, interaction)}
+                    {operation_node(ArchitectureNodeId::AttentionValue, "architecture-attention-value", VALUE_X, COLUMN_Y, COLUMN_WIDTH, COLUMN_HEIGHT, interaction)}
+                    {split_heads_node(QUERY_X, SPLIT_Y)}
+                    {split_heads_node(KEY_X, SPLIT_Y)}
+                    {split_heads_node(VALUE_X, SPLIT_Y)}
+                    {operation_node(ArchitectureNodeId::AttentionScores, "architecture-attention-score", SCORES_X, SCORES_Y, SPINE_WIDTH, SCORES_HEIGHT, interaction)}
+                    {operation_node(ArchitectureNodeId::AttentionScale, "architecture-attention-scale", SCALE_X, SCALE_Y, SCALE_WIDTH, SCALE_HEIGHT, interaction)}
+                    {operation_node(ArchitectureNodeId::AttentionCausalMask, "architecture-attention-mask", MASK_X, MASK_Y, SPINE_WIDTH, MASK_HEIGHT, interaction)}
+                    {operation_node(ArchitectureNodeId::AttentionSoftmax, "architecture-attention-softmax", SOFTMAX_X, SOFTMAX_Y, SPINE_WIDTH, SOFTMAX_HEIGHT, interaction)}
+                    {operation_node(ArchitectureNodeId::AttentionValueAggregation, "architecture-attention-aggregation", OUTPUT_X, AGGREGATION_Y, OUTPUT_WIDTH, OPERATION_HEIGHT, interaction)}
+                    {state_node(OUTPUT_X, HEAD_OUTPUT_Y, OUTPUT_WIDTH, STATE_HEIGHT, HEAD_OUTPUT_TITLE, HEAD_OUTPUT_DETAIL)}
+                    {operation_node(ArchitectureNodeId::AttentionMergeHeads, "architecture-attention-merge", OUTPUT_X, MERGE_Y, OUTPUT_WIDTH, OPERATION_HEIGHT, interaction)}
+                    {operation_node(ArchitectureNodeId::AttentionOutputProjection, "architecture-attention-projection", OUTPUT_X, PROJECTION_Y, OUTPUT_WIDTH, OPERATION_HEIGHT, interaction)}
+                    {state_node(OUTPUT_X, ATTENTION_OUTPUT_Y, OUTPUT_WIDTH, STATE_HEIGHT, ATTENTION_OUTPUT_TITLE, ATTENTION_OUTPUT_DETAIL)}
                     {attention_connectors()}
                 </svg>
             </div>
             <figcaption>
-                "Value는 score 계산에 참여하지 않고, Softmax 이후 attention probability와 × V에서 합류합니다."
+                {ATTENTION_VALUE_CAPTION}
             </figcaption>
         </figure>
     }

@@ -3,17 +3,19 @@
 use leptos::prelude::*;
 use nanogpt_schema::ModelMetadata;
 
+mod annotation;
 mod diagram;
 
 use crate::app::{
     architecture_overview::{
-        ArchitectureNodeId, ArchitectureOverviewState, AttentionArchitectureMetadata,
-        architecture_attention_heads, architecture_block_layers,
+        ArchitectureOverviewState, architecture_attention_heads, architecture_block_layers,
     },
+    notation::{CurrentAttentionShapes, current_sequence_length},
     state::AppState,
 };
 
 use super::node::ArchitectureInteraction;
+use annotation::attention_annotation;
 use diagram::attention_detail_diagram;
 
 pub(super) fn attention_detail(
@@ -22,7 +24,9 @@ pub(super) fn attention_detail(
     overview: ArchitectureOverviewState,
 ) -> AnyView {
     let config = &model.config;
-    let Some(metadata) = AttentionArchitectureMetadata::from_config(config.n_embd, config.n_head)
+    let sequence_length = state.with(current_sequence_length);
+    let Some(shapes) =
+        CurrentAttentionShapes::from_config(config.n_embd, config.n_head, sequence_length)
     else {
         return view! {
             <p class="architecture-error" role="alert">
@@ -63,8 +67,13 @@ pub(super) fn attention_detail(
                 </div>
             </div>
             <div class="architecture-visual-grid architecture-attention-grid">
-                {attention_detail_diagram(interaction, metadata)}
-                {attention_annotation(metadata, selected_layer, selected_head, overview.selected_node())}
+                {attention_detail_diagram(interaction)}
+                {attention_annotation(
+                    shapes,
+                    selected_layer,
+                    selected_head,
+                    overview.selected_node(),
+                )}
             </div>
         </section>
     }
@@ -136,87 +145,5 @@ fn head_selector(
                     .collect_view()}
             </div>
         </fieldset>
-    }
-}
-
-fn attention_annotation(
-    metadata: AttentionArchitectureMetadata,
-    selected_layer: usize,
-    selected_head: usize,
-    selected_node: Option<ArchitectureNodeId>,
-) -> impl IntoView {
-    let operation = selected_node.and_then(operation_copy);
-    view! {
-        <aside class="architecture-annotation architecture-attention-annotation">
-            <h3>"Self-Attention"</h3>
-            <dl class="architecture-attention-facts">
-                <div><dt>"현재 Layer"</dt><dd>{selected_layer}</dd></div>
-                <div><dt>"현재 Head"</dt><dd>{selected_head}</dd></div>
-                <div><dt>"Heads"</dt><dd>{metadata.head_count()}</dd></div>
-                <div><dt>"Head dimension"</dt><dd>{metadata.head_dimension()}</dd></div>
-                <div><dt>"Input"</dt><dd>"[T, C]"</dd></div>
-                <div><dt>"Q / K / V"</dt><dd>"[H, T, D]"</dd></div>
-                <div><dt>"Scores"</dt><dd>"[H, T, T]"</dd></div>
-                <div><dt>"Output"</dt><dd>"[T, C]"</dd></div>
-            </dl>
-            <div class="architecture-attention-formula">
-                <span>"핵심 계산"</span>
-                <code>
-                    "Attention(Q,K,V) = softmax(QKᵀ / √D + causal mask) V"
-                </code>
-            </div>
-            {operation.map(|(title, description)| view! {
-                <div class="architecture-attention-operation" data-testid="attention-operation-copy">
-                    <span>"현재 연산"</span>
-                    <strong>{title}</strong>
-                    <p>{description}</p>
-                </div>
-            })}
-        </aside>
-    }
-}
-
-const fn operation_copy(node: ArchitectureNodeId) -> Option<(&'static str, &'static str)> {
-    match node {
-        ArchitectureNodeId::AttentionQkvProjection => Some((
-            "QKV Projection",
-            "하나의 Linear C → 3C 연산이 Q, K, V를 함께 만든 뒤 세 갈래로 나눕니다.",
-        )),
-        ArchitectureNodeId::AttentionQuery => {
-            Some(("Query Q", "현재 token이 찾는 정보를 표현합니다."))
-        }
-        ArchitectureNodeId::AttentionKey => {
-            Some(("Key K", "각 token이 가진 검색 기준을 표현합니다."))
-        }
-        ArchitectureNodeId::AttentionValue => {
-            Some(("Value V", "attention probability로 모을 내용을 표현합니다."))
-        }
-        ArchitectureNodeId::AttentionScores => Some((
-            "Q × Kᵀ",
-            "Query와 Key의 유사도를 [T, T] score로 계산합니다.",
-        )),
-        ArchitectureNodeId::AttentionScale => Some((
-            "Scale",
-            "score를 1 / √D로 나눠 softmax가 과도하게 포화되지 않게 합니다.",
-        )),
-        ArchitectureNodeId::AttentionCausalMask => {
-            Some(("Causal Mask", "현재 token 이후 위치의 score를 차단합니다."))
-        }
-        ArchitectureNodeId::AttentionSoftmax => Some((
-            "Softmax",
-            "허용된 score를 attention probability로 정규화합니다.",
-        )),
-        ArchitectureNodeId::AttentionValueAggregation => {
-            Some(("× V", "attention probability로 Value를 가중합합니다."))
-        }
-        ArchitectureNodeId::AttentionMergeHeads => Some((
-            "Merge Heads",
-            "모든 head output을 다시 model width C로 결합합니다.",
-        )),
-        ArchitectureNodeId::AttentionOutputProjection => Some((
-            "Output Projection",
-            "c_proj Linear C → C로 최종 attention output을 만듭니다.",
-        )),
-        _ => None,
     }
 }

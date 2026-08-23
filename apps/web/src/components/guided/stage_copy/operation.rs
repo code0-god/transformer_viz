@@ -20,7 +20,7 @@ pub(super) const fn level_copy(level: ArchitectureLevel) -> StageCopy {
         ArchitectureLevel::Attention => c(
             "Multi-head Attention",
             "선택한 head의 Q, K, V부터 projection까지 조망합니다.",
-            "softmax(mask(QKᵀ/√dₕ))V",
+            "softmax(CausalMask(Q_h @ K_hᵀ / √D)) @ V_h",
             "head와 연산을 선택해 실제 trace를 확인하세요.",
         ),
         ArchitectureLevel::Generation => c(
@@ -47,11 +47,11 @@ pub(in crate::components::guided) const fn operation_label(
         O::Query => "Q",
         O::Key => "K",
         O::Value => "V",
-        O::QueryKeyProduct => "QKᵀ",
+        O::QueryKeyProduct => "Score MatMul",
         O::Scale => "Scale",
         O::Mask => "Mask",
         O::Softmax | O::GenerationSoftmax => "Softmax",
-        O::ValueProduct => "×V",
+        O::ValueProduct => "Value MatMul",
         O::MergeHeads => "Merge Heads",
         O::Projection => "Projection",
         O::Logits => "Logits",
@@ -93,7 +93,7 @@ pub(super) const fn operation_copy(operation: ArchitectureOperation) -> StageCop
         O::AttentionResidual | O::MlpResidual => c(
             "Residual",
             "연산 출력을 residual stream에 합칩니다.",
-            "x′=x+f(x)",
+            "X_res = X_in + f(X_in)",
             "다음 블록 연산을 탐색하세요.",
         ),
         O::Mlp => c(
@@ -130,7 +130,7 @@ const fn attention_copy(operation: ArchitectureOperation) -> StageCopy {
         O::QueryKeyProduct | O::Scale => c(
             operation_label(operation),
             "query-key 관련성 점수 경계를 확인합니다.",
-            "S=QKᵀ/√dₕ",
+            "S_h^scaled = Q_h @ K_hᵀ / √D",
             "mask를 탐색하세요.",
         ),
         O::Mask => c(

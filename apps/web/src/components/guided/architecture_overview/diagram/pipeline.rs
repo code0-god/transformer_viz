@@ -2,9 +2,12 @@
 
 use leptos::prelude::*;
 
-use crate::app::architecture_overview_layout::{
-    BLOCK_HEIGHT, BLOCK_START_Y, CENTER_X, COMPACT_HEIGHT, DiagramLayout, SELECTION_HEIGHT,
-    TOKEN_HEIGHT,
+use crate::app::{
+    architecture_overview_layout::{
+        BLOCK_HEIGHT, BLOCK_START_Y, CENTER_X, COMPACT_HEIGHT, DiagramLayout, SELECTION_HEIGHT,
+        TOKEN_HEIGHT,
+    },
+    notation::{ROOT_HIDDEN_OUTPUT, ROOT_HIDDEN_SHAPE},
 };
 
 use super::super::node::ArchitectureInteraction;
@@ -77,6 +80,13 @@ pub(super) fn generation_path(
 
 fn generation_connectors(layout: DiagramLayout) -> impl IntoView {
     view! {
+        <text
+            class="architecture-edge-state"
+            x=CENTER_X + 18
+            y=BLOCK_LAST_ADD_BOTTOM_Y + 18
+        >
+            {format!("{ROOT_HIDDEN_OUTPUT} {ROOT_HIDDEN_SHAPE}")}
+        </text>
         {vertical_connector(
             "add2-to-final",
             BLOCK_LAST_ADD_BOTTOM_Y,

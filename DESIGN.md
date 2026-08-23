@@ -169,6 +169,12 @@ No gradient decoration or grid texture.
 - Ready diagram derives layer count and dimensions from loaded metadata.
 - Worker errors expose full recovery text and disable Generate.
 
+## Notation
+
+All user-visible operation, Tensor, symbolic shape, and current-shape notation follows
+[`docs/NOTATION.md`](docs/NOTATION.md). `×` is reserved for repeated Blocks, attention matrix
+multiplication uses `@`, and concrete dimensions remain outside main Architecture nodes.
+
 ## Explicit Phase 1 exclusions
 
 Do not render or implement:

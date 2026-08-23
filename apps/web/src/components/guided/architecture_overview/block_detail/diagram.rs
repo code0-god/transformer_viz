@@ -2,7 +2,13 @@
 
 use leptos::prelude::*;
 
-use crate::app::architecture_overview::ArchitectureNodeId;
+use crate::app::{
+    architecture_overview::ArchitectureNodeId,
+    notation::{
+        BLOCK_INPUT_DETAIL, BLOCK_INPUT_TITLE, BLOCK_OUTPUT_DETAIL, BLOCK_OUTPUT_TITLE,
+        BLOCK_RESIDUAL_1_DETAIL, BLOCK_RESIDUAL_1_TITLE, notation_for,
+    },
+};
 
 use super::super::node::{
     ArchitectureInteraction, DrillDownIndicator, NodeBounds, architecture_node,
@@ -37,6 +43,10 @@ const ADD2_Y: usize = 790;
 const OUTPUT_Y: usize = 850;
 
 pub(super) fn block_detail_diagram(interaction: ArchitectureInteraction) -> impl IntoView {
+    let first_residual =
+        notation_for(ArchitectureNodeId::Residual1).map_or("", |entry| entry.formula);
+    let second_residual =
+        notation_for(ArchitectureNodeId::Residual2).map_or("", |entry| entry.formula);
     view! {
         <figure class="architecture-figure architecture-detail-figure">
             <div
@@ -54,7 +64,7 @@ pub(super) fn block_detail_diagram(interaction: ArchitectureInteraction) -> impl
                 >
                     <title id="block-detail-svg-title">"Pre-LN Transformer Block data flow"</title>
                     <desc id="block-detail-svg-desc">
-                        "Block Input x branches to LayerNorm 1 and the first residual path. The first sum produces x prime, which branches to LayerNorm 2 and the second residual path. The second sum produces Block Output y."
+                        "Block input X_in branches to LayerNorm 1 and the first residual path. The first sum produces X_res1, which branches to LayerNorm 2 and the second residual path. The second sum produces X_out."
                     </desc>
                     <defs>
                         <marker
@@ -71,14 +81,12 @@ pub(super) fn block_detail_diagram(interaction: ArchitectureInteraction) -> impl
                         </marker>
                     </defs>
 
-                    {state_node(INPUT_Y, "Block Input x", "Residual source x")}
+                    {state_node(INPUT_Y, BLOCK_INPUT_TITLE, BLOCK_INPUT_DETAIL)}
                     {module_node(
                         ArchitectureNodeId::LayerNorm1,
                         "architecture-block-normalization",
                         LN1_Y,
                         LN_HEIGHT,
-                        "LayerNorm 1",
-                        "Pre-normalize x",
                         interaction,
                     )}
                     {module_node(
@@ -86,8 +94,6 @@ pub(super) fn block_detail_diagram(interaction: ArchitectureInteraction) -> impl
                         "architecture-block-attention",
                         ATTENTION_Y,
                         ATTENTION_HEIGHT,
-                        "Causal Multi-Head Self-Attention",
-                        "Attention(LN1(x))",
                         interaction,
                     )}
                     {add_node(
@@ -96,14 +102,16 @@ pub(super) fn block_detail_diagram(interaction: ArchitectureInteraction) -> impl
                         "Residual Add 1",
                         interaction,
                     )}
-                    {state_node(X_PRIME_Y, "x′", "x + Attention(LN1(x))")}
+                    {state_node(
+                        X_PRIME_Y,
+                        BLOCK_RESIDUAL_1_TITLE,
+                        BLOCK_RESIDUAL_1_DETAIL,
+                    )}
                     {module_node(
                         ArchitectureNodeId::LayerNorm2,
                         "architecture-block-normalization",
                         LN2_Y,
                         LN_HEIGHT,
-                        "LayerNorm 2",
-                        "Pre-normalize x′",
                         interaction,
                     )}
                     {module_node(
@@ -111,8 +119,6 @@ pub(super) fn block_detail_diagram(interaction: ArchitectureInteraction) -> impl
                         "architecture-block-mlp",
                         MLP_Y,
                         MLP_HEIGHT,
-                        "MLP",
-                        "MLP(LN2(x′))",
                         interaction,
                     )}
                     {add_node(
@@ -121,14 +127,14 @@ pub(super) fn block_detail_diagram(interaction: ArchitectureInteraction) -> impl
                         "Residual Add 2",
                         interaction,
                     )}
-                    {state_node(OUTPUT_Y, "Block Output y", "x′ + MLP(LN2(x′))")}
+                    {state_node(OUTPUT_Y, BLOCK_OUTPUT_TITLE, BLOCK_OUTPUT_DETAIL)}
                     {connectors()}
                     {junction(FIRST_JUNCTION_Y, "block-input-junction")}
                     {junction(SECOND_JUNCTION_Y, "x-prime-junction")}
                 </svg>
             </div>
             <figcaption>
-                "Residual 1은 Block Input x를, Residual 2는 x′를 각각 보존해 계산 결과에 더합니다."
+                {format!("{first_residual}. {second_residual}. 두 residual source와 + 연산을 명시합니다.")}
             </figcaption>
         </figure>
     }
@@ -138,14 +144,15 @@ fn module_node(
     class: &'static str,
     y: usize,
     height: usize,
-    title: &'static str,
-    subtitle: &'static str,
     interaction: ArchitectureInteraction,
-) -> impl IntoView {
+) -> AnyView {
+    let Some(notation) = notation_for(id) else {
+        return ().into_any();
+    };
     view! {
         {architecture_node(
             id,
-            title,
+            notation.accessible_name,
             NodeBounds {
                 x: MODULE_X,
                 y,
@@ -161,18 +168,19 @@ fn module_node(
             }),
             view! { <g class=format!("architecture-block-module {class}")>
                 <rect x=MODULE_X y=y width=MODULE_WIDTH height=height rx="10"></rect>
-                <text x=CENTER_X y=y + height / 2 - 3 text-anchor="middle">{title}</text>
+                <text x=CENTER_X y=y + height / 2 - 3 text-anchor="middle">{notation.title}</text>
                 <text
                     class="architecture-node-subtitle"
                     x=CENTER_X
                     y=y + height / 2 + 18
                     text-anchor="middle"
                 >
-                    {subtitle}
+                    {notation.diagram_detail}
                 </text>
             </g> },
         )}
     }
+    .into_any()
 }
 fn add_node(
     id: ArchitectureNodeId,

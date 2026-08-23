@@ -25,7 +25,7 @@ fn value_stage(state: &AppState, residual_focus: bool) -> AnyView {
     };
     let (query, _) = selected(state, trace);
     let Ok(evidence) = value_evidence(trace, query) else {
-        return facts::error_state("P × V reconstruction");
+        return facts::error_state("Value MatMul reconstruction");
     };
     let lookup = TraceLookup::new().with_block(block);
     let (Ok(input), Ok(projected), Ok(residual)) = (
@@ -50,14 +50,14 @@ fn value_stage(state: &AppState, residual_focus: bool) -> AnyView {
         selected_feature,
     );
     let contributions = VectorStrip {
-        label: "선택 feature의 key별 P×V",
+        label: "선택 feature의 key별 A_h @ V_h",
         tensor_id: trace.value.id.clone(),
         values: key_contributions,
         tone: "value",
         selected_feature: state.selection.key,
     };
     let attended = VectorStrip {
-        label: "Σₖ P×V · attended head",
+        label: "Σⱼ A_h[i,j] · V_h[j,d] · attended head",
         tensor_id: trace.output.id.clone(),
         values: evidence.feature_sums.clone(),
         tone: "value",
@@ -95,9 +95,9 @@ fn value_stage(state: &AppState, residual_focus: bool) -> AnyView {
     view! {
         <div class="stage-visual value-visual" data-testid=if residual_focus { "evidence-attention-residual" } else { "evidence-value-aggregation" } data-visual=if residual_focus { "attention-residual" } else { "value-aggregation" } data-trace-ready="true">
             <figure hidden=residual_focus class="contribution-matrix" data-tensor-id=trace.value.id.clone()>
-                <figcaption><strong>"전체 key × feature 기여도"</strong><span>{format!("{} × {}", evidence.keys, evidence.features)}</span></figcaption>
+                <figcaption><strong>"전체 key별 feature 기여도"</strong><span>{format!("{} keys · {} features", evidence.keys, evidence.features)}</span></figcaption>
                 <svg role="img" viewBox=format!("0 0 {} {}", evidence.features, evidence.keys)>
-                    <title>"선택 query의 전체 P[q,k] × V[k,d] 기여도 matrix"</title><desc>"각 행은 key, 각 열은 value feature이며 모든 셀은 실제 확률과 value의 곱입니다."</desc>
+                    <title>"선택 query의 전체 A_h[i,j] · V_h[j,d] 기여도 matrix"</title><desc>"각 행은 key, 각 열은 value feature이며 모든 셀은 실제 확률과 value의 곱입니다."</desc>
                     {(0..evidence.keys).flat_map(|key| (0..evidence.features).map(move |feature| (key, feature))).map(|(key, feature)| {
                         let index = key.saturating_mul(evidence.features).saturating_add(feature);
                         let value = matrix_values.get(index).copied().unwrap_or_default();
@@ -109,13 +109,13 @@ fn value_stage(state: &AppState, residual_focus: bool) -> AnyView {
             <div hidden=residual_focus class="value-strips">{vector_strip(contributions, value_scale)}{vector_strip(attended, value_scale)}</div>
             <div hidden=!residual_focus class="residual-equation"><span>"block input"</span><b>"+"</b><span>"attention projected"</span><b>"="</b><span>"attention residual"</span></div>
             <div hidden=!residual_focus class="residual-strips">{vector_strip(input_strip, residual_scale)}{vector_strip(projected_strip, residual_scale)}{vector_strip(residual_strip, residual_scale)}</div>
-            {residual_focus.then(|| flow_diagram("Value aggregation to residual", "실제 P×V 출력이 projection을 거친 뒤 실제 block input addend와 더해져 attention residual이 됩니다.", vec![
-                FlowNode { label: "P × V", tensor_id: trace.output.id.clone(), shape: trace.output.shape.clone(), tone: "value" },
+            {residual_focus.then(|| flow_diagram("Value aggregation to residual", "실제 Value MatMul 출력이 projection을 거친 뒤 실제 block input addend와 더해져 attention residual이 됩니다.", vec![
+                FlowNode { label: "Value MatMul", tensor_id: trace.output.id.clone(), shape: trace.output.shape.clone(), tone: "value" },
                 FlowNode { label: "projection", tensor_id: projected.id.clone(), shape: projected.shape.clone(), tone: "score" },
                 FlowNode { label: "+ block input", tensor_id: input.id.clone(), shape: input.shape.clone(), tone: "residual" },
                 FlowNode { label: "attention residual", tensor_id: residual.id.clone(), shape: residual.shape.clone(), tone: "residual" },
             ]))}
-            <p hidden=residual_focus class="output-proof" data-output-error=evidence.output_error>{format!("모든 feature Σₖ(P×V)와 captured attention output의 최대 절대 오차: {:.2e}", evidence.output_error)}</p>
+            <p hidden=residual_focus class="output-proof" data-output-error=evidence.output_error>{format!("모든 feature Σⱼ(A_h[i,j] · V_h[j,d])와 captured attention output의 최대 절대 오차: {:.2e}", evidence.output_error)}</p>
         </div>
     }.into_any()
 }

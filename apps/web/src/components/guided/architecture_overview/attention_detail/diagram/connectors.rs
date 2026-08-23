@@ -2,6 +2,8 @@
 
 use leptos::prelude::*;
 
+use crate::app::notation::VALUE_HEAD_EDGE_LABEL;
+
 use super::{
     AGGREGATION_Y, ATTENTION_OUTPUT_Y, COLUMN_HEIGHT, COLUMN_Y, HEAD_OUTPUT_Y, INPUT_HEIGHT,
     INPUT_Y, KEY_X, MASK_HEIGHT, MASK_X, MASK_Y, MERGE_Y, OPERATION_HEIGHT, OUTPUT_WIDTH, OUTPUT_X,
@@ -39,7 +41,7 @@ pub(super) fn attention_connectors() -> impl IntoView {
             y="742"
             aria-hidden="true"
         >
-            "V [H,T,D]"
+            {VALUE_HEAD_EDGE_LABEL}
         </text>
         {flow_line("aggregation-to-head-outputs", OUTPUT_CENTER, AGGREGATION_Y + OPERATION_HEIGHT, OUTPUT_CENTER, HEAD_OUTPUT_Y)}
         {flow_line("head-outputs-to-merge", OUTPUT_CENTER, HEAD_OUTPUT_Y + STATE_HEIGHT, OUTPUT_CENTER, MERGE_Y)}

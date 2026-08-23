@@ -71,7 +71,7 @@ pub(super) fn scores(state: RwSignal<AppState>, client: &WorkerClient) -> AnyVie
     };
     let allowed = vec![true; rows.saturating_mul(cols)];
     let contribution = VectorStrip {
-        label: "feature별 Qᵢ × Kᵢ",
+        label: "feature별 Qᵢ · Kᵢ",
         tensor_id: trace.raw_scores.id.clone(),
         values: score.contributions.clone(),
         tone: "score",
@@ -107,7 +107,7 @@ pub(super) fn mask(state: RwSignal<AppState>, client: &WorkerClient) -> AnyView 
     view! {
         <div class="stage-visual mask-visual" data-visual="causal-mask" data-trace-ready="true">
             {matrix_heatmap(MatrixSpec { tensor_id: trace.scaled_scores.id.clone(), rows, cols, values, allowed, mode: MatrixMode::Mask, query, key, interactive: true, head: current.selection.head }, state, client)}
-            <p class="mask-verdict" data-tensor-id=trace.scaled_scores.id.clone()>{format!("선택 q{query} × k{key}: {} · 대각선 오른쪽은 hatch와 mask 텍스트로 차단", if selected_allowed { "실제 mask 허용" } else { "실제 mask 미래 차단" })}</p>
+            <p class="mask-verdict" data-tensor-id=trace.scaled_scores.id.clone()>{format!("선택 q{query}, k{key}: {} · 대각선 오른쪽은 hatch와 mask 텍스트로 차단", if selected_allowed { "실제 mask 허용" } else { "실제 mask 미래 차단" })}</p>
         </div>
     }.into_any()
 }

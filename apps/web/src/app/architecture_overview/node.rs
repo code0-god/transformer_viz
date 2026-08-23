@@ -1,7 +1,7 @@
 //! Stable architecture node identities and interaction capabilities.
 
 /// Stable identity for every architecture node in the current hierarchy.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum ArchitectureNodeId {
     /// GPT root breadcrumb.
     Root,
@@ -66,6 +66,41 @@ pub enum ArchitectureNodeId {
 }
 
 impl ArchitectureNodeId {
+    /// Complete stable node catalog.
+    #[cfg(test)]
+    pub(crate) const ALL: [Self; 30] = [
+        Self::Root,
+        Self::InputContext,
+        Self::TokenEmbedding,
+        Self::PositionEmbedding,
+        Self::EmbeddingAdd,
+        Self::HiddenState,
+        Self::TransformerBlock,
+        Self::LayerNorm1,
+        Self::SelfAttention,
+        Self::Residual1,
+        Self::LayerNorm2,
+        Self::Mlp,
+        Self::Residual2,
+        Self::FinalLayerNorm,
+        Self::LmHead,
+        Self::Logits,
+        Self::TokenSelection,
+        Self::GeneratedToken,
+        Self::AppendContext,
+        Self::AttentionQkvProjection,
+        Self::AttentionQuery,
+        Self::AttentionKey,
+        Self::AttentionValue,
+        Self::AttentionScores,
+        Self::AttentionScale,
+        Self::AttentionCausalMask,
+        Self::AttentionSoftmax,
+        Self::AttentionValueAggregation,
+        Self::AttentionMergeHeads,
+        Self::AttentionOutputProjection,
+    ];
+
     /// Stable machine-readable value used by browser contracts.
     #[must_use]
     pub const fn as_str(self) -> &'static str {

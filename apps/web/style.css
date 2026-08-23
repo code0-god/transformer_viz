@@ -531,6 +531,11 @@ button.primary {
 }
 .architecture-forward-label { fill: var(--ink) !important; font-weight: 850 !important; }
 .architecture-forward-subtitle { fill: var(--ink-muted) !important; letter-spacing: 0; }
+.architecture-edge-state {
+  fill: var(--ink-muted) !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+}
 .architecture-repeat-label { fill: var(--ready) !important; font-weight: 850 !important; }
 .architecture-repeat-subtitle { fill: var(--ink-muted) !important; letter-spacing: 0; }
 .architecture-figure figcaption {
@@ -715,6 +720,47 @@ button.primary {
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
 }
+.architecture-attention-input-definition {
+  color: var(--ink-muted);
+  font-size: .76rem;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+.architecture-notation-section {
+  display: grid;
+  gap: var(--s3);
+  padding-block-start: var(--s3);
+  border-block-start: 1px solid var(--hairline);
+}
+.architecture-notation-section h4 {
+  color: var(--ink);
+  font-size: .76rem;
+  letter-spacing: .02em;
+}
+.architecture-attention-symbols {
+  display: grid;
+  gap: .35rem;
+  margin: 0;
+}
+.architecture-attention-symbols div {
+  display: grid;
+  grid-template-columns: 3.8rem minmax(0, 1fr);
+  gap: var(--s2);
+  align-items: baseline;
+}
+.architecture-attention-symbols dt {
+  color: var(--accent);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: .72rem;
+  font-weight: 800;
+}
+.architecture-attention-symbols dd {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: .69rem;
+  line-height: 1.4;
+  word-break: keep-all;
+}
 .architecture-attention-facts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -757,12 +803,27 @@ button.primary {
   line-height: 1.6;
 }
 .architecture-attention-operation strong { font-size: .88rem; }
+.architecture-attention-operation code {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: .72rem;
+  line-height: 1.55;
+}
 .architecture-attention-operation p {
   color: var(--ink-muted);
   font-size: .76rem;
   line-height: 1.55;
   word-break: keep-all;
 }
+.architecture-mask-conditions {
+  display: grid;
+  gap: var(--s1);
+  padding: var(--s2);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--token-soft) 55%, var(--surface));
+}
+.architecture-attention-flow-formulas { gap: var(--s2); }
 
 .fatal-error {
   display: grid;

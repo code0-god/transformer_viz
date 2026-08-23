@@ -53,8 +53,16 @@ ATTENTION_DETAIL_PROBE = r"""
     return { x: value.x, y: value.y };
   };
   const y = id => Number(required(`[data-node-id="${id}"] rect`).getAttribute('y'));
+  const nodeText = id => required(`[data-node-id="${id}"]`).textContent
+    .replace(/\s+/g, ' ').trim();
+  const factValue = label => {
+    const term = [...document.querySelectorAll('.architecture-attention-facts dt')]
+      .find(element => element.textContent.trim() === label);
+    return term?.nextElementSibling?.textContent.trim() ?? null;
+  };
   const qkvStarts = ['qkv-to-query', 'qkv-to-key', 'qkv-to-value'].map(name => point(name));
   const text = detail.textContent;
+  const diagramText = required('.architecture-attention-diagram').textContent;
   return {
     attention: true,
     block: Boolean(document.querySelector('[data-testid="architecture-detail"]')),
@@ -70,6 +78,7 @@ ATTENTION_DETAIL_PROBE = r"""
     nodeIds: nodes.map(node => node.dataset.nodeId),
     nodeCapabilities: nodes.map(node => node.dataset.nodeCapability),
     nodeRoles: nodes.map(node => node.getAttribute('role')),
+    nodeAriaLabels: nodes.map(node => node.getAttribute('aria-label')),
     selectedNode: document.querySelector(
       '.architecture-interactive-node.is-selected',
     )?.dataset.nodeId ?? null,
@@ -90,10 +99,29 @@ ATTENTION_DETAIL_PROBE = r"""
       '[data-node-id="attention-qkv-projection"]',
     ).length,
     splitHeadNodes: document.querySelectorAll('.architecture-attention-split').length,
-    headDimension16: text.includes('Head dimension16') && text.includes('[4, T, 16]'),
-    qkvShape: text.includes('[T, 192]'),
+    currentValues: {
+      t: factValue('T'),
+      c: factValue('C'),
+      h: factValue('H'),
+      d: factValue('D'),
+      scale: factValue('1 / √D'),
+    },
+    symbolSections: [...document.querySelectorAll('.architecture-notation-section h4')]
+      .map(element => element.textContent.trim()),
+    qkvShape: nodeText('attention-qkv-projection').includes(
+      'Linear: [T, C] → [T, 3C]',
+    ),
+    scoreMatmul: nodeText('attention-scores').includes('Score MatMul') &&
+      nodeText('attention-scores').includes('S_h = Q_h @ K_hᵀ'),
+    valueMatmul: nodeText('attention-value-aggregation').includes('Value MatMul') &&
+      nodeText('attention-value-aggregation').includes('Y_h = A_h @ V_h'),
+    scaleSymbolic: nodeText('attention-scale').includes('S_h / √D'),
     formula: text.includes(
-      'Attention(Q,K,V) = softmax(QKᵀ / √D + causal mask) V',
+      'Y_h = softmax(CausalMask(Q_h @ K_hᵀ / √D)) @ V_h',
+    ),
+    actualShapeInDiagram: /\b64\b|\b16\b|\[4,/.test(diagramText),
+    legacyNotation: /Q × K|× V|1 \/ √16|\[T, C\] =|\[H, T, D\] =/.test(
+      diagramText,
     ),
     attentionOutput: text.includes('Attention Output'),
     hasResidual: /Residual Add/.test(text) ||

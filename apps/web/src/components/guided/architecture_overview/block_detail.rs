@@ -6,7 +6,10 @@ use nanogpt_schema::ModelMetadata;
 mod diagram;
 
 use crate::app::{
-    architecture_overview::{ArchitectureOverviewState, architecture_block_layers},
+    architecture_overview::{
+        ArchitectureNodeId, ArchitectureOverviewState, architecture_block_layers,
+    },
+    notation::notation_for,
     state::AppState,
 };
 
@@ -80,6 +83,14 @@ pub(super) fn block_detail(
 }
 
 fn block_detail_annotation(layer_count: usize, selected_layer: usize) -> impl IntoView {
+    let operation_ids = [
+        ArchitectureNodeId::LayerNorm1,
+        ArchitectureNodeId::SelfAttention,
+        ArchitectureNodeId::Residual1,
+        ArchitectureNodeId::LayerNorm2,
+        ArchitectureNodeId::Mlp,
+        ArchitectureNodeId::Residual2,
+    ];
     view! {
         <aside class="architecture-annotation architecture-detail-annotation">
             <h3>"Transformer Block"</h3>
@@ -89,17 +100,19 @@ fn block_detail_annotation(layer_count: usize, selected_layer: usize) -> impl In
                 <span>{format!("선택 Layer {selected_layer}")}</span>
             </p>
             <ol>
-                <li>"LayerNorm 1"</li>
-                <li>"Causal Self-Attention"</li>
-                <li>"Residual Add 1"</li>
-                <li>"LayerNorm 2"</li>
-                <li>"MLP"</li>
-                <li>"Residual Add 2"</li>
+                {operation_ids
+                    .into_iter()
+                    .filter_map(notation_for)
+                    .map(|entry| view! { <li>{entry.title}</li> })
+                    .collect_view()}
             </ol>
             <div class="architecture-detail-formulas">
                 <span>"수식"</span>
-                <code>"x′ = x + Attn(LN1(x))"</code>
-                <code>"y = x′ + MLP(LN2(x′))"</code>
+                {operation_ids
+                    .into_iter()
+                    .filter_map(notation_for)
+                    .map(|entry| view! { <code>{entry.formula}</code> })
+                    .collect_view()}
             </div>
         </aside>
     }

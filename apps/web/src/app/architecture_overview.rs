@@ -2,6 +2,8 @@
 
 use std::ops::Range;
 
+use super::notation::block_repeat_label;
+
 mod node;
 
 pub use node::{ArchitectureNodeCapability, ArchitectureNodeId};
@@ -186,14 +188,11 @@ impl ArchitectureOverviewState {
         match self.view {
             ArchitectureView::Root => vec!["GPT".to_owned()],
             ArchitectureView::TransformerBlock => {
-                vec![
-                    "GPT".to_owned(),
-                    format!("Transformer Block × {layer_count}"),
-                ]
+                vec!["GPT".to_owned(), block_repeat_label(layer_count)]
             }
             ArchitectureView::SelfAttention => vec![
                 "GPT".to_owned(),
-                format!("Transformer Block × {layer_count}"),
+                block_repeat_label(layer_count),
                 "Self-Attention".to_owned(),
             ],
         }

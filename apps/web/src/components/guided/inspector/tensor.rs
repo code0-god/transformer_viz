@@ -212,7 +212,7 @@ fn qk_table(state: &AppState) -> AnyView {
     view! {
         <div class="math-table-scroll" tabindex="0" role="region" aria-label="QK feature 기여도 표, 가로 세로 스크롤 가능">
             <table class="qk-contribution-table"><caption>{format!("q{query} · k{key} 전체 QᵢKᵢ")}</caption>
-                <thead><tr><th scope="col">"feature"</th><th scope="col">"Qᵢ"</th><th scope="col">"Kᵢ"</th><th scope="col">"Qᵢ × Kᵢ"</th></tr></thead>
+                <thead><tr><th scope="col">"feature"</th><th scope="col">"Qᵢ"</th><th scope="col">"Kᵢ"</th><th scope="col">"Qᵢ · Kᵢ"</th></tr></thead>
                 <tbody>{rows.map(|(feature, q_value, k_value, product)| view! { <tr><th scope="row">{feature}</th><td>{format!("{q_value:+.9}")}</td><td>{format!("{k_value:+.9}")}</td><td>{format!("{product:+.9}")}</td></tr> }).collect_view()}</tbody>
                 <tfoot><tr><th scope="row">"Σ / captured raw"</th><td colspan="3">{format!("{:.9} / {:.9} · error {:.2e}", evidence.dot, evidence.raw, evidence.raw_error)}</td></tr><tr><th scope="row">"scaled / error"</th><td colspan="3">{format!("{:.9} · {:.2e}", evidence.scaled, evidence.scaled_error)}</td></tr></tfoot>
             </table>
@@ -226,14 +226,14 @@ fn value_table(state: &AppState) -> AnyView {
     };
     let query = state.selection.token.min(trace.mask.rows.saturating_sub(1));
     let Ok(evidence) = value_evidence(trace, query) else {
-        return empty("P×V 기여도를 shape-safe하게 복원할 수 없습니다.");
+        return empty("Value MatMul 기여도를 shape-safe하게 복원할 수 없습니다.");
     };
     let selected_key = state.selection.key;
     let selected_feature = state.ui.selected_feature;
     let contribution_rows = evidence.contributions.chunks(evidence.features.max(1));
     view! {
         <div class="math-table-scroll value-table-scroll" tabindex="0" role="region" aria-label="전체 P 곱하기 V 기여도 표, 가로 세로 스크롤 가능">
-            <table class="value-contribution-table"><caption>{format!("q{query}의 전체 key × {} feature P[q,k] × V[k,d]", evidence.features)}</caption>
+            <table class="value-contribution-table"><caption>{format!("q{query}의 전체 key별 {} feature A_h[i,j] · V_h[j,d]", evidence.features)}</caption>
                 <thead><tr><th scope="col">"key"</th>{(0..evidence.features).map(|feature| view! { <th scope="col" class:selected=feature == selected_feature>{feature}</th> }).collect_view()}</tr></thead>
                 <tbody>{contribution_rows.enumerate().map(|(key, row)| view! { <tr class:selected=key == selected_key><th scope="row">{format!("k{key}")}</th>{row.iter().copied().enumerate().map(|(feature, value)| view! { <td class:selected=feature == selected_feature>{format!("{value:+.7}")}</td> }).collect_view()}</tr> }).collect_view()}</tbody>
                 <tfoot><tr><th scope="row">"Σₖ"</th>{evidence.feature_sums.iter().enumerate().map(|(feature, value)| view! { <td class:selected=feature == selected_feature>{format!("{value:+.7}")}</td> }).collect_view()}</tr><tr><th scope="row">"captured"</th>{evidence.captured.iter().enumerate().map(|(feature, value)| view! { <td class:selected=feature == selected_feature>{format!("{value:+.7}")}</td> }).collect_view()}</tr></tfoot>

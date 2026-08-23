@@ -49,7 +49,7 @@ pub fn tensor_snapshot_view(
         {stats_view(&stats)}
         <p class="selected-value"><span>"선택 값"</span><strong>{format_precise(selected)}</strong><small>{format!("token {selected_token}, local flat index {selected_index}")}</small></p>
         <div class="tensor-table-wrap" tabindex="0" aria-label="텐서 slice 표, 가로 스크롤 가능">
-            <table class="tensor-table"><caption>{format!("앞쪽 {rows} × {columns} slice")}</caption><thead><tr><th scope="col">"row"</th>{(0..columns).map(|column| view! { <th scope="col">{column}</th> }).collect_view()}</tr></thead>
+    <table class="tensor-table"><caption>{format!("앞쪽 {rows}행 {columns}열 slice")}</caption><thead><tr><th scope="col">"row"</th>{(0..columns).map(|column| view! { <th scope="col">{column}</th> }).collect_view()}</tr></thead>
                 <tbody>{(0..rows).map(|row| view! { <tr><th scope="row">{row}</th>{(0..columns).map(|column| {
                     let index = row * width + column;
                     let value = values.get(index).map_or(0.0, |value| value.get());

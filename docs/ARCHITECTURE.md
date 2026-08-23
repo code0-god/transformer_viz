@@ -97,6 +97,12 @@ assets, and source-map data use base-relative same-origin URLs. `scripts/build-w
 root and slash-delimited project-subpath builds. No backend, external model download, CDN, or Python
 runtime belongs in the deployed application.
 
+## Notation boundary
+
+[`NOTATION.md`](NOTATION.md) is the single source for operation names, Tensor symbols, symbolic
+shapes, current shapes, and accessible formula descriptions. UI notation changes do not alter
+Worker protocol, persisted trace identity, numerical parity, or nanoGPT source mapping.
+
 ## Toolchain constants
 
 - Rust `1.94.0`

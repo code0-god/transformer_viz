@@ -42,8 +42,6 @@ pub(super) fn input_and_embeddings(interaction: ArchitectureInteraction) -> impl
                 y: INPUT_Y,
                 width: INPUT_WIDTH,
                 height: INPUT_HEIGHT,
-                title: "Input Context",
-                subtitle: "Current token sequence",
             },
             interaction,
         )}
@@ -55,8 +53,6 @@ pub(super) fn input_and_embeddings(interaction: ArchitectureInteraction) -> impl
                 y: EMBEDDING_Y,
                 width: EMBEDDING_WIDTH,
                 height: EMBEDDING_HEIGHT,
-                title: "Token Embedding",
-                subtitle: "vocab_size → d_model",
             },
             interaction,
         )}
@@ -68,8 +64,6 @@ pub(super) fn input_and_embeddings(interaction: ArchitectureInteraction) -> impl
                 y: EMBEDDING_Y,
                 width: EMBEDDING_WIDTH,
                 height: EMBEDDING_HEIGHT,
-                title: "Position Embedding",
-                subtitle: "context_size → d_model",
             },
             interaction,
         )}
@@ -110,8 +104,6 @@ fn embedding_merge_and_hidden(interaction: ArchitectureInteraction) -> impl Into
                 y: HIDDEN_Y,
                 width: HIDDEN_WIDTH,
                 height: HIDDEN_HEIGHT,
-                title: "Hidden State x₀",
-                subtitle: "",
             },
             interaction,
         )}
@@ -165,8 +157,6 @@ pub(super) fn generation_nodes(
             y: layout.final_layer_norm_y,
             width: MAIN_WIDTH,
             height: COMPACT_HEIGHT,
-            title: "Final LayerNorm",
-            subtitle: "Normalize final hidden states",
         },
         NodeSpec {
             id: ArchitectureNodeId::LmHead,
@@ -175,8 +165,6 @@ pub(super) fn generation_nodes(
             y: layout.lm_head_y,
             width: MAIN_WIDTH,
             height: COMPACT_HEIGHT,
-            title: "LM Head",
-            subtitle: "d_model → vocab_size",
         },
         NodeSpec {
             id: ArchitectureNodeId::Logits,
@@ -185,8 +173,6 @@ pub(super) fn generation_nodes(
             y: layout.logits_y,
             width: MAIN_WIDTH,
             height: COMPACT_HEIGHT,
-            title: "Logits",
-            subtitle: "One score per token",
         },
         NodeSpec {
             id: ArchitectureNodeId::TokenSelection,
@@ -195,8 +181,6 @@ pub(super) fn generation_nodes(
             y: layout.selection_y,
             width: SELECTION_WIDTH,
             height: SELECTION_HEIGHT,
-            title: "Token Selection",
-            subtitle: "Temperature · Top-K · Softmax · Sampling",
         },
         NodeSpec {
             id: ArchitectureNodeId::GeneratedToken,
@@ -205,8 +189,6 @@ pub(super) fn generation_nodes(
             y: layout.generated_y,
             width: MAIN_WIDTH,
             height: TOKEN_HEIGHT,
-            title: "Generated Token",
-            subtitle: "One sampled token",
         },
         NodeSpec {
             id: ArchitectureNodeId::AppendContext,
@@ -215,8 +197,6 @@ pub(super) fn generation_nodes(
             y: layout.append_y,
             width: MAIN_WIDTH,
             height: TOKEN_HEIGHT,
-            title: "Append to Context",
-            subtitle: "Context grows by one token",
         },
     ];
     view! {

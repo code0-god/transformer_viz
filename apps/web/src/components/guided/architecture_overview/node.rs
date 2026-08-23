@@ -4,6 +4,7 @@ use leptos::prelude::*;
 
 use crate::app::{
     architecture_overview::{ArchitectureNodeCapability, ArchitectureNodeId},
+    notation::notation_for,
     state::AppState,
 };
 
@@ -71,7 +72,7 @@ impl ArchitectureInteraction {
 
 pub(super) fn architecture_node(
     id: ArchitectureNodeId,
-    label: &'static str,
+    fallback_label: &'static str,
     bounds: NodeBounds,
     interaction: ArchitectureInteraction,
     indicator: Option<DrillDownIndicator>,
@@ -80,6 +81,7 @@ pub(super) fn architecture_node(
     let capability = id.capability();
     let interactive = capability.is_interactive();
     let selected = interaction.is_selected(id);
+    let label = notation_for(id).map_or(fallback_label, |entry| entry.accessible_name);
     let accessible_name = match capability {
         ArchitectureNodeCapability::Static => label.to_owned(),
         ArchitectureNodeCapability::Selectable => format!("{label}, 선택 가능"),

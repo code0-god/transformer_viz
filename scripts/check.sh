@@ -101,6 +101,11 @@ PYTHONPATH="${ROOT_DIR}/scripts" \
   python3 "${ROOT_DIR}/scripts/browser_architecture_attention.py" \
   --root "${CHECK_DIST_DIR}/browser-root"
 
+printf '%s\n' '==> Architecture notation browser contract'
+PYTHONPATH="${ROOT_DIR}/scripts" \
+  python3 "${ROOT_DIR}/scripts/browser_architecture_notation.py" \
+  --root "${CHECK_DIST_DIR}/browser-root"
+
 printf '%s\n' '==> generation transport rollback'
 PYTHONPATH="${ROOT_DIR}/scripts" \
   python3 "${ROOT_DIR}/scripts/browser_generation_transport.py" \

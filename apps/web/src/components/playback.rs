@@ -43,8 +43,8 @@ const STEPS: [StepCopy; PLAYBACK_STEP_COUNT] = [
         explanation: "선택된 뒤 전달될 토큰 정보를 표현합니다.",
     },
     StepCopy {
-        label: "QKᵀ",
-        formula: "S = QKᵀ",
+        label: "Score MatMul",
+        formula: "S_h = Q_h @ K_hᵀ",
         explanation: "모든 query-key 쌍의 원시 유사도를 계산합니다.",
     },
     StepCopy {
@@ -58,8 +58,8 @@ const STEPS: [StepCopy; PLAYBACK_STEP_COUNT] = [
         explanation: "미래 위치를 차단하고 허용된 key 확률을 정규화합니다.",
     },
     StepCopy {
-        label: "Attention × V",
-        formula: "Y = AV",
+        label: "Value MatMul",
+        formula: "Y_h = A_h @ V_h",
         explanation: "확률로 value를 가중합해 토큰별 문맥을 만듭니다.",
     },
     StepCopy {

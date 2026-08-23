@@ -2,7 +2,7 @@
 
 use leptos::prelude::*;
 
-use crate::app::architecture_overview::ArchitectureNodeId;
+use crate::app::{architecture_overview::ArchitectureNodeId, notation::notation_for};
 
 use super::super::super::node::{ArchitectureInteraction, NodeBounds, architecture_node};
 
@@ -14,13 +14,14 @@ pub(super) struct NodeSpec {
     pub y: usize,
     pub width: usize,
     pub height: usize,
-    pub title: &'static str,
-    pub subtitle: &'static str,
 }
 
-pub(super) fn stage_node(spec: NodeSpec, interaction: ArchitectureInteraction) -> impl IntoView {
+pub(super) fn stage_node(spec: NodeSpec, interaction: ArchitectureInteraction) -> AnyView {
+    let Some(notation) = notation_for(spec.id) else {
+        return ().into_any();
+    };
     let center_x = spec.x + spec.width / 2;
-    let single_line = spec.subtitle.is_empty();
+    let single_line = notation.diagram_detail.is_empty();
     let title_y = if single_line {
         spec.y + spec.height / 2 + 2
     } else {
@@ -29,7 +30,7 @@ pub(super) fn stage_node(spec: NodeSpec, interaction: ArchitectureInteraction) -
     let subtitle_y = spec.y + if spec.height > 42 { 41 } else { 32 };
     architecture_node(
         spec.id,
-        spec.title,
+        notation.accessible_name,
         NodeBounds {
             x: spec.x,
             y: spec.y,
@@ -54,7 +55,7 @@ pub(super) fn stage_node(spec: NodeSpec, interaction: ArchitectureInteraction) -
                     text-anchor="middle"
                     dominant-baseline=if single_line { "middle" } else { "auto" }
                 >
-                    {spec.title}
+                    {notation.title}
                 </text>
                 <text
                     class="architecture-node-subtitle"
@@ -62,9 +63,10 @@ pub(super) fn stage_node(spec: NodeSpec, interaction: ArchitectureInteraction) -
                     y=subtitle_y
                     text-anchor="middle"
                 >
-                    {spec.subtitle}
+                    {notation.diagram_detail}
                 </text>
             </g>
         },
     )
+    .into_any()
 }

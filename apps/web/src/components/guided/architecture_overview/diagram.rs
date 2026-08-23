@@ -6,6 +6,7 @@ use nanogpt_schema::ModelMetadata;
 use crate::app::{
     architecture_overview::ArchitectureOverviewState,
     architecture_overview_layout::{DiagramLayout, VIEW_WIDTH},
+    notation::block_repeat_label,
     state::AppState,
 };
 
@@ -99,7 +100,7 @@ fn architecture_annotation(layer_count: usize) -> impl IntoView {
             <h3 id="architecture-annotation-title">"구조 설명"</h3>
             <ul>
                 <li>
-                    <strong>{format!("Transformer Block × {layer_count}")}</strong>
+                    <strong>{block_repeat_label(layer_count)}</strong>
                     <span>{format!("동일한 Block이 {layer_count}번 순차적으로 적용됩니다.")}</span>
                 </li>
                 <li>
