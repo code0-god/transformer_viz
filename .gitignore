@@ -1,5 +1,7 @@
 .omo/
 /target/
+/node_modules/
+/apps/web/node_modules/
 /apps/web/dist/
 /apps/web/.trunk/
 .DS_Store
