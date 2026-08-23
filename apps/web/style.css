@@ -70,7 +70,20 @@ button.primary {
   color: var(--ink);
   font-weight: 700;
 }
-.skip-link:focus { translate: 0; }
+.skip-link:not(:focus) {
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.skip-link:focus {
+  inline-size: auto;
+  block-size: auto;
+  translate: 0;
+  clip-path: none;
+}
 
 /* Pre-WASM startup */
 .startup-shell {
@@ -312,6 +325,15 @@ button.primary {
   color: var(--accent);
 }
 .architecture-breadcrumb-current { display: flex; gap: var(--s2); color: var(--ink-muted); font-size: .78rem; }
+.architecture-back-button {
+  min-block-size: 44px;
+  padding: .5rem .8rem;
+  border-color: var(--hairline);
+  background: var(--surface);
+  color: var(--accent);
+  font-size: .78rem;
+  white-space: nowrap;
+}
 .architecture-intro {
   display: flex;
   align-items: start;
@@ -400,6 +422,48 @@ button.primary {
   font-size: 12px;
   font-weight: 550;
 }
+.architecture-interactive-node { outline: none; }
+.architecture-interactive-node:not(.architecture-interactive-node--static) { cursor: pointer; }
+.architecture-node-focus-outline {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 4;
+  pointer-events: all;
+  transition:
+    fill 150ms ease-out,
+    stroke 150ms ease-out,
+    filter 150ms ease-out;
+}
+.architecture-interactive-node--static .architecture-node-focus-outline {
+  pointer-events: none;
+}
+.architecture-interactive-node:hover .architecture-node-focus-outline,
+.architecture-interactive-node:focus .architecture-node-focus-outline,
+.architecture-interactive-node:focus-visible .architecture-node-focus-outline,
+.architecture-interactive-node.is-selected .architecture-node-focus-outline {
+  fill: color-mix(in srgb, var(--accent) 6%, transparent);
+  stroke: color-mix(in srgb, var(--accent) 78%, var(--line));
+  filter: drop-shadow(0 4px 5px rgb(53 46 34 / 14%));
+}
+.architecture-interactive-node:focus .architecture-node-focus-outline,
+.architecture-interactive-node:focus-visible .architecture-node-focus-outline {
+  stroke: var(--accent);
+  stroke-width: 5;
+}
+.architecture-node-drilldown-indicator {
+  fill: var(--accent) !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+.architecture-interactive-node--drill-down:hover .architecture-node-drilldown-indicator,
+.architecture-interactive-node--drill-down:focus .architecture-node-drilldown-indicator,
+.architecture-interactive-node--drill-down:focus-visible .architecture-node-drilldown-indicator,
+.architecture-interactive-node--drill-down.is-selected
+  .architecture-node-drilldown-indicator {
+  opacity: 1;
+}
 .architecture-node rect { stroke: var(--line); stroke-width: 1.5; fill: var(--surface); }
 .architecture-node-input rect { fill: var(--projection-soft); stroke: #9d83bd; }
 .architecture-node-embedding rect { fill: var(--embedding-soft); stroke: #78a27d; }
@@ -467,6 +531,126 @@ button.primary {
   word-break: keep-all;
 }
 
+.architecture-detail {
+  display: grid;
+  gap: var(--s4);
+}
+.architecture-detail-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--s5);
+  padding: var(--s4);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--block-soft) 64%, var(--surface));
+}
+.architecture-detail-toolbar > div > p:last-child {
+  max-inline-size: 62ch;
+  margin-block-start: var(--s1);
+  color: var(--ink-muted);
+  font-size: .8rem;
+  word-break: keep-all;
+}
+.architecture-detail-kicker {
+  color: #315d99;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: .72rem;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.architecture-layer-selector {
+  display: grid;
+  gap: var(--s1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.architecture-layer-selector legend {
+  color: var(--ink-muted);
+  font-size: .72rem;
+  font-weight: 750;
+}
+.architecture-layer-selector > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+}
+.architecture-layer-selector button {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding: .4rem;
+  border-color: var(--hairline);
+  background: var(--surface);
+  color: var(--ink-muted);
+}
+.architecture-layer-selector button.selected {
+  border-color: #7096c7;
+  background: var(--block-soft);
+  color: #315d99;
+  box-shadow: inset 0 0 0 1px #7096c7;
+}
+.architecture-detail-grid { align-items: center; }
+.architecture-detail-figure { min-inline-size: 0; }
+.architecture-detail-diagram {
+  max-inline-size: 48rem;
+  min-inline-size: 42rem;
+}
+.architecture-detail-state rect {
+  fill: var(--surface);
+  stroke: var(--hairline);
+  stroke-width: 1.5;
+}
+.architecture-detail-flow,
+.architecture-detail-residual {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.7;
+  marker-end: url("#block-detail-arrow");
+}
+.architecture-detail-residual {
+  stroke: var(--line);
+  stroke-width: 1.6;
+}
+.architecture-detail-annotation {
+  align-content: start;
+}
+.architecture-detail-annotation ol {
+  display: grid;
+  gap: var(--s2);
+  margin: 0;
+  padding-inline-start: 1.4rem;
+  color: var(--ink-muted);
+  font-size: .78rem;
+}
+.architecture-detail-layer {
+  display: grid;
+  gap: var(--s1);
+  padding: var(--s3);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: .76rem;
+}
+.architecture-detail-layer span { color: var(--ink-muted); }
+.architecture-detail-formulas {
+  display: grid;
+  gap: var(--s2);
+  padding-block-start: var(--s3);
+  border-block-start: 1px solid var(--hairline);
+}
+.architecture-detail-formulas span {
+  color: var(--ink-muted);
+  font-size: .72rem;
+  font-weight: 750;
+}
+.architecture-detail-formulas code {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: .73rem;
+}
+
 .fatal-error {
   display: grid;
   place-content: center;
@@ -488,6 +672,7 @@ button.primary {
   .architecture-annotation { grid-template-columns: auto 1fr; align-items: start; }
   .architecture-annotation ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .architecture-diagram { min-inline-size: 50rem; }
+  .architecture-detail-diagram { min-inline-size: 42rem; }
   .lifecycle-detail { display: none; }
   .lifecycle-error .lifecycle-detail { display: block; }
 }
@@ -515,6 +700,10 @@ button.primary {
   .architecture-annotation { grid-template-columns: minmax(0, 1fr); }
   .architecture-annotation ul { grid-template-columns: minmax(0, 1fr); }
   .architecture-diagram { min-inline-size: 36rem; }
+}
+
+@media (hover: none) {
+  .architecture-node-drilldown-indicator { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

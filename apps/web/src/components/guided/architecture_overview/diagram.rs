@@ -3,15 +3,25 @@
 use leptos::prelude::*;
 use nanogpt_schema::ModelMetadata;
 
-use crate::app::architecture_overview_layout::{DiagramLayout, VIEW_WIDTH};
+use crate::app::{
+    architecture_overview::ArchitectureOverviewState,
+    architecture_overview_layout::{DiagramLayout, VIEW_WIDTH},
+    state::AppState,
+};
 
 mod pipeline;
 mod transformer_block;
 
+use super::node::ArchitectureInteraction;
 use pipeline::{forward_path, generation_path};
 
-pub(super) fn ready_architecture(model: &ModelMetadata) -> AnyView {
+pub(super) fn ready_architecture(
+    model: &ModelMetadata,
+    state: RwSignal<AppState>,
+    overview: ArchitectureOverviewState,
+) -> AnyView {
     let config = &model.config;
+    let interaction = ArchitectureInteraction::new(state, config.n_layer, overview.selected_node());
     view! {
         <p class="architecture-metadata">
             <strong>{model.name.clone()}</strong>
@@ -21,14 +31,14 @@ pub(super) fn ready_architecture(model: &ModelMetadata) -> AnyView {
             )}
         </p>
         <div class="architecture-visual-grid">
-            {architecture_svg(config.n_layer)}
+            {architecture_svg(config.n_layer, interaction)}
             {architecture_annotation(config.n_layer)}
         </div>
     }
     .into_any()
 }
 
-fn architecture_svg(layer_count: usize) -> impl IntoView {
+fn architecture_svg(layer_count: usize, interaction: ArchitectureInteraction) -> impl IntoView {
     let layout = DiagramLayout::new(layer_count);
     view! {
         <figure class="architecture-figure">
@@ -40,6 +50,7 @@ fn architecture_svg(layer_count: usize) -> impl IntoView {
             >
                 <svg
                     class="architecture-diagram"
+                    data-testid="architecture-root"
                     viewBox=format!("0 0 {VIEW_WIDTH} {}", layout.view_height)
                     style=format!("aspect-ratio: {VIEW_WIDTH} / {}", layout.view_height)
                     role="img"
@@ -66,8 +77,8 @@ fn architecture_svg(layer_count: usize) -> impl IntoView {
                             <path d="M 0 0 L 10 5 L 0 10 z"></path>
                         </marker>
                     </defs>
-                    {forward_path(layer_count)}
-                    {generation_path(layout)}
+                    {forward_path(layer_count, interaction)}
+                    {generation_path(layout, interaction)}
                 </svg>
             </div>
             <figcaption>

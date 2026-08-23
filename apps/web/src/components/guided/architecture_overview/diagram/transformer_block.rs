@@ -2,7 +2,14 @@
 
 use leptos::prelude::*;
 
-use crate::app::architecture_overview_layout::{BLOCK_HEIGHT, BLOCK_START_Y, CENTER_X};
+use crate::app::{
+    architecture_overview::ArchitectureNodeId,
+    architecture_overview_layout::{BLOCK_HEIGHT, BLOCK_START_Y, CENTER_X},
+};
+
+use super::super::node::{
+    ArchitectureInteraction, DrillDownIndicator, NodeBounds, architecture_node,
+};
 
 const BLOCK_WIDTH: usize = 480;
 const BLOCK_X: usize = CENTER_X - BLOCK_WIDTH / 2;
@@ -22,58 +29,77 @@ const SECOND_RESIDUAL_ORIGIN_Y: usize =
     (FIRST_ADD_Y + RESIDUAL_ADD_RADIUS + SECOND_MODULE_Y - ARROWHEAD_VISUAL_LENGTH) / 2;
 pub(super) const BLOCK_LAST_ADD_BOTTOM_Y: usize = SECOND_ADD_Y + RESIDUAL_ADD_RADIUS;
 
-pub(super) fn repeated_transformer_block(layer_count: usize) -> impl IntoView {
+pub(super) fn repeated_transformer_block(
+    layer_count: usize,
+    interaction: ArchitectureInteraction,
+) -> impl IntoView {
     view! {
-        <g
-            class="architecture-block-group"
-            role="group"
-            aria-label=format!("Transformer Block repeated {layer_count} times")
-        >
-            <rect
-                class="architecture-block-frame"
-                x=BLOCK_X
-                y=BLOCK_START_Y
-                width=BLOCK_WIDTH
-                height=BLOCK_HEIGHT
-                rx="16"
-            ></rect>
-            <text class="architecture-block-title" x=BLOCK_X + 22 y="374">
-                {format!("Transformer Block × {layer_count}")}
-            </text>
+        {architecture_node(
+            ArchitectureNodeId::TransformerBlock,
+            "Transformer Block",
+            NodeBounds {
+                x: BLOCK_X,
+                y: BLOCK_START_Y,
+                width: BLOCK_WIDTH,
+                height: BLOCK_HEIGHT,
+                radius: 16,
+            },
+            interaction,
+            Some(DrillDownIndicator {
+                x: BLOCK_X + BLOCK_WIDTH - 20,
+                y: BLOCK_START_Y + 30,
+            }),
+            view! { <g
+                class="architecture-block-group"
+                role="group"
+                aria-label=format!("Transformer Block repeated {layer_count} times")
+            >
+                <rect
+                    class="architecture-block-frame"
+                    x=BLOCK_X
+                    y=BLOCK_START_Y
+                    width=BLOCK_WIDTH
+                    height=BLOCK_HEIGHT
+                    rx="16"
+                ></rect>
+                <text class="architecture-block-title" x=BLOCK_X + 22 y="374">
+                    {format!("Transformer Block × {layer_count}")}
+                </text>
 
-            {block_module(
-                "architecture-block-normalization",
-                BLOCK_FIRST_MODULE_Y,
-                42,
-                "LayerNorm 1",
-                "",
-            )}
-            {block_module(
-                "architecture-block-attention",
-                ATTENTION_Y,
-                60,
-                "Causal Multi-Head",
-                "Self-Attention",
-            )}
-            {residual_add(FIRST_ADD_Y)}
-            {block_module(
-                "architecture-block-normalization",
-                SECOND_MODULE_Y,
-                42,
-                "LayerNorm 2",
-                "",
-            )}
-            {block_module(
-                "architecture-block-mlp",
-                MLP_Y,
-                54,
-                "MLP",
-                "Feed Forward",
-            )}
-            {residual_add(SECOND_ADD_Y)}
+                {block_module(
+                    "architecture-block-normalization",
+                    BLOCK_FIRST_MODULE_Y,
+                    42,
+                    "LayerNorm 1",
+                    "",
+                )}
+                {block_module(
+                    "architecture-block-attention",
+                    ATTENTION_Y,
+                    60,
+                    "Causal Multi-Head",
+                    "Self-Attention",
+                )}
+                {residual_add(FIRST_ADD_Y)}
+                {block_module(
+                    "architecture-block-normalization",
+                    SECOND_MODULE_Y,
+                    42,
+                    "LayerNorm 2",
+                    "",
+                )}
+                {block_module(
+                    "architecture-block-mlp",
+                    MLP_Y,
+                    54,
+                    "MLP",
+                    "Feed Forward",
+                )}
+                {residual_add(SECOND_ADD_Y)}
 
-            {block_connectors()}
-        </g>
+                {block_connectors()}
+            </g> },
+        )}
     }
 }
 
