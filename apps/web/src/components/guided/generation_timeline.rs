@@ -5,7 +5,7 @@ use nanogpt_schema::{GenerationStopReason, TokenInfo};
 
 use crate::app::{generation::GenerationPhase, state::AppState, worker_client::WorkerClient};
 
-use super::{scroll, shell::send_or_error};
+use super::{interaction::send_or_error, scroll};
 
 #[must_use]
 pub(super) fn generation_timeline(
@@ -35,8 +35,18 @@ pub(super) fn generation_timeline(
                     <span class="decoded-continuation" data-testid="decoded-continuation">{move || state.with(|current| current.generation.decoded_continuation())}</span>
                 </p>
             </div>
-            <div class="raw-tokens">
-                <div class="raw-group raw-prompt" data-testid="raw-prompt-tokens" aria-label="원문 prompt 토큰">
+            {token_details(state, client)}
+        </section>
+    }
+}
+
+fn token_details(state: RwSignal<AppState>, client: WorkerClient) -> impl IntoView {
+    view! {
+        <details class="token-details">
+            <summary>"Token details"</summary>
+            <div class="token-details-body">
+                <div class="raw-tokens">
+            <div class="raw-group raw-prompt" data-testid="raw-prompt-tokens" aria-label="원문 prompt 토큰">
                     <strong>"Prompt tokens"</strong>
                     <div class="raw-token-reel">
                         {move || state.with(|current| current.generation.prompt_tokens.iter().enumerate().map(|(index, token)| {
@@ -110,7 +120,8 @@ pub(super) fn generation_timeline(
                     )
                 })}
             </div>
-        </section>
+            </div>
+        </details>
     }
 }
 

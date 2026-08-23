@@ -9,7 +9,7 @@ use crate::app::{
     architecture::{
         ArchitectureLevel, ArchitectureMapState, ArchitectureNode, ArchitectureNodeKind, catalog,
     },
-    state::AppState,
+    state::{AppState, AppStatus},
     worker_client::WorkerClient,
 };
 
@@ -42,7 +42,14 @@ pub(super) fn architecture_map(state: RwSignal<AppState>, client: WorkerClient) 
             </div>
             <div id="architecture-map-body" class="model-map-body" hidden=move || state.with(|current| !current.ui.model_map_expanded)>
                 {move || state.with(|current| current.model.as_ref().map_or_else(
-                    || view! { <p class="empty-state">"모델 구성을 불러오는 중입니다."</p> }.into_any(),
+                    || {
+                        let message = if matches!(current.status, AppStatus::Error(_)) {
+                            "모델 구성을 불러오지 못했습니다."
+                        } else {
+                            "모델 구성을 불러오는 중입니다."
+                        };
+                        view! { <p class="empty-state">{message}</p> }.into_any()
+                    },
                     |model| architecture_body(state, &client, &model.config).into_any(),
                 ))}
             </div>

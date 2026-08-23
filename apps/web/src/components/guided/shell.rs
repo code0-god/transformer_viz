@@ -2,13 +2,11 @@
 
 use leptos::prelude::*;
 use nanogpt_schema::WorkerRequest;
-use wasm_bindgen::JsCast as _;
 
 use crate::{
     app::{
         generation::GenerationPhase,
         state::{AppState, AppStatus},
-        ui_state::ExplorerMode,
         worker_client::WorkerClient,
     },
     components::guided::scroll,
@@ -17,63 +15,34 @@ use crate::{
 #[must_use]
 pub(super) fn player_header(state: RwSignal<AppState>) -> impl IntoView {
     view! {
-        <header class="player-header">
+        <header class="architecture-header">
             <div class="brand-lockup">
                 <h1>"Transformer Viz"</h1>
-                <p>"실제 trace로 따라가는 Guided Learning Player"</p>
+                <p>"GPT형 Transformer가 텍스트를 생성하는 과정을 탐색합니다."</p>
             </div>
-            {mode_tabs(state)}
-            <div class="lifecycle" aria-live="polite">
+            <div
+                class=move || state.with(|current| if matches!(current.status, AppStatus::Error(_)) {
+                    "lifecycle lifecycle-error"
+                } else {
+                    "lifecycle"
+                })
+                role=move || state.with(|current| if matches!(current.status, AppStatus::Error(_)) {
+                    "alert"
+                } else {
+                    "status"
+                })
+                aria-live=move || state.with(|current| if matches!(current.status, AppStatus::Error(_)) {
+                    "assertive"
+                } else {
+                    "polite"
+                })
+            >
                 <span id="status" class="status-badge" data-status=move || state.with(|current| status_kind(&current.status))>
                     {move || state.with(|current| status_label(&current.status))}
                 </span>
                 <span class="lifecycle-detail">{move || state.with(status_detail)}</span>
             </div>
         </header>
-    }
-}
-
-fn mode_tabs(state: RwSignal<AppState>) -> impl IntoView {
-    view! {
-        <div class="mode-tabs" role="tablist" aria-label="탐색 모드">
-            {mode_tab(state, ExplorerMode::Guided, "guided", "Guided")}
-            {mode_tab(state, ExplorerMode::Explore, "explore", "Explore")}
-        </div>
-    }
-}
-
-fn mode_tab(
-    state: RwSignal<AppState>,
-    mode: ExplorerMode,
-    id: &'static str,
-    label: &'static str,
-) -> impl IntoView {
-    view! {
-        <button id=format!("mode-{id}") type="button" role="tab" aria-controls="shared-workspace"
-            aria-selected=move || state.with(|current| (current.ui.mode == mode).to_string())
-            tabindex=move || state.with(|current| if current.ui.mode == mode { "0" } else { "-1" })
-            on:click=move |_| state.update(|current| current.ui.select_mode(mode))
-            on:keydown=move |event| if let Some(next) = mode.after_key(&event.key()) {
-                event.prevent_default();
-                state.update(|current| current.ui.select_mode(next));
-                focus_mode(next);
-            }
-        >{label}</button>
-    }
-}
-
-fn focus_mode(mode: ExplorerMode) {
-    let id = if mode == ExplorerMode::Guided {
-        "mode-guided"
-    } else {
-        "mode-explore"
-    };
-    if let Some(element) = web_sys::window()
-        .and_then(|window| window.document())
-        .and_then(|document| document.get_element_by_id(id))
-        .and_then(|element| element.dyn_into::<web_sys::HtmlElement>().ok())
-    {
-        let _result = element.focus();
     }
 }
 
@@ -196,11 +165,11 @@ const fn status_kind(status: &AppStatus) -> &'static str {
 
 const fn status_label(status: &AppStatus) -> &'static str {
     match status {
-        AppStatus::Loading(_) => "모델 준비 중",
-        AppStatus::Ready => "준비 완료",
-        AppStatus::Running(_) => "Worker 실행 중",
-        AppStatus::Complete => "실행 완료",
-        AppStatus::Error(_) => "확인 필요",
+        AppStatus::Loading(_) => "Model Loading",
+        AppStatus::Ready => "Model Ready",
+        AppStatus::Running(_) => "Generating",
+        AppStatus::Complete => "Model Ready",
+        AppStatus::Error(_) => "Model Error",
     }
 }
 

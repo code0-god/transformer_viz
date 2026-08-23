@@ -78,9 +78,13 @@ def parse(document):
     return parsed
 
 parsed = parse(source)
-expected_meta = {"http-equiv": "Content-Security-Policy", "content": base_policy}
-if parsed.metas.count(expected_meta) != 1 or source.count(base_policy) != 1:
-    raise SystemExit("expected exactly one unhashed CSP meta policy")
+csp_metas = [
+    meta
+    for meta in parsed.metas
+    if meta.get("http-equiv", "").lower() == "content-security-policy"
+]
+if csp_metas or base_policy in source:
+    raise SystemExit("development template must not supply a release CSP")
 if len(parsed.scripts) != 1:
     raise SystemExit("expected exactly one Trunk inline bootstrap script")
 attributes, bootstrap = parsed.scripts[0]
@@ -100,12 +104,17 @@ script_source = "script-src 'self' 'wasm-unsafe-eval'"
 if base_policy.count(script_source) != 1:
     raise SystemExit("expected exactly one script-src directive")
 policy = base_policy.replace(script_source, f"{script_source} 'sha256-{digest}'")
-if source.index(base_policy) > source.index("<script"):
-    raise SystemExit("CSP meta must precede the bootstrap script")
-rendered = source.replace(base_policy, policy, 1)
+head_close = "</head>"
+if source.count(head_close) != 1:
+    raise SystemExit("expected exactly one HTML head")
+csp_meta = f'<meta http-equiv="Content-Security-Policy" content="{policy}" />'
+rendered = source.replace(head_close, f"    {csp_meta}\n  {head_close}", 1)
 verified = parse(rendered)
-if rendered.count(policy) != 1 or {"http-equiv": "Content-Security-Policy", "content": policy} not in verified.metas:
+expected_meta = {"http-equiv": "Content-Security-Policy", "content": policy}
+if rendered.count(policy) != 1 or verified.metas.count(expected_meta) != 1:
     raise SystemExit("failed to inject the bootstrap CSP hash")
+if rendered.index(csp_meta) > rendered.index("<script"):
+    raise SystemExit("CSP meta must precede the bootstrap script")
 page.write_text(rendered, encoding="utf-8")
 PY
 

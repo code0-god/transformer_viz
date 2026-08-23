@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <base data-trunk-public-url />
     <title>Transformer Viz - 브라우저 nanoGPT 탐색기</title>
-    <meta name="description" content="Rust Web Worker가 생성한 실제 nanoGPT trace를 토큰, 어텐션, 텐서 단위로 탐색합니다." />
+    <meta name="description" content="GPT형 Transformer가 입력 문맥에서 다음 토큰을 생성하는 전체 구조를 탐색합니다." />
     <meta name="theme-color" content="#f3f0e8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; form-action 'none'" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2322221f'/%3E%3Cpath d='M8 10h16M8 16h16M8 22h16' stroke='%23f3f0e8' stroke-width='3'/%3E%3C/svg%3E" />
     <link data-trunk rel="css" href="style.css" />
@@ -17,15 +16,15 @@
       <header class="startup-shell__header">
         <div class="brand-lockup">
           <h1>Transformer Viz</h1>
-          <p>실제 trace로 따라가는 Guided Learning Player</p>
+          <p>GPT형 Transformer가 텍스트를 생성하는 과정을 탐색합니다.</p>
         </div>
         <span class="status-badge" data-status="loading">브라우저 앱 불러오는 중</span>
       </header>
       <main class="startup-shell__main">
         <section class="startup-shell__surface" aria-labelledby="startup-title">
           <span class="stage-position">STARTUP / LOCAL INFERENCE</span>
-          <h2 id="startup-title">실제 nanoGPT trace를 준비하고 있습니다</h2>
-          <p>Rust 앱이 준비되면 전용 Worker가 같은 출처의 학습용 모델을 검증해 불러옵니다.</p>
+          <h2 id="startup-title">Transformer Architecture를 준비하고 있습니다</h2>
+          <p>Rust 앱이 준비되면 전용 Worker가 모델 구성을 불러와 전체 생성 경로를 그립니다.</p>
           <dl class="startup-shell__ledger">
             <div><dt>브라우저 앱</dt><dd>불러오는 중</dd></div>
             <div><dt>모델 Worker</dt><dd>앱 시작 후 준비</dd></div>
@@ -41,13 +40,11 @@
         </aside>
       </main>
     </div>
-    <!-- GUIDED_PLAYER_DIRECTION
-    THESIS: One current learning stage dominates; the equal-panel instrumentation dashboard is refused.
-    OWN-WORLD: Warm parchment, near-black ink, terracotta active paths, hairline structure, and monospace trace evidence.
-    STORY: Run one sentence, follow the 21-step curriculum across four groups, inspect the selected layer, head, query, and key.
-    FIRST VIEWPORT: Compact lifecycle and prompt rows lead to a sticky token context; the wide Main Stage sits between a narrow Model Map and scrolling Inspector, with the Stage Rail closing the viewport.
-    FORM: Brief-pinned established-world Guided Player, Operate-first with Read-quality explanation.
-    FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+    <!-- ARCHITECTURE_FIRST_DIRECTION
+    THESIS: Whole-model architecture dominates before any operation-level detail.
+    STORY: Prompt, generated continuation, complete GPT forward path, and autoregressive repeat loop.
+    FIRST VIEWPORT: No dashboard sidebars, Inspector, stage player, playback, or curriculum rail.
+    SCOPE: Root and block selection only; detailed drill-down remains a later phase.
     -->
     <link data-trunk rel="copy-dir" href="public/models" />
     <link data-trunk rel="copy-dir" href="public/reference" />

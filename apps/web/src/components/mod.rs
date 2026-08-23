@@ -1,10 +1,3 @@
-//! Leptos explorer components backed exclusively by Worker traces.
+//! Architecture-first browser components backed by Worker state.
 
-pub mod attention;
-pub mod auxiliary;
-pub mod block;
-pub mod chrome;
 pub mod guided;
-pub mod playback;
-pub mod source;
-pub mod tensor;

@@ -9,7 +9,7 @@ use transformer_viz_web::{
         state::{AppState, AppStatus},
         worker_client::WorkerClient,
     },
-    components::guided::guided_player,
+    components::guided::architecture_first_app,
 };
 
 #[cfg(target_arch = "wasm32")]
@@ -33,8 +33,8 @@ fn app() -> impl IntoView {
 
     match client {
         Ok(client) => view! {
-            <a class="skip-link" href="#main-stage">"Main Stage로 건너뛰기"</a>
-            {guided_player(state, client)}
+            <a class="skip-link" href="#architecture-main">"Architecture로 건너뛰기"</a>
+            {architecture_first_app(state, client)}
         }.into_any(),
         Err(error) => view! { <main class="fatal-error"><h1>"Transformer Viz"</h1><p role="alert">{error.to_string()}</p></main> }.into_any(),
     }

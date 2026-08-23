@@ -10,7 +10,7 @@ READY_PROBE = r"""new Promise((resolve, reject) => {
     error ? reject(error) : requestAnimationFrame(() => requestAnimationFrame(resolve));
   };
   const check = () => {
-    const shell = document.querySelector('.guided-player');
+    const shell = document.querySelector('.architecture-app');
     const status = document.querySelector('#status');
     if (status?.dataset.status === 'error') finish(`app entered error: ${status.textContent}`);
     else if (shell && status?.dataset.status === 'ready' && document.readyState === 'complete') finish();

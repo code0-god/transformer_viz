@@ -23,7 +23,7 @@ impl AppState {
     pub fn select_layer(&mut self, layer: usize) -> Option<WorkerRequest> {
         self.selection.layer = clamp_index(layer, self.layer_count());
         self.selection.head = clamp_index(self.selection.head, self.head_count());
-        #[cfg(any(test, target_arch = "wasm32"))]
+        #[cfg(test)]
         {
             self.ui.architecture.layer = self.selection.layer;
             self.ui.architecture.head = self.selection.head;
@@ -41,7 +41,7 @@ impl AppState {
     #[must_use]
     pub fn select_head(&mut self, head: usize) -> Option<WorkerRequest> {
         self.selection.head = clamp_index(head, self.head_count());
-        #[cfg(any(test, target_arch = "wasm32"))]
+        #[cfg(test)]
         {
             self.ui.architecture.head = self.selection.head;
         }

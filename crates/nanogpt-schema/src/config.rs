@@ -14,6 +14,7 @@ pub struct AssetDescriptor {
 }
 
 /// nanoGPT architecture parameters using upstream configuration names.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct GptConfig {
@@ -257,6 +258,31 @@ impl ModelManifest {
                 return Err(SchemaError::InvalidAssetSize { field, maximum });
             }
         }
+        Ok(())
+    }
+}
+
+#[cfg(all(test, feature = "typescript-bindings"))]
+mod typescript_tests {
+    use super::GptConfig;
+    use ts_rs::{Config, ExportError, TS as _};
+
+    #[test]
+    fn gpt_config_typescript_binding_stays_generated() -> Result<(), ExportError> {
+        let generated = GptConfig::export_to_string(&Config::default())?;
+        let committed =
+            include_str!("../../../spikes/react-root-architecture/src/generated/GptConfig.ts");
+
+        let generated_tokens = generated
+            .chars()
+            .filter(|character| !character.is_whitespace())
+            .collect::<String>();
+        let committed_tokens = committed
+            .chars()
+            .filter(|character| !character.is_whitespace())
+            .collect::<String>();
+
+        assert_eq!(generated_tokens, committed_tokens);
         Ok(())
     }
 }

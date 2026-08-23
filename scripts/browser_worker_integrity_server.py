@@ -71,8 +71,14 @@ class AssetHandler(SimpleHTTPRequestHandler):
     base: ClassVar[str] = "/"
     cross_origin: ClassVar[str] = ""
     targets: ClassVar[dict[str, int]] = {"outside": 0}
+    block_worker_loader: ClassVar[bool] = False
 
     def do_GET(self) -> None:
+        if self.block_worker_loader and self.path == f"{self.base}worker_loader.js":
+            self.send_response(404)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
         manifest = f"{self.base}models/edu/manifest.json"
         if self.path == manifest:
             match self.mode:

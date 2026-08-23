@@ -1,15 +1,19 @@
 //! Browser application state and Worker client.
 
-#[cfg(any(test, target_arch = "wasm32"))]
+#[cfg(test)]
 pub mod architecture;
+pub mod architecture_overview;
+pub mod architecture_overview_layout;
+#[cfg(test)]
+mod architecture_overview_tests;
 #[cfg(test)]
 mod architecture_tests;
 pub mod generation;
-#[cfg(any(test, target_arch = "wasm32"))]
+#[cfg(test)]
 #[doc(hidden)]
 #[path = "../components/guided/visuals/generation_sampling/sampling_contract.rs"]
 pub mod generation_sampling_contract;
-#[cfg(any(test, target_arch = "wasm32"))]
+#[cfg(test)]
 #[doc(hidden)]
 #[path = "../components/guided/visuals/generation_sampling/projection.rs"]
 pub mod generation_sampling_projection;

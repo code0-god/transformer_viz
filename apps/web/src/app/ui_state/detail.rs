@@ -22,26 +22,26 @@ impl ExplorerUiState {
             ExplorerMode::Guided => {
                 DETAIL_OPERATION_STAGES.get(index) == Some(&self.narrative.stage)
             }
-            #[cfg(any(test, target_arch = "wasm32"))]
+            #[cfg(test)]
             ExplorerMode::Explore => self
                 .architecture
                 .operation
                 .is_some_and(|operation| operation.retained_detail_indices().contains(&index)),
-            #[cfg(not(any(test, target_arch = "wasm32")))]
+            #[cfg(not(test))]
             ExplorerMode::Explore => false,
         }
     }
 
-    #[cfg(any(test, target_arch = "wasm32"))]
+    #[cfg(test)]
     pub(super) const fn canonicalize_detail(&mut self) {
         let visible = match self.mode {
             ExplorerMode::Guided => guided_detail_indices(self.narrative.stage),
-            #[cfg(any(test, target_arch = "wasm32"))]
+            #[cfg(test)]
             ExplorerMode::Explore => match self.architecture.operation {
                 Some(operation) => operation.retained_detail_indices(),
                 None => &[],
             },
-            #[cfg(not(any(test, target_arch = "wasm32")))]
+            #[cfg(not(test))]
             ExplorerMode::Explore => &[],
         };
         self.detail_operation = match self.detail_operation {
@@ -51,7 +51,7 @@ impl ExplorerUiState {
     }
 }
 
-#[cfg(any(test, target_arch = "wasm32"))]
+#[cfg(test)]
 const fn slice_contains(indices: &[usize], needle: usize) -> bool {
     let mut index = 0;
     while index < indices.len() {
@@ -63,7 +63,7 @@ const fn slice_contains(indices: &[usize], needle: usize) -> bool {
     false
 }
 
-#[cfg(any(test, target_arch = "wasm32"))]
+#[cfg(test)]
 const fn guided_detail_indices(stage: NarrativeStage) -> &'static [usize] {
     use NarrativeStage as S;
     match stage {

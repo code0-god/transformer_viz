@@ -58,7 +58,7 @@ LARGE_SEED_PROBE = (
 """
     + WAIT_HELPER
     + rf"""
-set('#generation-prompt', 'cat');
+set('#prompt', 'cat');
 set('#max-new-tokens', '1');
 set('#seed', '{U64_MAX}');
 const generate = document.querySelector('[data-testid="generate"]');
@@ -84,7 +84,7 @@ POST_FAILURE_PROBE = (
 """
     + WAIT_HELPER
     + r"""
-set('#generation-prompt', 'cat');
+set('#prompt', 'cat');
 set('#max-new-tokens', '1');
 set('#seed', '42');
 const generate = document.querySelector('[data-testid="generate"]');

@@ -1,12 +1,17 @@
 //! Pure browser-only state for one shared Guided/Explore focus.
 
+#[cfg(test)]
 mod detail;
 
-#[cfg(any(test, target_arch = "wasm32"))]
+#[cfg(test)]
 use super::architecture::{ArchitectureMapState, ArchitectureNodeKind, ArchitectureOperation};
+use super::architecture_overview::ArchitectureOverviewState;
+#[cfg(test)]
 use super::narrative::{NarrativePlayback, NarrativeSpeed, NarrativeStage};
+#[cfg(test)]
 use detail::representative_detail;
 
+#[cfg(test)]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 /// Active writer for the single shared focus.
 pub enum ExplorerMode {
@@ -17,6 +22,7 @@ pub enum ExplorerMode {
     Explore,
 }
 
+#[cfg(test)]
 impl ExplorerMode {
     #[must_use]
     /// Resolves Arrow, Home, and End roving-focus commands.
@@ -33,6 +39,7 @@ impl ExplorerMode {
     }
 }
 
+#[cfg(test)]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 /// Inspector panel selected by its roving tablist.
 pub enum InspectorTab {
@@ -45,6 +52,7 @@ pub enum InspectorTab {
     Source,
 }
 
+#[cfg(test)]
 impl InspectorTab {
     #[must_use]
     /// Resolves Arrow, Home, and End roving-focus commands.
@@ -70,48 +78,72 @@ impl InspectorTab {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// Browser-only mode, focus, transport, and Inspector state.
 pub struct ExplorerUiState {
+    #[cfg(test)]
     /// Current Guided or Explore writer.
     pub mode: ExplorerMode,
+    /// Independent first-screen architecture navigation.
+    pub architecture_overview: ArchitectureOverviewState,
+    #[cfg(test)]
     /// Shared curriculum cursor and playback transport.
     pub narrative: NarrativePlayback,
-    #[cfg(any(test, target_arch = "wasm32"))]
+    #[cfg(test)]
     /// Shared architecture level, coordinates, and operation.
     pub(crate) architecture: ArchitectureMapState,
+    #[cfg(test)]
     /// Inspector panel selected by its roving tablist.
     pub inspector_tab: InspectorTab,
     /// Whether prompt editing controls are expanded.
     pub prompt_expanded: bool,
+    #[cfg(test)]
     /// Whether the Architecture Map disclosure is expanded.
     pub model_map_expanded: bool,
+    #[cfg(test)]
     /// Feature coordinate highlighted in evidence views.
     pub selected_feature: usize,
+    #[cfg(test)]
     /// Selected legacy detail index, if valid for the focus.
     pub detail_operation: Option<usize>,
 }
 
 impl Default for ExplorerUiState {
     fn default() -> Self {
-        let mut state = Self {
+        let state = Self {
+            #[cfg(test)]
             mode: ExplorerMode::Guided,
+            architecture_overview: ArchitectureOverviewState::default(),
+            #[cfg(test)]
             narrative: NarrativePlayback::default(),
-            #[cfg(any(test, target_arch = "wasm32"))]
+            #[cfg(test)]
             architecture: ArchitectureMapState::default(),
+            #[cfg(test)]
             inspector_tab: InspectorTab::Explanation,
             prompt_expanded: true,
+            #[cfg(test)]
             model_map_expanded: false,
+            #[cfg(test)]
             selected_feature: 0,
+            #[cfg(test)]
             detail_operation: None,
         };
-        state.sync_guided_focus();
-        state
+        #[cfg(test)]
+        {
+            let mut state = state;
+            state.sync_guided_focus();
+            state
+        }
+        #[cfg(not(test))]
+        {
+            state
+        }
     }
 }
 
+#[cfg(test)]
 impl ExplorerUiState {
     /// Mode changes preserve the shared focus and all evidence coordinates.
     pub const fn select_mode(&mut self, mode: ExplorerMode) {
         self.mode = mode;
-        #[cfg(any(test, target_arch = "wasm32"))]
+        #[cfg(test)]
         if matches!(mode, ExplorerMode::Guided) && self.architecture.operation.is_none() {
             self.sync_guided_focus();
         } else {
@@ -127,7 +159,7 @@ impl ExplorerUiState {
     }
 
     /// Architecture Map is an Explore writer over the same focus.
-    #[cfg(any(test, target_arch = "wasm32"))]
+    #[cfg(test)]
     /// Writes an Explore level, coordinate, or operation focus.
     pub(crate) const fn navigate_architecture(&mut self, node: ArchitectureNodeKind) {
         self.mode = ExplorerMode::Explore;
@@ -175,7 +207,7 @@ impl ExplorerUiState {
     }
 
     const fn sync_guided_focus(&mut self) {
-        #[cfg(any(test, target_arch = "wasm32"))]
+        #[cfg(test)]
         {
             let (level, operation) = ArchitectureOperation::for_concept(self.narrative.stage);
             self.architecture.level = level;
