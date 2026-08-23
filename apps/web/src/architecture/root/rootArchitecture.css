@@ -31,9 +31,9 @@
 .architecture-annotation ul { display: grid; gap: var(--s5, 1.25rem); margin: 0; padding-inline-start: 1.1rem; }
 .architecture-annotation li { padding-inline-start: var(--s1, 0.25rem); }
 .architecture-annotation strong,
-.architecture-annotation span { display: block; }
+.architecture-annotation li > span { display: block; }
 .architecture-annotation strong { font-size: 0.82rem; }
-.architecture-annotation span { margin-block-start: 0.25rem; color: var(--ink-muted, #756b5d); font-size: 0.76rem; line-height: 1.55; }
+.architecture-annotation li > span { margin-block-start: 0.25rem; color: var(--ink-muted, #756b5d); font-size: 0.76rem; line-height: 1.55; }
 
 .architecture-figure { display: grid; gap: var(--s2, 0.5rem); min-inline-size: 0; }
 .architecture-svg-scroll {
@@ -109,19 +109,6 @@
 .architecture-diagram text.architecture-repeat-label { fill: var(--ready, #56834e); font-weight: 850; }
 .architecture-diagram text.architecture-edge-state { fill: var(--ink-muted, #756b5d); font-size: 11px; font-weight: 750; }
 
-.architecture-node-focus-outline {
-  fill: transparent;
-  stroke: transparent;
-  stroke-width: 4;
-  pointer-events: all;
-}
-.architecture-interactive-node--static .architecture-node-focus-outline { pointer-events: none; }
-.architecture-node:hover .architecture-node-focus-outline,
-.architecture-node:focus-visible .architecture-node-focus-outline,
-.architecture-node.is-selected .architecture-node-focus-outline {
-  fill: color-mix(in srgb, var(--accent, #b5533c) 6%, transparent);
-  stroke: color-mix(in srgb, var(--accent, #b5533c) 78%, var(--line, #9c8f7b));
-}
 .architecture-diagram text.architecture-node-drilldown-indicator,
 .architecture-diagram text.architecture-node__drill-down { fill: var(--accent, #b5533c); font-size: 12px; font-weight: 800; opacity: 0; }
 .architecture-node:hover .architecture-node-drilldown-indicator,

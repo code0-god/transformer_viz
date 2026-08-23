@@ -146,7 +146,6 @@ export function TransformerBlock({
           data-connector="add1-output-to-add2"
           d={`M ${CENTER_X} ${junction2.y} H ${RESIDUAL_RAIL_X} V ${add2.y} H ${CENTER_X + add2.radius}`}
         />
-        <rect className="architecture-node-focus-outline" {...BLOCK} rx={16} />
         <text
           className="architecture-node-drilldown-indicator"
           x={BLOCK.x + BLOCK.width - 20}

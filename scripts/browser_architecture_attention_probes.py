@@ -63,6 +63,9 @@ ATTENTION_DETAIL_PROBE = r"""
   const qkvStarts = ['qkv-to-query', 'qkv-to-key', 'qkv-to-value'].map(name => point(name));
   const text = detail.textContent;
   const diagramText = required('.architecture-attention-diagram').textContent;
+  const formulaHeights = [
+    ...document.querySelectorAll('.architecture-attention-operation [role="math"]'),
+  ].map(element => element.getBoundingClientRect().height);
   return {
     attention: true,
     block: Boolean(document.querySelector('[data-testid="architecture-detail"]')),
@@ -122,6 +125,7 @@ ATTENTION_DETAIL_PROBE = r"""
     formula: Boolean(document.querySelector(
       '[role="math"][aria-label="Self-Attention summary"] .katex-mathml math',
     )),
+    formulaMaxHeight: Math.max(0, ...formulaHeights),
     actualShapeInDiagram: /\b64\b|\b16\b|\[4,/.test(diagramText),
     legacyNotation: /Q × K|× V|1 \/ √16|\[T, C\] =|\[H, T, D\] =/.test(
       diagramText,

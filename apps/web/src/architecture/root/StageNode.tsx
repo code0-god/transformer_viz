@@ -53,7 +53,6 @@ export function StageNode({
         >
           {notation.diagramDetail}
         </text>
-        <rect className="architecture-node-focus-outline" {...bounds} rx={9} />
       </g>
     </ArchitectureNode>
   );

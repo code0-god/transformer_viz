@@ -20,7 +20,7 @@ ROOT_PROBE = r"""
   };
   const block = required('[data-node-id="transformer-block"]');
   const indicator = block.querySelector('.architecture-node-drilldown-indicator');
-  const outline = block.querySelector('.architecture-node-focus-outline');
+  const outline = required('.architecture-node__focus-outline');
   return {
     root: Boolean(document.querySelector('[data-testid="architecture-root"]')),
     detail: Boolean(document.querySelector('[data-testid="architecture-detail"]')),
@@ -29,6 +29,7 @@ ROOT_PROBE = r"""
     tabIndex: block.getAttribute('tabindex'),
     pressed: block.getAttribute('aria-pressed'),
     indicatorOpacity: Number.parseFloat(getComputedStyle(indicator).opacity),
+    outlineFill: getComputedStyle(outline).fill,
     outlineStroke: getComputedStyle(outline).stroke,
     prompt: required('#generation-prompt').value,
     status: required('#status').dataset.status,

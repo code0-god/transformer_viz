@@ -386,9 +386,9 @@ button.primary {
 .architecture-annotation ul { display: grid; gap: var(--s5); margin: 0; padding-inline-start: 1.1rem; }
 .architecture-annotation li { padding-inline-start: var(--s1); }
 .architecture-annotation strong,
-.architecture-annotation span { display: block; }
+.architecture-annotation li > span { display: block; }
 .architecture-annotation strong { font-size: .82rem; }
-.architecture-annotation span { margin-block-start: .25rem; color: var(--ink-muted); font-size: .76rem; line-height: 1.55; }
+.architecture-annotation li > span { margin-block-start: .25rem; color: var(--ink-muted); font-size: .76rem; line-height: 1.55; }
 .architecture-loading,
 .architecture-error {
   display: grid;
@@ -478,7 +478,7 @@ svg text.architecture-node-drilldown-indicator {
   .architecture-node-drilldown-indicator {
   opacity: 1;
 }
-.architecture-node rect { stroke: var(--line); stroke-width: 1.5; fill: var(--surface); }
+.architecture-node rect:not(.architecture-node__focus-outline) { stroke: var(--line); stroke-width: 1.5; fill: var(--surface); }
 .architecture-node-input rect { fill: var(--projection-soft); stroke: #9d83bd; }
 .architecture-node-embedding rect { fill: var(--embedding-soft); stroke: #78a27d; }
 .architecture-node-hidden rect { fill: var(--surface); stroke: var(--hairline); }
@@ -661,7 +661,7 @@ svg text.architecture-repeat-subtitle { fill: var(--ink-muted); letter-spacing: 
   padding-block-start: var(--s3);
   border-block-start: 1px solid var(--hairline);
 }
-.architecture-detail-formulas span {
+.architecture-detail-formulas > span {
   color: var(--ink-muted);
   font-size: .72rem;
   font-weight: 750;

@@ -53,6 +53,7 @@ export function ArchitectureNode({
       {children}
       <rect
         className="architecture-node__focus-outline"
+        fill="none"
         x={bounds.x}
         y={bounds.y}
         width={bounds.width}

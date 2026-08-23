@@ -140,6 +140,7 @@ def verify_navigation(
     require(initial["root"] and not initial["detail"], f"initial route: {initial}")
     require(initial["capability"] == "drill-down", f"block capability: {initial}")
     require(initial["role"] == "button" and initial["tabIndex"] == "0", f"block a11y: {initial}")
+    require(initial["outlineFill"] == "none", f"focus overlay covered node content: {initial}")
     require(initial["indicatorOpacity"] == 0 or mobile, f"normal indicator: {initial}")
 
     focus_by_tab(browser, '[data-node-id="transformer-block"]')

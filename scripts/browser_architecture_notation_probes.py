@@ -41,6 +41,9 @@ BLOCK_NOTATION_PROBE = r"""
   const text = detail.textContent.replace(/\s+/g, ' ').trim();
   const svgText = required('.architecture-detail-diagram').textContent
     .replace(/\s+/g, ' ').trim();
+  const formulaHeights = [
+    ...document.querySelectorAll('.architecture-annotation [role="math"]'),
+  ].map(element => element.getBoundingClientRect().height);
   return {
     block: true,
     input: svgText.includes('Block Input') && svgText.includes('X_in [T, C]'),
@@ -56,6 +59,7 @@ BLOCK_NOTATION_PROBE = r"""
       'Y_MLP = MLP(X_LN2)',
       'X_out = X_res1 + Y_MLP',
     ].every(value => text.includes(value)),
+    formulaMaxHeight: Math.max(0, ...formulaHeights),
     firstResidual: required('[data-connector="input-to-residual1"]').getAttribute('d'),
     secondResidual: required('[data-connector="x-prime-to-residual2"]').getAttribute('d'),
     legacyNotation: ['Block Input x', 'x′', 'Block Output y', 'Attention(LN1(x))']

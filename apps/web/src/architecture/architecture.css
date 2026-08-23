@@ -9,7 +9,7 @@
 }
 
 .architecture-node__focus-outline {
-  fill: transparent;
+  fill: none;
   pointer-events: none;
   stroke: transparent;
   stroke-width: 2;

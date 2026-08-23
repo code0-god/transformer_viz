@@ -86,6 +86,7 @@ def verify_notation(
     )
     require(not block["legacyNotation"], f"block legacy notation: {block}")
     require(not block["mixedShape"], f"block mixed shape: {block}")
+    require(block["formulaMaxHeight"] < 48, f"fragmented block formula: {block}")
     require(block["documentOverflow"] == 0, f"block overflow: {block}")
     if evidence is not None:
         capture(browser, evidence / f"block-detail-notation{suffix}.png")

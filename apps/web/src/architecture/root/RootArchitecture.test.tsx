@@ -47,6 +47,9 @@ describe("RootArchitecture", () => {
     ).toHaveLength(2);
     expect(
       container.querySelectorAll(".architecture-node-focus-outline"),
+    ).toHaveLength(0);
+    expect(
+      container.querySelectorAll(".architecture-node__focus-outline"),
     ).toHaveLength(11);
     expect(
       container.querySelectorAll(".architecture-node-drilldown-indicator"),
