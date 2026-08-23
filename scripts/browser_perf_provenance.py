@@ -69,19 +69,21 @@ def source_provenance(root: Path) -> dict[str, Any]:
 
 
 def artifact_provenance(builds: dict[str, Path]) -> dict[str, Any]:
-    """Hash every root/subpath artifact and identify app/Worker WASM."""
+    """Hash every root/subpath artifact and identify Vite app/Worker outputs."""
     result = {}
     for name, root in builds.items():
         manifest = _manifest(root, [path for path in root.rglob("*") if path.is_file()])
-        manifest["appWasm"] = [
+        manifest["appJavaScript"] = [
             entry
             for entry in manifest["entries"]
-            if entry["path"].startswith("app-") and entry["path"].endswith("_bg.wasm")
+            if Path(entry["path"]).name.startswith("index-")
+            and entry["path"].endswith(".js")
         ]
         manifest["workerWasm"] = [
             entry
             for entry in manifest["entries"]
-            if entry["path"].endswith("worker_bg.wasm")
+            if Path(entry["path"]).name.startswith("worker_bg-")
+            and entry["path"].endswith(".wasm")
         ]
         result[name] = manifest
     return result

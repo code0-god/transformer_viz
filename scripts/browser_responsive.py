@@ -8,6 +8,7 @@ import base64
 import json
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from browser_cdp import Cdp
 from browser_contract import CAPTURES, VIEWPORTS, failures_for
@@ -233,9 +234,15 @@ def verify(args: argparse.Namespace) -> int:
     for asset in required_worker_assets:
         if not any(url.endswith(asset) for url in worker_urls):
             failures.append(f"dedicated Worker telemetry missing {asset}")
-    for asset in ("worker.js", "worker_bg.wasm"):
-        if not any(url.endswith(asset) for url in all_urls):
-            failures.append(f"browser telemetry missing {asset}")
+    worker_outputs = {
+        "worker-entry JavaScript": lambda name: name.startswith("worker-entry-")
+        and name.endswith(".js"),
+        "worker WASM": lambda name: name.startswith("worker_bg-")
+        and name.endswith(".wasm"),
+    }
+    for label, matches in worker_outputs.items():
+        if not any(matches(Path(urlsplit(url).path).name) for url in all_urls):
+            failures.append(f"browser telemetry missing {label}")
     outside = telemetry.outside_scope(args.url)
     failures.extend(telemetry.errors)
     failures.extend(f"out-of-scope request: {url}" for url in outside)

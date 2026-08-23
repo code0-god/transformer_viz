@@ -3,8 +3,8 @@
   "private": true,
   "packageManager": "pnpm@11.22.0",
   "engines": {
-    "node": ">=22.22.0",
-    "pnpm": ">=11.22.0"
+    "node": "22.22.0",
+    "pnpm": "11.22.0"
   },
   "scripts": {
     "build": "pnpm --dir apps/web build",
@@ -12,5 +12,8 @@
     "check": "pnpm --dir apps/web check",
     "dev": "pnpm --dir apps/web dev",
     "test": "pnpm --dir apps/web test"
+  },
+  "devDependencies": {
+    "binaryen": "123.0.0"
   }
 }

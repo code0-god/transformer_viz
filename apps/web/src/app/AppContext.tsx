@@ -91,11 +91,12 @@ export function AppProvider({
       createWorkerLifecycle({
         createWorker,
         manifestUrl,
+        onError: reportError,
         onResponse,
         onRejected: () => dispatch({ type: "worker-payload-rejected" }),
         ...(scheduler === undefined ? {} : { scheduler }),
       }),
-    [createWorker, manifestUrl, onResponse, scheduler],
+    [createWorker, manifestUrl, onResponse, reportError, scheduler],
   );
 
   useEffect(() => {

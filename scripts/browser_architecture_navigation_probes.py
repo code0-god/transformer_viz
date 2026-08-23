@@ -30,7 +30,7 @@ ROOT_PROBE = r"""
     pressed: block.getAttribute('aria-pressed'),
     indicatorOpacity: Number.parseFloat(getComputedStyle(indicator).opacity),
     outlineStroke: getComputedStyle(outline).stroke,
-    prompt: required('#prompt').value,
+    prompt: required('#generation-prompt').value,
     status: required('#status').dataset.status,
     workerPosts: window.__architectureWorkerPosts,
     documentOverflow: Math.max(
@@ -74,7 +74,7 @@ DETAIL_PROBE = r"""
     secondJunctionY: Number(secondJunction.getAttribute('cy')),
     internalNodeCount: internalNodes.length,
     internalRoles: internalNodes.map(node => node.getAttribute('role')),
-    prompt: required('#prompt').value,
+    prompt: required('#generation-prompt').value,
     status: required('#status').dataset.status,
     workerPosts: window.__architectureWorkerPosts,
     forbiddenDetail: /QKV|QKᵀ|Softmax|heatmap|Tensor Inspector/i.test(
@@ -91,7 +91,7 @@ DETAIL_PROBE = r"""
 
 SET_PROMPT = r"""
 (() => {
-  const prompt = document.querySelector('#prompt');
+  const prompt = document.querySelector('#generation-prompt');
   const setter = Object.getOwnPropertyDescriptor(
     HTMLTextAreaElement.prototype,
     'value',

@@ -7,27 +7,37 @@ import type {
   TokenInfo,
   WorkerRequest,
 } from "../generated/schema";
-import type { WorkerTransport } from "../worker/WorkerClient";
+import type {
+  WorkerTransport,
+  WorkerTransportEventMap,
+  WorkerTransportListener,
+} from "../worker/WorkerClient";
 
 export class TestWorker implements WorkerTransport {
   readonly posted: WorkerRequest[] = [];
   readonly listeners = new Set<(event: MessageEvent<unknown>) => void>();
+  readonly errorListeners = new Set<(event: Event) => void>();
   terminations = 0;
 
   postMessage(message: WorkerRequest): void {
     this.posted.push(message);
   }
-  addEventListener(
-    _type: "message",
-    listener: (event: MessageEvent<unknown>) => void,
+  addEventListener<Type extends keyof WorkerTransportEventMap>(
+    type: Type,
+    listener: WorkerTransportListener<Type>,
   ): void {
-    this.listeners.add(listener);
+    if (type === "message")
+      this.listeners.add(listener as WorkerTransportListener<"message">);
+    else this.errorListeners.add(listener as WorkerTransportListener<"error">);
   }
-  removeEventListener(
-    _type: "message",
-    listener: (event: MessageEvent<unknown>) => void,
+  removeEventListener<Type extends keyof WorkerTransportEventMap>(
+    type: Type,
+    listener: WorkerTransportListener<Type>,
   ): void {
-    this.listeners.delete(listener);
+    if (type === "message")
+      this.listeners.delete(listener as WorkerTransportListener<"message">);
+    else
+      this.errorListeners.delete(listener as WorkerTransportListener<"error">);
   }
   terminate(): void {
     this.terminations += 1;
@@ -35,6 +45,12 @@ export class TestWorker implements WorkerTransport {
   emit(data: unknown): void {
     for (const listener of this.listeners)
       listener(new MessageEvent("message", { data }));
+  }
+  emitError(message = ""): void {
+    for (const listener of this.errorListeners)
+      listener(
+        message ? new ErrorEvent("error", { message }) : new Event("error"),
+      );
   }
 }
 

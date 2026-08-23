@@ -5,8 +5,8 @@
   "type": "module",
   "packageManager": "pnpm@11.22.0",
   "engines": {
-    "node": ">=22.22.0",
-    "pnpm": ">=11.22.0"
+    "node": "22.22.0",
+    "pnpm": "11.22.0"
   },
   "scripts": {
     "build": "pnpm build:worker && tsc --noEmit && vite build",

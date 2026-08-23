@@ -101,17 +101,18 @@ def verify_startup_layout(origin: str, base: str) -> None:
     print(f"{base} 390x844 startup layout: PASS")
 
 
-def verify_worker_loader_failure(origin: str, base: str) -> None:
+def verify_worker_loader_failure(origin: str, base: str, loader: str) -> None:
+    AssetHandler.worker_loader_path = loader
     AssetHandler.block_worker_loader = True
-    try:
-        with ChromeSession() as browser:
-            cdp = browser.require_cdp()
-            session = browser.page_session
-            browser.navigate(origin + base)
-            cdp.evaluate(session, WORKER_FAILURE_PROBE, True)
-            state = cdp.evaluate(
-                session,
-                """(() => {
+    with ChromeSession() as browser:
+        cdp = browser.require_cdp()
+        session = browser.page_session
+        cdp.send("Network.setBlockedURLs", {"urls": [f"*{loader}"]}, session)
+        browser.navigate(origin + base)
+        cdp.evaluate(session, WORKER_FAILURE_PROBE, True)
+        state = cdp.evaluate(
+            session,
+            """(() => {
                     const detail = document.querySelector('.lifecycle-detail');
                     const style = detail ? getComputedStyle(detail) : null;
                     return {
@@ -128,19 +129,18 @@ def verify_worker_loader_failure(origin: str, base: str) -> None:
                         startup: Boolean(document.querySelector('#startup-shell')),
                     };
                 })()""",
+        )
+        if (
+            state.get("status") != "error"
+            or not state.get("detail")
+            or not state.get("detailVisible")
+            or state.get("detailClipped")
+            or state.get("lifecycleRole") != "alert"
+            or not state.get("generateDisabled")
+            or state.get("startup")
+        ):
+            raise IntegrityError(
+                f"{base} Worker loader failure was not visible: {state}"
             )
-            if (
-                state.get("status") != "error"
-                or not state.get("detail")
-                or not state.get("detailVisible")
-                or state.get("detailClipped")
-                or state.get("lifecycleRole") != "alert"
-                or not state.get("generateDisabled")
-                or state.get("startup")
-            ):
-                raise IntegrityError(
-                    f"{base} Worker loader failure was not visible: {state}"
-                )
-    finally:
-        AssetHandler.block_worker_loader = False
+    AssetHandler.block_worker_loader = False
     print(f"{base} Worker loader failure UI: PASS")

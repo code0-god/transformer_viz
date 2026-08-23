@@ -9,6 +9,7 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Protocol
+from urllib.parse import urlsplit
 
 from browser_session import ChromeSession
 
@@ -155,9 +156,10 @@ def verify(root: Path, entry: str) -> None:
                 {"enabled": True},
                 browser.page_session,
             )
+            origin = f"http://127.0.0.1:{server.server_port}"
             navigation = cdp.send(
                 "Page.navigate",
-                {"url": f"http://127.0.0.1:{server.server_port}/{entry}"},
+                {"url": f"{origin}/{entry}"},
                 browser.page_session,
             )
             loader_id = navigation.get("loaderId")
@@ -172,6 +174,11 @@ def verify(root: Path, entry: str) -> None:
             cdp.evaluate(browser.page_session, READY, True)
             continuation = cdp.evaluate(browser.page_session, GENERATE, True)
             state = cdp.evaluate(browser.page_session, NAVIGATE, True)
+            cdp.evaluate(browser.page_session, "document.fonts.ready", True)
+            font_ready = cdp.evaluate(
+                browser.page_session,
+                "document.fonts.check('16px KaTeX_Main')",
+            )
             runtime_errors = [
                 event
                 for event in cdp.events
@@ -181,6 +188,24 @@ def verify(root: Path, entry: str) -> None:
                     and event.get("params", {}).get("type") in {"assert", "error"}
                 )
             ]
+            responses = [
+                event.get("params", {}).get("response", {})
+                for event in cdp.events
+                if event.get("method") == "Network.responseReceived"
+            ]
+            production_assets = [
+                response
+                for response in responses
+                if urlsplit(response.get("url", "")).path.endswith(
+                    (".js", ".css", ".wasm", ".woff2", ".safetensors")
+                )
+            ]
+            suffixes = {
+                Path(urlsplit(response["url"]).path).suffix
+                for response in production_assets
+                if response.get("url", "").startswith(origin)
+                and int(response.get("status", 0)) == 200
+            }
             if (
                 not continuation
                 or not state["root"]
@@ -191,11 +216,15 @@ def verify(root: Path, entry: str) -> None:
                 or state["katex"] == 0
                 or state["mathml"] == 0
                 or state["documentOverflow"] > 0
+                or not font_ready
+                or not {".js", ".css", ".wasm", ".woff2", ".safetensors"}
+                <= suffixes
                 or runtime_errors
             ):
                 raise ReactIntegrationError(
                     f"React integration failed: continuation={continuation!r}, "
-                    f"state={state}, runtime_errors={runtime_errors}"
+                    f"state={state}, font_ready={font_ready}, "
+                    f"suffixes={sorted(suffixes)}, runtime_errors={runtime_errors}"
                 )
     finally:
         server.shutdown()

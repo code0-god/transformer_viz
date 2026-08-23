@@ -5,21 +5,31 @@ import type {
   WorkerResponse,
 } from "../generated/schema";
 
+export interface WorkerTransportEventMap {
+  readonly error: Event;
+  readonly message: MessageEvent<unknown>;
+}
+
+export type WorkerTransportListener<
+  Type extends keyof WorkerTransportEventMap,
+> = (event: WorkerTransportEventMap[Type]) => void;
+
 export interface WorkerTransport {
   postMessage(message: WorkerRequest): void;
-  addEventListener(
-    type: "message",
-    listener: (event: MessageEvent<unknown>) => void,
+  addEventListener<Type extends keyof WorkerTransportEventMap>(
+    type: Type,
+    listener: WorkerTransportListener<Type>,
   ): void;
-  removeEventListener(
-    type: "message",
-    listener: (event: MessageEvent<unknown>) => void,
+  removeEventListener<Type extends keyof WorkerTransportEventMap>(
+    type: Type,
+    listener: WorkerTransportListener<Type>,
   ): void;
   terminate(): void;
 }
 
 export interface WorkerClientOptions {
   initialRequestId?: number;
+  onError?: (error: Error) => void;
   onResponse?: (response: WorkerResponse) => void;
   onRejected?: (data: unknown) => void;
   onStaleResponse?: (response: WorkerResponse) => void;
@@ -28,10 +38,12 @@ export interface WorkerClientOptions {
 export class WorkerClient {
   readonly #worker: WorkerTransport;
   readonly #activeRequestIds = new Set<number>();
+  readonly #onError: (error: Error) => void;
   readonly #onResponse: (response: WorkerResponse) => void;
   readonly #onRejected: (data: unknown) => void;
   readonly #onStaleResponse: (response: WorkerResponse) => void;
   readonly #listener: (event: MessageEvent<unknown>) => void;
+  readonly #errorListener: (event: Event) => void;
   #nextRequestId: number;
   #initialized = false;
   #disposed = false;
@@ -45,13 +57,23 @@ export class WorkerClient {
     }
     this.#worker = worker;
     this.#nextRequestId = initialRequestId;
+    this.#onError = options.onError ?? (() => undefined);
     this.#onResponse = options.onResponse ?? (() => undefined);
     this.#onRejected = options.onRejected ?? (() => undefined);
     this.#onStaleResponse = options.onStaleResponse ?? (() => undefined);
     this.#listener = (event: MessageEvent<unknown>) => {
       this.#receive(event.data);
     };
+    this.#errorListener = (event: Event) => {
+      event.preventDefault();
+      const message =
+        "message" in event && typeof event.message === "string"
+          ? event.message.trim()
+          : "";
+      this.#onError(new Error(message || "Model Worker failed to load"));
+    };
     worker.addEventListener("message", this.#listener);
+    worker.addEventListener("error", this.#errorListener);
   }
 
   initialize(manifestUrl: string): void {
@@ -147,6 +169,7 @@ export class WorkerClient {
     this.#disposed = true;
     this.#activeRequestIds.clear();
     this.#worker.removeEventListener("message", this.#listener);
+    this.#worker.removeEventListener("error", this.#errorListener);
     this.#worker.terminate();
   }
 

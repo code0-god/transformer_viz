@@ -19,7 +19,7 @@ ROOT_NOTATION_PROBE = r"""
       .some(value => text.includes(value)),
     mixedShape: ['[T, C] =', '[H, T, D] =', '[T, 64]']
       .some(value => text.includes(value)),
-    prompt: required('#prompt').value,
+    prompt: required('#generation-prompt').value,
     status: required('#status').dataset.status,
     workerPosts: window.__architectureWorkerPosts,
     documentOverflow: Math.max(
@@ -61,7 +61,7 @@ BLOCK_NOTATION_PROBE = r"""
     legacyNotation: ['Block Input x', 'x′', 'Block Output y', 'Attention(LN1(x))']
       .some(value => text.includes(value)),
     mixedShape: svgText.includes('[T, C] ='),
-    prompt: required('#prompt').value,
+    prompt: required('#generation-prompt').value,
     status: required('#status').dataset.status,
     workerPosts: window.__architectureWorkerPosts,
     documentOverflow: Math.max(

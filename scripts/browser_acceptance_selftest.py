@@ -226,7 +226,7 @@ def main() -> int:
             "sessionType": "worker",
         }
         for name in (
-            "worker.js",
+            "worker-entry.js",
             "worker_bg.wasm",
             "manifest.json",
             "config.json",

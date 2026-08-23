@@ -57,14 +57,11 @@ SURFACE_PROBE = r"""(() => {
     repeatMarkerEnd: getComputedStyle(document.querySelector('.architecture-repeat')).markerEnd,
     gridBackground: getComputedStyle(canvas).backgroundImage,
     settingsOpen: document.querySelector('.generation-settings')?.open,
-    tokenDetailsOpen: document.querySelector('.token-details')?.open,
     documentOverflow: document.documentElement.scrollWidth - innerWidth,
     canvasLocalOverflow: canvas ? canvas.scrollWidth - canvas.clientWidth : null,
     canvasRatio: main && canvasBox ? canvasBox.width / main.width : 0,
-    controlHeights: [
-      document.querySelector('.generation-settings > summary'),
-      document.querySelector('.token-details > summary'),
-    ].map(element => element?.getBoundingClientRect().height ?? 0),
+    controlHeights: [document.querySelector('.generation-settings > summary')]
+      .map(element => element?.getBoundingClientRect().height ?? 0),
     svgTitle: document.querySelector('.architecture-diagram title')?.textContent,
     svgDescription: document.querySelector('.architecture-diagram desc')?.textContent,
   };
@@ -123,7 +120,6 @@ def verify_surface(browser: ChromeSession, url: str, mobile: bool) -> None:
         or state["repeatMarkerEnd"] == "none"
         or state["gridBackground"] != "none"
         or state["settingsOpen"]
-        or state["tokenDetailsOpen"]
         or state["documentOverflow"] > 0
         or state["canvasRatio"] < 0.75
         or min(state["controlHeights"]) < 44

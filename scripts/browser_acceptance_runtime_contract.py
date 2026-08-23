@@ -7,7 +7,7 @@
 """Shared runtime asset contract."""
 
 REQUIRED_ASSETS = {
-    "worker.js",
+    "worker-entry.js",
     "worker_bg.wasm",
     "manifest.json",
     "config.json",

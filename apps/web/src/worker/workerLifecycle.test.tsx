@@ -2,7 +2,11 @@ import { render } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { StrictMode } from "react";
 import type { WorkerRequest } from "../generated/schema";
-import type { WorkerTransport } from "./WorkerClient";
+import type {
+  WorkerTransport,
+  WorkerTransportEventMap,
+  WorkerTransportListener,
+} from "./WorkerClient";
 import {
   type CleanupScheduler,
   createWorkerLifecycle,
@@ -15,13 +19,13 @@ class FakeWorker implements WorkerTransport {
   postMessage(message: WorkerRequest): void {
     this.posted.push(message);
   }
-  addEventListener(
-    _type: "message",
-    _listener: (event: MessageEvent<unknown>) => void,
+  addEventListener<Type extends keyof WorkerTransportEventMap>(
+    _type: Type,
+    _listener: WorkerTransportListener<Type>,
   ): void {}
-  removeEventListener(
-    _type: "message",
-    _listener: (event: MessageEvent<unknown>) => void,
+  removeEventListener<Type extends keyof WorkerTransportEventMap>(
+    _type: Type,
+    _listener: WorkerTransportListener<Type>,
   ): void {}
   terminate(): void {
     this.terminations += 1;

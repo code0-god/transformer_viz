@@ -101,7 +101,7 @@ def verify_notation(
     require(
         score["selectedNode"] == "attention-scores"
         and "Score MatMul" in score["operationCopy"]
-        and "S_h = Q_h @ K_hᵀ" in score["operationCopy"]
+        and score["operationFormulaTex"] == r"S_h = Q_h K_h^{\mathsf T}"
         and "Symbolic shape" in score["operationCopy"]
         and "Current shape" in score["operationCopy"]
         and "실행 후 표시" in score["operationCopy"],
@@ -112,7 +112,7 @@ def verify_notation(
     require(
         value["selectedNode"] == "attention-value-aggregation"
         and "Value MatMul" in value["operationCopy"]
-        and "Y_h = A_h @ V_h" in value["operationCopy"],
+        and value["operationFormulaTex"] == r"Y_h = A_h V_h",
         f"Value MatMul operation panel: {value}",
     )
 

@@ -15,11 +15,18 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           submodules: recursive
-      - name: Install pinned Rust toolchain
+      - name: Install pinned Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.22.0
+      - name: Install pinned pnpm
+        run: npm install --global pnpm@11.22.0
+      - name: Install frozen JavaScript dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install pinned Rust and WASM tools
         run: |
           rustup toolchain install 1.94.0 --profile minimal --component clippy,rustfmt
           rustup target add wasm32-unknown-unknown --toolchain 1.94.0
-      - name: Install pinned Trunk
-        run: cargo install trunk --version 0.21.14 --locked
+          cargo install wasm-bindgen-cli --version 0.2.127 --locked
       - name: Run repository gate
         run: ./scripts/check.sh

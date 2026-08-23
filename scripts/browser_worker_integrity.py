@@ -27,15 +27,19 @@ from browser_worker_integrity_server import (
 from browser_worker_startup import verify_startup_layout, verify_worker_loader_failure
 
 
-def worker_probe(loader: str) -> str:
+def worker_probe(loader: str, base: str) -> str:
     return f"""new Promise((resolve, reject) => {{
       const worker = new Worker({json.dumps(loader)}, {{type: 'module'}});
+      const manifest = new URL(
+        {json.dumps(f"{base}models/edu/manifest.json")},
+        location.origin,
+      ).href;
       let initialized = false;
       const timeout = setTimeout(() => reject('Worker integrity timeout'), 15000);
       worker.onmessage = event => {{
         if (!initialized && event.data.type === 'initializing') {{
           initialized = true;
-          worker.postMessage({{type: 'initialize', manifest_url: './models/edu/manifest.json'}});
+          worker.postMessage({{type: 'initialize', manifest_url: manifest}});
         }} else if (event.data.type === 'error') {{
           clearTimeout(timeout);
           worker.terminate();
@@ -64,9 +68,17 @@ def run(root: Path) -> None:
     origin = f"http://127.0.0.1:{main.server_port}"
     try:
         for base in ("/", "/transformer_viz/"):
+            deployment = root / base.strip("/") if base != "/" else root
+            loaders = list((deployment / "assets").glob("worker-entry-*.js"))
+            if len(loaders) != 1:
+                raise IntegrityError(
+                    f"{base} expected one Vite Worker entry, found {loaders}"
+                )
+            loader = f"{base}assets/{loaders[0].name}"
             AssetHandler.base = base
+            AssetHandler.worker_loader_path = loader
             verify_startup_layout(origin, base)
-            verify_worker_loader_failure(origin, base)
+            verify_worker_loader_failure(origin, base, loader)
             with ChromeSession() as browser:
                 cdp = browser.require_cdp()
                 cdp.send(
@@ -95,7 +107,7 @@ def run(root: Path) -> None:
                     ExternalHandler.requests = 0
                     result = cdp.evaluate(
                         browser.page_session,
-                        worker_probe(f"{base}worker_loader.js"),
+                        worker_probe(loader, base),
                         True,
                     )
                     if result.get("code") != "asset_unavailable":

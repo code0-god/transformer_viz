@@ -8,8 +8,8 @@ BLOCK_ATTENTION_PROBE = r"""
     return element;
   };
   const node = required('[data-node-id="self-attention"]');
-  const indicator = node.querySelector('.architecture-node-drilldown-indicator');
-  const outline = node.querySelector('.architecture-node-focus-outline');
+  const indicator = required('.architecture-node__drill-down');
+  const outline = required('.architecture-node__focus-outline');
   return {
     block: Boolean(document.querySelector('[data-testid="architecture-detail"]')),
     attention: Boolean(document.querySelector('[data-testid="attention-detail"]')),
@@ -22,7 +22,7 @@ BLOCK_ATTENTION_PROBE = r"""
     selectedLayer: Number(required('[data-testid="architecture-detail"]').dataset.selectedLayer),
     firstResidual: required('[data-connector="input-to-residual1"]').getAttribute('d'),
     secondResidual: required('[data-connector="x-prime-to-residual2"]').getAttribute('d'),
-    prompt: required('#prompt').value,
+    prompt: required('#generation-prompt').value,
     status: required('#status').dataset.status,
     workerPosts: window.__architectureWorkerPosts,
   };
@@ -80,10 +80,13 @@ ATTENTION_DETAIL_PROBE = r"""
     nodeRoles: nodes.map(node => node.getAttribute('role')),
     nodeAriaLabels: nodes.map(node => node.getAttribute('aria-label')),
     selectedNode: document.querySelector(
-      '.architecture-interactive-node.is-selected',
+      '.architecture-node.is-selected',
     )?.dataset.nodeId ?? null,
     operationCopy: document.querySelector(
       '[data-testid="attention-operation-copy"]',
+    )?.textContent.trim() ?? null,
+    operationFormulaTex: document.querySelector(
+      '[data-testid="attention-operation-copy"] annotation[encoding="application/x-tex"]',
     )?.textContent.trim() ?? null,
     qkvStarts,
     qToScoresEnd: point('query-heads-to-scores', true),
@@ -116,9 +119,9 @@ ATTENTION_DETAIL_PROBE = r"""
     valueMatmul: nodeText('attention-value-aggregation').includes('Value MatMul') &&
       nodeText('attention-value-aggregation').includes('Y_h = A_h @ V_h'),
     scaleSymbolic: nodeText('attention-scale').includes('S_h / √D'),
-    formula: text.includes(
-      'Y_h = softmax(CausalMask(Q_h @ K_hᵀ / √D)) @ V_h',
-    ),
+    formula: Boolean(document.querySelector(
+      '[role="math"][aria-label="Self-Attention summary"] .katex-mathml math',
+    )),
     actualShapeInDiagram: /\b64\b|\b16\b|\[4,/.test(diagramText),
     legacyNotation: /Q × K|× V|1 \/ √16|\[T, C\] =|\[H, T, D\] =/.test(
       diagramText,
@@ -127,7 +130,7 @@ ATTENTION_DETAIL_PROBE = r"""
     hasResidual: /Residual Add/.test(text) ||
       Boolean(document.querySelector('[data-connector*="residual"]')),
     forbiddenDetail: /heatmap|Tensor Inspector|source inspector|probability cell/i.test(text),
-    prompt: required('#prompt').value,
+    prompt: required('#generation-prompt').value,
     status: required('#status').dataset.status,
     workerPosts: window.__architectureWorkerPosts,
     documentOverflow: Math.max(

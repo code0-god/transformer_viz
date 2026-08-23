@@ -11,6 +11,9 @@ from pathlib import Path
 from typing import Protocol
 from urllib.parse import unquote, urlsplit
 
+CSP = "default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; form-action 'none'"
+RUNTIME_SUFFIXES = (".js", ".css", ".wasm", ".woff", ".woff2", ".ttf", ".json", ".safetensors")
+
 from browser_probes import READY_PROBE
 from browser_session import ChromeSession
 
@@ -61,13 +64,10 @@ def main() -> int:
     source = index.read_text(encoding="utf-8")
     shell_position = source.find('id="startup-shell"')
     bootstrap_position = source.find("<script")
-    if (
-        shell_position < 0
-        or bootstrap_position < 0
-        or shell_position >= bootstrap_position
-    ):
+    csp_position = source.find("Content-Security-Policy")
+    if shell_position < 0 or bootstrap_position < 0 or not 0 <= csp_position < bootstrap_position:
         raise ReleaseReadinessError(
-            "static startup shell must precede the bootstrap script"
+            "release must contain its startup shell and apply CSP before Vite"
         )
 
     ReleaseHandler.base = args.base
@@ -81,6 +81,12 @@ def main() -> int:
             cdp = browser.require_cdp()
             browser.navigate(origin + args.base)
             cdp.evaluate(browser.page_session, READY_PROBE, True)
+            cdp.evaluate(
+                browser.page_session,
+                "document.fonts.load('16px KaTeX_Main')",
+                True,
+            )
+            cdp.evaluate(browser.page_session, "document.fonts.ready", True)
             state = cdp.evaluate(
                 browser.page_session,
                 """(() => ({
@@ -93,8 +99,7 @@ def main() -> int:
             )
             if (
                 state.get("status") != "ready"
-                or not state.get("csp", "").startswith("default-src 'self'")
-                or "'sha256-" not in state["csp"]
+                or state.get("csp") != CSP
                 or state.get("referrer") != "strict-origin-when-cross-origin"
                 or state.get("startupShell")
                 or not browser.app_worker_sessions()
@@ -102,7 +107,32 @@ def main() -> int:
                 raise ReleaseReadinessError(
                     f"release did not initialize its Worker safely: {state}"
                 )
-        print(f"{args.base} real-Chrome Worker readiness: PASS")
+            responses = [
+                event.get("params", {}).get("response", {})
+                for event in cdp.events
+                if event.get("method") == "Network.responseReceived"
+            ]
+            runtime = [
+                response
+                for response in responses
+                if urlsplit(response.get("url", "")).scheme in {"http", "https"}
+                and urlsplit(response.get("url", "")).path.endswith(RUNTIME_SUFFIXES)
+            ]
+            suffixes = {
+                Path(urlsplit(response["url"]).path).suffix for response in runtime
+            }
+            invalid = [
+                response
+                for response in runtime
+                if not response.get("url", "").startswith(origin + args.base)
+                or int(response.get("status", 0)) != 200
+            ]
+            if invalid or not {".js", ".css", ".wasm", ".woff2", ".safetensors"} <= suffixes:
+                raise ReleaseReadinessError(
+                    f"runtime assets were not same-origin and complete: "
+                    f"suffixes={sorted(suffixes)}, invalid={invalid}"
+                )
+        print(f"{args.base} real-Chrome Worker/WASM/font readiness: PASS")
     finally:
         server.shutdown()
         server.server_close()

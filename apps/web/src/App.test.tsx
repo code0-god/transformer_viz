@@ -209,4 +209,18 @@ describe("production React Worker integration", () => {
       "Worker returned an invalid response",
     );
   });
+
+  test("surfaces a module Worker script-load error", () => {
+    const { worker } = renderApp();
+    act(() => {
+      worker.emitError();
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Model Worker failed to load",
+    );
+    expect(document.getElementById("status")).toHaveAttribute(
+      "data-status",
+      "error",
+    );
+  });
 });

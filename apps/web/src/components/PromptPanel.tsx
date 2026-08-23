@@ -65,10 +65,9 @@ export function PromptPanel(props: PromptPanelProps) {
     props.onFormChange({ ...props.form, [field]: value });
   };
   const generate = () => {
-    props.onGenerate(
-      props.prompt,
-      parseGenerationForm(props.form, props.limits).config,
-    );
+    const parsed = parseGenerationForm(props.form, props.limits);
+    props.onFormChange(parsed.form);
+    props.onGenerate(props.prompt, parsed.config);
   };
 
   return (
@@ -88,6 +87,7 @@ export function PromptPanel(props: PromptPanelProps) {
         {running ? (
           <button
             type="button"
+            data-testid="generate"
             className="primary"
             style={{ minHeight: 44 }}
             onClick={props.onStop}
@@ -97,6 +97,7 @@ export function PromptPanel(props: PromptPanelProps) {
         ) : (
           <button
             type="button"
+            data-testid="generate"
             className="primary"
             style={{ minHeight: 44 }}
             disabled={generateDisabled}

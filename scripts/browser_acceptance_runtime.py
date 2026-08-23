@@ -77,9 +77,11 @@ def asset_receipts(cdp: Cdp, browser: ChromeSession) -> list[dict[str, Any]]:
         response = event.get("params", {}).get("response", {})
         url = response.get("url", "")
         name = Path(urlsplit(url).path).name
-        if name not in {
-            "worker.js",
-            "worker_bg.wasm",
+        if name.startswith("worker-entry-") and name.endswith(".js"):
+            name = "worker-entry.js"
+        elif name.startswith("worker_bg-") and name.endswith(".wasm"):
+            name = "worker_bg.wasm"
+        elif name not in {
             "manifest.json",
             "config.json",
             "tokenizer.json",

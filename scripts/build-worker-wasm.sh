@@ -9,16 +9,14 @@ readonly WASM_OPT_VERSION="123"
 trap 'rm -rf "${TEMP_DIR}"' EXIT
 
 find_wasm_opt() {
-  if [[ -n "${BINARYEN_ROOT:-}" && -x "${BINARYEN_ROOT}/bin/wasm-opt" ]]; then
+  if [[ -x "${ROOT_DIR}/node_modules/.bin/wasm-opt" ]]; then
+    printf '%s\n' "${ROOT_DIR}/node_modules/.bin/wasm-opt"
+  elif [[ -n "${BINARYEN_ROOT:-}" && -x "${BINARYEN_ROOT}/bin/wasm-opt" ]]; then
     printf '%s\n' "${BINARYEN_ROOT}/bin/wasm-opt"
   elif command -v wasm-opt >/dev/null 2>&1; then
     command -v wasm-opt
-  elif [[ -x "${HOME}/Library/Caches/dev.trunkrs.trunk/wasm-opt-version_123/bin/wasm-opt" ]]; then
-    printf '%s\n' "${HOME}/Library/Caches/dev.trunkrs.trunk/wasm-opt-version_123/bin/wasm-opt"
-  elif [[ -x "${XDG_CACHE_HOME:-${HOME}/.cache}/trunk/wasm-opt-version_123/bin/wasm-opt" ]]; then
-    printf '%s\n' "${XDG_CACHE_HOME:-${HOME}/.cache}/trunk/wasm-opt-version_123/bin/wasm-opt"
   else
-    printf '%s\n' 'wasm-opt version_123 is required (set BINARYEN_ROOT if it is cached elsewhere).' >&2
+    printf '%s\n' 'Binaryen 123.0.0 is required; run pnpm install --frozen-lockfile.' >&2
     return 1
   fi
 }

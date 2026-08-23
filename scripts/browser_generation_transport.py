@@ -48,7 +48,10 @@ const wait = (test, action, label) => new Promise((resolve, reject) => {
 });
 const set = (selector, value, event = 'input') => {
   const element = document.querySelector(selector);
-  element.value = value;
+  const setter = Object.getOwnPropertyDescriptor(
+    Object.getPrototypeOf(element), 'value'
+  )?.set;
+  setter.call(element, value);
   element.dispatchEvent(new Event(event, {bubbles: true}));
 };
 """
@@ -58,10 +61,10 @@ LARGE_SEED_PROBE = (
 """
     + WAIT_HELPER
     + rf"""
-set('#prompt', 'cat');
+set('#generation-prompt', 'cat');
 set('#max-new-tokens', '1');
 set('#seed', '{U64_MAX}');
-const generate = document.querySelector('[data-testid="generate"]');
+const generate = document.querySelector('.generation-primary button');
 await wait(
   () => ['complete', 'error'].includes(document.querySelector('#status')?.dataset.status),
   () => generate.click(),
@@ -72,9 +75,10 @@ return {{
   status: document.querySelector('#status').dataset.status,
   disabled: generate.disabled,
   busy: generate.getAttribute('aria-busy'),
-  error: document.querySelector('[data-testid="generation-error"]')?.textContent ?? '',
-  reason: document.querySelector('[data-testid="generation-usage"]')?.dataset.stopReason ?? '',
-  generated: document.querySelectorAll('.generated-token').length,
+  error: document.querySelector('.generation-error')?.textContent ?? '',
+  reason: document.querySelector('.generation-usage span')?.textContent
+    .replace('Stop reason: ', '') ?? '',
+  generated: document.querySelectorAll('.generation-steps li').length,
 }};
 }})()"""
 )
@@ -84,10 +88,10 @@ POST_FAILURE_PROBE = (
 """
     + WAIT_HELPER
     + r"""
-set('#prompt', 'cat');
+set('#generation-prompt', 'cat');
 set('#max-new-tokens', '1');
 set('#seed', '42');
-const generate = document.querySelector('[data-testid="generate"]');
+const generate = document.querySelector('.generation-primary button');
 const originalPostMessage = Worker.prototype.postMessage;
 Worker.prototype.postMessage = function () {
   throw new Error('POST_SENTINEL');
@@ -102,7 +106,8 @@ try {
     status: document.querySelector('#status').dataset.status,
     disabled: generate.disabled,
     busy: generate.getAttribute('aria-busy'),
-    error: document.querySelector('[data-testid="generation-error"]')?.textContent ?? '',
+    error: document.querySelector('.generation-error')?.textContent ??
+      document.querySelector('.lifecycle-detail')?.textContent ?? '',
   };
 } finally {
   Worker.prototype.postMessage = originalPostMessage;

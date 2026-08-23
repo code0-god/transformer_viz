@@ -21,6 +21,7 @@ describe("controlled generation UI", () => {
   test("renders lifecycle state and emits parsed Generate data", async () => {
     const user = userEvent.setup();
     const onGenerate = vi.fn();
+    const onFormChange = vi.fn();
     const onPromptChange = vi.fn();
     render(
       <>
@@ -31,7 +32,7 @@ describe("controlled generation UI", () => {
           limits={{ blockSize: 32, vocabSize: 64 }}
           generation={createGenerationState()}
           onPromptChange={onPromptChange}
-          onFormChange={vi.fn()}
+          onFormChange={onFormChange}
           onGenerate={onGenerate}
           onStop={vi.fn()}
         />
@@ -48,6 +49,10 @@ describe("controlled generation UI", () => {
       top_k: 20,
       mode: "sample",
       seed: 42,
+    });
+    expect(onFormChange).toHaveBeenLastCalledWith({
+      ...form,
+      temperature: "1",
     });
   });
 

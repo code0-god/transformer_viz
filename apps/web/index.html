@@ -1,15 +1,14 @@
 <!doctype html>
 <html lang="ko">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <base data-trunk-public-url />
+    <base href="%BASE_URL%" />
     <title>Transformer Viz - 브라우저 nanoGPT 탐색기</title>
     <meta name="description" content="GPT형 Transformer가 입력 문맥에서 다음 토큰을 생성하는 전체 구조를 탐색합니다." />
     <meta name="theme-color" content="#f3f0e8" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2322221f'/%3E%3Cpath d='M8 10h16M8 16h16M8 22h16' stroke='%23f3f0e8' stroke-width='3'/%3E%3C/svg%3E" />
-    <link data-trunk rel="css" href="style.css" />
   </head>
   <body>
     <div id="startup-shell" class="startup-shell">
@@ -24,7 +23,7 @@
         <section class="startup-shell__surface" aria-labelledby="startup-title">
           <span class="stage-position">STARTUP / LOCAL INFERENCE</span>
           <h2 id="startup-title">Transformer Architecture를 준비하고 있습니다</h2>
-          <p>Rust 앱이 준비되면 전용 Worker가 모델 구성을 불러와 전체 생성 경로를 그립니다.</p>
+          <p>React 앱이 준비되면 전용 Worker가 모델 구성을 불러와 전체 생성 경로를 그립니다.</p>
           <dl class="startup-shell__ledger">
             <div><dt>브라우저 앱</dt><dd>불러오는 중</dd></div>
             <div><dt>모델 Worker</dt><dd>앱 시작 후 준비</dd></div>
@@ -46,9 +45,7 @@
     FIRST VIEWPORT: No dashboard sidebars, Inspector, stage player, playback, or curriculum rail.
     SCOPE: Root and block selection only; detailed drill-down remains a later phase.
     -->
-    <link data-trunk rel="copy-dir" href="public/models" />
-    <link data-trunk rel="copy-dir" href="public/reference" />
-    <link data-trunk rel="rust" href="Cargo.toml" data-bin="app" data-type="main" data-wasm-opt="z" />
-    <link data-trunk rel="rust" href="../worker/Cargo.toml" data-bin="worker" data-type="worker" data-loader-shim data-bindgen-target="web" data-wasm-opt="z" />
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -4,7 +4,13 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   build: {
     rollupOptions: {
-      input: "react-index.html",
+      output: {
+        manualChunks(id) {
+          if (id.includes("/node_modules/katex/")) return "katex";
+          if (id.includes("/node_modules/react")) return "react";
+          return undefined;
+        },
+      },
     },
   },
   plugins: [react()],

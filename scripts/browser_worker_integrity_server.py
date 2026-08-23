@@ -72,9 +72,10 @@ class AssetHandler(SimpleHTTPRequestHandler):
     cross_origin: ClassVar[str] = ""
     targets: ClassVar[dict[str, int]] = {"outside": 0}
     block_worker_loader: ClassVar[bool] = False
+    worker_loader_path: ClassVar[str] = ""
 
     def do_GET(self) -> None:
-        if self.block_worker_loader and self.path == f"{self.base}worker_loader.js":
+        if self.block_worker_loader and self.path == self.worker_loader_path:
             self.send_response(404)
             self.send_header("Content-Length", "0")
             self.end_headers()

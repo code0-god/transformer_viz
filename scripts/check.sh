@@ -3,8 +3,25 @@ set -euo pipefail
 
 readonly ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly CHECK_DIST_DIR="$(mktemp -d "${TMPDIR:-/tmp}/transformer-viz-check.XXXXXX")"
-trap 'rm -rf "${CHECK_DIST_DIR}"' EXIT
+readonly BINDINGS_CHECK="$(mktemp -d "${TMPDIR:-/tmp}/transformer-viz-schema.XXXXXX")"
+trap 'rm -rf "${CHECK_DIST_DIR}" "${BINDINGS_CHECK}"' EXIT
 cd "${ROOT_DIR}"
+
+printf '%s\n' '==> pinned web toolchain and frozen dependencies'
+[[ "$(node --version)" == "v$(tr -d '\n' < .node-version)" ]]
+[[ "$(pnpm --version)" == "11.22.0" ]]
+[[ "$(wasm-bindgen --version)" == "wasm-bindgen 0.2.127" ]]
+pnpm install --frozen-lockfile
+node_modules/.bin/wasm-opt --version | grep -Eq 'version 123([^0-9]|$)'
+
+printf '%s\n' '==> generated TypeScript binding freshness'
+"${ROOT_DIR}/scripts/generate-typescript-bindings.sh" "${BINDINGS_CHECK}"
+diff -ru apps/web/src/generated/schema "${BINDINGS_CHECK}"
+
+printf '%s\n' '==> TypeScript lint, typecheck, and tests'
+pnpm --dir apps/web lint
+pnpm --dir apps/web typecheck
+pnpm --dir apps/web test
 
 printf '%s\n' '==> rustfmt'
 cargo fmt --all -- --check
@@ -56,13 +73,6 @@ source = root / 'reference/nanoGPT/model.py'
 assert metadata['reference_model_sha256'] == hashlib.sha256(source.read_bytes()).hexdigest()
 PY
 
-printf '%s\n' '==> forbidden web dependencies'
-if grep -Eiq '(react|typescript|(^|[^[:alnum:]])d3([^[:alnum:]]|$)|npm)' \
-  Cargo.toml apps/web/Cargo.toml apps/web/index.html; then
-  printf 'A forbidden JavaScript application dependency was found.\n' >&2
-  exit 1
-fi
-
 printf '%s\n' '==> root static release'
 "${ROOT_DIR}/scripts/build-web.sh" / "${CHECK_DIST_DIR}/root"
 printf '%s\n' '==> subpath static release'
@@ -75,7 +85,7 @@ root = pathlib.Path('.')
 dist = pathlib.Path(sys.argv[1])
 digest = hashlib.sha256((root / 'assets/models/edu/manifest.json').read_bytes()).hexdigest().encode()
 for deployment in ('root', 'subpath'):
-    wasm = list((dist / deployment).rglob('worker*_bg.wasm'))
+    wasm = list((dist / deployment).rglob('worker_bg-*.wasm'))
     assert wasm, f'{deployment} build has no Worker WASM'
     assert any(digest in path.read_bytes() for path in wasm), f'{deployment} Worker omits manifest anchor'
 PY
@@ -87,6 +97,14 @@ cp -R "${CHECK_DIST_DIR}/subpath/." "${CHECK_DIST_DIR}/browser-root/transformer_
 PYTHONPATH="${ROOT_DIR}/scripts" \
   python3 "${ROOT_DIR}/scripts/browser_worker_integrity.py" \
   --root "${CHECK_DIST_DIR}/browser-root"
+
+printf '%s\n' '==> React Worker generation and Architecture integration'
+for entry in index.html transformer_viz/index.html; do
+  PYTHONPATH="${ROOT_DIR}/scripts" \
+    python3 "${ROOT_DIR}/scripts/browser_react_integration.py" \
+    --root "${CHECK_DIST_DIR}/browser-root" \
+    --entry "${entry}"
+done
 
 printf '%s\n' '==> architecture-first browser contract'
 PYTHONPATH="${ROOT_DIR}/scripts" \
