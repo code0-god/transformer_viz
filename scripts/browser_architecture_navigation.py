@@ -15,7 +15,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Protocol
 
-from browser_contract import dispatch_key
+from browser_input import dispatch_key
 from browser_probes import READY_PROBE
 from browser_session import ChromeSession
 from browser_architecture_navigation_probes import (
