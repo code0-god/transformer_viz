@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "pnpm --dir apps/web build",
+    "build:worker": "scripts/build-worker-wasm.sh",
     "check": "pnpm --dir apps/web check",
     "dev": "pnpm --dir apps/web dev",
     "test": "pnpm --dir apps/web test"

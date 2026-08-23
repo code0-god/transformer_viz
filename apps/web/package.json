@@ -9,7 +9,8 @@
     "pnpm": ">=11.22.0"
   },
   "scripts": {
-    "build": "tsc --noEmit && vite build",
+    "build": "pnpm build:worker && tsc --noEmit && vite build",
+    "build:worker": "../../scripts/build-worker-wasm.sh",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "dev": "vite --host 127.0.0.1",
     "lint": "biome check .",
