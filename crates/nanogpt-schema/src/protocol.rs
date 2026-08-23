@@ -5,6 +5,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 
 /// Request accepted by the inference Worker.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum WorkerRequest {
@@ -95,6 +96,7 @@ pub enum WorkerRequest {
 }
 
 /// Stable machine-readable Worker failure category.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkerErrorCode {
@@ -117,6 +119,7 @@ pub enum WorkerErrorCode {
 }
 
 /// Response emitted by the inference Worker.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum WorkerResponse {

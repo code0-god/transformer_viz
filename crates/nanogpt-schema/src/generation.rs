@@ -2,6 +2,7 @@ use crate::{FiniteF32, LogitCandidate, SchemaError, TokenId, TokenInfo};
 use serde::{Deserialize, Serialize};
 
 /// Token-selection strategy for one generation step.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SamplingMode {
@@ -12,6 +13,8 @@ pub enum SamplingMode {
 }
 
 /// Positive finite softmax temperature.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[cfg_attr(feature = "typescript-bindings", ts(type = "number"))]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(try_from = "f32", into = "f32")]
 pub struct Temperature(f32);
@@ -51,6 +54,8 @@ impl From<Temperature> for f32 {
 }
 
 /// Non-zero count of candidates retained before softmax.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[cfg_attr(feature = "typescript-bindings", ts(type = "number"))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(try_from = "usize", into = "usize")]
 pub struct TopK(usize);
@@ -90,6 +95,7 @@ impl From<TopK> for usize {
 }
 
 /// Controls deterministic autoregressive token generation.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct GenerationConfig {
@@ -118,6 +124,7 @@ impl Default for GenerationConfig {
 }
 
 /// Why an autoregressive generation stream terminated.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GenerationStopReason {
@@ -136,6 +143,7 @@ pub enum GenerationStopReason {
 }
 
 /// Half-open cumulative interval containing the deterministic sample draw.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CumulativeProbabilityInterval {
@@ -146,6 +154,7 @@ pub struct CumulativeProbabilityInterval {
 }
 
 /// Compact visualization data for one committed autoregressive token.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct GenerationStepSummary {

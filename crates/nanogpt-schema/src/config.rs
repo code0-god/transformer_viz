@@ -2,6 +2,7 @@ use crate::{SchemaError, SchemaVersion, TokenId};
 use serde::{Deserialize, Serialize};
 
 /// Static asset location and integrity metadata.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AssetDescriptor {
@@ -60,6 +61,7 @@ impl GptConfig {
 }
 
 /// Human-readable model identity and provenance.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ModelMetadata {
@@ -76,6 +78,7 @@ pub struct ModelMetadata {
 }
 
 /// Deterministic tokenizer algorithm identifier.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TokenizerKind {
@@ -84,6 +87,7 @@ pub enum TokenizerKind {
 }
 
 /// Compact tokenizer configuration loaded from JSON.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TokenizerConfig {
@@ -146,6 +150,7 @@ impl TokenizerConfig {
 }
 
 /// Top-level static model manifest.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ModelManifest {
@@ -258,31 +263,6 @@ impl ModelManifest {
                 return Err(SchemaError::InvalidAssetSize { field, maximum });
             }
         }
-        Ok(())
-    }
-}
-
-#[cfg(all(test, feature = "typescript-bindings"))]
-mod typescript_tests {
-    use super::GptConfig;
-    use ts_rs::{Config, ExportError, TS as _};
-
-    #[test]
-    fn gpt_config_typescript_binding_stays_generated() -> Result<(), ExportError> {
-        let generated = GptConfig::export_to_string(&Config::default())?;
-        let committed =
-            include_str!("../../../spikes/react-root-architecture/src/generated/GptConfig.ts");
-
-        let generated_tokens = generated
-            .chars()
-            .filter(|character| !character.is_whitespace())
-            .collect::<String>();
-        let committed_tokens = committed
-            .chars()
-            .filter(|character| !character.is_whitespace())
-            .collect::<String>();
-
-        assert_eq!(generated_tokens, committed_tokens);
         Ok(())
     }
 }

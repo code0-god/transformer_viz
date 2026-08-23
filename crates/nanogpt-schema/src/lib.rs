@@ -1,6 +1,8 @@
 //! Versioned shared contracts for model assets, traces, and Worker messages.
 
 mod config;
+#[cfg(feature = "typescript-bindings")]
+mod export;
 mod generation;
 mod protocol;
 mod tensor;
@@ -10,6 +12,8 @@ mod trace;
 pub use config::{
     AssetDescriptor, GptConfig, ModelManifest, ModelMetadata, TokenizerConfig, TokenizerKind,
 };
+#[cfg(feature = "typescript-bindings")]
+pub use export::{TypeScriptExportError, export_typescript_bindings};
 pub use generation::{
     CumulativeProbabilityInterval, GenerationConfig, GenerationStepSummary, GenerationStopReason,
     SamplingMode, Temperature, TopK,
@@ -29,6 +33,8 @@ use thiserror::Error;
 pub const TRACE_SCHEMA_VERSION: &str = "1.1.0";
 
 /// A schema version proven to match this build.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[cfg_attr(feature = "typescript-bindings", ts(type = "\"1.1.0\""))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(try_from = "String", into = "String")]
 pub struct SchemaVersion;

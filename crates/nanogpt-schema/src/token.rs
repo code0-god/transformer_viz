@@ -1,11 +1,14 @@
 use serde::{Deserialize, Serialize};
 
 /// Stable token identifier shared with Python fixtures.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[cfg_attr(feature = "typescript-bindings", ts(type = "number"))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct TokenId(pub u32);
 
 /// Semantic role of an encoded token.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TokenKind {
@@ -20,6 +23,7 @@ pub enum TokenKind {
 }
 
 /// One educational token with display and original source bytes.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TokenInfo {
@@ -38,6 +42,7 @@ pub struct TokenInfo {
 }
 
 /// Tokenizer output and truncation status.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct EncodedTokens {

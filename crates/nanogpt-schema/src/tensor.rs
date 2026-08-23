@@ -2,6 +2,8 @@ use crate::SchemaError;
 use serde::{Deserialize, Serialize};
 
 /// An f32 guaranteed to have a finite JSON representation.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[cfg_attr(feature = "typescript-bindings", ts(type = "number"))]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(try_from = "f32", into = "f32")]
 pub struct FiniteF32(f32);
@@ -41,6 +43,7 @@ impl From<FiniteF32> for f32 {
 }
 
 /// Finite summary statistics for a tensor.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TensorStats {
@@ -57,6 +60,7 @@ pub struct TensorStats {
 }
 
 /// Named row-major tensor values with dimensions and summary statistics.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TensorSnapshot {
@@ -125,6 +129,7 @@ impl TensorSnapshot {
 }
 
 /// Explicit allowed/blocked attention cells.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MaskSnapshot {

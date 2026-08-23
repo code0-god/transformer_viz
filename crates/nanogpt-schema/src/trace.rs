@@ -3,6 +3,7 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 /// Exact amount and selector of trace detail requested from inference.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum TraceMode {
@@ -33,6 +34,7 @@ pub enum TraceMode {
     },
 }
 /// Stable identifier for a nanoGPT forward-pass operation.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum OperationId {
@@ -58,6 +60,7 @@ pub enum OperationId {
     Logits,
 }
 /// Deployed base-relative source location for an educational operation (for example, `reference/model.py`).
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SourceReference {
@@ -71,6 +74,7 @@ pub struct SourceReference {
     pub end_line: usize,
 }
 /// Source-linked operation summary.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OperationTrace {
@@ -84,6 +88,7 @@ pub struct OperationTrace {
     pub output: TensorStats,
 }
 /// Summary of one Transformer layer.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LayerSummary {
@@ -99,6 +104,7 @@ pub struct LayerSummary {
     pub output: TensorStats,
 }
 /// Detailed values for one causal attention head.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AttentionHeadTrace {
@@ -126,6 +132,7 @@ pub struct AttentionHeadTrace {
     pub source: SourceReference,
 }
 /// Detailed MLP expansion, activation, and projection values.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MlpTrace {
@@ -143,6 +150,7 @@ pub struct MlpTrace {
     pub source: SourceReference,
 }
 /// One candidate from the model's output distribution.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LogitCandidate {
@@ -156,6 +164,7 @@ pub struct LogitCandidate {
     pub probability: FiniteF32,
 }
 /// Final logits and ranked candidate tokens.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LogitsTrace {
@@ -167,6 +176,7 @@ pub struct LogitsTrace {
     pub source: SourceReference,
 }
 /// Token, position, and summed embeddings captured at model input.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct EmbeddingTrace {
@@ -180,6 +190,7 @@ pub struct EmbeddingTrace {
     pub source: SourceReference,
 }
 /// Summary returned after a complete inference run.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RunSummary {
@@ -201,6 +212,7 @@ pub struct RunSummary {
     pub logits: LogitsTrace,
 }
 /// Detailed trace for one Transformer block.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BlockTrace {
@@ -220,6 +232,7 @@ pub struct BlockTrace {
     pub output: TensorSnapshot,
 }
 /// Detailed trace for one token selection.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TokenTrace {
