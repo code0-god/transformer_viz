@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { createElement } from "react";
 
 import { formulaCatalog } from "../../math/formulaCatalog";
@@ -140,7 +140,7 @@ describe("decoder Attention learning guide", () => {
 
   test("renders the selected operation only in its matching section", () => {
     // Given: Softmax is the route-visible selected node.
-    render(
+    const { container } = render(
       createElement(LearningGuide, {
         page: attentionGuide,
         glossary: attentionGuideGlossary,
@@ -153,17 +153,18 @@ describe("decoder Attention learning guide", () => {
     );
 
     // When: dynamic operation output is located.
-    const operations = document.querySelectorAll(
-      '[data-operation-presentation-id="decoder.operation.attention-softmax"]',
-    );
-    const softmaxSection = document.querySelector(
-      '[data-guide-section-id="softmax"]',
-    );
+    const softmaxSection = screen.getByRole("region", {
+      name: "Score를 Weight로 바꾸기",
+    });
+    const operation = within(softmaxSection).getByText(selectedOperation.title);
 
     // Then: the output is nested only under the mapped section.
-    expect(softmaxSection).not.toBeNull();
-    expect(operations).toHaveLength(1);
-    expect(softmaxSection?.contains(operations[0] ?? null)).toBe(true);
-    expect(document.querySelectorAll(".katex-error")).toHaveLength(0);
+    expect(operation).toBeInTheDocument();
+    expect(
+      screen.getAllByText(selectedOperation.title, {
+        selector: "[data-operation-presentation-id] > strong",
+      }),
+    ).toHaveLength(1);
+    expect(container.getElementsByClassName("katex-error")).toHaveLength(0);
   });
 });

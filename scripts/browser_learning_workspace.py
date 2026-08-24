@@ -25,6 +25,7 @@ from browser_learning_workspace_actions import (
     guide_selector,
     record_click,
     record_keyboard,
+    state,
 )
 from browser_learning_workspace_probes import (
     INSTRUMENT_LEARNING_WORKSPACE,
@@ -50,11 +51,11 @@ def run_actions(browser: ChromeSession) -> list[ActionRecord]:
     block = "decoder.block"
     attention = "decoder.self-attention"
     record_click(browser, records, "root.embedding.pointer", NODE_SELECTORS["embedding"], ExpectedState(root, "token-embedding", "root-embeddings", "root-embeddings"))
-    record_click(browser, records, "root.embedding.repeat", NODE_SELECTORS["embedding"], ExpectedState(root, "token-embedding", "root-embeddings", "root-embeddings"))
+    record_click(browser, records, "root.embedding.repeat", NODE_SELECTORS["embedding"], ExpectedState(root, "token-embedding", "root-embeddings", "root-embeddings", focus_delta=1))
     record_click(browser, records, "root.block.drill-down", NODE_SELECTORS["block"], ExpectedState(block, None, None, "learning-route-title", heading_focus_delta=1))
     record_click(browser, records, "block.ln1.pointer", NODE_SELECTORS["ln1"], ExpectedState(block, "layer-norm-1", "block-layer-norm-1", "block-layer-norm-1"))
     record_click(browser, records, "block.guide.attention", guide_selector("block-self-attention"), ExpectedState(block, "layer-norm-1", "block-self-attention", "self-attention", ("self-attention",), guide_action=True))
-    record_click(browser, records, "block.guide.attention.repeat", guide_selector("block-self-attention"), ExpectedState(block, "layer-norm-1", "block-self-attention", "self-attention", ("self-attention",), guide_action=True))
+    record_click(browser, records, "block.guide.attention.repeat", guide_selector("block-self-attention"), ExpectedState(block, "layer-norm-1", "block-self-attention", "self-attention", ("self-attention",), focus_delta=1, guide_action=True))
     record_click(browser, records, "block.attention.drill-down", NODE_SELECTORS["attention"], ExpectedState(attention, None, None, "learning-route-title", heading_focus_delta=1))
     record_click(browser, records, "attention.query.pointer", NODE_SELECTORS["query"], ExpectedState(attention, "attention-query", "heads", "heads"))
     record_click(browser, records, "attention.score.pointer", NODE_SELECTORS["score"], ExpectedState(attention, "attention-scores", "score", "score"))
@@ -64,7 +65,10 @@ def run_actions(browser: ChromeSession) -> list[ActionRecord]:
     cdp = browser.require_cdp()
     cdp.send("Emulation.setDeviceMetricsOverride", {"width": 390, "height": 844, "deviceScaleFactor": 1, "mobile": False}, browser.page_session)
     cdp.send("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": "reduce"}]}, browser.page_session)
-    cdp.evaluate(browser.page_session, "document.querySelector('.architecture-attention-scroll').scrollLeft = document.querySelector('.architecture-attention-scroll').scrollWidth")
+    cdp.evaluate(browser.page_session, """(() => {
+      const scroll = document.getElementsByClassName('architecture-attention-scroll')[0];
+      scroll.scrollLeft = scroll.scrollWidth;
+    })()""")
     record_click(browser, records, "attention.guide.heads.reduced-motion", guide_selector("heads"), ExpectedState(attention, "attention-value-aggregation", "heads", "attention-query", ("attention-key", "attention-query", "attention-value"), guide_action=True, scroll_behavior="auto"))
     cdp.send("Emulation.clearDeviceMetricsOverride", session_id=browser.page_session)
     cdp.send("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": "no-preference"}]}, browser.page_session)
@@ -74,11 +78,12 @@ def run_actions(browser: ChromeSession) -> list[ActionRecord]:
     record_click(browser, records, "attention.guide.softmax", guide_selector("softmax"), ExpectedState(attention, "attention-value-aggregation", "softmax", "attention-softmax", ("attention-softmax",), guide_action=True))
     record_click(browser, records, "attention.layer", '[data-layer-index="1"]', ExpectedState(attention, "attention-value-aggregation", "softmax", highlights=("attention-softmax",)))
     record_click(browser, records, "attention.head", '[data-head-index="2"]', ExpectedState(attention, "attention-value-aggregation", "softmax", highlights=("attention-softmax",)))
-    record_click(browser, records, "attention.value.repeat", NODE_SELECTORS["value"], ExpectedState(attention, "attention-value-aggregation", "value", "value"))
+    record_click(browser, records, "attention.value.repeat", NODE_SELECTORS["value"], ExpectedState(attention, "attention-value-aggregation", "value", "value", focus_delta=1))
     record_keyboard(browser, records, "attention.query.keyboard", NODE_SELECTORS["query"], ExpectedState(attention, "attention-query", "heads", "heads"))
     record_click(browser, records, "attention.back.block", '[data-testid="architecture-back-block"]', ExpectedState(block, None, None, "learning-route-title", heading_focus_delta=1))
     record_click(browser, records, "block.breadcrumb.root", '[data-testid="architecture-breadcrumb-gpt"]', ExpectedState(root, None, None, "learning-route-title", heading_focus_delta=1))
-    browser.require_cdp().evaluate(browser.page_session, "document.querySelector('[data-node-id=\"token-embedding\"]').remove()")
+    browser.require_cdp().evaluate(browser.page_session, """Array.from(document.getElementsByTagName('*'))
+      .find(element => element.dataset.nodeId === 'token-embedding').remove()""")
     record_click(browser, records, "root.guide.embedding.stale-target", guide_selector("root-embeddings"), ExpectedState(root, None, "root-embeddings", "", ("position-embedding",), guide_action=True, focus_availability="unavailable"))
     return records
 
@@ -117,20 +122,30 @@ def verify_entry(root: Path, entry: str, evidence: Path) -> None:
             browser.navigate(f"http://127.0.0.1:{server.server_port}/{entry}")
             cdp.evaluate(browser.page_session, READY_PROBE, True)
             cdp.evaluate(browser.page_session, WORKSPACE_READY, True)
+            startup = state(browser)
+            if startup["workerStarts"] != 1:
+                raise WorkspaceContractError(
+                    f"expected one startup Worker, observed {startup['workerStarts']}"
+                )
             records = run_actions(browser)
             health = cdp.evaluate(browser.page_session, PAGE_HEALTH, True)
             errors = browser_errors(browser)
-            if len(records) < 18:
-                raise WorkspaceContractError(f"action log too short: {len(records)}")
+            if len(records) != 24:
+                raise WorkspaceContractError(f"expected 24 actions, observed {len(records)}")
+            repeat_records = [record for record in records if record["action"].endswith(".repeat")]
+            if len(repeat_records) != 3 or any(record["focusDelta"] <= 0 for record in repeat_records):
+                raise WorkspaceContractError(f"repeat reveal was not observed: {repeat_records}")
             if health["status"] != "ready" or health["katexErrors"] != 0 or health["runtimeAlerts"]:
                 raise WorkspaceContractError(f"page health failed: {health}")
             if any(errors.values()):
                 raise WorkspaceContractError(f"browser errors: {errors}")
             evidence.mkdir(parents=True, exist_ok=True)
             (evidence / "actions.json").write_text(json.dumps(records, ensure_ascii=False, indent=2) + "\n")
-            (evidence / "browser-summary.json").write_text(json.dumps({"entry": entry, "health": health, "errors": errors}, ensure_ascii=False, indent=2) + "\n")
+            (evidence / "browser-summary.json").write_text(json.dumps({"entry": entry, "startupWorkerCount": startup["workerStarts"], "actionCount": len(records), "health": health, "errors": errors}, ensure_ascii=False, indent=2) + "\n")
             guide_deltas = [record["workerDelta"] for record in records if ".guide." in record["action"]]
-            (evidence / "worker-delta.json").write_text(json.dumps({"guideActionDeltas": guide_deltas, "allZero": all(delta == 0 for delta in guide_deltas)}, indent=2) + "\n")
+            if len(guide_deltas) != 8 or any(delta != 0 for delta in guide_deltas):
+                raise WorkspaceContractError(f"Guide Worker deltas failed: {guide_deltas}")
+            (evidence / "worker-delta.json").write_text(json.dumps({"startupWorkerCount": startup["workerStarts"], "guideActionDeltas": guide_deltas, "allZero": all(delta == 0 for delta in guide_deltas)}, indent=2) + "\n")
     finally:
         server.shutdown()
         server.server_close()

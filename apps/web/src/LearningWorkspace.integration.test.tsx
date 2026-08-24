@@ -1,6 +1,7 @@
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StrictMode } from "react";
+import { vi } from "vitest";
 
 import { App } from "./App";
 import { model, TestWorker } from "./test/workerFixtures";
@@ -27,42 +28,28 @@ describe("Learning Workspace production integration", () => {
     // Given: the learner opens Block, layer 2, Attention, head 2, and Softmax.
     const worker = await readyWorkspace();
     const user = userEvent.setup();
-    const rootBlock = document.querySelector(
-      '[data-node-id="transformer-block"]',
+    await user.click(
+      screen.getByRole("button", { name: /반복 Transformer Blocks/ }),
     );
-    if (!(rootBlock instanceof SVGElement))
-      throw new Error("Missing Root Block node");
-    await user.click(rootBlock);
-    const layer = document.querySelector('[data-layer-index="2"]');
-    if (!(layer instanceof HTMLButtonElement))
-      throw new Error("Missing Layer 2 control");
-    await user.click(layer);
-    const blockAttention = document.querySelector(
-      '[data-node-id="self-attention"]',
+    await user.click(screen.getByRole("button", { name: "Layer 2" }));
+    await user.click(
+      screen.getByRole("button", {
+        name: /Causal Multi-Head Self-Attention/,
+      }),
     );
-    if (!(blockAttention instanceof SVGElement))
-      throw new Error("Missing Block Self-Attention node");
-    await user.click(blockAttention);
-    const head = document.querySelector('[data-head-index="2"]');
-    if (!(head instanceof HTMLButtonElement))
-      throw new Error("Missing Head 2 control");
-    await user.click(head);
+    await user.click(screen.getByRole("button", { name: "Head 2" }));
     await user.click(screen.getByLabelText(/Softmax.*선택 가능/));
 
     // When: the learner returns to Root and drills down again.
     await user.click(screen.getByTestId("architecture-breadcrumb-gpt"));
-    const returnedBlock = document.querySelector(
-      '[data-node-id="transformer-block"]',
+    await user.click(
+      screen.getByRole("button", { name: /반복 Transformer Blocks/ }),
     );
-    if (!(returnedBlock instanceof SVGElement))
-      throw new Error("Missing returned Root Block node");
-    await user.click(returnedBlock);
-    const returnedAttention = document.querySelector(
-      '[data-node-id="self-attention"]',
+    await user.click(
+      screen.getByRole("button", {
+        name: /Causal Multi-Head Self-Attention/,
+      }),
     );
-    if (!(returnedAttention instanceof SVGElement))
-      throw new Error("Missing returned Self-Attention node");
-    await user.click(returnedAttention);
 
     // Then: architecture state survives and no navigation posts to the Worker.
     expect(screen.getByTestId("attention-detail")).toHaveAttribute(
@@ -86,17 +73,17 @@ describe("Learning Workspace production integration", () => {
     const user = userEvent.setup();
 
     // When: the learner activates Token Embedding in the real diagram.
-    const embedding = document.querySelector(
-      '[data-node-id="token-embedding"]',
-    );
-    if (!(embedding instanceof SVGElement))
-      throw new Error("Missing Token Embedding node");
+    const embedding = screen.getByRole("button", {
+      name: /Token embedding lookup/,
+    });
     await user.click(embedding);
 
     // Then: architecture selection and the matching Guide advance together.
     expect(embedding).toHaveAttribute("aria-pressed", "true");
     expect(
-      document.querySelector('[data-guide-section-id="root-embeddings"]'),
+      screen.getByRole("region", {
+        name: "Token과 위치를 숫자 표현으로 바꾸기",
+      }),
     ).toHaveAttribute("data-active", "true");
     expect(document.activeElement).toHaveAttribute(
       "data-guide-section-id",
@@ -116,11 +103,9 @@ describe("Learning Workspace production integration", () => {
     const postsBeforeGuide = worker.posted.length;
 
     // When: the Guide asks to reveal Self-Attention.
-    const guideSection = document.querySelector(
-      '[data-guide-section-id="block-self-attention"]',
-    );
-    if (!(guideSection instanceof HTMLElement))
-      throw new Error("Missing block Self-Attention Guide section");
+    const guideSection = screen.getByRole("region", {
+      name: "Self-Attention",
+    });
     await user.click(
       within(guideSection).getByRole("button", { name: "Self-Attention" }),
     );
@@ -141,7 +126,11 @@ describe("Learning Workspace production integration", () => {
 
     // Then: the shared heading owns the route reset and focus exactly once.
     expect(screen.getByTestId("attention-detail")).toBeInTheDocument();
-    expect(document.querySelector("[data-active=true]")).toBeNull();
+    expect(
+      screen
+        .getAllByRole("region")
+        .filter((region) => region.getAttribute("data-active") === "true"),
+    ).toHaveLength(0);
     expect(document.activeElement).toHaveAttribute(
       "id",
       "learning-route-title",
@@ -175,12 +164,33 @@ describe("Learning Workspace production integration", () => {
       "2",
     );
     expect(
-      document.querySelector('[data-guide-section-id="softmax"]'),
+      screen.getByRole("region", { name: "Score를 Weight로 바꾸기" }),
     ).toHaveAttribute("data-active", "true");
     expect(screen.getByLabelText(/Softmax.*선택 가능/)).toHaveAttribute(
       "aria-pressed",
       "true",
     );
+    expect(worker.posted).toHaveLength(1);
+  });
+
+  test("reveals the Guide again when the same diagram node is activated", async () => {
+    // Given: the matching Guide section can observe each direct reveal.
+    const worker = await readyWorkspace();
+    const user = userEvent.setup();
+    const section = screen.getByRole("region", {
+      name: "Token과 위치를 숫자 표현으로 바꾸기",
+    });
+    const focus = vi.spyOn(section, "focus");
+    const embedding = screen.getByRole("button", {
+      name: /Token embedding lookup/,
+    });
+
+    // When: the already-selected diagram node is activated again.
+    await user.click(embedding);
+    await user.click(embedding);
+
+    // Then: both real activations invoke the target reveal, not just selection.
+    expect(focus).toHaveBeenCalledTimes(2);
     expect(worker.posted).toHaveLength(1);
   });
 });

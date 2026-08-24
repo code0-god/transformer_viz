@@ -18,6 +18,9 @@ printf '%s\n' '==> generated TypeScript binding freshness'
 "${ROOT_DIR}/scripts/generate-typescript-bindings.sh" "${BINDINGS_CHECK}"
 diff -ru apps/web/src/generated/schema "${BINDINGS_CHECK}"
 
+printf '%s\n' '==> production Worker generation before web validation'
+"${ROOT_DIR}/scripts/build-worker-wasm.sh"
+
 printf '%s\n' '==> TypeScript lint, typecheck, and tests'
 pnpm --dir apps/web lint
 pnpm --dir apps/web typecheck
@@ -70,9 +73,11 @@ assert metadata['reference_model_sha256'] == hashlib.sha256(source.read_bytes())
 PY
 
 printf '%s\n' '==> root static release'
-"${ROOT_DIR}/scripts/build-web.sh" / "${CHECK_DIST_DIR}/root"
+TRANSFORMER_VIZ_PREBUILT_WORKER=1 \
+  "${ROOT_DIR}/scripts/build-web.sh" / "${CHECK_DIST_DIR}/root"
 printf '%s\n' '==> subpath static release'
-"${ROOT_DIR}/scripts/build-web.sh" /transformer_viz/ "${CHECK_DIST_DIR}/subpath"
+TRANSFORMER_VIZ_PREBUILT_WORKER=1 \
+  "${ROOT_DIR}/scripts/build-web.sh" /transformer_viz/ "${CHECK_DIST_DIR}/subpath"
 
 printf '%s\n' '==> compiled Worker trust anchor'
 python3 - "${CHECK_DIST_DIR}" <<'PY'

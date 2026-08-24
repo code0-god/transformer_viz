@@ -42,8 +42,15 @@ printf '%s\n' '==> generated TypeScript binding freshness'
 "${ROOT_DIR}/scripts/generate-typescript-bindings.sh" "${TEMP_BINDINGS}"
 diff -ru "${BINDINGS_DIR}" "${TEMP_BINDINGS}"
 
-printf '%s\n' '==> explicit production Worker build'
-"${ROOT_DIR}/scripts/build-worker-wasm.sh"
+if [[ "${TRANSFORMER_VIZ_PREBUILT_WORKER:-0}" == "1" ]]; then
+  printf '%s\n' '==> prebuilt production Worker verification'
+  for artifact in worker.js worker.d.ts worker_bg.wasm; do
+    test -f "${ROOT_DIR}/apps/web/src/generated/worker/${artifact}"
+  done
+else
+  printf '%s\n' '==> explicit production Worker build'
+  "${ROOT_DIR}/scripts/build-worker-wasm.sh"
+fi
 
 printf '%s\n' '==> TypeScript lint, typecheck, and tests'
 pnpm --dir apps/web lint

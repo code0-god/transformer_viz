@@ -151,12 +151,16 @@ describe("production React Worker integration", () => {
         message: "GENERATION_ERROR_SENTINEL",
       });
     });
-    expect(document.querySelector(".lifecycle-detail")).toHaveTextContent(
-      "GENERATION_ERROR_SENTINEL",
-    );
-    expect(document.querySelector(".generation-error")).toHaveTextContent(
-      "GENERATION_ERROR_SENTINEL",
-    );
+    expect(
+      screen.getByText("GENERATION_ERROR_SENTINEL", {
+        selector: ".lifecycle-detail",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("GENERATION_ERROR_SENTINEL", {
+        selector: ".generation-error",
+      }),
+    ).toBeInTheDocument();
     expect(document.getElementById("status")).toHaveAttribute(
       "data-status",
       "error",
@@ -199,10 +203,11 @@ describe("production React Worker integration", () => {
       screen.getByRole("button", { name: /Causal Multi-Head Self-Attention/ }),
     );
     expect(
-      document.querySelector(
-        '[data-runtime-presentation-id="decoder.runtime.attention-facts"] [data-guide-fact-id="decoder.fact.sequence-length"] [data-fact-status="ready"]',
-      ),
-    ).toHaveTextContent("5");
+      screen.getByText("5", {
+        selector:
+          '[data-runtime-presentation-id="decoder.runtime.attention-facts"] [data-guide-fact-id="decoder.fact.sequence-length"] [data-fact-status="ready"]',
+      }),
+    ).toBeInTheDocument();
   });
 
   test("surfaces guard rejection and never renders prompt text through KaTeX", async () => {

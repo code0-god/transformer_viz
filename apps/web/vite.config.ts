@@ -3,7 +3,10 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   build: {
-    assetsInlineLimit: 0,
+    assetsInlineLimit(filePath) {
+      if (filePath.endsWith("/KaTeX_Size3-Regular.woff2")) return false;
+      return undefined;
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
