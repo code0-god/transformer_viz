@@ -2,6 +2,7 @@ import type { WorkerStatus } from "../app/workerState";
 
 export type HeaderProps = Readonly<{
   status: WorkerStatus;
+  subtitle: string;
 }>;
 
 function statusCopy(
@@ -21,14 +22,14 @@ function statusCopy(
   }
 }
 
-export function Header({ status }: HeaderProps) {
+export function Header({ status, subtitle }: HeaderProps) {
   const copy = statusCopy(status);
   const isError = status.type === "error";
   return (
     <header className="architecture-header">
       <div className="brand-lockup">
         <h1>Transformer Viz</h1>
-        <p>GPT형 Transformer가 텍스트를 생성하는 과정을 탐색합니다.</p>
+        <p>{subtitle}</p>
       </div>
       <div
         className={isError ? "lifecycle lifecycle-error" : "lifecycle"}

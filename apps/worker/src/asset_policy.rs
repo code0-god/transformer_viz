@@ -1,5 +1,9 @@
 //! Pure lexical gates shared by Worker asset URL enforcement and native tests.
 
+/// SHA-256 identity of the canonical educational manifest.
+pub const EXPECTED_MANIFEST_SHA256: &str =
+    "a9dc4cab09f2b86e3ed5eeb76c02dcd7301eb98686d022bd564ea94faa4ec266";
+
 /// Returns whether initialization names the one deployment-relative educational manifest.
 #[must_use]
 pub fn canonical_manifest_request(value: &str) -> bool {
@@ -43,7 +47,19 @@ pub fn bounded_asset_size(size: u64, maximum: u64, exact: Option<u64>) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use sha2::{Digest as _, Sha256};
+
     use super::*;
+
+    #[test]
+    fn expected_manifest_digest_matches_canonical_asset() {
+        let manifest =
+            include_bytes!("../../../assets/models/edu/manifest.json");
+        assert_eq!(
+            EXPECTED_MANIFEST_SHA256,
+            format!("{:x}", Sha256::digest(manifest))
+        );
+    }
 
     #[test]
     fn manifest_request_rejects_absolute_traversal_encoded_and_unexpected_paths() {

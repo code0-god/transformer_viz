@@ -1,18 +1,16 @@
 import type { ReactNode } from "react";
 
-import {
-  ATTENTION_SYMBOLS,
-  notationCatalog,
-  symbolicShape,
-} from "../../domain/notation";
+import { symbolicShape } from "../../domain/notation";
 import type { CurrentAttentionShapes } from "../../domain/shapes";
-import {
-  type FormulaId,
-  formulaCatalog,
-  type RuntimeFormulaId,
-} from "../../math/formulaCatalog";
+import type { FormulaId, RuntimeFormulaId } from "../../math/formulaCatalog";
 import { MathFormula } from "../../math/MathFormula";
 import { shapeFormula } from "../../math/trustedFormulaBuilders";
+import {
+  decoderAttentionGuide,
+  decoderAttentionGuideCopy,
+  decoderAttentionOperationIds,
+} from "../../tracks/decoder-only-fundamentals/guide";
+import { decoderOnlyFundamentalsProfile } from "../../tracks/decoder-only-fundamentals/profile";
 import type { ArchitectureNodeId } from "../catalog";
 
 export interface AttentionAnnotationProps {
@@ -22,19 +20,15 @@ export interface AttentionAnnotationProps {
   readonly selectedNodeId: ArchitectureNodeId | null;
 }
 
-const attentionOperationIds: readonly ArchitectureNodeId[] = [
-  "attention-qkv-projection",
-  "attention-query",
-  "attention-key",
-  "attention-value",
-  "attention-scores",
-  "attention-scale",
-  "attention-causal-mask",
-  "attention-softmax",
-  "attention-value-aggregation",
-  "attention-merge-heads",
-  "attention-output-projection",
-];
+const formulas = decoderOnlyFundamentalsProfile.notation.formulas;
+const notationEntries = decoderOnlyFundamentalsProfile.notation.entries;
+
+class AttentionGuideError extends Error {
+  constructor(readonly symbol: string) {
+    super(`Missing attention symbol formula: ${symbol}`);
+    this.name = "AttentionGuideError";
+  }
+}
 
 function Fact({
   label,
@@ -68,9 +62,8 @@ const attentionSymbolFormulaIds: Readonly<Record<string, FormulaId>> = {
 
 function SymbolFormula({ symbol }: Readonly<{ symbol: string }>) {
   const formulaId = attentionSymbolFormulaIds[symbol];
-  if (formulaId === undefined)
-    throw new Error(`Missing attention symbol formula: ${symbol}`);
-  return <MathFormula formula={formulaCatalog[formulaId]} />;
+  if (formulaId === undefined) throw new AttentionGuideError(symbol);
+  return <MathFormula formula={formulas[formulaId]} />;
 }
 
 function ShapeValue({
@@ -97,7 +90,10 @@ function OperationDetail({
   selectedNodeId,
 }: Pick<AttentionAnnotationProps, "shapes" | "selectedNodeId">) {
   const id =
-    selectedNodeId !== null && attentionOperationIds.includes(selectedNodeId)
+    selectedNodeId !== null &&
+    decoderAttentionOperationIds.some(
+      (operationId) => operationId === selectedNodeId,
+    )
       ? selectedNodeId
       : null;
   if (id === null) {
@@ -110,17 +106,17 @@ function OperationDetail({
     ];
     return (
       <div className="architecture-attention-operation architecture-attention-flow-formulas">
-        <strong>Self-Attention flow</strong>
+        <strong>{decoderAttentionGuideCopy.flowTitle}</strong>
         {flowIds.map((flowId) => (
-          <MathFormula key={flowId} formula={formulaCatalog[flowId]} />
+          <MathFormula key={flowId} formula={formulas[flowId]} />
         ))}
-        <span>한 줄 요약</span>
-        <MathFormula formula={formulaCatalog["attention-summary"]} />
+        <span>{decoderAttentionGuideCopy.summaryLabel}</span>
+        <MathFormula formula={formulas["attention-summary"]} />
       </div>
     );
   }
 
-  const notation = notationCatalog[id];
+  const notation = notationEntries[id];
   const currentShape = shapes.currentShape(id);
   return (
     <div
@@ -128,9 +124,9 @@ function OperationDetail({
       data-testid="attention-operation-copy"
     >
       <strong>{notation.title}</strong>
-      <MathFormula formula={formulaCatalog[id]} className="katex" />
+      <MathFormula formula={formulas[id]} className="katex" />
       <p>{notation.description}</p>
-      <span>Symbolic shape</span>
+      <span>{decoderAttentionGuideCopy.symbolicShape}</span>
       <MathFormula
         formula={shapeFormula(
           "attention-symbolic-shape",
@@ -139,9 +135,11 @@ function OperationDetail({
         )}
         className="architecture-symbolic-shape"
       />
-      <span>Current shape</span>
+      <span>{decoderAttentionGuideCopy.currentShape}</span>
       {currentShape === null ? (
-        <span className="architecture-actual-shape">실행 후 표시</span>
+        <span className="architecture-actual-shape">
+          {decoderAttentionGuideCopy.pending}
+        </span>
       ) : (
         <MathFormula
           formula={shapeFormula(
@@ -155,12 +153,12 @@ function OperationDetail({
       {id === "attention-causal-mask" ? (
         <div className="architecture-mask-conditions">
           <span>
-            <MathFormula formula={formulaCatalog["attention-mask-keep"]} />
-            <span>: score 유지</span>
+            <MathFormula formula={formulas["attention-mask-keep"]} />
+            <span>: {decoderAttentionGuideCopy.scoreKept}</span>
           </span>
           <span>
-            <MathFormula formula={formulaCatalog["attention-mask-block"]} />
-            <span>: 차단</span>
+            <MathFormula formula={formulas["attention-mask-block"]} />
+            <span>: {decoderAttentionGuideCopy.blocked}</span>
           </span>
         </div>
       ) : null}
@@ -174,35 +172,44 @@ export function AttentionAnnotation({
   selectedHead,
   selectedNodeId,
 }: AttentionAnnotationProps) {
-  const pending = "실행 후 표시";
+  const pending = decoderAttentionGuideCopy.pending;
   return (
-    <aside className="architecture-annotation architecture-attention-annotation">
-      <h3>Self-Attention</h3>
+    <aside
+      className="architecture-annotation architecture-attention-annotation"
+      data-guide-page-id={decoderAttentionGuide.id}
+    >
+      <h3>{decoderAttentionGuide.title}</h3>
       <p className="architecture-attention-input-definition">
-        <MathFormula formula={formulaCatalog["attention-input-definition"]} />
-        <span>는 선택한 Transformer Block의 LayerNorm 1 출력입니다.</span>
+        <MathFormula formula={formulas["attention-input-definition"]} />
+        <span>{decoderAttentionGuideCopy.inputExplanation}</span>
       </p>
       <section
         className="architecture-notation-section"
         aria-labelledby="attention-symbols-title"
       >
-        <h4 id="attention-symbols-title">A. 기호</h4>
+        <h4 id="attention-symbols-title">
+          {decoderAttentionGuideCopy.symbolsTitle}
+        </h4>
         <dl className="architecture-attention-symbols">
-          {ATTENTION_SYMBOLS.map(({ symbol, meaning }) => (
-            <div key={symbol}>
-              <dt>
-                <SymbolFormula symbol={symbol} />
-              </dt>
-              <dd>{meaning}</dd>
-            </div>
-          ))}
+          {decoderOnlyFundamentalsProfile.notation.symbols.map(
+            ({ symbol, meaning }) => (
+              <div key={symbol}>
+                <dt>
+                  <SymbolFormula symbol={symbol} />
+                </dt>
+                <dd>{meaning}</dd>
+              </div>
+            ),
+          )}
         </dl>
       </section>
       <section
         className="architecture-notation-section"
         aria-labelledby="attention-current-title"
       >
-        <h4 id="attention-current-title">B. 현재 모델값</h4>
+        <h4 id="attention-current-title">
+          {decoderAttentionGuideCopy.currentModelTitle}
+        </h4>
         <dl className="architecture-attention-facts" aria-label="현재 모델값">
           <Fact label="Layer" value={String(selectedLayer)} />
           <Fact label="Head" value={String(selectedHead)} />
@@ -227,9 +234,7 @@ export function AttentionAnnotation({
             value={String(shapes.headDimension)}
           />
           <Fact
-            label={
-              <MathFormula formula={formulaCatalog["attention-scale-factor"]} />
-            }
+            label={<MathFormula formula={formulas["attention-scale-factor"]} />}
             value={String(shapes.scaleFactor)}
           />
           <Fact
@@ -263,7 +268,9 @@ export function AttentionAnnotation({
         className="architecture-notation-section"
         aria-labelledby="attention-operation-title"
       >
-        <h4 id="attention-operation-title">C. 현재 연산</h4>
+        <h4 id="attention-operation-title">
+          {decoderAttentionGuideCopy.currentOperationTitle}
+        </h4>
         <OperationDetail shapes={shapes} selectedNodeId={selectedNodeId} />
       </section>
     </aside>

@@ -1,9 +1,12 @@
 //! Exact Phase C public names and finite snapshot contracts.
 
 use nanogpt_schema::{
-    AttentionHeadTrace, BlockTrace, EmbeddingTrace, FiniteF32, GptConfig, LayerSummary,
-    LogitsTrace, MaskSnapshot, MlpTrace, ModelMetadata, OperationId, RunSummary, SchemaError,
-    SourceReference, TRACE_SCHEMA_VERSION, TensorSnapshot, TensorStats, TokenInfo, TokenTrace,
+    AttentionArchitecture, AttentionHeadTrace, BlockTrace, EmbeddingTrace, FeedForwardArchitecture,
+    FeedForwardKind, FiniteF32, GenerationArchitecture, GenerationKind, GptConfig, LayerSummary,
+    LmHeadArchitecture, LogitsTrace, MaskSnapshot, MlpTrace, ModelArchitectureMetadata,
+    ModelMetadata, NormPlacement, NormalizationKind, OperationId, PositionEncodingKind, RunSummary,
+    SchemaError, SelfAttentionKind, SourceReference, TRACE_SCHEMA_VERSION, TensorSnapshot,
+    TensorStats, TokenInfo, TokenTrace, TransformerFamily,
 };
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json::json;
@@ -42,6 +45,7 @@ fn gpt_config_rejects_incompatible_heads_when_validated() -> Result<(), &'static
         n_head: 3,
         n_embd: 16,
         bias: true,
+        dropout: FiniteF32::ZERO,
     };
     // When: the config is validated.
     let Err(error) = config.validate() else {
@@ -113,16 +117,65 @@ fn guided_learning_contract_carries_embeddings_and_real_model_config()
         n_head: 4,
         n_embd: 16,
         bias: true,
+        dropout: FiniteF32::ZERO,
     };
     let metadata = ModelMetadata {
+        model_id: "nanogpt-edu".to_owned(),
         name: "edu".to_owned(),
         corpus: "test".to_owned(),
         nanogpt_commit: "abc".to_owned(),
         parameter_count: 1,
+        architecture: ModelArchitectureMetadata {
+            architecture_id: "nanogpt-decoder-v1".to_owned(),
+            family: TransformerFamily::DecoderOnly,
+            normalization: NormalizationKind::LayerNorm,
+            norm_placement: NormPlacement::PreNorm,
+            position_encoding: PositionEncodingKind::LearnedAbsolute,
+            attention: AttentionArchitecture {
+                self_attention: SelfAttentionKind::CausalMultiHead,
+                cross_attention: false,
+            },
+            feed_forward: FeedForwardArchitecture {
+                kind: FeedForwardKind::GeluMlp,
+            },
+            generation: GenerationArchitecture {
+                kind: GenerationKind::Autoregressive,
+                kv_cache: false,
+            },
+            lm_head: LmHeadArchitecture {
+                tied_token_embedding: true,
+                bias: false,
+            },
+            dropout: FiniteF32::new(0.0)?,
+        },
         config: config.clone(),
     };
     assert_eq!(embedding.token.id, "token_embeddings");
     assert_eq!(metadata.config, config);
+    assert_eq!(
+        serde_json::to_value(&metadata.architecture)?,
+        json!({
+            "architecture_id": "nanogpt-decoder-v1",
+            "family": "decoder_only",
+            "normalization": "layer_norm",
+            "norm_placement": "pre_norm",
+            "position_encoding": "learned_absolute",
+            "attention": {
+                "self_attention": "causal_multi_head",
+                "cross_attention": false
+            },
+            "feed_forward": {"kind": "gelu_mlp"},
+            "generation": {
+                "kind": "autoregressive",
+                "kv_cache": false
+            },
+            "lm_head": {
+                "tied_token_embedding": true,
+                "bias": false
+            },
+            "dropout": 0.0
+        })
+    );
     Ok(())
 }
 

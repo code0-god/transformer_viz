@@ -1,8 +1,10 @@
 import type { ReactElement } from "react";
-import { repeatedBlockLabel } from "../../domain/notation";
 import type { GptConfig } from "../../generated/schema/GptConfig";
 import { MathFormula } from "../../math/MathFormula";
 import { integerParameterFormula } from "../../math/trustedFormulaBuilders";
+import { decoderGuidePage } from "../../tracks/decoder-only-fundamentals/guide";
+import { decoderOnlyFundamentalsProfile } from "../../tracks/decoder-only-fundamentals/profile";
+import { LearningGuide } from "../../tracks/LearningGuide";
 import type { ArchitectureNodeId } from "../catalog";
 import type { ArchitectureState } from "../state";
 import { diagramLayout, VIEW_WIDTH } from "./layout";
@@ -25,6 +27,7 @@ export function RootArchitecture({
   onOpenBlock,
 }: RootArchitectureProps): ReactElement {
   const layout = diagramLayout(config.n_layer);
+  const guidePage = decoderGuidePage("decoder.root", config.n_layer);
 
   function activate(id: ArchitectureNodeId): void {
     if (id === "transformer-block") onOpenBlock();
@@ -97,28 +100,14 @@ export function RootArchitecture({
         </figure>
         <aside
           className="architecture-annotation"
-          aria-labelledby="architecture-annotation-title"
+          aria-labelledby={`${guidePage.id}-title`}
         >
-          <h3 id="architecture-annotation-title">구조 설명</h3>
-          <ul>
-            <li>
-              <strong>{repeatedBlockLabel(config.n_layer)}</strong>
-              <span>{`동일한 Block이 ${config.n_layer}번 순차적으로 적용됩니다.`}</span>
-            </li>
-            <li>
-              <strong>반복 Block 범위</strong>
-              <span>
-                LN1 · Causal Self-Attention · Residual Add · LN2 · MLP ·
-                Residual Add
-              </span>
-            </li>
-            <li>
-              <strong>Final LayerNorm</strong>
-              <span>
-                반복 Block 바깥에서 마지막 hidden state를 정규화합니다.
-              </span>
-            </li>
-          </ul>
+          <LearningGuide
+            className="architecture-root-guide"
+            page={guidePage}
+            glossary={decoderOnlyFundamentalsProfile.guide.glossary}
+            formulas={decoderOnlyFundamentalsProfile.notation.formulas}
+          />
         </aside>
       </div>
     </section>

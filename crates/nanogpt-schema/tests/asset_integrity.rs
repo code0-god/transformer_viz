@@ -3,6 +3,11 @@
 use nanogpt_schema::{ModelManifest, SchemaError};
 
 const MANIFEST: &str = include_str!("../../../assets/models/edu/manifest.json");
+const PUBLIC_MANIFEST: &str = include_str!("../../../apps/web/public/models/edu/manifest.json");
+const CONFIG: &str = include_str!("../../../assets/models/edu/config.json");
+const PUBLIC_CONFIG: &str = include_str!("../../../apps/web/public/models/edu/config.json");
+const SHA256SUMS: &str = include_str!("../../../assets/models/edu/SHA256SUMS");
+const PUBLIC_SHA256SUMS: &str = include_str!("../../../apps/web/public/models/edu/SHA256SUMS");
 
 #[test]
 fn canonical_manifest_has_complete_bounded_asset_integrity()
@@ -12,7 +17,7 @@ fn canonical_manifest_has_complete_bounded_asset_integrity()
     assert_eq!(manifest.config_file, "config.json");
     assert_eq!(manifest.tokenizer_file, "tokenizer.json");
     assert_eq!(manifest.weights_file, "model.safetensors");
-    assert_eq!(manifest.config_size_bytes, 107);
+    assert_eq!(manifest.config_size_bytes, 125);
     assert_eq!(manifest.tokenizer_size_bytes, 118);
     assert_eq!(manifest.weights_size_bytes, 475_432);
     for digest in [
@@ -61,4 +66,19 @@ fn manifest_rejects_invalid_digest_size_filename_and_identity() -> Result<(), se
         Err(SchemaError::InvalidModelManifest(_))
     ));
     Ok(())
+}
+
+#[test]
+fn public_runtime_metadata_exactly_matches_canonical_assets() {
+    assert_eq!(PUBLIC_MANIFEST, MANIFEST);
+    assert_eq!(PUBLIC_CONFIG, CONFIG);
+    assert_eq!(PUBLIC_SHA256SUMS, SHA256SUMS);
+    assert!(
+        SHA256SUMS.contains(
+            "c037b9f98ff66e1834a86052afb595df3c0d5543621e36af609095524efcc1b9  config.json"
+        )
+    );
+    assert!(SHA256SUMS.contains(
+        "a9dc4cab09f2b86e3ed5eeb76c02dcd7301eb98686d022bd564ea94faa4ec266  manifest.json"
+    ));
 }

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use candle_core::{Device, Tensor};
 use nanogpt_model::{CausalMask, ForwardOutput, ForwardRequest, Gpt, TraceSink, TraceTensor};
-use nanogpt_schema::{GptConfig, TokenId, TraceMode};
+use nanogpt_schema::{FiniteF32, GptConfig, TokenId, TraceMode};
 
 #[derive(Debug, Default)]
 pub(super) struct CapturedTrace {
@@ -32,6 +32,7 @@ pub(super) const fn tiny_config() -> GptConfig {
         n_head: 2,
         n_embd: 4,
         bias: true,
+        dropout: FiniteF32::ZERO,
     }
 }
 

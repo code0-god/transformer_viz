@@ -32,6 +32,7 @@
 }
 
 .architecture-root-screen .architecture-annotation h3{ font-size: 1rem; }
+.architecture-root-screen .architecture-root-guide{ display: grid; gap: var(--s4, 1rem); }
 .architecture-root-screen .architecture-annotation ul{ display: grid; gap: var(--s5, 1.25rem); margin: 0; padding-inline-start: 1.1rem; }
 .architecture-root-screen .architecture-annotation li{ padding-inline-start: var(--s1, 0.25rem); }
 .architecture-root-screen .architecture-annotation strong,

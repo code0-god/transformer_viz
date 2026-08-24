@@ -1,5 +1,8 @@
 import type { ArchitectureNodeId } from "../architecture/catalog";
-import { ATTENTION_SUMMARY, notationCatalog } from "../domain/notation";
+import {
+  decoderAttentionSummary,
+  decoderNotationEntries,
+} from "../tracks/decoder-only-fundamentals/notation";
 import {
   INLINE_FORMULA_IDS,
   type InlineFormulaId,
@@ -34,7 +37,7 @@ export interface FormulaDefinition {
 }
 
 function formula(id: ArchitectureNodeId): FormulaDefinition {
-  const notation = notationCatalog[id];
+  const notation = decoderNotationEntries[id];
   return {
     id,
     tex: notation.tex,
@@ -119,7 +122,7 @@ export const formulaCatalog: Readonly<Record<FormulaId, FormulaDefinition>> = {
   "attention-summary": {
     id: "attention-summary",
     tex: "Y_h = \\operatorname{softmax}\\!\\left(\\operatorname{CausalMask}\\!\\left(\\frac{Q_h K_h^{\\mathsf T}}{\\sqrt D}\\right)\\right)V_h",
-    plainText: ATTENTION_SUMMARY,
+    plainText: decoderAttentionSummary,
     accessibleLabel: "Self-Attention summary",
   },
   "block-input-state": {

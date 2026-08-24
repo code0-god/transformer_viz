@@ -9,6 +9,9 @@ use serde::{Deserialize, Serialize};
 pub struct FiniteF32(f32);
 
 impl FiniteF32 {
+    /// Exact zero.
+    pub const ZERO: Self = Self(0.0);
+
     /// Creates a finite value.
     ///
     /// # Errors

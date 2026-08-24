@@ -46,6 +46,24 @@ The deterministic byte-fallback tokenizer reserves BOS `0`, EOS `1`, and UNK `2`
 `b` to `b + 3`. Runtime assets stay same-origin. No backend, external inference API, CDN, WebGPU,
 or TypeScript numerical fallback ships.
 
+## Learning tracks
+
+Currently provided learning track:
+
+- **Decoder-only Fundamentals**
+
+Currently bundled runtime model:
+
+- **nanoGPT Educational Model** (`nanogpt-edu`, architecture `nanogpt-decoder-v1`)
+
+The application resolves runtime architecture metadata through a Learning Track registry. The
+current profile owns GPT Root, Transformer Block, Self-Attention, guide content, and notation while
+the React shell remains model-independent. This profile architecture is designed to admit future
+learning tracks without changing the generic shell.
+
+No Encoder-Decoder model, Original Transformer track, or Cross-Attention surface is implemented.
+See [Model and Learning Profiles](docs/MODEL_AND_LEARNING_PROFILES.md).
+
 ## Development
 
 Prerequisites:

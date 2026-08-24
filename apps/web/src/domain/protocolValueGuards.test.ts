@@ -42,10 +42,26 @@ const step = {
   total_ms: 1.25,
 };
 const model = {
+  model_id: "nanogpt-edu",
   name: "edu",
   corpus: "fixture",
   nanogpt_commit: "abc",
   parameter_count: 42,
+  architecture: {
+    architecture_id: "nanogpt-decoder-v1",
+    family: "decoder_only",
+    normalization: "layer_norm",
+    norm_placement: "pre_norm",
+    position_encoding: "learned_absolute",
+    attention: {
+      self_attention: "causal_multi_head",
+      cross_attention: false,
+    },
+    feed_forward: { kind: "gelu_mlp" },
+    generation: { kind: "autoregressive", kv_cache: false },
+    lm_head: { tied_token_embedding: true, bias: false },
+    dropout: 0,
+  },
   config: {
     block_size: 24,
     vocab_size: 259,
@@ -53,6 +69,7 @@ const model = {
     n_head: 4,
     n_embd: 64,
     bias: true,
+    dropout: 0,
   },
 };
 const snapshot = {
@@ -143,6 +160,28 @@ describe("protocol value guards", () => {
     expect(isModel({ ...model, config: { ...model.config, n_embd: 63 } })).toBe(
       false,
     );
+  });
+
+  test.each([
+    ["family", { family: "unknown" }],
+    ["norm placement", { norm_placement: "unknown" }],
+    [
+      "self-attention",
+      {
+        attention: {
+          ...model.architecture.attention,
+          self_attention: "unknown",
+        },
+      },
+    ],
+    ["dropout", { dropout: Number.NaN }],
+  ])("rejects invalid model architecture %s", (_name, architecture) => {
+    expect(
+      isModel({
+        ...model,
+        architecture: { ...model.architecture, ...architecture },
+      }),
+    ).toBe(false);
   });
 
   test.each([

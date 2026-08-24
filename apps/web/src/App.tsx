@@ -8,6 +8,7 @@ import { ArchitectureExplorer } from "./architecture";
 import { ContinuationPanel } from "./components/ContinuationPanel";
 import { Header } from "./components/Header";
 import { PromptPanel } from "./components/PromptPanel";
+import { resolveLearningTrack } from "./tracks/registry";
 import { createInferenceWorker } from "./worker/createWorker";
 import type { WorkerTransport } from "./worker/WorkerClient";
 import type { CleanupScheduler } from "./worker/workerLifecycle";
@@ -30,6 +31,14 @@ function AppSurface(): ReactElement {
   const [prompt, setPrompt] = useState("the cat");
   const [form, setForm] = useState<GenerationForm>(defaultGenerationForm);
   const config = state.worker.model?.config;
+  const track =
+    state.worker.model === null
+      ? null
+      : resolveLearningTrack(state.worker.model);
+  const headerSubtitle =
+    track?.status === "supported"
+      ? track.adapter.profile.subtitle
+      : "Transformer 학습 과정을 탐색합니다.";
   const replaySequenceLength =
     state.generation.replaySummary?.tokens.length ?? null;
 
@@ -43,7 +52,7 @@ function AppSurface(): ReactElement {
         Architecture로 건너뛰기
       </a>
       <div className="architecture-app">
-        <Header status={state.worker.status} />
+        <Header status={state.worker.status} subtitle={headerSubtitle} />
         <main id="architecture-main" className="architecture-main">
           <PromptPanel
             prompt={prompt}

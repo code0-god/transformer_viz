@@ -1,19 +1,5 @@
+import { model } from "../test/workerFixtures";
 import { isWorkerResponse } from "./protocolGuards";
-
-const model = {
-  name: "edu",
-  corpus: "fixture",
-  nanogpt_commit: "abc",
-  parameter_count: 42,
-  config: {
-    block_size: 24,
-    vocab_size: 259,
-    n_layer: 2,
-    n_head: 4,
-    n_embd: 64,
-    bias: true,
-  },
-};
 
 describe("Worker response protocol guard", () => {
   test("accepts a complete known response", () => {

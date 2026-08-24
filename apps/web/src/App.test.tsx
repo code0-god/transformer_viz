@@ -33,6 +33,9 @@ async function readyApp() {
     "data-status",
     "ready",
   );
+  expect(
+    screen.getByTestId("architecture-root").closest("[data-learning-track-id]"),
+  ).toHaveAttribute("data-learning-track-id", "decoder-only-fundamentals");
   return result;
 }
 
@@ -266,5 +269,27 @@ describe("production React Worker integration", () => {
       "data-status",
       "error",
     );
+  });
+
+  test("renders a controlled error for an unsupported learning profile", () => {
+    const { worker } = renderApp();
+    act(() => {
+      worker.emit({
+        type: "ready",
+        model: {
+          ...model,
+          model_id: "unknown-model",
+          architecture: {
+            ...model.architecture,
+            architecture_id: "unknown-architecture",
+          },
+        },
+      });
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("unknown-model");
+    expect(screen.getByRole("alert")).toHaveTextContent("unknown-architecture");
+    expect(screen.queryByTestId("architecture-root")).not.toBeInTheDocument();
+    expect(worker.posted).toHaveLength(1);
   });
 });

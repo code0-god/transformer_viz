@@ -11,6 +11,7 @@ const config: GptConfig = {
   n_head: 4,
   n_embd: 64,
   bias: true,
+  dropout: 0,
 };
 
 function renderRoot(

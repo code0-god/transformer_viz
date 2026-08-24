@@ -15,7 +15,21 @@ fn committed_typescript_bindings_are_exactly_current() -> Result<(), Box<dyn Err
 
     let generated = files_by_relative_path(temporary.path())?;
     let committed = files_by_relative_path(&committed_bindings_path())?;
-    assert_eq!(generated, committed);
+    assert_eq!(
+        generated.keys().collect::<Vec<_>>(),
+        committed.keys().collect::<Vec<_>>()
+    );
+    for (path, generated_contents) in generated {
+        let committed_contents = committed
+            .get(&path)
+            .ok_or_else(|| format!("missing committed binding {}", path.display()))?;
+        assert_eq!(
+            String::from_utf8_lossy(&generated_contents),
+            String::from_utf8_lossy(committed_contents),
+            "generated binding differs: {}",
+            path.display()
+        );
+    }
     Ok(())
 }
 

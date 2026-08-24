@@ -1,12 +1,16 @@
-import { notationCatalog, repeatedBlockLabel } from "../../domain/notation";
+import { repeatedBlockLabel } from "../../domain/notation";
 import type { GptConfig } from "../../generated/schema/GptConfig";
-import { formulaCatalog } from "../../math/formulaCatalog";
 import { MathFormula } from "../../math/MathFormula";
 import { integerParameterFormula } from "../../math/trustedFormulaBuilders";
+import {
+  decoderBlockGuide,
+  decoderBlockGuideCopy,
+  decoderBlockOperationIds,
+} from "../../tracks/decoder-only-fundamentals/guide";
+import { decoderOnlyFundamentalsProfile } from "../../tracks/decoder-only-fundamentals/profile";
 import type { ArchitectureNodeId } from "../catalog";
 import type { ArchitectureView } from "../state";
 import { BlockDiagram } from "./BlockDiagram";
-import { BLOCK_OPERATION_IDS } from "./blockGeometry";
 import "./block.css";
 import "./block-panel.css";
 
@@ -125,11 +129,12 @@ export function TransformerBlockDetail({
           />
           <aside
             className="architecture-annotation architecture-detail-annotation"
+            data-guide-page-id={decoderBlockGuide.id}
             data-testid="architecture-block-equations"
           >
-            <h3>Transformer Block</h3>
+            <h3>{decoderBlockGuide.title}</h3>
             <p className="architecture-detail-layer">
-              <span>현재 모델</span>
+              <span>{decoderBlockGuideCopy.currentModel}</span>
               <strong data-testid="architecture-model-layer-count">
                 <MathFormula
                   formula={integerParameterFormula(
@@ -138,19 +143,23 @@ export function TransformerBlockDetail({
                   )}
                 />
               </strong>
-              <span>선택 Layer {selectedLayer}</span>
+              <span>
+                {decoderBlockGuideCopy.selectedLayer} {selectedLayer}
+              </span>
             </p>
             <ol>
-              {BLOCK_OPERATION_IDS.map((id) => (
-                <li key={id}>{notationCatalog[id].title}</li>
+              {decoderBlockOperationIds.map((id) => (
+                <li key={id}>
+                  {decoderOnlyFundamentalsProfile.notation.entries[id].title}
+                </li>
               ))}
             </ol>
             <div className="architecture-detail-formulas">
-              <span>수식</span>
-              {BLOCK_OPERATION_IDS.map((id) => (
+              <span>{decoderBlockGuideCopy.formulas}</span>
+              {decoderBlockOperationIds.map((id) => (
                 <MathFormula
                   key={id}
-                  formula={formulaCatalog[id]}
+                  formula={decoderOnlyFundamentalsProfile.notation.formulas[id]}
                   displayMode
                   className="architecture-detail-formula"
                 />

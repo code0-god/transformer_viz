@@ -58,7 +58,7 @@ root = pathlib.Path('.')
 model = root / 'assets/models/edu'
 manifest_bytes = (model / 'manifest.json').read_bytes()
 manifest = json.loads(manifest_bytes)
-worker_source = (root / 'apps/worker/src/bin/worker/assets.rs').read_text()
+worker_source = (root / 'apps/worker/src/asset_policy.rs').read_text()
 assert hashlib.sha256(manifest_bytes).hexdigest() in worker_source
 for kind in ('config', 'tokenizer', 'weights'):
     asset = model / manifest[f'{kind}_file']

@@ -1,5 +1,4 @@
-const EXPECTED_MANIFEST_SHA256: &str =
-    "54fdba46e557dc9665e0b9b4ab1e9c739ed62b03783650bd333bcf463d83f7b4";
+use transformer_viz_worker::asset_policy::EXPECTED_MANIFEST_SHA256;
 
 #[derive(Debug)]
 struct AssetPolicy {

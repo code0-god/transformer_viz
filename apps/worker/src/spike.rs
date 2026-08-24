@@ -1,5 +1,6 @@
 //! Exact shared Worker protocol handler and retained Candle CPU operation proof.
 
+use crate::runtime_assets::nanogpt_architecture;
 use candle_core::{D, Device, Tensor};
 use nanogpt_schema::{
     EmbeddingTrace, FiniteF32, GptConfig, LayerSummary, LogitsTrace, ModelMetadata, OperationId,
@@ -169,20 +170,24 @@ pub fn worker_error(error: &SpikeError) -> WorkerResponse {
 /// Metadata for the retained pre-model Worker proof.
 #[must_use]
 pub fn spike_model_metadata() -> ModelMetadata {
+    let config = GptConfig {
+        block_size: WORKER_TOKEN_LIMIT,
+        vocab_size: 259,
+        n_layer: 1,
+        n_head: 1,
+        n_embd: 2,
+        bias: true,
+        dropout: FiniteF32::ZERO,
+    };
     ModelMetadata {
+        model_id: "nanogpt-edu".to_owned(),
         name: "Candle CPU operation proof".to_owned(),
         corpus: "deterministic Phase B fixtures".to_owned(),
         nanogpt_commit: include_str!("../../../reference/NANOGPT_COMMIT")
             .trim()
             .to_owned(),
         parameter_count: 0,
-        config: GptConfig {
-            block_size: WORKER_TOKEN_LIMIT,
-            vocab_size: 259,
-            n_layer: 1,
-            n_head: 1,
-            n_embd: 2,
-            bias: true,
-        },
+        architecture: nanogpt_architecture(config.dropout),
+        config,
     }
 }

@@ -1,4 +1,4 @@
-use crate::{SchemaError, SchemaVersion, TokenId};
+use crate::{FiniteF32, SchemaError, SchemaVersion, TokenId};
 use serde::{Deserialize, Serialize};
 
 /// Static asset location and integrity metadata.
@@ -16,7 +16,7 @@ pub struct AssetDescriptor {
 
 /// nanoGPT architecture parameters using upstream configuration names.
 #[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct GptConfig {
     /// Maximum sequence length.
@@ -31,6 +31,8 @@ pub struct GptConfig {
     pub n_embd: usize,
     /// Whether linear and normalization layers include bias.
     pub bias: bool,
+    /// Dropout probability used by the source architecture.
+    pub dropout: FiniteF32,
 }
 
 impl GptConfig {
@@ -60,11 +62,161 @@ impl GptConfig {
     }
 }
 
-/// Human-readable model identity and provenance.
+/// Top-level Transformer family.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TransformerFamily {
+    /// Autoregressive decoder stack.
+    DecoderOnly,
+    /// Source encoder plus autoregressive target decoder.
+    EncoderDecoder,
+}
+
+/// Normalization operation.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NormalizationKind {
+    /// Standard `LayerNorm`.
+    LayerNorm,
+    /// Root mean square normalization.
+    RmsNorm,
+}
+
+/// Normalization placement around a residual sublayer.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NormPlacement {
+    /// Normalize before the sublayer.
+    PreNorm,
+    /// Add the residual before normalization.
+    PostNorm,
+}
+
+/// Token-position representation.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PositionEncodingKind {
+    /// Learned absolute position embeddings.
+    LearnedAbsolute,
+    /// Fixed sinusoidal encoding.
+    Sinusoidal,
+    /// Rotary position embedding.
+    Rotary,
+}
+
+/// Self-attention visibility.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SelfAttentionKind {
+    /// Decoder self-attention with a causal mask.
+    CausalMultiHead,
+    /// Encoder self-attention over the full sequence.
+    BidirectionalMultiHead,
+}
+
+/// Attention topology.
 #[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct AttentionArchitecture {
+    /// Self-attention visibility and head topology.
+    pub self_attention: SelfAttentionKind,
+    /// Whether decoder queries can attend to encoder memory.
+    pub cross_attention: bool,
+}
+
+/// Feed-forward activation family.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FeedForwardKind {
+    /// GELU multilayer perceptron.
+    GeluMlp,
+    /// `ReLU` feed-forward network.
+    ReluFfn,
+    /// `SwiGLU` gated feed-forward network.
+    SwiGlu,
+}
+
+/// Feed-forward topology.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FeedForwardArchitecture {
+    /// Activation and projection family.
+    pub kind: FeedForwardKind,
+}
+
+/// Generation strategy.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GenerationKind {
+    /// Generate one target token from previous context at a time.
+    Autoregressive,
+}
+
+/// Generation runtime capabilities.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct GenerationArchitecture {
+    /// Sequence generation strategy.
+    pub kind: GenerationKind,
+    /// Whether inference reuses cached attention keys and values.
+    pub kv_cache: bool,
+}
+
+/// Language-model output projection facts.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LmHeadArchitecture {
+    /// Whether the output projection shares token embedding weights.
+    pub tied_token_embedding: bool,
+    /// Whether the output projection includes a bias vector.
+    pub bias: bool,
+}
+
+/// Runtime facts needed to choose a compatible learning profile.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ModelArchitectureMetadata {
+    /// Stable architecture contract identifier.
+    pub architecture_id: String,
+    /// Top-level Transformer family.
+    pub family: TransformerFamily,
+    /// Normalization operation.
+    pub normalization: NormalizationKind,
+    /// Normalization placement around residual sublayers.
+    pub norm_placement: NormPlacement,
+    /// Position representation.
+    pub position_encoding: PositionEncodingKind,
+    /// Self-attention and cross-attention topology.
+    pub attention: AttentionArchitecture,
+    /// Feed-forward topology.
+    pub feed_forward: FeedForwardArchitecture,
+    /// Generation capabilities.
+    pub generation: GenerationArchitecture,
+    /// Language-model output projection facts.
+    pub lm_head: LmHeadArchitecture,
+    /// Architecture dropout probability.
+    pub dropout: FiniteF32,
+}
+
+/// Human-readable model identity and provenance.
+#[cfg_attr(feature = "typescript-bindings", derive(ts_rs::TS))]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ModelMetadata {
+    /// Stable model asset identifier.
+    pub model_id: String,
     /// Display name.
     pub name: String,
     /// Training corpus description.
@@ -73,6 +225,8 @@ pub struct ModelMetadata {
     pub nanogpt_commit: String,
     /// Learned parameter count.
     pub parameter_count: u64,
+    /// Runtime architecture compatibility facts.
+    pub architecture: ModelArchitectureMetadata,
     /// Loaded model architecture parameters.
     pub config: GptConfig,
 }
@@ -213,7 +367,7 @@ impl ModelManifest {
                 self.display_name == "nanoGPT Educational Model",
                 "display_name",
             ),
-            (self.architecture == "nanogpt-compatible", "architecture"),
+            (self.architecture == "nanogpt-decoder-v1", "architecture"),
             (self.dtype == "f32", "dtype"),
             (self.weights_file == "model.safetensors", "weights_file"),
             (self.config_file == "config.json", "config_file"),

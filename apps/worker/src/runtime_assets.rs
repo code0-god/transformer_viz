@@ -2,7 +2,12 @@
 
 use candle_core::Device;
 use nanogpt_model::{Gpt, stored_parameter_count};
-use nanogpt_schema::{GptConfig, ModelManifest, ModelMetadata};
+use nanogpt_schema::{
+    AttentionArchitecture, FeedForwardArchitecture, FeedForwardKind, FiniteF32,
+    GenerationArchitecture, GenerationKind, GptConfig, LmHeadArchitecture,
+    ModelArchitectureMetadata, ModelManifest, ModelMetadata, NormPlacement, NormalizationKind,
+    PositionEncodingKind, SelfAttentionKind, TransformerFamily,
+};
 use nanogpt_tokenizer::Tokenizer;
 use sha2::{Digest as _, Sha256};
 
@@ -26,6 +31,32 @@ pub(super) struct LoadedModel {
     pub(super) config: GptConfig,
     pub(super) tokenizer: Tokenizer,
     pub(super) model: Gpt,
+}
+
+pub(crate) fn nanogpt_architecture(dropout: FiniteF32) -> ModelArchitectureMetadata {
+    ModelArchitectureMetadata {
+        architecture_id: "nanogpt-decoder-v1".to_owned(),
+        family: TransformerFamily::DecoderOnly,
+        normalization: NormalizationKind::LayerNorm,
+        norm_placement: NormPlacement::PreNorm,
+        position_encoding: PositionEncodingKind::LearnedAbsolute,
+        attention: AttentionArchitecture {
+            self_attention: SelfAttentionKind::CausalMultiHead,
+            cross_attention: false,
+        },
+        feed_forward: FeedForwardArchitecture {
+            kind: FeedForwardKind::GeluMlp,
+        },
+        generation: GenerationArchitecture {
+            kind: GenerationKind::Autoregressive,
+            kv_cache: false,
+        },
+        lm_head: LmHeadArchitecture {
+            tied_token_embedding: true,
+            bias: false,
+        },
+        dropout,
+    }
 }
 
 pub(super) fn load_assets(
@@ -71,10 +102,12 @@ pub(super) fn load_assets(
     }
     let model = Gpt::from_safetensors(&config, &assets.weights, &Device::Cpu)?;
     let metadata = ModelMetadata {
+        model_id: manifest.model_id,
         name: manifest.display_name,
         corpus: "CC0 educational corpus".to_owned(),
         nanogpt_commit: manifest.nanogpt_commit,
         parameter_count: manifest.parameter_count,
+        architecture: nanogpt_architecture(config.dropout),
         config: config.clone(),
     };
     Ok((
@@ -162,6 +195,31 @@ mod integrity_tests {
         assert!(
             matches!(load_assets(&assets), Err(RuntimeError::InvalidAsset(message)) if message.contains("parameter"))
         );
+        Ok(())
+    }
+
+    #[test]
+    fn loaded_metadata_reports_canonical_decoder_architecture()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let (_, metadata) = load_assets(&assets())?;
+
+        assert_eq!(metadata.model_id, "nanogpt-edu");
+        assert_eq!(metadata.architecture.architecture_id, "nanogpt-decoder-v1");
+        assert_eq!(metadata.architecture.family, TransformerFamily::DecoderOnly);
+        assert_eq!(metadata.architecture.norm_placement, NormPlacement::PreNorm);
+        assert_eq!(
+            metadata.architecture.attention.self_attention,
+            SelfAttentionKind::CausalMultiHead
+        );
+        assert!(!metadata.architecture.attention.cross_attention);
+        assert_eq!(
+            metadata.architecture.feed_forward.kind,
+            FeedForwardKind::GeluMlp
+        );
+        assert!(!metadata.architecture.generation.kv_cache);
+        assert!(metadata.architecture.lm_head.tied_token_embedding);
+        assert!(metadata.config.bias);
+        assert_eq!(metadata.architecture.dropout, FiniteF32::ZERO);
         Ok(())
     }
 }

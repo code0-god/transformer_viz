@@ -12,6 +12,20 @@ import {
 
 const tokenKinds = new Set(["bos", "byte", "eos", "unknown"]);
 const samplingModes = new Set(["greedy", "sample"]);
+const transformerFamilies = new Set(["decoder_only", "encoder_decoder"]);
+const normalizationKinds = new Set(["layer_norm", "rms_norm"]);
+const normPlacements = new Set(["pre_norm", "post_norm"]);
+const positionEncodingKinds = new Set([
+  "learned_absolute",
+  "sinusoidal",
+  "rotary",
+]);
+const selfAttentionKinds = new Set([
+  "causal_multi_head",
+  "bidirectional_multi_head",
+]);
+const feedForwardKinds = new Set(["gelu_mlp", "relu_ffn", "swi_glu"]);
+const generationKinds = new Set(["autoregressive"]);
 
 function isProbability(value: unknown): value is number {
   return isFiniteNumber(value) && value >= 0 && value <= 1;
@@ -139,6 +153,36 @@ export function isStep(value: unknown): boolean {
   );
 }
 
+function isArchitecture(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const attention = field(value, "attention");
+  const feedForward = field(value, "feed_forward");
+  const generation = field(value, "generation");
+  const lmHead = field(value, "lm_head");
+  const dropout = field(value, "dropout");
+  return (
+    isRecord(attention) &&
+    isRecord(feedForward) &&
+    isRecord(generation) &&
+    isRecord(lmHead) &&
+    isString(field(value, "architecture_id")) &&
+    isOneOf(field(value, "family"), transformerFamilies) &&
+    isOneOf(field(value, "normalization"), normalizationKinds) &&
+    isOneOf(field(value, "norm_placement"), normPlacements) &&
+    isOneOf(field(value, "position_encoding"), positionEncodingKinds) &&
+    isOneOf(field(attention, "self_attention"), selfAttentionKinds) &&
+    isBoolean(field(attention, "cross_attention")) &&
+    isOneOf(field(feedForward, "kind"), feedForwardKinds) &&
+    isOneOf(field(generation, "kind"), generationKinds) &&
+    isBoolean(field(generation, "kv_cache")) &&
+    isBoolean(field(lmHead, "tied_token_embedding")) &&
+    isBoolean(field(lmHead, "bias")) &&
+    isFiniteNumber(dropout) &&
+    dropout >= 0 &&
+    dropout <= 1
+  );
+}
+
 export function isModel(value: unknown): boolean {
   if (!isRecord(value)) return false;
   const config = field(value, "config");
@@ -148,7 +192,9 @@ export function isModel(value: unknown): boolean {
   const layerCount = field(config, "n_layer");
   const headCount = field(config, "n_head");
   const embeddingSize = field(config, "n_embd");
+  const dropout = field(config, "dropout");
   return (
+    isString(field(value, "model_id")) &&
     isString(field(value, "name")) &&
     isString(field(value, "corpus")) &&
     isString(field(value, "nanogpt_commit")) &&
@@ -164,6 +210,10 @@ export function isModel(value: unknown): boolean {
     isSafeId(embeddingSize) &&
     embeddingSize > 0 &&
     embeddingSize % headCount === 0 &&
-    isBoolean(field(config, "bias"))
+    isBoolean(field(config, "bias")) &&
+    isFiniteNumber(dropout) &&
+    dropout >= 0 &&
+    dropout <= 1 &&
+    isArchitecture(field(value, "architecture"))
   );
 }

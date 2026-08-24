@@ -10,7 +10,10 @@ mod token;
 mod trace;
 
 pub use config::{
-    AssetDescriptor, GptConfig, ModelManifest, ModelMetadata, TokenizerConfig, TokenizerKind,
+    AssetDescriptor, AttentionArchitecture, FeedForwardArchitecture, FeedForwardKind,
+    GenerationArchitecture, GenerationKind, GptConfig, LmHeadArchitecture,
+    ModelArchitectureMetadata, ModelManifest, ModelMetadata, NormPlacement, NormalizationKind,
+    PositionEncodingKind, SelfAttentionKind, TokenizerConfig, TokenizerKind, TransformerFamily,
 };
 #[cfg(feature = "typescript-bindings")]
 pub use export::{TypeScriptExportError, export_typescript_bindings};
