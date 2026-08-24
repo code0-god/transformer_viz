@@ -21,6 +21,7 @@ export interface ArchitectureNodeProps {
   readonly id: ArchitectureNodeId;
   readonly bounds: NodeBounds;
   readonly selected: boolean;
+  readonly highlighted?: boolean;
   readonly onActivate: (id: ArchitectureNodeId) => void;
   readonly drillDownIndicator?: DrillDownIndicator;
   readonly disabled?: boolean;
@@ -94,6 +95,7 @@ export function ArchitectureNode({
   id,
   bounds,
   selected,
+  highlighted = false,
   onActivate,
   drillDownIndicator,
   disabled = false,
@@ -102,6 +104,7 @@ export function ArchitectureNode({
   const definition = architectureNodeCatalog[id];
   const interactive = definition.capability !== "static";
   const stateClass = selected ? " is-selected" : "";
+  const highlightClass = highlighted ? " is-learning-highlighted" : "";
   const disabledClass = disabled ? " is-disabled" : "";
   const suffix = disabled
     ? ", 사용할 수 없음"
@@ -110,10 +113,19 @@ export function ArchitectureNode({
       : definition.capability === "selectable"
         ? ", 선택 가능"
         : "";
-  const className = `architecture-node architecture-node--${definition.capability}${stateClass}${disabledClass}`;
+  const className = `architecture-node architecture-node--${definition.capability}${stateClass}${highlightClass}${disabledClass}`;
   const content = (
     <>
       {children}
+      <rect
+        className="architecture-node__learning-highlight"
+        fill="none"
+        x={bounds.x - 3}
+        y={bounds.y - 3}
+        width={bounds.width + 6}
+        height={bounds.height + 6}
+        rx={bounds.radius + 3}
+      />
       <rect
         className="architecture-node__focus-outline"
         fill="none"
@@ -186,6 +198,7 @@ export function ArchitectureNode({
       data-node-id={id}
       data-node-capability={definition.capability}
       data-selected={selected ? "true" : undefined}
+      data-learning-highlighted={highlighted ? "true" : undefined}
       {...interactionProps}
     >
       {content}

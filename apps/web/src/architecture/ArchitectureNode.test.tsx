@@ -55,6 +55,29 @@ describe("ArchitectureNode", () => {
     expect(label).toHaveAttribute("y", "44");
   });
 
+  test("exposes learning highlight independently from selection", () => {
+    // Given / When
+    render(
+      <svg aria-label="Test diagram">
+        <ArchitectureNode
+          id="self-attention"
+          bounds={bounds}
+          selected={false}
+          highlighted
+          onActivate={() => undefined}
+        >
+          <text>Attention</text>
+        </ArchitectureNode>
+      </svg>,
+    );
+
+    // Then
+    const node = screen.getByRole("button");
+    expect(node).toHaveAttribute("data-learning-highlighted", "true");
+    expect(node).toHaveAttribute("aria-pressed", "false");
+    expect(node).not.toHaveAttribute("data-selected");
+  });
+
   test("static and disabled nodes cannot activate", () => {
     const onActivate = vi.fn();
     const { rerender } = render(

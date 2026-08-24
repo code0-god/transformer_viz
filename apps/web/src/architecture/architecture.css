@@ -8,11 +8,24 @@
   cursor: default;
 }
 
-.architecture-node__focus-outline {
+.architecture-node__focus-outline,
+.architecture-node__learning-highlight {
   fill: none;
   pointer-events: none;
   stroke: transparent;
+}
+
+.architecture-node__focus-outline {
   stroke-width: 2;
+}
+
+.architecture-node__learning-highlight {
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+
+.architecture-node.is-learning-highlighted .architecture-node__learning-highlight {
+  stroke: var(--accent, currentColor);
 }
 
 .architecture-node:hover:not(.architecture-node--static, .is-disabled) .architecture-node__focus-outline {
