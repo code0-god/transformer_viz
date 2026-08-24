@@ -22,14 +22,20 @@ import {
 
 interface BlockDiagramProps {
   readonly selectedNodeId: ArchitectureNodeId | null;
+  readonly highlightedNodeIds?: readonly ArchitectureNodeId[];
   readonly onActivateNode: (id: ArchitectureNodeId) => void;
 }
 
 export function BlockDiagram({
   selectedNodeId,
+  highlightedNodeIds = [],
   onActivateNode,
 }: BlockDiagramProps) {
-  const interaction = { selectedNodeId, onActivateNode };
+  const interaction = {
+    selectedNodeId,
+    highlightedNodeIds,
+    onActivateNode,
+  };
   return (
     <figure className="architecture-figure architecture-detail-figure">
       <section

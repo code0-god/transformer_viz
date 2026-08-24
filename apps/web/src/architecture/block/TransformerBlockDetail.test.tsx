@@ -7,7 +7,10 @@ import { TransformerBlockDetail } from "./TransformerBlockDetail";
 const config = { n_layer: 3 };
 const noSelection: ArchitectureNodeId | null = null;
 
-function renderDetail(selectedNodeId: ArchitectureNodeId | null = noSelection) {
+function renderDetail(
+  selectedNodeId: ArchitectureNodeId | null = noSelection,
+  highlightedNodeIds: readonly ArchitectureNodeId[] = [],
+) {
   const onActivateNode = vi.fn();
   const onNavigate = vi.fn();
   const onSelectLayer = vi.fn();
@@ -16,6 +19,7 @@ function renderDetail(selectedNodeId: ArchitectureNodeId | null = noSelection) {
       config={config}
       selectedLayer={1}
       selectedNodeId={selectedNodeId}
+      highlightedNodeIds={highlightedNodeIds}
       onActivateNode={onActivateNode}
       onNavigate={onNavigate}
       onSelectLayer={onSelectLayer}
@@ -163,6 +167,19 @@ describe("TransformerBlockDetail", () => {
     expect(onActivateNode).toHaveBeenNthCalledWith(2, "layer-norm-1");
   });
 
+  test("keeps learning highlights independent from selection", () => {
+    const { container } = renderDetail("mlp", ["layer-norm-2"]);
+    const selected = container.querySelector('[data-node-id="mlp"]');
+    const highlighted = container.querySelector(
+      '[data-node-id="layer-norm-2"]',
+    );
+
+    expect(selected).toHaveAttribute("aria-pressed", "true");
+    expect(selected).not.toHaveAttribute("data-learning-highlighted");
+    expect(highlighted).toHaveAttribute("aria-pressed", "false");
+    expect(highlighted).toHaveAttribute("data-learning-highlighted", "true");
+  });
+
   test("preserves breadcrumb and back callback surfaces", () => {
     const { onNavigate } = renderDetail();
     fireEvent.click(screen.getByTestId("architecture-breadcrumb-gpt"));
@@ -175,16 +192,17 @@ describe("TransformerBlockDetail", () => {
     );
   });
 
-  test("renders catalog formulas through the math surface", () => {
+  test("renders only diagram formulas without an embedded guide", () => {
     const { container } = renderDetail();
-    const panel = screen.getByTestId("architecture-block-equations");
-    expect(panel.querySelectorAll('[role="math"]')).toHaveLength(7);
-    expect(panel.querySelectorAll(".katex")).toHaveLength(7);
     expect(
-      screen
-        .getByTestId("architecture-model-layer-count")
-        .querySelector(".katex"),
-    ).not.toBeNull();
+      screen.getByTestId("architecture-model-layer-count"),
+    ).toHaveTextContent("3");
+    expect(
+      container.querySelector('[data-guide-page-id="decoder-guide-block"]'),
+    ).toBeNull();
+    expect(
+      screen.queryByTestId("architecture-block-equations"),
+    ).not.toBeInTheDocument();
     const diagram = container.querySelector(".architecture-detail-diagram");
     expect(
       diagram?.querySelectorAll(".architecture-node-formula"),

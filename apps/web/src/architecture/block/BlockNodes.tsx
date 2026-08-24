@@ -12,6 +12,7 @@ import {
 
 interface NodeInteraction {
   readonly selectedNodeId: ArchitectureNodeId | null;
+  readonly highlightedNodeIds: readonly ArchitectureNodeId[];
   readonly onActivateNode: (id: ArchitectureNodeId) => void;
 }
 
@@ -28,6 +29,7 @@ export function ModuleNode({
   y,
   height,
   selectedNodeId,
+  highlightedNodeIds,
   onActivateNode,
 }: ModuleNodeProps) {
   const notation = notationCatalog[id];
@@ -42,6 +44,7 @@ export function ModuleNode({
         radius: 10,
       }}
       selected={selectedNodeId === id}
+      highlighted={highlightedNodeIds.includes(id)}
       onActivate={onActivateNode}
       {...(id === "self-attention"
         ? {
@@ -76,6 +79,7 @@ export function AddNode({
   id,
   y,
   selectedNodeId,
+  highlightedNodeIds,
   onActivateNode,
 }: AddNodeProps) {
   return (
@@ -89,6 +93,7 @@ export function AddNode({
         radius: ADD_RADIUS,
       }}
       selected={selectedNodeId === id}
+      highlighted={highlightedNodeIds.includes(id)}
       onActivate={onActivateNode}
     >
       <circle
