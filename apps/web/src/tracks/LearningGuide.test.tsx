@@ -74,9 +74,16 @@ describe("LearningGuide", () => {
     ).not.toHaveLength(0);
   });
 
-  test("orders the compact outline by its declared section IDs", () => {
+  test("activates the compact outline with a real heading target", async () => {
+    const user = userEvent.setup();
+    window.history.replaceState(null, "", window.location.pathname);
     render(
-      <LearningGuide page={page} glossary={glossary} formulas={formulas} />,
+      <LearningGuide
+        page={page}
+        glossary={glossary}
+        formulas={formulas}
+        activeSectionId="fixture-section-one"
+      />,
     );
 
     const outline = screen.getByRole("navigation");
@@ -85,10 +92,23 @@ describe("LearningGuide", () => {
       "SECTION_TWO",
       "SECTION_ONE",
     ]);
-    expect(links[0]).toHaveAttribute(
-      "href",
+    expect(
+      within(outline).getByRole("link", { name: "SECTION_ONE" }),
+    ).toHaveAttribute("aria-current", "location");
+    expect(
+      document.getElementById("fixture-guide-fixture-section-two-title"),
+    ).toBe(screen.getByRole("heading", { name: "SECTION_TWO" }));
+    const targetLink = within(outline).getByRole("link", {
+      name: "SECTION_TWO",
+    });
+
+    await user.click(targetLink);
+
+    expect(targetLink).toHaveFocus();
+    expect(window.location.hash).toBe(
       "#fixture-guide-fixture-section-two-title",
     );
+    window.history.replaceState(null, "", window.location.pathname);
   });
 
   test("invokes native section and next-route controls with typed data", async () => {
@@ -110,6 +130,11 @@ describe("LearningGuide", () => {
     await user.click(screen.getByRole("button", { name: "SECTION_ONE" }));
     await user.click(screen.getByRole("button", { name: "NEXT_STEP_LABEL" }));
 
+    for (const sectionTitle of ["SECTION_ONE", "SECTION_TWO"] as const) {
+      expect(
+        screen.getByRole("button", { name: sectionTitle }),
+      ).toHaveAttribute("aria-controls", "learning-diagram-pane");
+    }
     expect(onSectionFocus).toHaveBeenCalledWith(page.sections[0]);
     expect(onSectionRef).toHaveBeenCalledWith(
       "fixture-section-one",

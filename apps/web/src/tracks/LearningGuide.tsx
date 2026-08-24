@@ -88,7 +88,12 @@ export function LearningGuide<Id extends string>({
           <ol>
             {outlineSections.map((section) => (
               <li key={section.id}>
-                <a href={`#${sectionHeadingId(page.id, section.id)}`}>
+                <a
+                  href={`#${sectionHeadingId(page.id, section.id)}`}
+                  aria-current={
+                    section.id === activeSectionId ? "location" : undefined
+                  }
+                >
                   {section.title}
                 </a>
               </li>
@@ -149,6 +154,7 @@ export function LearningGuide<Id extends string>({
                       type="button"
                       className="learning-guide-section-control"
                       aria-label={section.title}
+                      aria-controls="learning-diagram-pane"
                       onClick={() => onSectionFocus(section)}
                     >
                       도식에서 보기
