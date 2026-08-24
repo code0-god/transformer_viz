@@ -15,6 +15,7 @@
     "dev": "vite --host 127.0.0.1",
     "lint": "biome check .",
     "preview": "vite preview",
+    "pretypecheck": "pnpm build:worker",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

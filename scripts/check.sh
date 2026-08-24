@@ -18,10 +18,8 @@ printf '%s\n' '==> generated TypeScript binding freshness'
 "${ROOT_DIR}/scripts/generate-typescript-bindings.sh" "${BINDINGS_CHECK}"
 diff -ru apps/web/src/generated/schema "${BINDINGS_CHECK}"
 
-printf '%s\n' '==> production Worker generation before web validation'
-"${ROOT_DIR}/scripts/build-worker-wasm.sh"
-
 printf '%s\n' '==> TypeScript lint, typecheck, and tests'
+# pnpm's pretypecheck lifecycle owns production Worker generation.
 pnpm --dir apps/web lint
 pnpm --dir apps/web typecheck
 pnpm --dir apps/web test
