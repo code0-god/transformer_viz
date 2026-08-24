@@ -12,6 +12,7 @@ export interface OperationNodeProps {
   readonly className: string;
   readonly bounds: Omit<NodeBounds, "radius">;
   readonly selectedNodeId: ArchitectureNodeId | null;
+  readonly highlighted: boolean;
   readonly onSelectNode: (id: ArchitectureNodeId) => void;
 }
 
@@ -20,6 +21,7 @@ export function OperationNode({
   className,
   bounds,
   selectedNodeId,
+  highlighted,
   onSelectNode,
 }: OperationNodeProps) {
   const notation = notationCatalog[id];
@@ -29,6 +31,7 @@ export function OperationNode({
       id={id}
       bounds={{ ...bounds, radius: 10 }}
       selected={selectedNodeId === id}
+      highlighted={highlighted}
       onActivate={onSelectNode}
     >
       <g className={`architecture-attention-operation ${className}`}>

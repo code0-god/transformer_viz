@@ -12,6 +12,7 @@ export interface AttentionDetailProps {
   readonly selectedLayer: number;
   readonly selectedHead: number;
   readonly selectedNodeId: ArchitectureNodeId | null;
+  readonly highlightedNodeIds?: readonly ArchitectureNodeId[];
   readonly onNavigateRoot: () => void;
   readonly onBack: () => void;
   readonly onSelectLayer: (layer: number) => void;
@@ -167,6 +168,7 @@ export function AttentionDetail(props: AttentionDetailProps) {
         <div className="architecture-visual-grid architecture-attention-grid">
           <AttentionDiagram
             selectedNodeId={props.selectedNodeId}
+            highlightedNodeIds={props.highlightedNodeIds ?? []}
             onSelectNode={props.onSelectNode}
           />
           <AttentionAnnotation

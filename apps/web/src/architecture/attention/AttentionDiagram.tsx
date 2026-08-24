@@ -7,6 +7,7 @@ import { ATTENTION_HEIGHT, ATTENTION_WIDTH, geometry } from "./geometry";
 
 export interface AttentionDiagramProps {
   readonly selectedNodeId: ArchitectureNodeId | null;
+  readonly highlightedNodeIds?: readonly ArchitectureNodeId[];
   readonly onSelectNode: (id: ArchitectureNodeId) => void;
 }
 
@@ -42,6 +43,7 @@ const operations = [
 
 export function AttentionDiagram({
   selectedNodeId,
+  highlightedNodeIds = [],
   onSelectNode,
 }: AttentionDiagramProps) {
   return (
@@ -92,6 +94,7 @@ export function AttentionDiagram({
               className={className}
               bounds={bounds}
               selectedNodeId={selectedNodeId}
+              highlighted={highlightedNodeIds.includes(id)}
               onSelectNode={onSelectNode}
             />
           ))}
@@ -114,6 +117,7 @@ export function AttentionDiagram({
               className={className}
               bounds={bounds}
               selectedNodeId={selectedNodeId}
+              highlighted={highlightedNodeIds.includes(id)}
               onSelectNode={onSelectNode}
             />
           ))}
@@ -129,6 +133,7 @@ export function AttentionDiagram({
               className={className}
               bounds={bounds}
               selectedNodeId={selectedNodeId}
+              highlighted={highlightedNodeIds.includes(id)}
               onSelectNode={onSelectNode}
             />
           ))}

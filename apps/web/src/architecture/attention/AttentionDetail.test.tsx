@@ -212,6 +212,23 @@ describe("AttentionDetail", () => {
     ).toBeInTheDocument();
   });
 
+  test("highlights Guide targets independently from operation selection", () => {
+    // Given: Guide focus highlights two Attention operations without selecting one.
+    renderAttention({
+      highlightedNodeIds: ["attention-query", "attention-key"],
+    });
+
+    // When: node state is exposed on the diagram.
+    const query = screen.getByLabelText(/^Query tensor Q, 선택 가능$/);
+    const key = screen.getByLabelText(/^Key tensor K, 선택 가능$/);
+
+    // Then: learning highlights do not alter the controlled selected state.
+    expect(query).toHaveAttribute("data-learning-highlighted", "true");
+    expect(key).toHaveAttribute("data-learning-highlighted", "true");
+    expect(query).toHaveAttribute("aria-pressed", "false");
+    expect(key).toHaveAttribute("aria-pressed", "false");
+  });
+
   test("preserves selectors, breadcrumb, and back callbacks", async () => {
     const user = userEvent.setup();
     const { props } = renderAttention();
