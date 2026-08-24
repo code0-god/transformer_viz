@@ -44,9 +44,7 @@ diff -ru "${BINDINGS_DIR}" "${TEMP_BINDINGS}"
 
 if [[ "${TRANSFORMER_VIZ_PREBUILT_WORKER:-0}" == "1" ]]; then
   printf '%s\n' '==> prebuilt production Worker verification'
-  for artifact in worker.js worker.d.ts worker_bg.wasm; do
-    test -f "${ROOT_DIR}/apps/web/src/generated/worker/${artifact}"
-  done
+  "${ROOT_DIR}/scripts/ensure-worker-wasm.sh"
 else
   printf '%s\n' '==> explicit production Worker build'
   "${ROOT_DIR}/scripts/build-worker-wasm.sh"

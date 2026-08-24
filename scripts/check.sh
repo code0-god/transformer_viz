@@ -18,6 +18,9 @@ printf '%s\n' '==> generated TypeScript binding freshness'
 "${ROOT_DIR}/scripts/generate-typescript-bindings.sh" "${BINDINGS_CHECK}"
 diff -ru apps/web/src/generated/schema "${BINDINGS_CHECK}"
 
+printf '%s\n' '==> Worker artifact provenance contract'
+python3 "${ROOT_DIR}/scripts/test_worker_artifact_contract.py"
+
 printf '%s\n' '==> TypeScript lint, typecheck, and tests'
 # pnpm's pretypecheck lifecycle owns production Worker generation.
 pnpm --dir apps/web lint
