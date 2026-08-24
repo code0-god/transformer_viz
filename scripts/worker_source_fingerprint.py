@@ -90,8 +90,8 @@ def _relative(root: Path, path: Path) -> Path:
     return relative
 
 
-def read_regular(root: Path, relative: Path, *, single_link: bool = False) -> bytes:
-    flags = os.O_RDONLY | os.O_NOFOLLOW
+def read_regular(root: Path, relative: Path) -> bytes:
+    flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK
     root_fd = os.open(root, flags | os.O_DIRECTORY)
     current_fd = root_fd
     try:
@@ -103,7 +103,7 @@ def read_regular(root: Path, relative: Path, *, single_link: bool = False) -> by
         file_fd = os.open(relative.name, flags, dir_fd=current_fd)
         try:
             before = os.fstat(file_fd)
-            if not stat.S_ISREG(before.st_mode) or (single_link and before.st_nlink != 1):
+            if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
                 raise SourceContractError(f"input is not an exclusive regular file: {relative}")
             chunks: list[bytes] = []
             while chunk := os.read(file_fd, 1024 * 1024):
@@ -208,8 +208,9 @@ def _package_inputs(root: Path, package: PackageNode) -> set[Path]:
 
 def source_fingerprint(root_value: Path) -> str:
     root = root_value.resolve(strict=True)
-    packages, graph = _reachable_packages(root, _metadata(root))
     inputs = {Path(path) for path in FIXED_INPUTS}
+    fixed_contents = {relative: read_regular(root, relative) for relative in inputs}
+    packages, graph = _reachable_packages(root, _metadata(root))
     for package in packages:
         inputs.update(_package_inputs(root, package))
     for relative in tuple(inputs):
@@ -218,7 +219,9 @@ def source_fingerprint(root_value: Path) -> str:
                 inputs.add(_relative(root, root / relative.parent / os.fsdecode(included)))
     digest = hashlib.sha256(graph)
     for relative in sorted(inputs, key=Path.as_posix):
-        content = read_regular(root, relative)
+        content = fixed_contents.get(relative)
+        if content is None:
+            content = read_regular(root, relative)
         name = relative.as_posix().encode()
         digest.update(len(name).to_bytes(8, "big"))
         digest.update(name)

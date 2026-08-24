@@ -10,6 +10,8 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -121,6 +123,55 @@ class WorkerArtifactSecurityTests(unittest.TestCase):
                 source.unlink()
                 source.write_bytes(content)
                 backing.unlink()
+
+    def test_source_include_hardlink_is_rejected_in_tree_and_outside(self) -> None:
+        source = self.fixture.root / "assets/input.txt"
+        for location in ("in-tree", "outside"):
+            with self.subTest(location=location):
+                # Given: the included source path hardlinks identical bytes owned elsewhere.
+                self.fixture.write_valid_set()
+                content = source.read_bytes()
+                source.unlink()
+                if location == "in-tree":
+                    backing = self.fixture.root / "assets/input-hardlink.txt"
+                else:
+                    backing = Path(self.fixture.temporary.name).parent / f"{self.fixture.root.name}-input-hardlink.txt"
+                    self.addCleanup(backing.unlink, missing_ok=True)
+                backing.write_bytes(content)
+                os.link(backing, source)
+                # When: the source closure is fingerprinted.
+                snapshot = validate_artifacts(self.fixture.root, self.fixture.output)
+                # Then: aliased source ownership fails closed despite identical bytes.
+                self.assertIsNone(snapshot)
+                source.unlink()
+                source.write_bytes(content)
+                backing.unlink()
+
+    def test_source_input_fifos_fail_immediately_without_hanging(self) -> None:
+        seams = ("assets/input.txt", "crates/dep/src/lib.rs", "rust-toolchain.toml")
+        for relative in seams:
+            with self.subTest(relative=relative):
+                # Given: an included, package-source, or fixed-tool input is replaced by a FIFO.
+                self.fixture.write_valid_set()
+                path = self.fixture.root / relative
+                content = path.read_bytes()
+                path.unlink()
+                os.mkfifo(path)
+                command = (
+                    sys.executable,
+                    str(self.fixture.root / "scripts/worker_source_fingerprint.py"),
+                    str(self.fixture.root),
+                )
+                # When: fingerprinting runs in a bounded child process.
+                try:
+                    completed = subprocess.run(command, cwd=self.fixture.root, capture_output=True, timeout=5.0)
+                except subprocess.TimeoutExpired:
+                    self.fail(f"source fingerprint hung on FIFO input: {relative}")
+                finally:
+                    path.unlink()
+                    path.write_bytes(content)
+                # Then: every seam exits nonzero immediately instead of opening the FIFO for blocking reads.
+                self.assertNotEqual(completed.returncode, 0)
 
     def test_same_size_mutation_at_validation_barrier_is_rejected(self) -> None:
         # Given: a deterministic event mutates JS after its FD bytes are read.
