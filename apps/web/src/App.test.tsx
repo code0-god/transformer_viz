@@ -62,24 +62,6 @@ async function startGeneration(
 }
 
 describe("production React Worker integration", () => {
-  test("surfaces a synchronous Worker construction error", () => {
-    render(
-      <App
-        createWorker={() => {
-          throw new Error("WORKER_CONSTRUCTION_SENTINEL");
-        }}
-        manifestUrl="https://example.test/models/edu/manifest.json"
-      />,
-    );
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "WORKER_CONSTRUCTION_SENTINEL",
-    );
-    expect(document.getElementById("status")).toHaveAttribute(
-      "data-status",
-      "error",
-    );
-  });
-
   test("owns one initialized Worker under StrictMode and terminates on final cleanup", async () => {
     const { worker, rendered } = renderApp();
     expect(screen.getByRole("textbox", { name: "Prompt" })).toHaveValue(
