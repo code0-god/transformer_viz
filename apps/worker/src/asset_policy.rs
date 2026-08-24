@@ -53,8 +53,7 @@ mod tests {
 
     #[test]
     fn expected_manifest_digest_matches_canonical_asset() {
-        let manifest =
-            include_bytes!("../../../assets/models/edu/manifest.json");
+        let manifest = include_bytes!("../../../assets/models/edu/manifest.json");
         assert_eq!(
             EXPECTED_MANIFEST_SHA256,
             format!("{:x}", Sha256::digest(manifest))
