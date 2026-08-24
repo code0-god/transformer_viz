@@ -9,6 +9,7 @@
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "Bundler",
+    "paths": { "#worker/*": ["./src/generated/worker/*"] },
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,

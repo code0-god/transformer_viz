@@ -9,36 +9,28 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
+import os
+import stat
+import subprocess
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, TypeAlias
 
+from worker_source_fingerprint import SourceContractError, source_fingerprint
+
 SCHEMA_VERSION: Final = 1
 MANIFEST_NAME: Final = "worker.provenance.json"
 ARTIFACT_NAMES: Final = ("worker.js", "worker.d.ts", "worker_bg.wasm")
-LOCAL_PACKAGE_DIRS: Final = (
-    "apps/worker",
-    "crates/nanogpt-model",
-    "crates/nanogpt-schema",
-    "crates/nanogpt-tokenizer",
-)
-FIXED_INPUTS: Final = (
-    "Cargo.toml",
-    "Cargo.lock",
-    "rust-toolchain.toml",
-    ".cargo/config.toml",
-    "scripts/build-worker-wasm.sh",
-    "scripts/worker_artifact_provenance.py",
-)
-INCLUDE_PATTERN: Final = re.compile(r'include_(?:bytes|str)!\("([^"]+)"\)')
+COMPONENT_NAMES: Final = (*ARTIFACT_NAMES, MANIFEST_NAME)
 WASM_MAGIC: Final = b"\x00asm"
 JsonValue: TypeAlias = str | int | float | bool | None | list["JsonValue"] | dict[str, "JsonValue"]
+ValidationHook: TypeAlias = Callable[[], None]
 
 
 @dataclass(frozen=True, slots=True)
-class ArtifactBuildError(RuntimeError):
+class ArtifactContractError(RuntimeError):
     reason: str
 
     def __str__(self) -> str:
@@ -52,145 +44,173 @@ class ArtifactRecord:
 
 
 @dataclass(frozen=True, slots=True)
-class Provenance:
+class ComponentReceipt:
+    name: str
+    content: bytes
+    device: int
+    inode: int
+    size: int
+    modified_ns: int
+    changed_ns: int
+
+
+@dataclass(frozen=True, slots=True)
+class ArtifactSnapshot:
     source_fingerprint: str
-    artifacts: dict[str, ArtifactRecord]
+    components: tuple[ComponentReceipt, ...]
+
+    def content(self, name: str) -> bytes:
+        for component in self.components:
+            if component.name == name:
+                return component.content
+        raise ArtifactContractError(f"validated snapshot omits {name}")
+
+    def payload(self) -> tuple[tuple[str, bytes], ...]:
+        return tuple((component.name, component.content) for component in self.components)
 
 
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as source:
-        while chunk := source.read(1024 * 1024):
-            digest.update(chunk)
-    return digest.hexdigest()
+def _relative_directory(root: Path, directory: Path) -> Path:
+    try:
+        relative = Path(os.path.abspath(directory)).relative_to(root)
+    except ValueError as error:
+        raise ArtifactContractError(f"artifact directory escapes repository root: {directory}") from error
+    if not relative.parts or ".." in relative.parts:
+        raise ArtifactContractError(f"invalid artifact directory: {directory}")
+    return relative
 
 
-def _source_inputs(root: Path) -> tuple[Path, ...]:
-    inputs = {root / relative for relative in FIXED_INPUTS}
-    rust_sources: list[Path] = []
-    for relative in LOCAL_PACKAGE_DIRS:
-        package = root / relative
-        inputs.add(package / "Cargo.toml")
-        build_script = package / "build.rs"
-        if build_script.is_file():
-            inputs.add(build_script)
-        rust_sources.extend((package / "src").rglob("*.rs"))
-    inputs.update(rust_sources)
-    for source in rust_sources:
-        for included in INCLUDE_PATTERN.findall(source.read_text(encoding="utf-8")):
-            inputs.add((source.parent / included).resolve())
-    return tuple(sorted(inputs, key=lambda path: path.relative_to(root).as_posix()))
+def _open_directory(root: Path, directory: Path) -> int:
+    relative = _relative_directory(root, directory)
+    flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_DIRECTORY
+    root_fd = os.open(root, flags)
+    current_fd = root_fd
+    try:
+        for component in relative.parts:
+            next_fd = os.open(component, flags, dir_fd=current_fd)
+            if current_fd != root_fd:
+                os.close(current_fd)
+            current_fd = next_fd
+        if current_fd == root_fd:
+            raise ArtifactContractError("artifact directory cannot be repository root")
+        return current_fd
+    except OSError as error:
+        if current_fd != root_fd:
+            os.close(current_fd)
+        raise ArtifactContractError(f"cannot securely open artifact directory: {error}") from error
+    finally:
+        os.close(root_fd)
 
 
-def source_fingerprint(root: Path) -> str:
-    digest = hashlib.sha256()
-    for path in _source_inputs(root.resolve()):
-        relative = path.relative_to(root.resolve()).as_posix().encode()
-        content = path.read_bytes()
-        digest.update(len(relative).to_bytes(8, "big"))
-        digest.update(relative)
-        digest.update(len(content).to_bytes(8, "big"))
-        digest.update(content)
-    return digest.hexdigest()
+def _identity(status: os.stat_result) -> tuple[int, int, int, int, int]:
+    return (status.st_dev, status.st_ino, status.st_size, status.st_mtime_ns, status.st_ctime_ns)
 
 
-def _parse_record(raw: JsonValue) -> ArtifactRecord | None:
-    match raw:  # noqa: MATCH_OK - boundary parser rejects non-record JSON variants.
-        case {"sha256": str(sha256), "size": int(size), **extra} if not extra:
-            valid_digest = len(sha256) == 64 and all(character in "0123456789abcdef" for character in sha256)
-            return ArtifactRecord(sha256, size) if valid_digest and size >= 0 else None
+def _read_components(root: Path, directory: Path, names: tuple[str, ...], event_hook: ValidationHook | None) -> tuple[ComponentReceipt, ...]:
+    directory_fd = _open_directory(root, directory)
+    opened: list[tuple[str, int, os.stat_result, bytes]] = []
+    try:
+        for name in names:
+            file_fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory_fd)
+            status = os.fstat(file_fd)
+            if not stat.S_ISREG(status.st_mode) or status.st_nlink != 1:
+                os.close(file_fd)
+                raise ArtifactContractError(f"artifact component is not an exclusive regular file: {name}")
+            chunks: list[bytes] = []
+            while chunk := os.read(file_fd, 1024 * 1024):
+                chunks.append(chunk)
+            opened.append((name, file_fd, status, b"".join(chunks)))
+        if event_hook is not None:
+            event_hook()
+        receipts: list[ComponentReceipt] = []
+        for name, file_fd, before, content in opened:
+            after = os.fstat(file_fd)
+            path_after = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+            if _identity(before) != _identity(after) or (after.st_dev, after.st_ino) != (path_after.st_dev, path_after.st_ino):
+                raise ArtifactContractError(f"artifact component changed while validating: {name}")
+            receipts.append(ComponentReceipt(name, content, *_identity(after)))
+        return tuple(receipts)
+    except OSError as error:
+        raise ArtifactContractError(f"cannot securely read artifact component: {error}") from error
+    finally:
+        for _, file_fd, _, _ in opened:
+            os.close(file_fd)
+        os.close(directory_fd)
+
+
+def _mapping(value: JsonValue) -> dict[str, JsonValue] | None:
+    match value:  # noqa: MATCH_OK - manifest boundary rejects non-object JSON variants.
+        case dict() as mapping:
+            return mapping
         case _:
             return None
 
 
-def _parse_manifest(path: Path) -> Provenance | None:
-    try:
-        raw: JsonValue = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError):
+def _parse_record(value: JsonValue) -> ArtifactRecord | None:
+    record = _mapping(value)
+    if record is None or set(record) != {"sha256", "size"}:
         return None
-    match raw:  # noqa: MATCH_OK - boundary parser rejects malformed provenance variants.
-        case {
-            "schema_version": int(schema_version),
-            "source_fingerprint": str(fingerprint),
-            "artifacts": {
-                "worker.js": worker_js,
-                "worker.d.ts": worker_dts,
-                "worker_bg.wasm": worker_wasm,
-                **artifact_extra,
-            },
-            **manifest_extra,
-        } if not artifact_extra and not manifest_extra:
-            if schema_version != SCHEMA_VERSION:
-                return None
-            records = zip(ARTIFACT_NAMES, (worker_js, worker_dts, worker_wasm), strict=True)
-            parsed: dict[str, ArtifactRecord] = {}
-            for name, raw_record in records:
-                record = _parse_record(raw_record)
-                if record is None:
-                    return None
-                parsed[name] = record
-            return Provenance(fingerprint, parsed)
-        case _:
-            return None
+    digest = record["sha256"]
+    size = record["size"]
+    if type(digest) is not str or type(size) is not int:
+        return None
+    valid_digest = len(digest) == 64 and all(character in "0123456789abcdef" for character in digest)
+    return ArtifactRecord(digest, size) if valid_digest and size >= 0 else None
 
 
-def validate_artifacts(root: Path, output: Path) -> bool:
-    provenance = _parse_manifest(output / MANIFEST_NAME)
-    if provenance is None:
-        return False
+def _parse_manifest(content: bytes) -> tuple[str, dict[str, ArtifactRecord]] | None:
     try:
-        if provenance.source_fingerprint != source_fingerprint(root):
-            return False
+        raw: JsonValue = json.loads(content)
+    except (UnicodeError, json.JSONDecodeError):
+        return None
+    manifest = _mapping(raw)
+    if manifest is None or set(manifest) != {"schema_version", "source_fingerprint", "artifacts"}:
+        return None
+    if type(manifest["schema_version"]) is not int or manifest["schema_version"] != SCHEMA_VERSION:
+        return None
+    fingerprint = manifest["source_fingerprint"]
+    artifacts = _mapping(manifest["artifacts"])
+    if type(fingerprint) is not str or artifacts is None or set(artifacts) != set(ARTIFACT_NAMES):
+        return None
+    records: dict[str, ArtifactRecord] = {}
+    for name in ARTIFACT_NAMES:
+        record = _parse_record(artifacts[name])
+        if record is None:
+            return None
+        records[name] = record
+    return fingerprint, records
+
+
+def validate_artifacts(root_value: Path, output: Path, event_hook: ValidationHook | None = None) -> ArtifactSnapshot | None:
+    try:
+        root = root_value.resolve(strict=True)
+        fingerprint_before = source_fingerprint(root)
+        components = _read_components(root, output, COMPONENT_NAMES, event_hook)
+        contents = {component.name: component.content for component in components}
+        parsed = _parse_manifest(contents[MANIFEST_NAME])
+        if parsed is None:
+            return None
+        manifest_fingerprint, records = parsed
+        if manifest_fingerprint != fingerprint_before:
+            return None
         for name in ARTIFACT_NAMES:
-            path = output / name
-            record = provenance.artifacts[name]
-            if not path.is_file() or path.stat().st_size != record.size or _sha256(path) != record.sha256:
-                return False
-        if provenance.artifacts["worker.js"].size == 0 or provenance.artifacts["worker.d.ts"].size == 0:
-            return False
-        with (output / "worker_bg.wasm").open("rb") as wasm:
-            return wasm.read(len(WASM_MAGIC)) == WASM_MAGIC
-    except (OSError, KeyError, ValueError):
-        return False
-
-
-def write_manifest(root: Path, output: Path) -> None:
-    records = {
-        name: ArtifactRecord(_sha256(output / name), (output / name).stat().st_size)
-        for name in ARTIFACT_NAMES
-    }
-    if records["worker.js"].size == 0 or records["worker.d.ts"].size == 0:
-        raise ArtifactBuildError("Worker JavaScript and declarations must be nonempty")
-    with (output / "worker_bg.wasm").open("rb") as wasm:
-        if wasm.read(len(WASM_MAGIC)) != WASM_MAGIC:
-            raise ArtifactBuildError("Worker WASM has invalid magic")
-    payload = {
-        "artifacts": {
-            name: {"sha256": record.sha256, "size": record.size}
-            for name, record in sorted(records.items())
-        },
-        "schema_version": SCHEMA_VERSION,
-        "source_fingerprint": source_fingerprint(root),
-    }
-    (output / MANIFEST_NAME).write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+            content = contents[name]
+            record = records[name]
+            if len(content) != record.size or hashlib.sha256(content).hexdigest() != record.sha256:
+                return None
+        if not contents["worker.js"] or not contents["worker.d.ts"] or not contents["worker_bg.wasm"].startswith(WASM_MAGIC):
+            return None
+        fingerprint_after = source_fingerprint(root)
+        if fingerprint_after != fingerprint_before:
+            return None
+        return ArtifactSnapshot(fingerprint_before, components)
+    except (ArtifactContractError, SourceContractError, OSError, KeyError, subprocess.SubprocessError):
+        return None
 
 
 def main(arguments: list[str]) -> int:
-    if len(arguments) != 3:
-        print("usage: worker_artifact_provenance.py (validate|write) ROOT OUTPUT_DIR", file=sys.stderr)
-        return 2
-    operation, root_value, output_value = arguments
-    root = Path(root_value)
-    output = Path(output_value)
-    if operation == "validate":
-        return 0 if validate_artifacts(root, output) else 1
-    if operation == "write":
-        write_manifest(root, output)
-        return 0
-    print(f"unknown operation: {operation}", file=sys.stderr)
+    if len(arguments) == 3 and arguments[0] == "validate":
+        return 0 if validate_artifacts(Path(arguments[1]), Path(arguments[2])) is not None else 1
+    print("usage: worker_artifact_provenance.py validate ROOT OUTPUT", file=sys.stderr)
     return 2
 
 

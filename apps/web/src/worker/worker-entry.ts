@@ -1,4 +1,4 @@
-import initializeWorkerWasm from "../generated/worker/worker";
+import initializeWorkerWasm from "#worker/worker";
 import { initializeWorkerRuntime } from "./workerBootstrap";
 
 await initializeWorkerRuntime(

@@ -9,7 +9,7 @@
     "pnpm": "11.22.0"
   },
   "scripts": {
-    "build": "pnpm build:worker && tsc --noEmit && vite build",
+    "build": "pnpm build:worker && python3 ../../scripts/worker_verified_snapshot.py ../.. src/generated/worker -- pnpm --dir apps/web exec tsc --noEmit -p {verified-tsconfig} && python3 ../../scripts/worker_verified_snapshot.py ../.. src/generated/worker -- pnpm --dir apps/web exec vite build",
     "build:worker": "../../scripts/build-worker-wasm.sh",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "dev": "vite --host 127.0.0.1",
@@ -17,7 +17,7 @@
     "preview": "vite preview",
     "pretypecheck": "../../scripts/ensure-worker-wasm.sh",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "python3 ../../scripts/worker_verified_snapshot.py ../.. src/generated/worker -- pnpm --dir apps/web exec tsc --noEmit -p {verified-tsconfig}"
   },
   "dependencies": {
     "katex": "0.18.4",

@@ -66,10 +66,12 @@ done
 (cd "${PUBLIC_REFERENCE_DIR}" && shasum -a 256 -c SHA256SUMS)
 
 printf '%s\n' "==> Vite production build (${PUBLIC_URL})"
-pnpm --dir apps/web exec vite build \
-  --base "${PUBLIC_URL}" \
-  --outDir "${DIST_DIR}" \
-  --emptyOutDir
+python3 "${ROOT_DIR}/scripts/worker_verified_snapshot.py" \
+  "${ROOT_DIR}" "${ROOT_DIR}/apps/web/src/generated/worker" -- \
+  pnpm --dir apps/web exec vite build \
+    --base "${PUBLIC_URL}" \
+    --outDir "${DIST_DIR}" \
+    --emptyOutDir
 python3 "${ROOT_DIR}/scripts/static-web-policy.py" \
   --root "${DIST_DIR}" \
   --base "${PUBLIC_URL}"
