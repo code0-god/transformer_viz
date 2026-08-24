@@ -59,6 +59,14 @@ export function mappingIssues<Id extends string>({
         });
         return;
       }
+      if (routeTransitionExemptions.has(nodeId)) {
+        issues.push({
+          code: "invalid-route-transition-exemption",
+          path,
+          relatedId: nodeId,
+        });
+        return;
+      }
       routeTransitionExemptions.add(nodeId);
     });
   });
