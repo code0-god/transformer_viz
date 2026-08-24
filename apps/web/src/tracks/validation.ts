@@ -1,80 +1,214 @@
+import type { LearningGuidePage } from "./guideTypes";
+import { createContentScan, scanGuideBlock } from "./validationContent";
+import { mappingIssues } from "./validationMappings";
 import type {
-  GuideBlock,
-  LearningGuidePage,
-  LearningTrackProfile,
-} from "./types";
+  LearningProfileIssue,
+  LearningProfileValidationInput,
+  ValidationContext,
+} from "./validationTypes";
 
-export type LearningProfileIssue =
-  | "duplicate-guide-page-id"
-  | "duplicate-guide-section-id"
-  | "missing-guide-page"
-  | "unknown-associated-node"
-  | "unknown-formula"
-  | "unknown-glossary-term";
+export type {
+  LearningProfileIssue,
+  LearningProfileIssueCode,
+  LearningProfileValidationInput,
+} from "./validationTypes";
 
-function blockIssues(
-  block: GuideBlock,
-  profile: LearningTrackProfile,
-): readonly LearningProfileIssue[] {
-  if (
-    block.kind === "formula" &&
-    profile.notation.formulas[block.formulaId] === undefined
-  ) {
-    return ["unknown-formula"];
+export class LearningProfileValidationError extends Error {
+  constructor(readonly issues: readonly LearningProfileIssue[]) {
+    super(`Learning profile validation failed with ${issues.length} issues`);
+    this.name = "LearningProfileValidationError";
   }
-  if (
-    block.kind === "term" &&
-    !profile.guide.glossary.some(({ id }) => id === block.termId)
-  ) {
-    return ["unknown-glossary-term"];
-  }
-  return [];
 }
 
-function pageIssues(
-  page: LearningGuidePage,
-  profile: LearningTrackProfile,
+function pageIssues<Id extends string>(
+  page: LearningGuidePage<Id>,
+  pagePath: string,
+  context: ValidationContext<Id>,
 ): readonly LearningProfileIssue[] {
   const issues: LearningProfileIssue[] = [];
+  if (page.learningGoal.trim() === "") {
+    issues.push({
+      code: "missing-learning-goal",
+      path: `${pagePath}.learningGoal`,
+    });
+  }
+  if (page.keyTakeaway.length === 0) {
+    issues.push({
+      code: "missing-key-takeaway",
+      path: `${pagePath}.keyTakeaway`,
+    });
+  }
+  if (page.glossary.length === 0) {
+    issues.push({
+      code: "missing-page-glossary",
+      path: `${pagePath}.glossary`,
+    });
+  }
+
+  const route = context.profile.routes.definitions.find(
+    ({ id }) => id === page.routeId,
+  );
+  if (route?.terminal === false && page.nextStep === undefined) {
+    issues.push({ code: "missing-next-step", path: `${pagePath}.nextStep` });
+  }
+  if (route?.terminal === true && page.nextStep !== undefined) {
+    issues.push({ code: "terminal-next-step", path: `${pagePath}.nextStep` });
+  }
+  const nextStep = page.nextStep;
+  if (
+    nextStep !== undefined &&
+    !context.profile.routes.definitions.some(
+      ({ id }) => id === nextStep.routeId,
+    )
+  ) {
+    issues.push({
+      code: "unknown-next-step-route",
+      path: `${pagePath}.nextStep.routeId`,
+      relatedId: nextStep.routeId,
+    });
+  }
+
   const sectionIds = new Set<string>();
-  for (const section of page.sections) {
-    if (sectionIds.has(section.id)) issues.push("duplicate-guide-section-id");
+  page.sections.forEach((section, index) => {
+    const path = `${pagePath}.sections[${index}].id`;
+    if (section.id.trim() === "") {
+      issues.push({ code: "missing-guide-section-id", path });
+    }
+    if (sectionIds.has(section.id)) {
+      issues.push({
+        code: "duplicate-guide-section-id",
+        path,
+        relatedId: section.id,
+      });
+    }
     sectionIds.add(section.id);
-    for (const nodeId of section.associatedNodeIds ?? []) {
-      if (profile.architecture.nodeMap[nodeId] === undefined) {
-        issues.push("unknown-associated-node");
-      }
+  });
+  page.outlineSectionIds?.forEach((sectionId, index) => {
+    if (!sectionIds.has(sectionId)) {
+      issues.push({
+        code: "unknown-outline-section",
+        path: `${pagePath}.outlineSectionIds[${index}]`,
+        relatedId: sectionId,
+      });
     }
-    for (const block of section.blocks) {
-      issues.push(...blockIssues(block, profile));
+  });
+  page.glossary.forEach((termId, index) => {
+    if (!context.glossaryIds.has(termId)) {
+      issues.push({
+        code: "unknown-glossary-term",
+        path: `${pagePath}.glossary[${index}]`,
+        relatedId: termId,
+      });
     }
-  }
-  for (const block of [...page.introduction, ...page.keyTakeaway]) {
-    issues.push(...blockIssues(block, profile));
-  }
-  for (const termId of page.glossary) {
-    if (!profile.guide.glossary.some(({ id }) => id === termId)) {
-      issues.push("unknown-glossary-term");
-    }
-  }
+  });
+
+  const scan = createContentScan(context);
+  page.introduction.forEach((block, index) => {
+    scanGuideBlock(block, `${pagePath}.introduction[${index}]`, scan);
+  });
+  page.sections.forEach((section, sectionIndex) => {
+    section.blocks.forEach((block, blockIndex) => {
+      scanGuideBlock(
+        block,
+        `${pagePath}.sections[${sectionIndex}].blocks[${blockIndex}]`,
+        scan,
+      );
+    });
+  });
+  page.keyTakeaway.forEach((block, index) => {
+    scanGuideBlock(block, `${pagePath}.keyTakeaway[${index}]`, scan);
+  });
+  issues.push(...scan.issues);
+  issues.push(...mappingIssues({ page, pagePath, profile: context.profile }));
   return issues;
 }
 
-export function validateLearningProfile(
-  profile: LearningTrackProfile,
+export function validateLearningProfile<Id extends string>(
+  profile: LearningProfileValidationInput<Id>,
 ): readonly LearningProfileIssue[] {
   const issues: LearningProfileIssue[] = [];
+  const routeIds = new Set<string>();
+  profile.routes.definitions.forEach((route, index) => {
+    if (routeIds.has(route.id)) {
+      issues.push({
+        code: "duplicate-route-id",
+        path: `routes.definitions[${index}].id`,
+        relatedId: route.id,
+      });
+    }
+    routeIds.add(route.id);
+  });
+  if (!routeIds.has(profile.routes.initialRouteId)) {
+    issues.push({
+      code: "unknown-initial-route",
+      path: "routes.initialRouteId",
+      relatedId: profile.routes.initialRouteId,
+    });
+  }
+
+  const glossaryIds = new Set<string>();
+  profile.guide.glossary.forEach((entry, index) => {
+    if (entry.id.trim() === "") {
+      issues.push({
+        code: "missing-glossary-id",
+        path: `guide.glossary[${index}].id`,
+      });
+    }
+    if (glossaryIds.has(entry.id)) {
+      issues.push({
+        code: "duplicate-glossary-id",
+        path: `guide.glossary[${index}].id`,
+        relatedId: entry.id,
+      });
+    }
+    glossaryIds.add(entry.id);
+  });
+  const context: ValidationContext<Id> = {
+    profile,
+    glossaryIds,
+    runtimeAdapterIds: new Set(profile.guide.runtimeAdapterIds ?? []),
+    operationAdapterIds: new Set(profile.guide.operationAdapterIds ?? []),
+  };
+
   const pageIds = new Set<string>();
-  const pages = Object.values(profile.guide.pages);
-  for (const page of pages) {
+  for (const [routeKey, page] of Object.entries(profile.guide.pages)) {
     if (page === undefined) continue;
-    if (pageIds.has(page.id)) issues.push("duplicate-guide-page-id");
+    const pagePath = `guide.pages.${routeKey}`;
+    if (page.id.trim() === "") {
+      issues.push({ code: "missing-guide-page-id", path: `${pagePath}.id` });
+    }
+    if (pageIds.has(page.id)) {
+      issues.push({
+        code: "duplicate-guide-page-id",
+        path: `${pagePath}.id`,
+        relatedId: page.id,
+      });
+    }
     pageIds.add(page.id);
-    issues.push(...pageIssues(page, profile));
+    if (page.routeId !== routeKey) {
+      issues.push({
+        code: "guide-page-route-mismatch",
+        path: `${pagePath}.routeId`,
+        relatedId: page.routeId,
+      });
+    }
+    const route = profile.routes.definitions.find(({ id }) => id === routeKey);
+    if (route !== undefined && route.guidePageId !== page.id) {
+      issues.push({
+        code: "guide-page-id-mismatch",
+        path: `${pagePath}.id`,
+        relatedId: route.guidePageId,
+      });
+    }
+    issues.push(...pageIssues(page, pagePath, context));
   }
   for (const route of profile.routes.definitions) {
     if (profile.guide.pages[route.id] === undefined) {
-      issues.push("missing-guide-page");
+      issues.push({
+        code: "missing-guide-page",
+        path: `guide.pages.${route.id}`,
+        relatedId: route.id,
+      });
     }
   }
   return issues;

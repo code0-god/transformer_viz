@@ -5,6 +5,10 @@ import type {
   LearningTrackRegistration,
   LearningTrackResolution,
 } from "./types";
+import {
+  LearningProfileValidationError,
+  validateLearningProfile,
+} from "./validation";
 
 export type LearningTrackRegistryErrorCode =
   | "duplicate-track-id"
@@ -32,6 +36,8 @@ export function createLearningTrackRegistry(
   const byTrackId = new Map<LearningTrackId, LearningTrackRegistration>();
   const byArchitectureId = new Map<string, LearningTrackRegistration>();
   for (const registration of registrations) {
+    const issues = validateLearningProfile(registration.profile);
+    if (issues.length > 0) throw new LearningProfileValidationError(issues);
     if (byTrackId.has(registration.profile.id)) {
       throw new LearningTrackRegistryError(
         "duplicate-track-id",

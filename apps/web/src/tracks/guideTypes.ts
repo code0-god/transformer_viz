@@ -140,4 +140,6 @@ export type LearningGuideCatalog<Id extends string = FormulaId> = {
     Partial<Record<LearningRouteId, LearningGuidePage<Id>>>
   >;
   readonly glossary: readonly GlossaryEntry[];
+  readonly runtimeAdapterIds?: readonly string[];
+  readonly operationAdapterIds?: readonly string[];
 };

@@ -5,6 +5,13 @@ import type {
   LearningRouteId,
 } from "../types";
 import { decoderAttentionSymbols, decoderNotationEntries } from "./notation";
+import {
+  attentionKeyTakeaway,
+  attentionOperationNodeIds,
+  blockKeyTakeaway,
+  rootAssociatedNodeIds,
+  rootKeyTakeaway,
+} from "./validationMetadata";
 
 class DecoderGuideError extends Error {
   constructor(readonly routeId: LearningRouteId) {
@@ -51,10 +58,7 @@ const rootGuide: LearningGuidePage = {
     {
       id: "root-structure",
       title: "",
-      associatedNodeIds: [
-        "decoder.root.transformer-block",
-        "decoder.root.final-layer-norm",
-      ],
+      associatedNodeIds: rootAssociatedNodeIds,
       blocks: [
         {
           id: "root-structure-summary",
@@ -80,8 +84,8 @@ const rootGuide: LearningGuidePage = {
       ],
     },
   ],
-  keyTakeaway: [],
-  glossary: [],
+  keyTakeaway: rootKeyTakeaway,
+  glossary: ["attention-symbol-X"],
   nextStep: {
     routeId: "decoder.block",
     label: "Transformer Block",
@@ -133,8 +137,8 @@ export const decoderBlockGuide: LearningGuidePage = {
       ],
     },
   ],
-  keyTakeaway: [],
-  glossary: [],
+  keyTakeaway: blockKeyTakeaway,
+  glossary: ["attention-symbol-X"],
   nextStep: {
     routeId: "decoder.self-attention",
     label: "Self-Attention",
@@ -190,13 +194,7 @@ export const decoderAttentionGuide: LearningGuidePage = {
     {
       id: "attention-current-operation",
       title: decoderAttentionGuideCopy.currentOperationTitle,
-      associatedNodeIds: [
-        "decoder.attention.score-matmul",
-        "decoder.attention.scale",
-        "decoder.attention.causal-mask",
-        "decoder.attention.softmax",
-        "decoder.attention.value-matmul",
-      ],
+      associatedNodeIds: attentionOperationNodeIds,
       blocks: [
         {
           id: "attention-summary-formula",
@@ -206,7 +204,7 @@ export const decoderAttentionGuide: LearningGuidePage = {
       ],
     },
   ],
-  keyTakeaway: [],
+  keyTakeaway: attentionKeyTakeaway,
   glossary: glossary.map(({ id }) => id),
 };
 
