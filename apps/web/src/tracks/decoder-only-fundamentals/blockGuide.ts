@@ -23,7 +23,7 @@ export const decoderBlockGuide: LearningGuidePage = {
   routeId: "decoder.block",
   title: "Transformer Block",
   learningGoal:
-    "Pre-LN Block이 hidden state를 attention과 MLP로 갱신하는 순서를 설명합니다.",
+    "Pre-LN Block이 hidden state를 attention과 MLP로 갱신하는 순서를 설명합니다.",
   introduction: [
     {
       id: "block-what-is-shown",
@@ -51,7 +51,7 @@ export const decoderBlockGuide: LearningGuidePage = {
     {
       id: "block-key-takeaway",
       kind: "paragraph",
-      text: "Pre-LN Block은 위치를 섞는 attention과 위치별 MLP를 각각 residual stream에 더해 hidden state를 두 번 갱신합니다.",
+      text: "Pre-LN Block은 위치를 섞는 attention과 위치별 MLP를 각각 residual stream에 더해 hidden state를 두 번 갱신합니다.",
     },
   ],
   glossary: [

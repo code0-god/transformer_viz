@@ -66,7 +66,7 @@ export const decoderRootFlowSections: readonly LearningGuideSection[] = [
       {
         id: "root-embedding-copy",
         kind: "paragraph",
-        text: "Token Embedding은 token ID에 대응하는 벡터를 찾고, Position Embedding은 context 안의 위치에 대응하는 벡터를 찾습니다. 두 벡터를 원소별로 더하면 각 위치의 token 종류와 순서를 함께 담은 초기 표현이 됩니다.",
+        text: "Token Embedding은 token ID에 대응하는 벡터를 찾고, Position Embedding은 context 안의 위치에 대응하는 벡터를 찾습니다. 두 벡터를 원소별로 더하면 각 위치의 token 종류와 순서를 함께 담은 초기 표현이 됩니다.",
       },
       {
         id: "root-embedding-roles",
@@ -94,7 +94,7 @@ export const decoderRootFlowSections: readonly LearningGuideSection[] = [
       {
         id: "root-hidden-state-definition",
         kind: "paragraph",
-        text: "Hidden state는 각 token 위치에 대해 모델이 현재까지 계산한 숫자 표현입니다. 초기 embedding 합이 X₀가 되고, 각 Transformer Block이 이전 hidden state를 받아 다음 hidden state로 갱신합니다.",
+        text: "Hidden state는 각 token 위치에 대해 모델이 현재까지 계산한 숫자 표현입니다. 초기 embedding 합이 X₀가 되고, 각 Transformer Block이 이전 hidden state를 받아 다음 hidden state로 갱신합니다.",
       },
       {
         id: "root-hidden-state-chain",
@@ -113,7 +113,7 @@ export const decoderRootFlowSections: readonly LearningGuideSection[] = [
       {
         id: "root-transformer-block-copy",
         kind: "paragraph",
-        text: "각 Transformer Block은 token들이 이전 위치의 정보를 참고하게 하고, 각 위치의 표현을 다시 계산해 hidden state를 정교하게 만듭니다. Block들은 같은 구조를 반복하지만 서로 다른 학습 가중치를 사용합니다.",
+        text: "각 Transformer Block은 token들이 이전 위치의 정보를 참고하게 하고, 각 위치의 표현을 다시 계산해 hidden state를 정교하게 만듭니다. Block들은 같은 구조를 반복하지만 서로 다른 학습 가중치를 사용합니다.",
       },
       {
         id: "root-transformer-block-next",

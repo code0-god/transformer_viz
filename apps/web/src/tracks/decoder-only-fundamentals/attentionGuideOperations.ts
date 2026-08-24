@@ -100,7 +100,7 @@ export const attentionOperationSections: readonly LearningGuideSection[] = [
       {
         id: "softmax-explanation",
         kind: "paragraph",
-        text: "Softmax는 한 Query 행의 허용된 score를 양수로 바꾸고 합을 1로 맞춥니다. 이제 각 값은 다음 Value weighted sum에 사용할 비율입니다.",
+        text: "Softmax는 한 Query 행의 허용된 score를 양수로 바꾸고 합을 1로 맞춥니다. 이제 각 값은 다음 Value weighted sum에 사용할 비율입니다.",
       },
       {
         id: "softmax-row-example",
@@ -129,7 +129,7 @@ export const attentionOperationSections: readonly LearningGuideSection[] = [
       {
         id: "value-explanation",
         kind: "paragraph",
-        text: "각 attention weight를 대응하는 Value 벡터에 곱해 모두 더하면 현재 Query 위치의 head output이 됩니다. Q와 K는 섞을 비율을 정했고, 실제로 전달되는 내용은 V에서 옵니다.",
+        text: "각 attention weight를 대응하는 Value 벡터에 곱해 모두 더하면 현재 Query 위치의 head output이 됩니다. Q와 K는 섞을 비율을 정했고, 실제로 전달되는 내용은 V에서 옵니다.",
       },
       {
         id: "value-expansion-example",

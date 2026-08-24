@@ -15,7 +15,7 @@ import threading
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Protocol
+from typing import Final, Protocol
 
 from browser_learning_workspace_actions import (
     NODE_SELECTORS,
@@ -31,9 +31,75 @@ from browser_learning_workspace_probes import (
     INSTRUMENT_LEARNING_WORKSPACE,
     PAGE_HEALTH,
     WORKSPACE_READY,
+    browser_errors,
+)
+from browser_learning_workspace_visual import (
+    VisualCaptureConfig,
+    VisualMetricError,
+    VisualMetrics,
+    verify_visual,
 )
 from browser_probes import READY_PROBE
 from browser_session import ChromeSession
+
+
+DEFAULT_VIEWPORTS: Final = "1440x900,1024x768,390x844"
+
+
+def parse_viewports(source: str) -> tuple[tuple[int, int], ...]:
+    parsed: list[tuple[int, int]] = []
+    for token in source.split(","):
+        parts = token.lower().split("x")
+        if len(parts) != 2 or not all(part.isdigit() for part in parts):
+            raise VisualMetricError(f"invalid viewport: {token}")
+        width, height = (int(part) for part in parts)
+        if width <= 0 or height <= 0:
+            raise VisualMetricError(f"invalid viewport: {token}")
+        parsed.append((width, height))
+    if not parsed:
+        raise VisualMetricError("at least one viewport is required")
+    return tuple(parsed)
+
+
+def validate_metrics(metrics: VisualMetrics) -> tuple[str, ...]:
+    viewport, layout = metrics["viewport"], metrics["layout"]
+    typography, health = metrics["typography"], metrics["health"]
+    controls, content = metrics["controls"], metrics["content"]
+    width = viewport["width"]
+    failures: list[str] = []
+    if width == 1440:
+        if layout["mode"] != "grid" or not 46 <= layout["diagramShare"] <= 50 or not 50 <= layout["guideShare"] <= 54:
+            failures.append("1440px columns must be 46-50% Diagram and 50-54% Guide")
+        if not layout["stickyVisibleAfterScroll"]:
+            failures.append("desktop Diagram must remain visible after Guide document scroll")
+    elif layout["mode"] != "stack":
+        failures.append(f"{width}px layout must stack Diagram then Guide")
+    if layout["documentOverflow"] != 0:
+        failures.append("document horizontal overflow must be 0")
+    if layout["unexpectedOverflowOwners"]:
+        failures.append("only intended diagram/formula scrollers may overflow")
+    if typography["fontSize"] < 15:
+        failures.append("Guide body font-size must be at least 15px")
+    if typography["lineHeightRatio"] < 1.65:
+        failures.append("Guide line-height ratio must be at least 1.65")
+    if health["workerStarts"] != 1:
+        failures.append("Worker startup count must be exactly 1")
+    if not health["workerReadyObserved"]:
+        failures.append("Worker Ready must be observed before generation")
+    error_keys = ("consoleErrors", "networkErrors", "runtimeErrors", "katexErrors")
+    if any(health[key] != 0 for key in error_keys):
+        failures.append("browser error counts must all be 0")
+    if health["status"] != "ready":
+        failures.append("Worker status must be ready")
+    if controls["targetViolations"]:
+        failures.append("interactive targets must be at least 44px")
+    if content["outlineCount"] < 1 or content["sectionControlCount"] < 1 or content["runtimeFactsCount"] < 1:
+        failures.append("outline, Guide controls, and runtime facts must be present")
+    if metrics["routeId"] == "decoder.self-attention" and content["selectedOperationCount"] < 1:
+        failures.append("Attention selected operation must be present")
+    if content["pendingFactCount"] > 0 or content["readyFactCount"] < 1:
+        failures.append("runtime and selected-operation facts must be trace-ready")
+    return tuple(failures)
 
 
 class LogValue(Protocol):
@@ -88,28 +154,6 @@ def run_actions(browser: ChromeSession) -> list[ActionRecord]:
     return records
 
 
-def browser_errors(browser: ChromeSession) -> dict[str, list[str]]:
-    console: list[str] = []
-    network: list[str] = []
-    runtime: list[str] = []
-    request_urls: dict[str, str] = {}
-    for event in browser.require_cdp().events:
-        method = event.get("method")
-        params = event.get("params", {})
-        if method == "Network.requestWillBeSent":
-            request_urls[params.get("requestId", "")] = params.get("request", {}).get("url", "")
-        if method == "Runtime.consoleAPICalled" and params.get("type") in ("error", "warning"):
-            console.append(json.dumps(params, ensure_ascii=False))
-        if method == "Runtime.exceptionThrown":
-            runtime.append(json.dumps(params, ensure_ascii=False))
-        if method == "Network.loadingFailed":
-            request_url = request_urls.get(params.get("requestId", ""), "unknown")
-            network.append(f"{request_url}: {json.dumps(params, ensure_ascii=False)}")
-        if method == "Network.responseReceived" and params.get("response", {}).get("status", 0) >= 400:
-            network.append(json.dumps(params.get("response"), ensure_ascii=False))
-    return {"console": console, "network": network, "runtime": runtime}
-
-
 def verify_entry(root: Path, entry: str, evidence: Path) -> None:
     handler = partial(QuietHandler, directory=str(root.resolve()))
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -158,11 +202,32 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--entry", default="index.html")
-    parser.add_argument("--scenario", choices=("all",), default="all")
+    parser.add_argument("--scenario", choices=("all", "visual"), default="all")
+    parser.add_argument("--viewports", default=DEFAULT_VIEWPORTS)
     parser.add_argument("--evidence", type=Path, required=True)
     args = parser.parse_args()
-    verify_entry(args.root, args.entry, args.evidence)
-    print(f"{args.entry} Learning Workspace: PASS")
+    if args.scenario == "visual":
+        source_paths = [
+            *Path("apps/web/src").rglob("*.ts"),
+            *Path("apps/web/src").rglob("*.tsx"),
+            *Path("apps/web/src").rglob("*.css"),
+            Path("apps/web/style.css"),
+            Path("apps/web/index.html"),
+        ]
+        source_mtime_ns = max(path.stat().st_mtime_ns for path in source_paths)
+        verify_visual(
+            VisualCaptureConfig(
+                root=args.root,
+                entry=args.entry,
+                viewports=parse_viewports(args.viewports),
+                evidence=args.evidence,
+                source_mtime_ns=source_mtime_ns,
+                validator=validate_metrics,
+            )
+        )
+    else:
+        verify_entry(args.root, args.entry, args.evidence)
+    print(f"{args.entry} Learning Workspace {args.scenario}: PASS")
     return 0
 
 

@@ -5,7 +5,7 @@ export const blockGuideGlossary: readonly GlossaryEntry[] = [
     id: "feature",
     term: "Feature",
     definition:
-      "각 token 위치의 hidden state를 이루는 개별 숫자 축입니다. 여러 feature가 함께 그 위치의 현재 표현을 구성합니다.",
+      "각 token 위치의 hidden state를 이루는 개별 숫자 축입니다. 여러 feature가 함께 그 위치의 현재 표현을 구성합니다.",
   },
   {
     id: "layer-norm",
@@ -41,6 +41,6 @@ export const blockGuideGlossary: readonly GlossaryEntry[] = [
     id: "hidden-state",
     term: "Hidden State",
     definition:
-      "모델이 각 token 위치에 대해 현재까지 계산한 feature 벡터입니다. Block을 지날 때 attention과 MLP 결과가 더해지며 갱신됩니다.",
+      "모델이 각 token 위치에 대해 현재까지 계산한 feature 벡터입니다. Block을 지날 때 attention과 MLP 결과가 더해지며 갱신됩니다.",
   },
 ];

@@ -10,7 +10,7 @@ export const blockOperationSections: readonly LearningGuideSection[] = [
       {
         id: "block-ln1-explanation",
         kind: "paragraph",
-        text: "LayerNorm 1은 attention 전에 각 token 위치 안의 feature를 따로 정규화합니다. 이 단계 자체는 token 위치 사이의 정보를 섞지 않으며, 하위 연산 앞에 놓여 Pre-LN이라 부릅니다.",
+        text: "LayerNorm 1은 attention 전에 각 token 위치 안의 feature를 따로 정규화합니다. 이 단계 자체는 token 위치 사이의 정보를 섞지 않으며, 하위 연산 앞에 놓여 Pre-LN이라 부릅니다.",
       },
     ],
   },
@@ -23,7 +23,7 @@ export const blockOperationSections: readonly LearningGuideSection[] = [
       {
         id: "block-attention-role",
         kind: "paragraph",
-        text: "Causal Self-Attention은 각 위치가 현재 위치까지의 문맥을 참고해 위치 사이의 정보를 모으도록 합니다. 구체적인 Q, K, V 계산은 다음 학습 단계에서 내려다봅니다.",
+        text: "Causal Self-Attention은 각 위치가 현재 위치까지의 문맥을 참고해 위치 사이의 정보를 모으도록 합니다. 구체적인 Q, K, V 계산은 다음 학습 단계에서 내려다봅니다.",
       },
     ],
   },
@@ -36,7 +36,7 @@ export const blockOperationSections: readonly LearningGuideSection[] = [
       {
         id: "block-residual1-explanation",
         kind: "paragraph",
-        text: "첫 residual 덧셈은 attention 출력과 Block 입력을 원소별로 더합니다. 이 연결은 입력 경로를 제공하지만, 입력 정보가 변하지 않거나 항상 더 강하게 남는다고 보장하지 않습니다.",
+        text: "첫 residual 덧셈은 attention 출력과 Block 입력을 원소별로 더합니다. 이 연결은 입력 경로를 제공하지만, 입력 정보가 변하지 않거나 항상 더 강하게 남는다고 보장하지 않습니다.",
       },
     ],
   },
@@ -49,7 +49,7 @@ export const blockOperationSections: readonly LearningGuideSection[] = [
       {
         id: "block-ln2-explanation",
         kind: "paragraph",
-        text: "LayerNorm 2는 첫 residual 결과를 MLP 전에 위치별로 정규화합니다. 따라서 두 번째 하위 연산도 Pre-LN 순서를 따릅니다.",
+        text: "LayerNorm 2는 첫 residual 결과를 MLP 전에 위치별로 정규화합니다. 따라서 두 번째 하위 연산도 Pre‑LN 순서를 따릅니다.",
       },
     ],
   },

@@ -89,7 +89,7 @@ export const decoderRootReferenceSections: readonly LearningGuideSection[] = [
         kind: "callout",
         tone: "warning",
         title: "이 runtime은 이전 계산을 KV cache로 재사용하지 않습니다",
-        text: "각 단계에서 현재 context 전체의 hidden state를 다시 계산합니다.",
+        text: "각 단계에서 현재 context 전체의 hidden state를 다시 계산합니다.",
       },
     ],
   },

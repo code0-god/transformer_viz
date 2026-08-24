@@ -48,7 +48,7 @@ export const blockClosingSections: readonly LearningGuideSection[] = [
             id: "block-attention-column",
             title: "Self-Attention",
             items: [
-              "허용된 token 위치 사이의 정보를 모읍니다.",
+              "허용된 token 위치 사이의 정보를 모읍니다.",
               "문맥 관계를 반영합니다.",
             ],
           },
@@ -127,7 +127,7 @@ export const blockClosingSections: readonly LearningGuideSection[] = [
           {
             id: "block-misconception-ln-mixing",
             title: "LayerNorm이 token을 섞는다",
-            text: "LayerNorm은 각 위치 안의 feature를 정규화하며 위치 사이를 섞지 않습니다.",
+            text: "LayerNorm은 각 위치 안의 feature를 정규화하며 위치 사이를 섞지 않습니다.",
           },
           {
             id: "block-misconception-residual-copy",

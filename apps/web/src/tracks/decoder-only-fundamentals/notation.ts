@@ -12,6 +12,11 @@ export const decoderNotationEntries: Readonly<
   ...rootNotation,
   ...blockNotation,
   ...attentionNotation,
+  "attention-softmax": {
+    ...attentionNotation["attention-softmax"],
+    description:
+      "허용된 score를 선택한 head의 attention probability로 정규화합니다.",
+  },
 };
 
 export function repeatedBlockLabel(layerCount: number): string {
