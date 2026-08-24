@@ -32,7 +32,36 @@ export function mappingIssues<Id extends string>({
   const issues: LearningProfileIssue[] = [];
   const associated = new Set<string>();
   const primaryNodes = new Set<string>();
+  const routeTransitionExemptions = new Set<string>();
   const routeIds = profile.routes.definitions.map(({ id }) => id);
+
+  profile.routes.definitions.forEach((route, routeIndex) => {
+    if (route.id !== page.routeId) return;
+    route.guideCoverageExemptNodeIds?.forEach((nodeId, nodeIndex) => {
+      const path = `routes.definitions[${routeIndex}].guideCoverageExemptNodeIds[${nodeIndex}]`;
+      const architectureNodeId = profile.architecture.nodeMap[nodeId];
+      if (architectureNodeId === undefined) {
+        issues.push({
+          code: "unknown-route-transition-exemption",
+          path,
+          relatedId: nodeId,
+        });
+        return;
+      }
+      if (
+        nodeRoute(nodeId, routeIds) !== route.id ||
+        architectureNodeCatalog[architectureNodeId].capability !== "drill-down"
+      ) {
+        issues.push({
+          code: "invalid-route-transition-exemption",
+          path,
+          relatedId: nodeId,
+        });
+        return;
+      }
+      routeTransitionExemptions.add(nodeId);
+    });
+  });
 
   page.sections.forEach((section, sectionIndex) => {
     const sectionPath = `${pagePath}.sections[${sectionIndex}]`;
@@ -102,13 +131,14 @@ export function mappingIssues<Id extends string>({
     if (
       architectureNodeId === undefined ||
       nodeRoute(nodeId, routeIds) !== page.routeId ||
-      architectureNodeCatalog[architectureNodeId].capability !== "selectable" ||
-      associated.has(nodeId)
+      architectureNodeCatalog[architectureNodeId].capability === "static" ||
+      associated.has(nodeId) ||
+      routeTransitionExemptions.has(nodeId)
     ) {
       continue;
     }
     issues.push({
-      code: "uncovered-selectable-node",
+      code: "uncovered-interactive-node",
       path: `architecture.nodeMap.${nodeId}`,
       relatedId: nodeId,
     });

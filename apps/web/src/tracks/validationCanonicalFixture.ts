@@ -24,6 +24,7 @@ export const canonicalProfileFixture = {
         subtitle: "Canonical encoder",
         guidePageId: "canonical.guide.encoder",
         terminal: true,
+        guideCoverageExemptNodeIds: ["canonical.encoder.transition" as const],
       },
     ],
   },

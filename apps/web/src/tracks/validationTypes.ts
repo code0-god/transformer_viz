@@ -14,6 +14,7 @@ export type LearningProfileIssueCode =
   | "formula-before-explanation"
   | "guide-page-id-mismatch"
   | "guide-page-route-mismatch"
+  | "invalid-route-transition-exemption"
   | "missing-content-id"
   | "missing-glossary-id"
   | "missing-guide-page"
@@ -26,7 +27,7 @@ export type LearningProfileIssueCode =
   | "primary-node-not-interactive"
   | "primary-not-associated"
   | "terminal-next-step"
-  | "uncovered-selectable-node"
+  | "uncovered-interactive-node"
   | "unknown-associated-node"
   | "unknown-formula"
   | "unknown-glossary-term"
@@ -35,6 +36,7 @@ export type LearningProfileIssueCode =
   | "unknown-operation-adapter"
   | "unknown-outline-section"
   | "unknown-primary-node"
+  | "unknown-route-transition-exemption"
   | "unknown-runtime-adapter";
 
 export type LearningProfileIssue = {

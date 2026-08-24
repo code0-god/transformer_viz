@@ -145,7 +145,25 @@ describe("learning profile structured validation", () => {
     });
   });
 
-  test("reports route-filtered mappings and uncovered selectable nodes", () => {
+  test("reports an uncovered drill-down node omitted from every section", () => {
+    const profile = withRootPage({
+      ...rootPage,
+      sections: rootPage.sections.map((section) => ({
+        ...section,
+        associatedNodeIds: (section.associatedNodeIds ?? []).filter(
+          (nodeId) => nodeId !== "decoder.root.transformer-block",
+        ),
+      })),
+    });
+
+    expect(validateLearningProfile(profile)).toContainEqual({
+      code: "uncovered-interactive-node",
+      path: "architecture.nodeMap.decoder.root.transformer-block",
+      relatedId: "decoder.root.transformer-block",
+    });
+  });
+
+  test("reports route-filtered mappings and uncovered interactive nodes", () => {
     const profile = withRootPage({
       ...rootPage,
       sections: [
@@ -164,7 +182,7 @@ describe("learning profile structured validation", () => {
           relatedId: "decoder.block.layer-norm-1",
         },
         {
-          code: "uncovered-selectable-node",
+          code: "uncovered-interactive-node",
           path: "architecture.nodeMap.decoder.root.final-layer-norm",
           relatedId: "decoder.root.final-layer-norm",
         },

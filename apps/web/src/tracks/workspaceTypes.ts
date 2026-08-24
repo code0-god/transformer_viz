@@ -26,6 +26,7 @@ export type ArchitectureRouteDefinition = {
   readonly subtitle: string;
   readonly guidePageId: string;
   readonly terminal: boolean;
+  readonly guideCoverageExemptNodeIds?: readonly LearningNodeId[];
 };
 
 export type ArchitectureRouteCatalog = {
