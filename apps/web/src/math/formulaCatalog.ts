@@ -29,14 +29,16 @@ export type RuntimeFormulaId =
   | "attention-head-shape"
   | "attention-full-head-shape";
 
-export interface FormulaDefinition {
-  readonly id: FormulaId | RuntimeFormulaId;
+export interface FormulaDefinition<Id extends string = string> {
+  readonly id: Id;
   readonly tex: string;
   readonly plainText: string;
   readonly accessibleLabel: string;
 }
 
-function formula(id: ArchitectureNodeId): FormulaDefinition {
+function formula(
+  id: ArchitectureNodeId,
+): FormulaDefinition<ArchitectureNodeId> {
   const notation = decoderNotationEntries[id];
   return {
     id,
@@ -88,7 +90,9 @@ export const FORMULA_IDS: readonly FormulaId[] = [
   ...INLINE_FORMULA_IDS,
 ];
 
-export const formulaCatalog: Readonly<Record<FormulaId, FormulaDefinition>> = {
+export const formulaCatalog: Readonly<
+  Record<FormulaId, FormulaDefinition<FormulaId>>
+> = {
   root: formula("root"),
   "input-context": formula("input-context"),
   "token-embedding": formula("token-embedding"),

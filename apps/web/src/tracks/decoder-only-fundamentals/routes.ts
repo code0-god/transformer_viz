@@ -18,17 +18,23 @@ const routeDefinitions: readonly ArchitectureRouteDefinition[] = [
   {
     id: "decoder.root",
     title: "GPT",
+    subtitle: "Decoder-only Transformer",
     guidePageId: "decoder-guide-root",
+    terminal: false,
   },
   {
     id: "decoder.block",
     title: "Transformer Block",
+    subtitle: "Pre-LN Decoder Block",
     guidePageId: "decoder-guide-block",
+    terminal: false,
   },
   {
     id: "decoder.self-attention",
     title: "Self-Attention",
+    subtitle: "Causal Multi-Head Self-Attention",
     guidePageId: "decoder-guide-self-attention",
+    terminal: true,
   },
 ];
 

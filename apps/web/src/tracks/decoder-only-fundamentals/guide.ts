@@ -57,6 +57,7 @@ const rootGuide: LearningGuidePage = {
       ],
       blocks: [
         {
+          id: "root-structure-summary",
           kind: "bullets",
           items: [
             {
@@ -117,6 +118,7 @@ export const decoderBlockGuide: LearningGuidePage = {
       ],
       blocks: [
         {
+          id: "block-operation-steps",
           kind: "steps",
           items: decoderBlockOperationIds.map((id) => ({
             id,
@@ -124,6 +126,7 @@ export const decoderBlockGuide: LearningGuidePage = {
           })),
         },
         ...decoderBlockOperationIds.map((formulaId) => ({
+          id: `block-formula-${formulaId}`,
           kind: "formula" as const,
           formulaId,
         })),
@@ -159,6 +162,7 @@ export const decoderAttentionGuide: LearningGuidePage = {
   learningGoal: "Causal Self-Attention의 기호, 모델값, 현재 연산을 연결합니다.",
   introduction: [
     {
+      id: "attention-input-summary",
       kind: "paragraph",
       text: "선택한 Transformer Block의 LayerNorm 1 출력이 attention input입니다.",
     },
@@ -172,7 +176,11 @@ export const decoderAttentionGuide: LearningGuidePage = {
         "decoder.attention.key",
         "decoder.attention.value",
       ],
-      blocks: glossary.map(({ id }) => ({ kind: "term", termId: id })),
+      blocks: glossary.map(({ id }) => ({
+        id: `attention-term-${id}`,
+        kind: "term",
+        termId: id,
+      })),
     },
     {
       id: "attention-current-model",
@@ -189,7 +197,13 @@ export const decoderAttentionGuide: LearningGuidePage = {
         "decoder.attention.softmax",
         "decoder.attention.value-matmul",
       ],
-      blocks: [{ kind: "formula", formulaId: "attention-summary" }],
+      blocks: [
+        {
+          id: "attention-summary-formula",
+          kind: "formula",
+          formulaId: "attention-summary",
+        },
+      ],
     },
   ],
   keyTakeaway: [],

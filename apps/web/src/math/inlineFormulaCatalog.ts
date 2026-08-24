@@ -28,12 +28,12 @@ function inlineFormula(
   tex: string,
   plainText: string,
   accessibleLabel: string,
-): FormulaDefinition {
+): FormulaDefinition<InlineFormulaId> {
   return { id, tex, plainText, accessibleLabel };
 }
 
 export const inlineFormulaCatalog: Readonly<
-  Record<InlineFormulaId, FormulaDefinition>
+  Record<InlineFormulaId, FormulaDefinition<InlineFormulaId>>
 > = {
   "root-output-state": inlineFormula(
     "root-output-state",

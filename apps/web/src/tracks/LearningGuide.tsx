@@ -11,24 +11,7 @@ interface LearningGuideProps {
 }
 
 function blockKey(block: GuideBlock): string {
-  switch (block.kind) {
-    case "paragraph":
-      return `paragraph:${block.text}`;
-    case "bullets":
-      return `bullets:${block.items.map(({ id }) => id).join(",")}`;
-    case "steps":
-      return `steps:${block.items.map(({ id }) => id).join(",")}`;
-    case "formula":
-      return `formula:${block.formulaId}`;
-    case "callout":
-      return `callout:${block.tone}:${block.title ?? block.text}`;
-    case "comparison":
-      return `comparison:${block.columns.map(({ id }) => id).join(",")}`;
-    case "example":
-      return `example:${block.title ?? block.lines.join(",")}`;
-    case "term":
-      return `term:${block.termId}`;
-  }
+  return block.id;
 }
 
 function GuideBlockView({
@@ -43,6 +26,10 @@ function GuideBlockView({
   switch (block.kind) {
     case "paragraph":
       return <p>{block.text}</p>;
+    case "rich-paragraph":
+    case "runtime-facts":
+    case "selected-operation":
+      return null;
     case "bullets":
       return (
         <ul>
