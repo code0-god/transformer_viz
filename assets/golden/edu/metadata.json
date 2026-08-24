@@ -1,5 +1,5 @@
 {
-  "config_sha256": "a81ea5a170d8dd7f75064b4962076d0d54adcc55440bc98aed9c52c664b99c64",
+  "config_sha256": "c037b9f98ff66e1834a86052afb595df3c0d5543621e36af609095524efcc1b9",
   "corpus_file": "assets/corpus/edu_corpus.txt",
   "corpus_sha256": "b4612aa9500d36f667619e69bbcbe54be71f595d3367136a782e52ca70e8a532",
   "generated_continuation": "mat",
