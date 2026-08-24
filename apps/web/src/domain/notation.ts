@@ -33,11 +33,11 @@ export const ATTENTION_SYMBOLS: readonly SymbolDefinition[] = [
   { symbol: "T", meaning: "현재 sequence length" },
   { symbol: "C", meaning: "model dimension" },
   { symbol: "H", meaning: "attention head 수" },
-  { symbol: "D", meaning: "head dimension, C / H" },
+  { symbol: "D", meaning: "model dimension을 head 수로 나눈 값" },
   { symbol: "h", meaning: "선택한 head index" },
   { symbol: "i", meaning: "Query token position" },
   { symbol: "j", meaning: "Key token position" },
-  { symbol: "X", meaning: "Attention input, X_LN1" },
+  { symbol: "X", meaning: "LayerNorm 1에서 나온 attention input" },
   { symbol: "Q / K / V", meaning: "Query, Key, Value" },
   { symbol: "S_h", meaning: "선택한 head의 attention scores" },
   { symbol: "A_h", meaning: "선택한 head의 attention probabilities" },
@@ -46,5 +46,3 @@ export const ATTENTION_SYMBOLS: readonly SymbolDefinition[] = [
 
 export const ATTENTION_SUMMARY =
   "Y_h = softmax(CausalMask(Q_h @ K_hᵀ / √D)) @ V_h";
-export const ATTENTION_VALUE_CAPTION =
-  "V_h는 score 계산에 참여하지 않고, Softmax 이후 Value MatMul에서 A_h와 결합합니다.";

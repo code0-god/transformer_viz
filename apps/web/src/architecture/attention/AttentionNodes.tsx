@@ -1,5 +1,10 @@
 import { notationCatalog } from "../../domain/notation";
-import { ArchitectureNode, type NodeBounds } from "../ArchitectureNode";
+import type { FormulaId } from "../../math/formulaCatalog";
+import {
+  ArchitectureNode,
+  ArchitectureNodeFormula,
+  type NodeBounds,
+} from "../ArchitectureNode";
 import type { ArchitectureNodeId } from "../catalog";
 
 export interface OperationNodeProps {
@@ -35,14 +40,12 @@ export function OperationNode({
         >
           {notation.title}
         </text>
-        <text
-          className="architecture-node-subtitle"
-          x={centerX}
-          y={bounds.y + bounds.height / 2 + 18}
-          textAnchor="middle"
-        >
-          {notation.diagramDetail}
-        </text>
+        <ArchitectureNodeFormula
+          formulaId={id}
+          x={bounds.x + 10}
+          y={bounds.y + bounds.height / 2 + 6}
+          width={bounds.width - 20}
+        />
       </g>
     </ArchitectureNode>
   );
@@ -50,8 +53,13 @@ export function OperationNode({
 
 export function SplitHeadsNode({
   bounds,
+  formulaId,
 }: {
   readonly bounds: Omit<NodeBounds, "radius">;
+  readonly formulaId:
+    | "attention-query-heads"
+    | "attention-key-heads"
+    | "attention-value-heads";
 }) {
   const centerX = bounds.x + bounds.width / 2;
   return (
@@ -60,14 +68,12 @@ export function SplitHeadsNode({
       <text x={centerX} y={bounds.y + 28} textAnchor="middle">
         Split Heads
       </text>
-      <text
-        className="architecture-node-subtitle"
-        x={centerX}
-        y={bounds.y + 50}
-        textAnchor="middle"
-      >
-        [T, C] → [H, T, D]
-      </text>
+      <ArchitectureNodeFormula
+        formulaId={formulaId}
+        x={bounds.x + 8}
+        y={bounds.y + 38}
+        width={bounds.width - 16}
+      />
     </g>
   );
 }
@@ -75,11 +81,11 @@ export function SplitHeadsNode({
 export function StateNode({
   bounds,
   title,
-  subtitle,
+  formulaId,
 }: {
   readonly bounds: Omit<NodeBounds, "radius">;
   readonly title: string;
-  readonly subtitle: string;
+  readonly formulaId: FormulaId;
 }) {
   const centerX = bounds.x + bounds.width / 2;
   return (
@@ -92,14 +98,12 @@ export function StateNode({
       >
         {title}
       </text>
-      <text
-        className="architecture-node-subtitle"
-        x={centerX}
-        y={bounds.y + bounds.height / 2 + 18}
-        textAnchor="middle"
-      >
-        {subtitle}
-      </text>
+      <ArchitectureNodeFormula
+        formulaId={formulaId}
+        x={bounds.x + 10}
+        y={bounds.y + bounds.height / 2 + 6}
+        width={bounds.width - 20}
+      />
     </g>
   );
 }

@@ -1,5 +1,6 @@
 import { notationCatalog } from "../../domain/notation";
-import { ArchitectureNode } from "../ArchitectureNode";
+import type { FormulaId } from "../../math/formulaCatalog";
+import { ArchitectureNode, ArchitectureNodeFormula } from "../ArchitectureNode";
 import type { ArchitectureNodeId } from "../catalog";
 import {
   ADD_RADIUS,
@@ -45,8 +46,6 @@ export function ModuleNode({
       {...(id === "self-attention"
         ? {
             drillDownIndicator: {
-              x: MODULE_X + MODULE_WIDTH - 16,
-              y: y + height - 12,
               label: "자세히 보기 ›",
             },
           }
@@ -57,14 +56,12 @@ export function ModuleNode({
         <text x={CENTER_X} y={y + height / 2 - 3} textAnchor="middle">
           {notation.title}
         </text>
-        <text
-          className="architecture-node-subtitle"
-          x={CENTER_X}
-          y={y + height / 2 + 18}
-          textAnchor="middle"
-        >
-          {notation.diagramDetail}
-        </text>
+        <ArchitectureNodeFormula
+          formulaId={id}
+          x={MODULE_X + 10}
+          y={y + height / 2 + 6}
+          width={MODULE_WIDTH - 20}
+        />
       </g>
     </ArchitectureNode>
   );
@@ -115,11 +112,11 @@ export function AddNode({
 interface StateNodeProps {
   readonly y: number;
   readonly title: string;
-  readonly detail: string;
+  readonly formulaId: FormulaId;
   readonly state: string;
 }
 
-export function StateNode({ y, title, detail, state }: StateNodeProps) {
+export function StateNode({ y, title, formulaId, state }: StateNodeProps) {
   return (
     <g className="architecture-detail-state" data-state-node={state}>
       <rect
@@ -132,14 +129,12 @@ export function StateNode({ y, title, detail, state }: StateNodeProps) {
       <text x={CENTER_X} y={y + 20} textAnchor="middle">
         {title}
       </text>
-      <text
-        className="architecture-node-subtitle"
-        x={CENTER_X}
-        y={y + 38}
-        textAnchor="middle"
-      >
-        {detail}
-      </text>
+      <ArchitectureNodeFormula
+        formulaId={formulaId}
+        x={MODULE_X + 10}
+        y={y + 27}
+        width={MODULE_WIDTH - 20}
+      />
     </g>
   );
 }

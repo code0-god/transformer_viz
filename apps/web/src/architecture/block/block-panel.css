@@ -30,6 +30,10 @@
   font-size: 0.76rem;
 }
 
+.architecture-block-screen .architecture-detail-layer strong [role="math"] {
+  display: inline-flex;
+}
+
 .architecture-block-screen .architecture-detail-formulas {
   min-inline-size: 0;
   padding-block-start: var(--s3, 0.75rem);

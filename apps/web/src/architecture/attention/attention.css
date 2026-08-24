@@ -1,4 +1,5 @@
 .architecture-attention-screen {
+  --architecture-node-formula-color: var(--attention-muted);
   --attention-ink: #28251f;
   --attention-muted: #716b60;
   --attention-line: #a49b8d;
@@ -13,11 +14,11 @@
 .architecture-attention-screen .architecture-breadcrumb button, .architecture-attention-screen .architecture-back-button { border: 0; background: transparent; color: #315d99; cursor: pointer; }
 .architecture-attention-screen .architecture-intro, .architecture-attention-screen .architecture-detail-toolbar { display: flex; align-items: end; justify-content: space-between; gap: 1.25rem; }
 .architecture-attention-screen .architecture-intro h2, .architecture-attention-screen .architecture-intro p, .architecture-attention-screen .architecture-detail-toolbar p { margin: 0; }
-.architecture-attention-screen .architecture-intro p { margin-top: .35rem; color: var(--attention-muted); }
+.architecture-attention-screen .architecture-intro p { margin-top: .35rem; color: var(--attention-muted); overflow-wrap: anywhere; word-break: keep-all; }
 .architecture-attention-screen .architecture-detail { display: grid; gap: 1rem; }
 .architecture-attention-screen .architecture-detail-toolbar { padding: 1rem; border: 1px solid var(--attention-hairline); border-radius: 14px; background: #f2f5fa; }
 .architecture-attention-screen .architecture-detail-kicker { color: #315d99; font: 800 .72rem ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; }
-.architecture-attention-screen .architecture-detail-toolbar > div > p:last-child { margin-top: .25rem; color: var(--attention-muted); font-size: .8rem; }
+.architecture-attention-screen .architecture-detail-toolbar > div > p:last-child { margin-top: .25rem; color: var(--attention-muted); font-size: .8rem; overflow-wrap: anywhere; word-break: keep-all; }
 .architecture-attention-screen .architecture-attention-selectors{ display: flex; align-items: end; gap: 1rem; }
 .architecture-attention-screen .architecture-layer-selector { display: grid; gap: .25rem; margin: 0; padding: 0; border: 0; }
 .architecture-attention-screen .architecture-layer-selector legend { color: var(--attention-muted); font-size: .72rem; font-weight: 750; }
@@ -30,7 +31,6 @@
 .architecture-attention-screen .architecture-svg-scroll { width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; border-top: 1px solid var(--attention-hairline); background: var(--attention-surface); }
 .architecture-attention-screen .architecture-attention-diagram{ display: block; width: 100%; min-width: 50rem; max-width: 56rem; height: auto; margin-inline: auto; }
 .architecture-attention-screen .architecture-attention-diagram text{ fill: var(--attention-ink); font: 750 16px system-ui, sans-serif; pointer-events: none; }
-.architecture-attention-screen .architecture-attention-diagram .architecture-node-subtitle{ fill: var(--attention-muted); font-size: 12px; font-weight: 550; }
 .architecture-attention-screen .architecture-attention-state rect{ fill: var(--attention-surface); stroke: var(--attention-hairline); stroke-width: 1.5; }
 .architecture-attention-screen .architecture-attention-operation rect,
 .architecture-attention-screen .architecture-attention-split rect{ stroke: var(--attention-line); stroke-width: 1.5; }
@@ -46,27 +46,31 @@
 .architecture-attention-screen .architecture-attention-softmax rect,
 .architecture-attention-screen .architecture-attention-aggregation rect{ fill: #f9ecd9; stroke: #d58d35; }
 .architecture-attention-screen .architecture-attention-flow{ fill: none; stroke: var(--attention-ink); stroke-width: 1.7; marker-end: url("#attention-detail-arrow"); }
-.architecture-attention-screen .architecture-attention-connector-label{ fill: #8f4f3d; font-size: 12px; }
-.architecture-attention-screen .architecture-figure figcaption { padding-top: .5rem; border-top: 1px solid var(--attention-hairline); color: var(--attention-muted); font-size: .72rem; text-align: center; }
+.architecture-attention-screen .architecture-attention-connector-formula{ color: #8f4f3d; }
+.architecture-attention-screen .architecture-figure figcaption { padding-top: .5rem; border-top: 1px solid var(--attention-hairline); color: var(--attention-muted); font-size: .72rem; overflow-wrap: anywhere; text-align: center; word-break: keep-all; }
 .architecture-attention-screen .architecture-attention-annotation{ display: grid; gap: .75rem; align-content: start; }
 .architecture-attention-screen .architecture-attention-annotation h3,
 .architecture-attention-screen .architecture-attention-annotation p{ margin: 0; }
-.architecture-attention-screen .architecture-attention-input-definition{ color: var(--attention-muted); font-size: .76rem; line-height: 1.55; }
+.architecture-attention-screen .architecture-attention-input-definition{ display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem; color: var(--attention-muted); font-size: .76rem; line-height: 1.55; overflow-wrap: anywhere; word-break: keep-all; }
 .architecture-attention-screen .architecture-notation-section{ display: grid; gap: .75rem; padding-top: .75rem; border-top: 1px solid var(--attention-hairline); }
 .architecture-attention-screen .architecture-notation-section h4{ margin: 0; font-size: .76rem; }
 .architecture-attention-screen .architecture-attention-symbols,
 .architecture-attention-screen .architecture-attention-facts{ display: grid; gap: .35rem; margin: 0; }
 .architecture-attention-screen .architecture-attention-symbols div{ display: grid; grid-template-columns: 3.8rem 1fr; gap: .5rem; }
-.architecture-attention-screen .architecture-attention-symbols dt{ color: #9a3d2f; font: 800 .72rem ui-monospace, monospace; }
+.architecture-attention-screen .architecture-attention-symbols dt{ color: #9a3d2f; font-size: .72rem; font-weight: 800; }
 .architecture-attention-screen .architecture-attention-symbols dd{ margin: 0; color: var(--attention-muted); font-size: .69rem; }
 .architecture-attention-screen .architecture-attention-facts{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .architecture-attention-screen .architecture-attention-facts div{ padding: .5rem; border-top: 1px solid var(--attention-hairline); }
 .architecture-attention-screen .architecture-attention-facts dt{ color: var(--attention-muted); font-size: .7rem; }
+.architecture-attention-screen .architecture-full-qkv-label{ display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem; }
 .architecture-attention-screen .architecture-attention-facts dd{ margin: .2rem 0 0; font: 800 .8rem ui-monospace, monospace; }
 .architecture-attention-screen .architecture-attention-operation{ display: grid; gap: .5rem; padding-top: .75rem; border-top: 1px solid var(--attention-hairline); }
 .architecture-attention-screen .architecture-attention-operation > span{ color: var(--attention-muted); font-size: .72rem; font-weight: 750; }
-.architecture-attention-screen .architecture-attention-operation code{ overflow-wrap: anywhere; font: .72rem/1.55 ui-monospace, monospace; }
-.architecture-attention-screen .architecture-attention-operation p{ color: var(--attention-muted); font-size: .76rem; line-height: 1.55; }
+.architecture-attention-screen .architecture-symbolic-shape,
+.architecture-attention-screen .architecture-actual-shape{ overflow-wrap: anywhere; font-size: .72rem; line-height: 1.55; }
+.architecture-attention-screen .architecture-attention-operation p{ color: var(--attention-muted); font-size: .76rem; line-height: 1.55; overflow-wrap: anywhere; word-break: keep-all; }
 .architecture-attention-screen .architecture-mask-conditions{ display: grid; gap: .25rem; padding: .5rem; border: 1px solid var(--attention-hairline); border-radius: 10px; }
+.architecture-attention-screen .architecture-mask-conditions > span{ display: flex; align-items: baseline; gap: .2rem; font-size: .72rem; }
+.architecture-attention-screen .architecture-figure figcaption [role="math"]{ display: inline-flex; }
 @media (max-width: 1099px) { .architecture-attention-screen .architecture-attention-grid{ grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 767px) { .architecture-attention-screen .architecture-intro, .architecture-attention-screen .architecture-attention-toolbar { align-items: stretch; flex-direction: column; } .architecture-attention-screen .architecture-attention-selectors{ flex-wrap: wrap; } }

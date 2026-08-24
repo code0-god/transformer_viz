@@ -64,6 +64,7 @@ def verify_notation(
         root["repeatedBlock"]
         and root["hiddenInput"]
         and root["hiddenOutput"]
+        and root["modelWidth"]
         and root["finalRelation"],
         f"root notation: {root}",
     )
@@ -76,7 +77,12 @@ def verify_notation(
     dispatch_click(browser, '[data-node-id="transformer-block"]')
     block = cdp.evaluate(session, BLOCK_NOTATION_PROBE, True)
     require(
-        block["input"] and block["residual1"] and block["output"] and block["formulas"],
+        block["input"]
+        and block["residual1"]
+        and block["output"]
+        and block["formulas"]
+        and block["layerCount"]
+        and block["captionFormulas"],
         f"block notation: {block}",
     )
     require(
@@ -103,6 +109,8 @@ def verify_notation(
         score["selectedNode"] == "attention-scores"
         and "Score MatMul" in score["operationCopy"]
         and score["operationFormulaTex"] == r"S_h = Q_h K_h^{\mathsf T}"
+        and score["operationSymbolicTex"]
+        == r"[T,D]\mathbin{@}[D,T]\to[T,T]"
         and "Symbolic shape" in score["operationCopy"]
         and "Current shape" in score["operationCopy"]
         and "실행 후 표시" in score["operationCopy"],

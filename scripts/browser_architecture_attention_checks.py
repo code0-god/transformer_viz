@@ -72,6 +72,16 @@ def verify_structure(detail: dict[str, Any], mobile: bool) -> None:
         and detail["formula"],
         f"canonical attention notation: {detail}",
     )
+    require(
+        detail["connectorFormula"]
+        and detail["captionFormulaCount"] == 2
+        and detail["inputFormula"]
+        and detail["symbolFormulaCount"] == 12
+        and detail["factFormulaCount"] == 7
+        and detail["plainMathCodeCount"] == 0
+        and detail["plainConnectorLabelCount"] == 0,
+        f"complete attention math surface: {detail}",
+    )
     require(detail["formulaMaxHeight"] < 40, f"fragmented attention formula: {detail}")
     require(not detail["actualShapeInDiagram"], f"actual shape leaked into diagram: {detail}")
     require(not detail["legacyNotation"], f"legacy notation rendered: {detail}")

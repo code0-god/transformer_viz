@@ -1,7 +1,7 @@
 import katex from "katex";
 import { useLayoutEffect, useRef } from "react";
 
-import type { FormulaDefinition, FormulaId } from "./formulaCatalog";
+import type { FormulaDefinition } from "./formulaCatalog";
 
 export interface MathFormulaProps {
   readonly formula: FormulaDefinition;
@@ -9,7 +9,7 @@ export interface MathFormulaProps {
   readonly className?: string;
 }
 
-const reportedFormulaErrors = new Set<FormulaId>();
+const reportedFormulaErrors = new Set<FormulaDefinition["id"]>();
 
 function reportFormulaError(formula: FormulaDefinition): void {
   if (import.meta.env.DEV && !reportedFormulaErrors.has(formula.id)) {

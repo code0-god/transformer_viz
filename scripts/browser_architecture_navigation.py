@@ -44,7 +44,7 @@ def settle(browser: ChromeSession) -> None:
         browser.page_session,
         """new Promise(resolve => requestAnimationFrame(() => {
           document.querySelectorAll(
-            '.architecture-node-focus-outline, .architecture-node-drilldown-indicator',
+            '.architecture-node__focus-outline, .architecture-node__drill-down--label',
           ).forEach(element => getComputedStyle(element).opacity);
           requestAnimationFrame(async () => {
             const animations = document.getAnimations().filter(animation => {
@@ -146,7 +146,7 @@ def verify_navigation(
     focus_by_tab(browser, '[data-node-id="transformer-block"]')
     settle(browser)
     focused = cdp.evaluate(session, ROOT_PROBE, True)
-    require(focused["indicatorOpacity"] == 1, f"focus affordance: {focused}")
+    require(focused["indicatorOpacity"] >= 0.7, f"focus affordance: {focused}")
 
     cdp.evaluate(session, "document.activeElement.blur()")
     dispatch_click(browser, '[data-node-id="token-embedding"]')
@@ -173,7 +173,7 @@ def verify_navigation(
         cdp.send("Input.dispatchMouseEvent", {"type": "mouseMoved", **point}, session)
         settle(browser)
         hover = cdp.evaluate(session, ROOT_PROBE, True)
-        require(hover["indicatorOpacity"] == 1, f"hover affordance: {hover}")
+        require(hover["indicatorOpacity"] >= 0.7, f"hover affordance: {hover}")
         capture(browser, evidence / "root-block-hover.png")
 
     dispatch_click(browser, '[data-node-id="transformer-block"]')

@@ -9,12 +9,22 @@ ROOT_NOTATION_PROBE = r"""
   };
   const svg = required('[data-testid="architecture-root"].architecture-diagram');
   const text = svg.textContent.replace(/\s+/g, ' ').trim();
+  const formula = id => required(
+    `[data-formula-id="${id}"] annotation[encoding="application/x-tex"]`,
+  ).textContent.trim();
   return {
     root: true,
     repeatedBlock: text.includes('Transformer Block × 2'),
-    hiddenInput: text.includes('Hidden State X₀') && text.includes('[T, C]'),
-    hiddenOutput: text.includes('Hidden State X_N [T, C]'),
-    finalRelation: Boolean(document.querySelector('[data-connector="add2-to-final"]')),
+    hiddenInput: text.includes('Hidden State X₀') &&
+      formula('hidden-state') === String.raw`X_0 = E_{\mathrm{tok}} + E_{\mathrm{pos}}`,
+    hiddenOutput: formula('root-output-state') ===
+      String.raw`\text{Hidden State }X_N\;[T,C]`,
+    modelWidth: required(
+      '[data-testid="architecture-model-width"] ' +
+        'annotation[encoding="application/x-tex"]',
+    ).textContent.trim() === String.raw`d_{\mathrm{model}} = 64`,
+    finalRelation: formula('final-layer-norm') ===
+      String.raw`X_{\mathrm{final}} = \operatorname{LN}_f(X_N)`,
     legacyNotation: ['Hidden State x₀', 'Q × K', '× V', 'Block Input x', 'x′']
       .some(value => text.includes(value)),
     mixedShape: ['[T, C] =', '[H, T, D] =', '[T, 64]']
@@ -41,24 +51,50 @@ BLOCK_NOTATION_PROBE = r"""
   const text = detail.textContent.replace(/\s+/g, ' ').trim();
   const svgText = required('.architecture-detail-diagram').textContent
     .replace(/\s+/g, ' ').trim();
+  const formula = id => required(
+    `.architecture-detail-diagram [data-formula-id="${id}"] ` +
+      'annotation[encoding="application/x-tex"]',
+  ).textContent.trim();
+  const panelFormulas = [
+    ...document.querySelectorAll(
+      '.architecture-annotation annotation[encoding="application/x-tex"]',
+    ),
+  ].map(element => element.textContent.trim());
   const formulaHeights = [
     ...document.querySelectorAll('.architecture-annotation [role="math"]'),
   ].map(element => element.getBoundingClientRect().height);
+  const captionFormulas = [
+    ...document.querySelectorAll(
+      '.architecture-detail-figure figcaption ' +
+        'annotation[encoding="application/x-tex"]',
+    ),
+  ].map(element => element.textContent.trim());
   return {
     block: true,
-    input: svgText.includes('Block Input') && svgText.includes('X_in [T, C]'),
+    input: svgText.includes('Block Input') &&
+      formula('block-input-state') === String.raw`X_{\mathrm{in}}\;[T,C]`,
     residual1: svgText.includes('Residual 1') &&
-      svgText.includes('X_res1 = X_in + Y_attn'),
+      formula('residual-1') ===
+        String.raw`X_{\mathrm{res1}} = X_{\mathrm{in}} + Y_{\mathrm{attn}}`,
     output: svgText.includes('Block Output') &&
-      svgText.includes('X_out = X_res1 + Y_MLP'),
+      formula('residual-2') ===
+        String.raw`X_{\mathrm{out}} = X_{\mathrm{res1}} + Y_{\mathrm{MLP}}`,
     formulas: [
-      'X_LN1 = LN1(X_in)',
-      'Y_attn = Attention(X_LN1)',
-      'X_res1 = X_in + Y_attn',
-      'X_LN2 = LN2(X_res1)',
-      'Y_MLP = MLP(X_LN2)',
-      'X_out = X_res1 + Y_MLP',
-    ].every(value => text.includes(value)),
+      String.raw`X_{\mathrm{LN1}} = \operatorname{LN1}(X_{\mathrm{in}})`,
+      String.raw`Y_{\mathrm{attn}} = \operatorname{Attention}(X_{\mathrm{LN1}})`,
+      String.raw`X_{\mathrm{res1}} = X_{\mathrm{in}} + Y_{\mathrm{attn}}`,
+      String.raw`X_{\mathrm{LN2}} = \operatorname{LN2}(X_{\mathrm{res1}})`,
+      String.raw`Y_{\mathrm{MLP}} = \operatorname{MLP}(X_{\mathrm{LN2}})`,
+      String.raw`X_{\mathrm{out}} = X_{\mathrm{res1}} + Y_{\mathrm{MLP}}`,
+    ].every(value => panelFormulas.includes(value)),
+    layerCount: required(
+      '[data-testid="architecture-model-layer-count"] ' +
+        'annotation[encoding="application/x-tex"]',
+    ).textContent.trim() === String.raw`n_{\mathrm{layer}} = 2`,
+    captionFormulas: [
+      String.raw`X_{\mathrm{res1}} = X_{\mathrm{in}} + Y_{\mathrm{attn}}`,
+      String.raw`X_{\mathrm{out}} = X_{\mathrm{res1}} + Y_{\mathrm{MLP}}`,
+    ].every(value => captionFormulas.includes(value)),
     formulaMaxHeight: Math.max(0, ...formulaHeights),
     firstResidual: required('[data-connector="input-to-residual1"]').getAttribute('d'),
     secondResidual: required('[data-connector="x-prime-to-residual2"]').getAttribute('d'),

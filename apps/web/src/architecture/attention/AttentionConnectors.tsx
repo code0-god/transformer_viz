@@ -1,3 +1,5 @@
+import { ArchitectureCanvasFormula } from "../ArchitectureNode";
+
 type LineProps = {
   readonly name: string;
   readonly x1: number;
@@ -45,9 +47,14 @@ export function AttentionConnectors() {
         d="M 360 942 V 980 H 470 V 1010"
       />
       <FlowPath name="value-heads-to-aggregation" d="M 760 452 V 1046 H 620" />
-      <text className="architecture-attention-connector-label" x={776} y={742}>
-        V_h [T, D]
-      </text>
+      <ArchitectureCanvasFormula
+        className="architecture-attention-connector-formula"
+        formulaId="attention-value-edge"
+        x={760}
+        y={714}
+        width={150}
+        height={28}
+      />
       <FlowLine
         name="aggregation-to-head-outputs"
         x1={470}

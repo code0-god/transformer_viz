@@ -1,4 +1,5 @@
-import { ATTENTION_VALUE_CAPTION } from "../../domain/notation";
+import { formulaCatalog } from "../../math/formulaCatalog";
+import { MathFormula } from "../../math/MathFormula";
 import type { ArchitectureNodeId } from "../catalog";
 import { AttentionConnectors } from "./AttentionConnectors";
 import { OperationNode, SplitHeadsNode, StateNode } from "./AttentionNodes";
@@ -62,8 +63,8 @@ export function AttentionDiagram({
           <desc id="attention-detail-svg-desc">
             LN1 output enters one combined QKV projection. Query and Key form
             scaled, causally masked probabilities. Value joins only at
-            aggregation. Head outputs merge and pass through c_proj to Attention
-            Output.
+            aggregation. Head outputs merge and pass through output projection
+            to Attention Output.
           </desc>
           <defs>
             <marker
@@ -82,7 +83,7 @@ export function AttentionDiagram({
           <StateNode
             bounds={geometry.input}
             title="Attention Input X"
-            subtitle="[T, C]"
+            formulaId="attention-input-state"
           />
           {operations.slice(0, 4).map(([id, className, bounds]) => (
             <OperationNode
@@ -94,9 +95,18 @@ export function AttentionDiagram({
               onSelectNode={onSelectNode}
             />
           ))}
-          <SplitHeadsNode bounds={geometry.querySplit} />
-          <SplitHeadsNode bounds={geometry.keySplit} />
-          <SplitHeadsNode bounds={geometry.valueSplit} />
+          <SplitHeadsNode
+            bounds={geometry.querySplit}
+            formulaId="attention-query-heads"
+          />
+          <SplitHeadsNode
+            bounds={geometry.keySplit}
+            formulaId="attention-key-heads"
+          />
+          <SplitHeadsNode
+            bounds={geometry.valueSplit}
+            formulaId="attention-value-heads"
+          />
           {operations.slice(4, 9).map(([id, className, bounds]) => (
             <OperationNode
               key={id}
@@ -110,7 +120,7 @@ export function AttentionDiagram({
           <StateNode
             bounds={geometry.headOutputs}
             title="Head Outputs"
-            subtitle="Y [H, T, D]"
+            formulaId="attention-head-outputs"
           />
           {operations.slice(9).map(([id, className, bounds]) => (
             <OperationNode
@@ -125,12 +135,21 @@ export function AttentionDiagram({
           <StateNode
             bounds={geometry.output}
             title="Attention Output"
-            subtitle="Y_attn [T, C]"
+            formulaId="attention-output-state"
           />
           <AttentionConnectors />
         </svg>
       </section>
-      <figcaption>{ATTENTION_VALUE_CAPTION}</figcaption>
+      <figcaption className="architecture-math-caption">
+        <MathFormula formula={formulaCatalog["attention-value-edge"]} />
+        <span>
+          는 score 계산에 참여하지 않고, Softmax 이후 Value MatMul에서
+        </span>
+        <MathFormula
+          formula={formulaCatalog["attention-symbol-probabilities"]}
+        />
+        <span>와 결합합니다.</span>
+      </figcaption>
     </figure>
   );
 }

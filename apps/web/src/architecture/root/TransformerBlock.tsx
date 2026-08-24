@@ -81,6 +81,9 @@ export function TransformerBlock({
       bounds={{ ...BLOCK, radius: 16 }}
       selected={selected}
       onActivate={onActivate}
+      drillDownIndicator={{
+        label: "자세히 보기 ›",
+      }}
     >
       <g
         className={`architecture-block-group architecture-interactive-node architecture-interactive-node--drill-down${selected ? " is-selected" : ""}`}
@@ -146,14 +149,6 @@ export function TransformerBlock({
           data-connector="add1-output-to-add2"
           d={`M ${CENTER_X} ${junction2.y} H ${RESIDUAL_RAIL_X} V ${add2.y} H ${CENTER_X + add2.radius}`}
         />
-        <text
-          className="architecture-node-drilldown-indicator"
-          x={BLOCK.x + BLOCK.width - 20}
-          y={BLOCK.y + 30}
-          textAnchor="end"
-        >
-          자세히 ›
-        </text>
       </g>
     </ArchitectureNode>
   );

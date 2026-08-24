@@ -176,9 +176,40 @@ describe("TransformerBlockDetail", () => {
   });
 
   test("renders catalog formulas through the math surface", () => {
-    renderDetail();
+    const { container } = renderDetail();
     const panel = screen.getByTestId("architecture-block-equations");
-    expect(panel.querySelectorAll('[role="math"]')).toHaveLength(6);
-    expect(panel.querySelectorAll(".katex")).toHaveLength(6);
+    expect(panel.querySelectorAll('[role="math"]')).toHaveLength(7);
+    expect(panel.querySelectorAll(".katex")).toHaveLength(7);
+    expect(
+      screen
+        .getByTestId("architecture-model-layer-count")
+        .querySelector(".katex"),
+    ).not.toBeNull();
+    const diagram = container.querySelector(".architecture-detail-diagram");
+    expect(
+      diagram?.querySelectorAll(".architecture-node-formula"),
+    ).toHaveLength(7);
+    expect(
+      diagram?.querySelectorAll(".architecture-node-formula .katex"),
+    ).toHaveLength(7);
+    expect(
+      diagram?.querySelectorAll(".architecture-node-subtitle"),
+    ).toHaveLength(0);
+    expect(
+      diagram?.querySelectorAll(".architecture-node__drill-down--compact"),
+    ).toHaveLength(1);
+    expect(
+      diagram?.querySelectorAll(".architecture-node__drill-down--label"),
+    ).toHaveLength(1);
+    const drillDownLabel = diagram?.querySelector(
+      ".architecture-node__drill-down--label",
+    );
+    expect(drillDownLabel).toHaveAttribute("x", "539");
+    expect(drillDownLabel).toHaveAttribute("y", "318");
+    const caption = container.querySelector("figcaption");
+    expect(caption?.querySelectorAll('[role="math"]')).toHaveLength(2);
+    expect(caption?.querySelectorAll(".katex")).toHaveLength(2);
+    expect(caption).not.toHaveTextContent("X_res1 =");
+    expect(caption).not.toHaveTextContent("X_out =");
   });
 });

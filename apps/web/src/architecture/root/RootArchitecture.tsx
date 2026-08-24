@@ -1,6 +1,8 @@
 import type { ReactElement } from "react";
 import { repeatedBlockLabel } from "../../domain/notation";
 import type { GptConfig } from "../../generated/schema/GptConfig";
+import { MathFormula } from "../../math/MathFormula";
+import { integerParameterFormula } from "../../math/trustedFormulaBuilders";
 import type { ArchitectureNodeId } from "../catalog";
 import type { ArchitectureState } from "../state";
 import { diagramLayout, VIEW_WIDTH } from "./layout";
@@ -33,7 +35,16 @@ export function RootArchitecture({
     <section className="architecture-root-screen" aria-label="GPT Architecture">
       <p className="architecture-metadata">
         <strong>{modelName}</strong>
-        {` · ${config.n_layer} layers · ${config.n_head} heads · d_model ${config.n_embd} · context ${config.block_size}`}
+        {` · ${config.n_layer} layers · ${config.n_head} heads · `}
+        <span data-testid="architecture-model-width">
+          <MathFormula
+            formula={integerParameterFormula(
+              "root-model-width-value",
+              config.n_embd,
+            )}
+          />
+        </span>
+        {` · context ${config.block_size}`}
       </p>
       <div className="architecture-visual-grid">
         <figure className="architecture-figure">

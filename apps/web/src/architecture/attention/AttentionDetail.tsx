@@ -119,7 +119,7 @@ export function AttentionDetail(props: AttentionDetailProps) {
             Self-Attention
           </h2>
           <p>
-            combined QKV projection부터 c_proj output까지 causal attention의
+            combined QKV projection부터 output projection까지 causal attention의
             실제 연산 순서입니다.
           </p>
         </div>

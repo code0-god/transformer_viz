@@ -1,5 +1,7 @@
 .architecture-block-screen,
 .architecture-block-screen .architecture-detail {
+  --architecture-node-formula-color: var(--ink-muted, #625f59);
+  --architecture-node-hint-color: var(--accent, #315d99);
   display: grid;
   gap: var(--s4, 1rem);
 }
@@ -56,6 +58,8 @@
 .architecture-block-screen .architecture-detail-toolbar > div > p:last-child {
   color: var(--ink-muted, #625f59);
   font-size: 0.8rem;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
 .architecture-block-screen .architecture-back-button {
@@ -157,12 +161,6 @@
   pointer-events: none;
 }
 
-.architecture-block-screen .architecture-detail-diagram .architecture-node-subtitle {
-  fill: var(--ink-muted, #625f59);
-  font-size: 12px;
-  font-weight: 550;
-}
-
 .architecture-block-screen .architecture-detail-state rect {
   fill: var(--surface, #fff);
   stroke: var(--hairline, #d8d3ca);
@@ -216,7 +214,13 @@
 .architecture-block-screen .architecture-figure figcaption {
   color: var(--ink-muted, #625f59);
   font-size: 0.72rem;
+  overflow-wrap: anywhere;
   text-align: center;
+  word-break: keep-all;
+}
+
+.architecture-block-screen .architecture-figure figcaption .katex {
+  font-size: 1em;
 }
 
 @media (max-width: 760px) {

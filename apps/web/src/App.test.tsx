@@ -196,7 +196,9 @@ describe("production React Worker integration", () => {
       screen.getByRole("button", { name: /Causal Multi-Head Self-Attention/ }),
     );
     expect(
-      within(screen.getByLabelText("현재 모델값")).getByText("5"),
+      within(screen.getByLabelText("현재 모델값")).getByText("5", {
+        selector: "dd",
+      }),
     ).toBeInTheDocument();
   });
 

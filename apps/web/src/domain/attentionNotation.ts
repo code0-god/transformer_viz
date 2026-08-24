@@ -10,8 +10,7 @@ export const attentionNotation = {
     symbolicInput: "[T, C]",
     symbolicOutput: "[T, 3C]",
     accessibleName: "QKV Projection, 하나의 Linear layer",
-    description:
-      "하나의 Linear C to 3C 연산이 combined tensor Z_qkv를 만듭니다.",
+    description: "하나의 Linear 연산이 combined QKV tensor를 만듭니다.",
   },
   "attention-query": {
     id: "attention-query",
@@ -78,7 +77,7 @@ export const attentionNotation = {
     symbolicInput: "[T, T]",
     symbolicOutput: "[T, T]",
     accessibleName: "Causal Mask, 미래 token position 차단",
-    description: "j가 i보다 큰 미래 위치의 score를 차단합니다.",
+    description: "현재 Query보다 뒤인 미래 위치의 score를 차단합니다.",
   },
   "attention-softmax": {
     id: "attention-softmax",
@@ -89,7 +88,8 @@ export const attentionNotation = {
     symbolicInput: "[T, T]",
     symbolicOutput: "[T, T]",
     accessibleName: "Softmax, attention probability 정규화",
-    description: "허용된 score를 attention probability A_h로 정규화합니다.",
+    description:
+      "허용된 score를 선택한 head의 attention probability로 정규화합니다.",
   },
   "attention-value-aggregation": {
     id: "attention-value-aggregation",
@@ -101,7 +101,7 @@ export const attentionNotation = {
     symbolicOutput: "[T, D]",
     accessibleName: "Value MatMul, attention probability와 Value의 행렬곱",
     description:
-      "Attention probability와 Value를 행렬곱해 head output Y_h를 만듭니다.",
+      "Attention probability와 Value를 행렬곱해 선택한 head output을 만듭니다.",
   },
   "attention-merge-heads": {
     id: "attention-merge-heads",
@@ -113,7 +113,7 @@ export const attentionNotation = {
     symbolicOutput: "[T, C]",
     accessibleName: "Merge Heads, head output 연결과 reshape",
     description:
-      "Head output을 더하지 않고 Concat한 뒤 model dimension C로 reshape합니다.",
+      "Head output을 더하지 않고 Concat한 뒤 model dimension으로 reshape합니다.",
   },
   "attention-output-projection": {
     id: "attention-output-projection",
@@ -124,7 +124,6 @@ export const attentionNotation = {
     symbolicInput: "[T, C]",
     symbolicOutput: "[T, C]",
     accessibleName: "Output Projection, Linear C to C",
-    description:
-      "c_proj Linear layer가 최종 attention output Y_attn을 만듭니다.",
+    description: "Output projection이 최종 attention output을 만듭니다.",
   },
 } satisfies Readonly<Record<string, NotationEntry>>;

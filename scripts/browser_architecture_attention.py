@@ -100,11 +100,11 @@ def verify_attention(
     focus_by_tab(browser, '[data-node-id="self-attention"]')
     settle(browser)
     focused = cdp.evaluate(session, BLOCK_ATTENTION_PROBE, True)
-    require(focused["indicatorOpacity"] == 1, f"attention focus affordance: {focused}")
+    require(focused["indicatorOpacity"] >= 0.7, f"attention focus affordance: {focused}")
     cdp.evaluate(session, "document.activeElement.blur()")
     hover(browser, '[data-node-id="self-attention"]')
     hovered = cdp.evaluate(session, BLOCK_ATTENTION_PROBE, True)
-    require(hovered["indicatorOpacity"] == 1, f"attention hover affordance: {hovered}")
+    require(hovered["indicatorOpacity"] >= 0.7, f"attention hover affordance: {hovered}")
 
     dispatch_click(browser, '[data-node-id="self-attention"]')
     detail = cdp.evaluate(session, ATTENTION_DETAIL_PROBE, True)

@@ -1,4 +1,6 @@
 .architecture-root-screen {
+  --architecture-node-formula-color: var(--ink-muted, #756b5d);
+  --architecture-node-hint-color: var(--accent, #b5533c);
   color: var(--ink, #352e22);
 }
 
@@ -9,6 +11,8 @@
 }
 
 .architecture-root-screen .architecture-metadata strong{ color: var(--ink, #352e22); }
+.architecture-root-screen .architecture-metadata [role="math"]{ display: inline-flex; align-items: center; }
+.architecture-root-screen .architecture-metadata .katex{ font-size: 1em; }
 
 .architecture-root-screen .architecture-visual-grid {
   display: grid;
@@ -33,7 +37,14 @@
 .architecture-root-screen .architecture-annotation strong,
 .architecture-root-screen .architecture-annotation li > span{ display: block; }
 .architecture-root-screen .architecture-annotation strong{ font-size: 0.82rem; }
-.architecture-root-screen .architecture-annotation li > span{ margin-block-start: 0.25rem; color: var(--ink-muted, #756b5d); font-size: 0.76rem; line-height: 1.55; }
+.architecture-root-screen .architecture-annotation li > span{
+  margin-block-start: 0.25rem;
+  color: var(--ink-muted, #756b5d);
+  font-size: 0.76rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
 
 .architecture-root-screen .architecture-figure { display: grid; gap: var(--s2, 0.5rem); min-inline-size: 0; }
 .architecture-root-screen .architecture-svg-scroll {
@@ -58,7 +69,6 @@
   font-weight: 750;
   pointer-events: none;
 }
-.architecture-root-screen .architecture-diagram .architecture-node-subtitle{ fill: var(--ink-muted, #756b5d); font-size: 12px; font-weight: 550; }
 .architecture-root-screen .architecture-node > g.architecture-node > rect:not(.architecture-node-focus-outline){ fill: var(--surface, #fffaf0); stroke: var(--line, #9c8f7b); stroke-width: 1.5; }
 .architecture-root-screen .architecture-node > g.architecture-node-input > rect:not(.architecture-node-focus-outline){ fill: var(--projection-soft, #eee4f5); stroke: #9d83bd; }
 .architecture-root-screen .architecture-node > g.architecture-node-embedding > rect:not(.architecture-node-focus-outline){ fill: var(--embedding-soft, #e5f0df); stroke: #78a27d; }
@@ -107,17 +117,17 @@
 .architecture-root-screen .architecture-diagram text.architecture-forward-subtitle,
 .architecture-root-screen .architecture-diagram text.architecture-repeat-subtitle{ fill: var(--ink-muted, #756b5d); letter-spacing: 0; }
 .architecture-root-screen .architecture-diagram text.architecture-repeat-label{ fill: var(--ready, #56834e); font-weight: 850; }
-.architecture-root-screen .architecture-diagram text.architecture-edge-state{ fill: var(--ink-muted, #756b5d); font-size: 11px; font-weight: 750; }
+.architecture-root-screen .architecture-edge-state{ color: var(--ink-muted, #756b5d); }
 
-.architecture-root-screen .architecture-diagram text.architecture-node-drilldown-indicator,
-.architecture-root-screen .architecture-diagram text.architecture-node__drill-down{ fill: var(--accent, #b5533c); font-size: 12px; font-weight: 800; opacity: 0; }
-.architecture-root-screen .architecture-node:hover .architecture-node-drilldown-indicator,
-.architecture-root-screen .architecture-node:focus-visible .architecture-node-drilldown-indicator,
-.architecture-root-screen .architecture-node.is-selected .architecture-node-drilldown-indicator,
-.architecture-root-screen .architecture-node:hover .architecture-node__drill-down,
-.architecture-root-screen .architecture-node:focus-visible .architecture-node__drill-down,
-.architecture-root-screen .architecture-node.is-selected .architecture-node__drill-down{ opacity: 1; }
-.architecture-root-screen .architecture-figure figcaption { padding-block-start: var(--s2, 0.5rem); border-block-start: 1px solid var(--hairline, #d8cdb9); color: var(--ink-muted, #756b5d); font-size: 0.72rem; text-align: center; word-break: keep-all; }
+.architecture-root-screen .architecture-figure figcaption {
+  padding-block-start: var(--s2, 0.5rem);
+  border-block-start: 1px solid var(--hairline, #d8cdb9);
+  color: var(--ink-muted, #756b5d);
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+  text-align: center;
+  word-break: keep-all;
+}
 
 @media (max-width: 68rem) {
   .architecture-root-screen .architecture-visual-grid { grid-template-columns: minmax(0, 1fr); }

@@ -2,6 +2,7 @@ import { notationCatalog, repeatedBlockLabel } from "../../domain/notation";
 import type { GptConfig } from "../../generated/schema/GptConfig";
 import { formulaCatalog } from "../../math/formulaCatalog";
 import { MathFormula } from "../../math/MathFormula";
+import { integerParameterFormula } from "../../math/trustedFormulaBuilders";
 import type { ArchitectureNodeId } from "../catalog";
 import type { ArchitectureView } from "../state";
 import { BlockDiagram } from "./BlockDiagram";
@@ -129,7 +130,14 @@ export function TransformerBlockDetail({
             <h3>Transformer Block</h3>
             <p className="architecture-detail-layer">
               <span>현재 모델</span>
-              <strong>n_layer = {layerCount}</strong>
+              <strong data-testid="architecture-model-layer-count">
+                <MathFormula
+                  formula={integerParameterFormula(
+                    "block-layer-count-value",
+                    layerCount,
+                  )}
+                />
+              </strong>
               <span>선택 Layer {selectedLayer}</span>
             </p>
             <ol>

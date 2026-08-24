@@ -8,7 +8,9 @@ BLOCK_ATTENTION_PROBE = r"""
     return element;
   };
   const node = required('[data-node-id="self-attention"]');
-  const indicator = required('.architecture-node__drill-down');
+  const indicator = required(
+    '[data-node-id="self-attention"] .architecture-node__drill-down--label',
+  );
   const outline = required('.architecture-node__focus-outline');
   return {
     block: Boolean(document.querySelector('[data-testid="architecture-detail"]')),
@@ -55,9 +57,14 @@ ATTENTION_DETAIL_PROBE = r"""
   const y = id => Number(required(`[data-node-id="${id}"] rect`).getAttribute('y'));
   const nodeText = id => required(`[data-node-id="${id}"]`).textContent
     .replace(/\s+/g, ' ').trim();
-  const factValue = label => {
-    const term = [...document.querySelectorAll('.architecture-attention-facts dt')]
-      .find(element => element.textContent.trim() === label);
+  const nodeFormula = id => required(
+    `[data-node-id="${id}"] annotation[encoding="application/x-tex"]`,
+  ).textContent.trim();
+  const factValue = accessibleLabel => {
+    const formula = document.querySelector(
+      `.architecture-attention-facts dt [aria-label="${accessibleLabel}"]`,
+    );
+    const term = formula?.closest('dt');
     return term?.nextElementSibling?.textContent.trim() ?? null;
   };
   const qkvStarts = ['qkv-to-query', 'qkv-to-key', 'qkv-to-value'].map(name => point(name));
@@ -91,6 +98,10 @@ ATTENTION_DETAIL_PROBE = r"""
     operationFormulaTex: document.querySelector(
       '[data-testid="attention-operation-copy"] annotation[encoding="application/x-tex"]',
     )?.textContent.trim() ?? null,
+    operationSymbolicTex: document.querySelector(
+      '[data-testid="attention-operation-copy"] ' +
+        '.architecture-symbolic-shape annotation[encoding="application/x-tex"]',
+    )?.textContent.trim() ?? null,
     qkvStarts,
     qToScoresEnd: point('query-heads-to-scores', true),
     kToScoresEnd: point('key-heads-to-scores', true),
@@ -106,25 +117,48 @@ ATTENTION_DETAIL_PROBE = r"""
     ).length,
     splitHeadNodes: document.querySelectorAll('.architecture-attention-split').length,
     currentValues: {
-      t: factValue('T'),
-      c: factValue('C'),
-      h: factValue('H'),
-      d: factValue('D'),
-      scale: factValue('1 / √D'),
+      t: factValue('Sequence length T'),
+      c: factValue('Model dimension C'),
+      h: factValue('Attention head count H'),
+      d: factValue('Head dimension D'),
+      scale: factValue('One divided by square root of head dimension D'),
     },
     symbolSections: [...document.querySelectorAll('.architecture-notation-section h4')]
       .map(element => element.textContent.trim()),
-    qkvShape: nodeText('attention-qkv-projection').includes(
-      'Linear: [T, C] → [T, 3C]',
-    ),
+    qkvShape: nodeFormula('attention-qkv-projection') ===
+      String.raw`Z_{\mathrm{qkv}} = \operatorname{Linear}_{\mathrm{qkv}}(X)`,
     scoreMatmul: nodeText('attention-scores').includes('Score MatMul') &&
-      nodeText('attention-scores').includes('S_h = Q_h @ K_hᵀ'),
+      nodeFormula('attention-scores') === String.raw`S_h = Q_h K_h^{\mathsf T}`,
     valueMatmul: nodeText('attention-value-aggregation').includes('Value MatMul') &&
-      nodeText('attention-value-aggregation').includes('Y_h = A_h @ V_h'),
-    scaleSymbolic: nodeText('attention-scale').includes('S_h / √D'),
+      nodeFormula('attention-value-aggregation') === String.raw`Y_h = A_h V_h`,
+    scaleSymbolic: nodeFormula('attention-scale') ===
+      String.raw`S_h^{\mathrm{scaled}} = \frac{S_h}{\sqrt D}`,
     formula: Boolean(document.querySelector(
       '[role="math"][aria-label="Self-Attention summary"] .katex-mathml math',
     )),
+    connectorFormula: required(
+      '[data-formula-id="attention-value-edge"] ' +
+        'annotation[encoding="application/x-tex"]',
+    ).textContent.trim() === String.raw`V_h\;[T,D]`,
+    captionFormulaCount: document.querySelectorAll(
+      '.architecture-attention-figure figcaption [role="math"] .katex',
+    ).length,
+    inputFormula: required(
+      '.architecture-attention-input-definition ' +
+        'annotation[encoding="application/x-tex"]',
+    ).textContent.trim() === String.raw`X = X_{\mathrm{LN1}}`,
+    symbolFormulaCount: document.querySelectorAll(
+      '.architecture-attention-symbols dt [role="math"] .katex',
+    ).length,
+    factFormulaCount: document.querySelectorAll(
+      '.architecture-attention-facts dt [role="math"] .katex',
+    ).length,
+    plainMathCodeCount: document.querySelectorAll(
+      '.architecture-attention-operation code',
+    ).length,
+    plainConnectorLabelCount: document.querySelectorAll(
+      '.architecture-attention-connector-label',
+    ).length,
     formulaMaxHeight: Math.max(0, ...formulaHeights),
     actualShapeInDiagram: /\b64\b|\b16\b|\[4,/.test(diagramText),
     legacyNotation: /Q × K|× V|1 \/ √16|\[T, C\] =|\[H, T, D\] =/.test(

@@ -19,7 +19,9 @@ ROOT_PROBE = r"""
     return element;
   };
   const block = required('[data-node-id="transformer-block"]');
-  const indicator = block.querySelector('.architecture-node-drilldown-indicator');
+  const indicator = required(
+    '[data-node-id="transformer-block"] .architecture-node__drill-down--label',
+  );
   const outline = required('.architecture-node__focus-outline');
   return {
     root: Boolean(document.querySelector('[data-testid="architecture-root"]')),

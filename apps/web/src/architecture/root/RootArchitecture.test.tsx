@@ -53,7 +53,35 @@ describe("RootArchitecture", () => {
     ).toHaveLength(11);
     expect(
       container.querySelectorAll(".architecture-node-drilldown-indicator"),
+    ).toHaveLength(0);
+    expect(
+      container.querySelectorAll(".architecture-node-formula"),
+    ).toHaveLength(10);
+    expect(
+      container.querySelectorAll(".architecture-node-formula .katex"),
+    ).toHaveLength(10);
+    expect(
+      container.querySelectorAll(
+        '[data-formula-id="root-output-state"] .katex',
+      ),
     ).toHaveLength(1);
+    expect(
+      screen.getByTestId("architecture-model-width").querySelector(".katex"),
+    ).not.toBeNull();
+    expect(
+      container.querySelectorAll(".architecture-node-subtitle"),
+    ).toHaveLength(0);
+    expect(
+      container.querySelectorAll(".architecture-node__drill-down--compact"),
+    ).toHaveLength(1);
+    expect(
+      container.querySelectorAll(".architecture-node__drill-down--label"),
+    ).toHaveLength(1);
+    const drillDownLabel = container.querySelector(
+      ".architecture-node__drill-down--label",
+    );
+    expect(drillDownLabel).toHaveAttribute("x", "724");
+    expect(drillDownLabel).toHaveAttribute("y", "812");
     expect(container.querySelector("#architecture-arrow")).toHaveAttribute(
       "refX",
       "10",
@@ -131,6 +159,23 @@ describe("RootArchitecture", () => {
     ).toHaveLength(1);
     expect(container.querySelectorAll(".architecture-edge-state")).toHaveLength(
       1,
+    );
+    expect(container.querySelector(".architecture-edge-state")).toHaveAttribute(
+      "data-formula-id",
+      "root-output-state",
+    );
+    expect(container.querySelector(".architecture-edge-state")).toHaveClass(
+      "architecture-node-formula-slot",
+    );
+    expect(
+      container.querySelector(".architecture-edge-state text"),
+    ).not.toBeInTheDocument();
+    expect(
+      container.querySelector(".architecture-edge-state .katex"),
+    ).not.toBeNull();
+    expect(container.querySelector(".architecture-edge-state")).toHaveAttribute(
+      "x",
+      "340",
     );
   });
 

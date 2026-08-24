@@ -33,6 +33,72 @@
   opacity: 0.55;
 }
 
+.architecture-node-formula-slot,
 .architecture-node__drill-down {
   pointer-events: none;
+}
+
+.architecture-node-formula-slot {
+  overflow: visible;
+}
+
+.architecture-node-formula-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+  color: var(--architecture-node-formula-color, currentColor);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.architecture-node-formula {
+  display: inline-flex;
+  align-items: center;
+  max-inline-size: 100%;
+}
+
+.architecture-node-formula .katex,
+.architecture-canvas-formula .katex {
+  font-size: 1em;
+  line-height: 1.1;
+}
+
+.architecture-math-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.architecture-node__drill-down text {
+  fill: var(--architecture-node-hint-color, currentColor);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+.architecture-node__drill-down--compact {
+  opacity: 0.52;
+}
+
+.architecture-node__drill-down--label {
+  opacity: 0;
+}
+
+.architecture-node:hover:not(.is-disabled)
+  .architecture-node__drill-down--compact,
+.architecture-node:focus-visible .architecture-node__drill-down--compact {
+  opacity: 0;
+}
+
+.architecture-node:hover:not(.is-disabled)
+  .architecture-node__drill-down--label,
+.architecture-node:focus-visible .architecture-node__drill-down--label {
+  opacity: 0.72;
 }

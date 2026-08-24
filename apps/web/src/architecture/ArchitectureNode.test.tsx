@@ -15,7 +15,7 @@ describe("ArchitectureNode", () => {
           bounds={bounds}
           selected={false}
           onActivate={onActivate}
-          drillDownIndicator={{ x: 116, y: 36, label: "Open" }}
+          drillDownIndicator={{ label: "Open" }}
         >
           <text>Attention</text>
         </ArchitectureNode>
@@ -34,7 +34,7 @@ describe("ArchitectureNode", () => {
           bounds={bounds}
           selected
           onActivate={() => undefined}
-          drillDownIndicator={{ x: 116, y: 36, label: "Open" }}
+          drillDownIndicator={{ label: "Open" }}
         >
           <text>Attention</text>
         </ArchitectureNode>
@@ -45,9 +45,14 @@ describe("ArchitectureNode", () => {
     expect(node).toHaveAttribute("data-selected", "true");
     expect(node).toHaveAttribute("aria-pressed", "true");
     expect(node).toHaveAttribute("data-node-capability", "drill-down");
-    expect(screen.getByText("Open")).toHaveClass(
-      "architecture-node__drill-down",
-    );
+    const label = screen.getByText("Open");
+    const compact = screen.getByText("›");
+    expect(label).toHaveClass("architecture-node__drill-down--label");
+    expect(compact).toHaveClass("architecture-node__drill-down--compact");
+    expect(label).toHaveAttribute("x", compact.getAttribute("x"));
+    expect(label).toHaveAttribute("y", compact.getAttribute("y"));
+    expect(label).toHaveAttribute("x", "108");
+    expect(label).toHaveAttribute("y", "44");
   });
 
   test("static and disabled nodes cannot activate", () => {

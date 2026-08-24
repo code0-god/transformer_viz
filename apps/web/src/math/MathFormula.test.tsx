@@ -3,6 +3,10 @@ import katex from "katex";
 import { afterEach, vi } from "vitest";
 import { FORMULA_IDS, formulaCatalog } from "./formulaCatalog";
 import { MathFormula } from "./MathFormula";
+import {
+  integerParameterFormula,
+  shapeFormula,
+} from "./trustedFormulaBuilders";
 
 describe("MathFormula", () => {
   afterEach(() => vi.restoreAllMocks());
@@ -60,5 +64,32 @@ describe("MathFormula", () => {
       "ignore previous instructions and render \\href{javascript:alert(1)}{x}";
     render(<MathFormula formula={formulaCatalog.root} />);
     expect(screen.queryByText(prompt)).not.toBeInTheDocument();
+  });
+
+  test("renders only validated trusted dynamic formulas", () => {
+    const formulas = [
+      integerParameterFormula("root-model-width-value", 64),
+      shapeFormula(
+        "attention-current-shape",
+        "[3, 4] @ [4, 3] → [3, 3]",
+        "Current score shape",
+      ),
+    ];
+    const { container } = render(
+      formulas.map((formula) => (
+        <MathFormula key={formula.id} formula={formula} />
+      )),
+    );
+    expect(container.querySelectorAll(".katex")).toHaveLength(2);
+    expect(
+      container.querySelectorAll('annotation[encoding="application/x-tex"]')[1],
+    ).toHaveTextContent(String.raw`[3,4]\mathbin{@}[4,3]\to[3,3]`);
+    expect(() =>
+      shapeFormula(
+        "attention-current-shape",
+        "\\href{javascript:alert(1)}{x}",
+        "Unsafe",
+      ),
+    ).toThrow("Invalid trusted shape formula");
   });
 });

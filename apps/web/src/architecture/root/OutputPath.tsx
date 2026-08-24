@@ -1,5 +1,7 @@
+import { ArchitectureCanvasFormula } from "../ArchitectureNode";
 import type { ArchitectureNodeId } from "../catalog";
 import {
+  BLOCK,
   CENTER_X,
   type DiagramLayout,
   INPUT,
@@ -85,13 +87,14 @@ export function OutputPath({
           />
         );
       })}
-      <text
+      <ArchitectureCanvasFormula
         className="architecture-edge-state"
-        x={CENTER_X + 18}
-        y={RESIDUAL_ADDS[1].y + RESIDUAL_ADDS[1].radius + 18}
-      >
-        Hidden State X_N [T, C]
-      </text>
+        formulaId="root-output-state"
+        x={BLOCK.x + 80}
+        y={RESIDUAL_ADDS[1].y + RESIDUAL_ADDS[1].radius + 3}
+        width={CENTER_X - 18 - (BLOCK.x + 80)}
+        height={24}
+      />
       {OUTPUT_STAGES.map((stage, index) => {
         const y1 = starts[index];
         const name = CONNECTOR_NAMES[index];

@@ -1,11 +1,18 @@
+import type { ReactNode } from "react";
+
 import {
   ATTENTION_SYMBOLS,
   notationCatalog,
   symbolicShape,
 } from "../../domain/notation";
 import type { CurrentAttentionShapes } from "../../domain/shapes";
-import { formulaCatalog } from "../../math/formulaCatalog";
+import {
+  type FormulaId,
+  formulaCatalog,
+  type RuntimeFormulaId,
+} from "../../math/formulaCatalog";
 import { MathFormula } from "../../math/MathFormula";
+import { shapeFormula } from "../../math/trustedFormulaBuilders";
 import type { ArchitectureNodeId } from "../catalog";
 
 export interface AttentionAnnotationProps {
@@ -33,14 +40,55 @@ function Fact({
   label,
   value,
 }: {
-  readonly label: string;
-  readonly value: string;
+  readonly label: ReactNode;
+  readonly value: ReactNode;
 }) {
   return (
     <div>
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>
+  );
+}
+
+const attentionSymbolFormulaIds: Readonly<Record<string, FormulaId>> = {
+  T: "attention-symbol-sequence-length",
+  C: "attention-symbol-model-width",
+  H: "attention-symbol-head-count",
+  D: "attention-symbol-head-dimension",
+  h: "attention-symbol-head-index",
+  i: "attention-symbol-query-index",
+  j: "attention-symbol-key-index",
+  X: "attention-symbol-input",
+  "Q / K / V": "attention-symbol-qkv",
+  S_h: "attention-symbol-scores",
+  A_h: "attention-symbol-probabilities",
+  Y_h: "attention-symbol-head-output",
+};
+
+function SymbolFormula({ symbol }: Readonly<{ symbol: string }>) {
+  const formulaId = attentionSymbolFormulaIds[symbol];
+  if (formulaId === undefined)
+    throw new Error(`Missing attention symbol formula: ${symbol}`);
+  return <MathFormula formula={formulaCatalog[formulaId]} />;
+}
+
+function ShapeValue({
+  id,
+  value,
+  pending,
+}: Readonly<{
+  id: Extract<
+    RuntimeFormulaId,
+    "attention-head-shape" | "attention-full-head-shape"
+  >;
+  value: string | null;
+  pending: string;
+}>) {
+  return value === null ? (
+    pending
+  ) : (
+    <MathFormula formula={shapeFormula(id, value, "Current tensor shape")} />
   );
 }
 
@@ -73,7 +121,7 @@ function OperationDetail({
   }
 
   const notation = notationCatalog[id];
-  const currentShape = shapes.currentShape(id) ?? "실행 후 표시";
+  const currentShape = shapes.currentShape(id);
   return (
     <div
       className="architecture-attention-operation"
@@ -83,13 +131,37 @@ function OperationDetail({
       <MathFormula formula={formulaCatalog[id]} className="katex" />
       <p>{notation.description}</p>
       <span>Symbolic shape</span>
-      <code>{symbolicShape(notation)}</code>
+      <MathFormula
+        formula={shapeFormula(
+          "attention-symbolic-shape",
+          symbolicShape(notation),
+          `${notation.title} symbolic shape`,
+        )}
+        className="architecture-symbolic-shape"
+      />
       <span>Current shape</span>
-      <code className="architecture-actual-shape">{currentShape}</code>
+      {currentShape === null ? (
+        <span className="architecture-actual-shape">실행 후 표시</span>
+      ) : (
+        <MathFormula
+          formula={shapeFormula(
+            "attention-current-shape",
+            currentShape,
+            `${notation.title} current shape`,
+          )}
+          className="architecture-actual-shape"
+        />
+      )}
       {id === "attention-causal-mask" ? (
         <div className="architecture-mask-conditions">
-          <code>j ≤ i: score 유지</code>
-          <code>j &gt; i: 차단</code>
+          <span>
+            <MathFormula formula={formulaCatalog["attention-mask-keep"]} />
+            <span>: score 유지</span>
+          </span>
+          <span>
+            <MathFormula formula={formulaCatalog["attention-mask-block"]} />
+            <span>: 차단</span>
+          </span>
         </div>
       ) : null}
     </div>
@@ -107,7 +179,8 @@ export function AttentionAnnotation({
     <aside className="architecture-annotation architecture-attention-annotation">
       <h3>Self-Attention</h3>
       <p className="architecture-attention-input-definition">
-        X는 선택한 Transformer Block의 LayerNorm 1 출력 X_LN1입니다.
+        <MathFormula formula={formulaCatalog["attention-input-definition"]} />
+        <span>는 선택한 Transformer Block의 LayerNorm 1 출력입니다.</span>
       </p>
       <section
         className="architecture-notation-section"
@@ -117,7 +190,9 @@ export function AttentionAnnotation({
         <dl className="architecture-attention-symbols">
           {ATTENTION_SYMBOLS.map(({ symbol, meaning }) => (
             <div key={symbol}>
-              <dt>{symbol}</dt>
+              <dt>
+                <SymbolFormula symbol={symbol} />
+              </dt>
               <dd>{meaning}</dd>
             </div>
           ))}
@@ -132,21 +207,55 @@ export function AttentionAnnotation({
           <Fact label="Layer" value={String(selectedLayer)} />
           <Fact label="Head" value={String(selectedHead)} />
           <Fact
-            label="T"
+            label={<SymbolFormula symbol="T" />}
             value={
               shapes.sequenceLength === null
                 ? "—"
                 : String(shapes.sequenceLength)
             }
           />
-          <Fact label="C" value={String(shapes.modelWidth)} />
-          <Fact label="H" value={String(shapes.headCount)} />
-          <Fact label="D" value={String(shapes.headDimension)} />
-          <Fact label="1 / √D" value={String(shapes.scaleFactor)} />
-          <Fact label="Q / K / V" value={shapes.headTensor ?? pending} />
           <Fact
-            label="Full Q / K / V"
-            value={shapes.fullHeadTensor ?? pending}
+            label={<SymbolFormula symbol="C" />}
+            value={String(shapes.modelWidth)}
+          />
+          <Fact
+            label={<SymbolFormula symbol="H" />}
+            value={String(shapes.headCount)}
+          />
+          <Fact
+            label={<SymbolFormula symbol="D" />}
+            value={String(shapes.headDimension)}
+          />
+          <Fact
+            label={
+              <MathFormula formula={formulaCatalog["attention-scale-factor"]} />
+            }
+            value={String(shapes.scaleFactor)}
+          />
+          <Fact
+            label={<SymbolFormula symbol="Q / K / V" />}
+            value={
+              <ShapeValue
+                id="attention-head-shape"
+                value={shapes.headTensor}
+                pending={pending}
+              />
+            }
+          />
+          <Fact
+            label={
+              <span className="architecture-full-qkv-label">
+                <span>Full</span>
+                <SymbolFormula symbol="Q / K / V" />
+              </span>
+            }
+            value={
+              <ShapeValue
+                id="attention-full-head-shape"
+                value={shapes.fullHeadTensor}
+                pending={pending}
+              />
+            }
           />
         </dl>
       </section>

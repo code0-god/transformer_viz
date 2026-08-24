@@ -1,5 +1,5 @@
 import { notationCatalog } from "../../domain/notation";
-import { ArchitectureNode } from "../ArchitectureNode";
+import { ArchitectureNode, ArchitectureNodeFormula } from "../ArchitectureNode";
 import { type ArchitectureNodeId, architectureNodeCatalog } from "../catalog";
 import type { RectBounds } from "./layout";
 
@@ -45,14 +45,12 @@ export function StageNode({
         >
           {notation.title}
         </text>
-        <text
-          className="architecture-node-subtitle"
-          x={bounds.x + bounds.width / 2}
-          y={subtitleY}
-          textAnchor="middle"
-        >
-          {notation.diagramDetail}
-        </text>
+        <ArchitectureNodeFormula
+          formulaId={id}
+          x={bounds.x + 8}
+          y={subtitleY - 12}
+          width={bounds.width - 16}
+        />
       </g>
     </ArchitectureNode>
   );

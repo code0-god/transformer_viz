@@ -1,10 +1,33 @@
 import type { ArchitectureNodeId } from "../architecture/catalog";
 import { ATTENTION_SUMMARY, notationCatalog } from "../domain/notation";
+import {
+  INLINE_FORMULA_IDS,
+  type InlineFormulaId,
+  inlineFormulaCatalog,
+} from "./inlineFormulaCatalog";
 
-export type FormulaId = ArchitectureNodeId | "attention-summary";
+export type FormulaId =
+  | ArchitectureNodeId
+  | InlineFormulaId
+  | "attention-summary"
+  | "block-input-state"
+  | "attention-input-state"
+  | "attention-query-heads"
+  | "attention-key-heads"
+  | "attention-value-heads"
+  | "attention-head-outputs"
+  | "attention-output-state";
+
+export type RuntimeFormulaId =
+  | "root-model-width-value"
+  | "block-layer-count-value"
+  | "attention-symbolic-shape"
+  | "attention-current-shape"
+  | "attention-head-shape"
+  | "attention-full-head-shape";
 
 export interface FormulaDefinition {
-  readonly id: FormulaId;
+  readonly id: FormulaId | RuntimeFormulaId;
   readonly tex: string;
   readonly plainText: string;
   readonly accessibleLabel: string;
@@ -52,6 +75,14 @@ export const FORMULA_IDS: readonly FormulaId[] = [
   "attention-merge-heads",
   "attention-output-projection",
   "attention-summary",
+  "block-input-state",
+  "attention-input-state",
+  "attention-query-heads",
+  "attention-key-heads",
+  "attention-value-heads",
+  "attention-head-outputs",
+  "attention-output-state",
+  ...INLINE_FORMULA_IDS,
 ];
 
 export const formulaCatalog: Readonly<Record<FormulaId, FormulaDefinition>> = {
@@ -91,4 +122,47 @@ export const formulaCatalog: Readonly<Record<FormulaId, FormulaDefinition>> = {
     plainText: ATTENTION_SUMMARY,
     accessibleLabel: "Self-Attention summary",
   },
+  "block-input-state": {
+    id: "block-input-state",
+    tex: "X_{\\mathrm{in}}\\;[T,C]",
+    plainText: "X_in [T, C]",
+    accessibleLabel: "Block input tensor X in, shape T by C",
+  },
+  "attention-input-state": {
+    id: "attention-input-state",
+    tex: "X = X_{\\mathrm{LN1}}\\;[T,C]",
+    plainText: "X = X_LN1 [T, C]",
+    accessibleLabel: "Attention input X equals X LN1, shape T by C",
+  },
+  "attention-query-heads": {
+    id: "attention-query-heads",
+    tex: "Q\\colon [T,C] \\to [H,T,D]",
+    plainText: "Q: [T, C] → [H, T, D]",
+    accessibleLabel: "Query split into H heads, shape H by T by D",
+  },
+  "attention-key-heads": {
+    id: "attention-key-heads",
+    tex: "K\\colon [T,C] \\to [H,T,D]",
+    plainText: "K: [T, C] → [H, T, D]",
+    accessibleLabel: "Key split into H heads, shape H by T by D",
+  },
+  "attention-value-heads": {
+    id: "attention-value-heads",
+    tex: "V\\colon [T,C] \\to [H,T,D]",
+    plainText: "V: [T, C] → [H, T, D]",
+    accessibleLabel: "Value split into H heads, shape H by T by D",
+  },
+  "attention-head-outputs": {
+    id: "attention-head-outputs",
+    tex: "Y\\;[H,T,D]",
+    plainText: "Y [H, T, D]",
+    accessibleLabel: "Head output tensor Y, shape H by T by D",
+  },
+  "attention-output-state": {
+    id: "attention-output-state",
+    tex: "Y_{\\mathrm{attn}}\\;[T,C]",
+    plainText: "Y_attn [T, C]",
+    accessibleLabel: "Attention output tensor Y attention, shape T by C",
+  },
+  ...inlineFormulaCatalog,
 };

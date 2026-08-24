@@ -1,4 +1,5 @@
-import { notationCatalog } from "../../domain/notation";
+import { formulaCatalog } from "../../math/formulaCatalog";
+import { MathFormula } from "../../math/MathFormula";
 import type { ArchitectureNodeId } from "../catalog";
 import { BlockConnectors, ResidualJunctions } from "./BlockConnectors";
 import { AddNode, ModuleNode, StateNode } from "./BlockNodes";
@@ -66,7 +67,7 @@ export function BlockDiagram({
           <StateNode
             y={INPUT_Y}
             title="Block Input"
-            detail="X_in [T, C]"
+            formulaId="block-input-state"
             state="block-input"
           />
           <ModuleNode
@@ -87,7 +88,7 @@ export function BlockDiagram({
           <StateNode
             y={RESIDUAL_STATE_Y}
             title="Residual 1"
-            detail={notationCatalog["residual-1"].plainText}
+            formulaId="residual-1"
             state="residual-1-output"
           />
           <ModuleNode
@@ -108,16 +109,17 @@ export function BlockDiagram({
           <StateNode
             y={OUTPUT_Y}
             title="Block Output"
-            detail={notationCatalog["residual-2"].plainText}
+            formulaId="residual-2"
             state="block-output"
           />
           <BlockConnectors />
           <ResidualJunctions />
         </svg>
       </section>
-      <figcaption>
-        {notationCatalog["residual-1"].plainText}.{" "}
-        {notationCatalog["residual-2"].plainText}.
+      <figcaption className="architecture-math-caption">
+        <MathFormula formula={formulaCatalog["residual-1"]} />
+        <span aria-hidden="true">·</span>
+        <MathFormula formula={formulaCatalog["residual-2"]} />
       </figcaption>
     </figure>
   );
