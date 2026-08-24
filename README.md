@@ -110,6 +110,34 @@ pnpm dev
 
 Vite serves the app at `http://127.0.0.1:5173/`. Computation still runs in the real module Worker.
 
+### Docker
+
+Docker avoids installing the pinned Node, pnpm, Rust, wasm-bindgen, Binaryen, and Chromium
+toolchains on the host:
+
+```sh
+./bootstrap.sh
+```
+
+Open `http://127.0.0.1:5173/`. The container rebuilds the Rust/WASM Worker and Vite production
+artifact, then serves it with Python's static HTTP server. Vite's development Worker query URLs and
+chunked preview responses are intentionally rejected by the shipping asset policy. Restart Compose
+after source changes by rerunning `./bootstrap.sh`. Dependency and Cargo build outputs stay in named
+Docker volumes.
+
+Run the production build or canonical gate in the same environment:
+
+```sh
+docker compose run --rm web ./scripts/build-web.sh / apps/web/dist
+docker compose run --rm web ./scripts/check.sh
+./shutdown.sh
+```
+
+Docker Desktop blocks Chromium's nested namespace sandbox. Browser gates therefore run Chromium as
+the unprivileged `node` user with `--no-sandbox`, while retaining Docker's default seccomp policy
+and granting no extra container capabilities. The browser only loads this repository's trusted
+localhost artifact; do not reuse the wrapper for untrusted pages.
+
 ## Repository boundaries
 
 - `apps/web`: React/TypeScript/Vite UI, CSS, KaTeX, generated TypeScript bindings, public assets.

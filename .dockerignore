@@ -1,0 +1,9 @@
+.git
+.omo
+.DS_Store
+target
+node_modules
+apps/web/node_modules
+apps/web/dist
+__pycache__
+*.pyc
