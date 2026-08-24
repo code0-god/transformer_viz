@@ -37,3 +37,34 @@ export const decoderNodeMap = {
 >;
 
 export type DecoderNodeId = keyof typeof decoderNodeMap;
+
+export const decoderLearningNodeByArchitecture: Readonly<
+  Partial<Record<ArchitectureNodeId, DecoderNodeId>>
+> = {
+  "input-context": "decoder.root.input-context",
+  "token-embedding": "decoder.root.token-embedding",
+  "position-embedding": "decoder.root.position-embedding",
+  "transformer-block": "decoder.root.transformer-block",
+  "final-layer-norm": "decoder.root.final-layer-norm",
+  "lm-head": "decoder.root.lm-head",
+  logits: "decoder.root.logits",
+  "token-selection": "decoder.root.token-selection",
+  "append-context": "decoder.root.append-context",
+  "layer-norm-1": "decoder.block.layer-norm-1",
+  "self-attention": "decoder.block.self-attention",
+  "residual-1": "decoder.block.residual-1",
+  "layer-norm-2": "decoder.block.layer-norm-2",
+  mlp: "decoder.block.mlp",
+  "residual-2": "decoder.block.residual-2",
+  "attention-qkv-projection": "decoder.attention.qkv-projection",
+  "attention-query": "decoder.attention.query",
+  "attention-key": "decoder.attention.key",
+  "attention-value": "decoder.attention.value",
+  "attention-scores": "decoder.attention.score-matmul",
+  "attention-scale": "decoder.attention.scale",
+  "attention-causal-mask": "decoder.attention.causal-mask",
+  "attention-softmax": "decoder.attention.softmax",
+  "attention-value-aggregation": "decoder.attention.value-matmul",
+  "attention-merge-heads": "decoder.attention.merge-heads",
+  "attention-output-projection": "decoder.attention.output-projection",
+};

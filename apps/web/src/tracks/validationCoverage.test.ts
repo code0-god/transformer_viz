@@ -1,19 +1,33 @@
 import { describe, expect, test } from "vitest";
+import type { LearningGuideSection, LearningNodeId } from "./types";
 import { validateLearningProfile } from "./validation";
 import { rootPage, withRootPage } from "./validationFixtures";
+
+function withoutNodeMappings(
+  nodeIds: readonly LearningNodeId[],
+): readonly LearningGuideSection[] {
+  return rootPage.sections.map((section) => {
+    const associatedNodeIds = (section.associatedNodeIds ?? []).filter(
+      (nodeId) => !nodeIds.includes(nodeId),
+    );
+    if (
+      section.primaryNodeId === undefined ||
+      !nodeIds.includes(section.primaryNodeId)
+    )
+      return { ...section, associatedNodeIds };
+    const { primaryNodeId: _primaryNodeId, ...withoutPrimary } = section;
+    return { ...withoutPrimary, associatedNodeIds };
+  });
+}
 
 describe("learning profile route-transition exemptions", () => {
   test("a declared exemption suppresses only its exact drill-down node", () => {
     const profile = withRootPage({
       ...rootPage,
-      sections: rootPage.sections.map((section) => ({
-        ...section,
-        associatedNodeIds: (section.associatedNodeIds ?? []).filter(
-          (nodeId) =>
-            nodeId !== "decoder.root.transformer-block" &&
-            nodeId !== "decoder.root.final-layer-norm",
-        ),
-      })),
+      sections: withoutNodeMappings([
+        "decoder.root.transformer-block",
+        "decoder.root.final-layer-norm",
+      ]),
     });
     const fixture = {
       ...profile,
@@ -51,14 +65,10 @@ describe("learning profile route-transition exemptions", () => {
   test("a duplicate valid exemption is invalid at its duplicate index", () => {
     const profile = withRootPage({
       ...rootPage,
-      sections: rootPage.sections.map((section) => ({
-        ...section,
-        associatedNodeIds: (section.associatedNodeIds ?? []).filter(
-          (nodeId) =>
-            nodeId !== "decoder.root.transformer-block" &&
-            nodeId !== "decoder.root.final-layer-norm",
-        ),
-      })),
+      sections: withoutNodeMappings([
+        "decoder.root.transformer-block",
+        "decoder.root.final-layer-norm",
+      ]),
     });
     const fixture = {
       ...profile,

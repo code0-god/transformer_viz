@@ -65,11 +65,6 @@ function profileWithBlockPage(page: LearningGuidePage): LearningTrackProfile {
         ...decoderOnlyFundamentalsProfile.guide.pages,
         "decoder.block": page,
       },
-      glossary: [
-        ...decoderOnlyFundamentalsProfile.guide.glossary,
-        ...blockGuideGlossary,
-      ],
-      runtimeAdapterIds: ["decoder.runtime.block-facts"],
     },
   };
 }

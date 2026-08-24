@@ -41,6 +41,64 @@
   min-block-size: 44px;
 }
 
+.learning-route-actions,
+.learning-route-actions .architecture-breadcrumb ol,
+.learning-route-actions .architecture-breadcrumb li,
+.learning-route-actions .architecture-attention-selectors,
+.learning-route-actions .architecture-layer-selector > div {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.learning-route-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.learning-route-actions .architecture-breadcrumb ol {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.learning-route-actions .architecture-breadcrumb button,
+.learning-route-actions .architecture-back-button {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.learning-route-actions .architecture-layer-selector {
+  display: grid;
+  gap: var(--s1);
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.learning-route-actions .architecture-layer-selector legend {
+  color: var(--ink-muted);
+  font-size: .72rem;
+  font-weight: 750;
+}
+
+.learning-route-actions .architecture-layer-selector button {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink-muted);
+}
+
+.learning-route-actions .architecture-layer-selector button.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
 .learning-workspace__body {
   display: grid;
   gap: var(--s4);

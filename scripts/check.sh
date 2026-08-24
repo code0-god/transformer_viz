@@ -117,6 +117,17 @@ PYTHONPATH="${ROOT_DIR}/scripts" \
   python3 "${ROOT_DIR}/scripts/browser_architecture_attention.py" \
   --root "${CHECK_DIST_DIR}/browser-root"
 
+printf '%s\n' '==> Learning Workspace browser contract'
+for entry in index.html transformer_viz/index.html; do
+  entry_label="${entry//\//-}"
+  PYTHONPATH="${ROOT_DIR}/scripts" \
+    python3 "${ROOT_DIR}/scripts/browser_learning_workspace.py" \
+    --root "${CHECK_DIST_DIR}/browser-root" \
+    --entry "${entry}" \
+    --scenario all \
+    --evidence "${CHECK_DIST_DIR}/learning-${entry_label}"
+done
+
 printf '%s\n' '==> Architecture notation browser contract'
 PYTHONPATH="${ROOT_DIR}/scripts" \
   python3 "${ROOT_DIR}/scripts/browser_architecture_notation.py" \

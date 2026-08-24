@@ -17,6 +17,7 @@ export interface TransformerBlockDetailProps {
   readonly selectedLayer: number;
   readonly selectedNodeId: ArchitectureNodeId | null;
   readonly highlightedNodeIds?: readonly ArchitectureNodeId[];
+  readonly showRouteControls?: boolean;
   readonly onActivateNode: (id: ArchitectureNodeId) => void;
   readonly onNavigate: (view: ArchitectureView) => void;
   readonly onSelectLayer: (layer: number) => void;
@@ -27,6 +28,7 @@ export function TransformerBlockDetail({
   selectedLayer,
   selectedNodeId,
   highlightedNodeIds = [],
+  showRouteControls = true,
   onActivateNode,
   onNavigate,
   onSelectLayer,
@@ -37,52 +39,55 @@ export function TransformerBlockDetail({
       className="architecture-block-screen"
       aria-labelledby="architecture-title"
     >
-      <nav
-        className="architecture-breadcrumb"
-        aria-label="Architecture navigation"
-      >
-        <ol>
-          <li>
+      {showRouteControls ? (
+        <>
+          <nav
+            className="architecture-breadcrumb"
+            aria-label="Architecture navigation"
+          >
+            <ol>
+              <li>
+                <button
+                  type="button"
+                  data-testid="architecture-breadcrumb-gpt"
+                  onClick={() => onNavigate("root")}
+                >
+                  GPT
+                </button>
+              </li>
+              <li>
+                <span aria-hidden="true">›</span>
+                <span
+                  className="architecture-breadcrumb-current"
+                  data-testid="architecture-breadcrumb-block"
+                  aria-current="page"
+                >
+                  {repeatedBlockLabel(layerCount)}
+                </span>
+              </li>
+            </ol>
+          </nav>
+          <div className="architecture-intro">
+            <div>
+              <h2 id="architecture-title" tabIndex={-1}>
+                Transformer Block
+              </h2>
+              <p>
+                하나의 Pre-LN Decoder Block이 attention과 MLP residual을
+                계산하는 흐름입니다.
+              </p>
+            </div>
             <button
               type="button"
-              data-testid="architecture-breadcrumb-gpt"
+              className="architecture-back-button"
+              data-testid="architecture-back-root"
               onClick={() => onNavigate("root")}
             >
-              GPT
+              ← 전체 구조
             </button>
-          </li>
-          <li>
-            <span aria-hidden="true">›</span>
-            <span
-              className="architecture-breadcrumb-current"
-              data-testid="architecture-breadcrumb-block"
-              aria-current="page"
-            >
-              {repeatedBlockLabel(layerCount)}
-            </span>
-          </li>
-        </ol>
-      </nav>
-
-      <div className="architecture-intro">
-        <div>
-          <h2 id="architecture-title" tabIndex={-1}>
-            Transformer Block
-          </h2>
-          <p>
-            하나의 Pre-LN Decoder Block이 attention과 MLP residual을 계산하는
-            흐름입니다.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="architecture-back-button"
-          data-testid="architecture-back-root"
-          onClick={() => onNavigate("root")}
-        >
-          ← 전체 구조
-        </button>
-      </div>
+          </div>
+        </>
+      ) : null}
 
       <section
         className="architecture-detail"
@@ -101,23 +106,25 @@ export function TransformerBlockDetail({
               회 순차적으로 적용됩니다.
             </p>
           </div>
-          <fieldset className="architecture-layer-selector">
-            <legend>Layer</legend>
-            <div>
-              {layerIndexes(layerCount).map((layer) => (
-                <button
-                  key={layer}
-                  type="button"
-                  className={layer === selectedLayer ? "selected" : undefined}
-                  aria-pressed={layer === selectedLayer}
-                  data-layer-index={layer}
-                  onClick={() => onSelectLayer(layer)}
-                >
-                  {layer}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+          {showRouteControls ? (
+            <fieldset className="architecture-layer-selector">
+              <legend>Layer</legend>
+              <div>
+                {layerIndexes(layerCount).map((layer) => (
+                  <button
+                    key={layer}
+                    type="button"
+                    className={layer === selectedLayer ? "selected" : undefined}
+                    aria-pressed={layer === selectedLayer}
+                    data-layer-index={layer}
+                    onClick={() => onSelectLayer(layer)}
+                  >
+                    {layer}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
         </div>
 
         <div className="architecture-detail-grid">

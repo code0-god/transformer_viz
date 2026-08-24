@@ -2,6 +2,7 @@ import type { KeyboardEvent, ReactNode, SVGProps } from "react";
 
 import { type FormulaId, formulaCatalog } from "../math/formulaCatalog";
 import { MathFormula } from "../math/MathFormula";
+import { useArchitectureNodeRegistration } from "./ArchitectureLearningContext";
 import { type ArchitectureNodeId, architectureNodeCatalog } from "./catalog";
 import "./architecture.css";
 
@@ -101,6 +102,7 @@ export function ArchitectureNode({
   disabled = false,
   children,
 }: ArchitectureNodeProps) {
+  const registerNode = useArchitectureNodeRegistration();
   const definition = architectureNodeCatalog[id];
   const interactive = definition.capability !== "static";
   const stateClass = selected ? " is-selected" : "";
@@ -194,6 +196,9 @@ export function ArchitectureNode({
 
   return (
     <g
+      ref={(element) => {
+        registerNode?.(id, element);
+      }}
       className={className}
       data-node-id={id}
       data-node-capability={definition.capability}

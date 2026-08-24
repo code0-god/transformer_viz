@@ -60,13 +60,9 @@ ATTENTION_DETAIL_PROBE = r"""
   const nodeFormula = id => required(
     `[data-node-id="${id}"] annotation[encoding="application/x-tex"]`,
   ).textContent.trim();
-  const factValue = accessibleLabel => {
-    const formula = document.querySelector(
-      `.architecture-attention-facts dt [aria-label="${accessibleLabel}"]`,
-    );
-    const term = formula?.closest('dt');
-    return term?.nextElementSibling?.textContent.trim() ?? null;
-  };
+  const factValue = factId => document.querySelector(
+    `[data-guide-fact-id="${factId}"] [data-fact-status]`,
+  )?.textContent.trim() ?? null;
   const qkvStarts = ['qkv-to-query', 'qkv-to-key', 'qkv-to-value'].map(name => point(name));
   const text = detail.textContent;
   const diagramText = required('.architecture-attention-diagram').textContent;
@@ -93,15 +89,12 @@ ATTENTION_DETAIL_PROBE = r"""
       '.architecture-node.is-selected',
     )?.dataset.nodeId ?? null,
     operationCopy: document.querySelector(
-      '[data-testid="attention-operation-copy"]',
+      '[data-operation-presentation-id]',
     )?.textContent.trim() ?? null,
     operationFormulaTex: document.querySelector(
-      '[data-testid="attention-operation-copy"] annotation[encoding="application/x-tex"]',
+      '[data-operation-presentation-id] annotation[encoding="application/x-tex"]',
     )?.textContent.trim() ?? null,
-    operationSymbolicTex: document.querySelector(
-      '[data-testid="attention-operation-copy"] ' +
-        '.architecture-symbolic-shape annotation[encoding="application/x-tex"]',
-    )?.textContent.trim() ?? null,
+    operationSymbolicTex: null,
     qkvStarts,
     qToScoresEnd: point('query-heads-to-scores', true),
     kToScoresEnd: point('key-heads-to-scores', true),
@@ -117,14 +110,19 @@ ATTENTION_DETAIL_PROBE = r"""
     ).length,
     splitHeadNodes: document.querySelectorAll('.architecture-attention-split').length,
     currentValues: {
-      t: factValue('Sequence length T'),
-      c: factValue('Model dimension C'),
-      h: factValue('Attention head count H'),
-      d: factValue('Head dimension D'),
-      scale: factValue('One divided by square root of head dimension D'),
+      t: factValue('decoder.fact.sequence-length'),
+      c: factValue('decoder.fact.model-width'),
+      h: factValue('decoder.fact.heads'),
+      d: factValue('decoder.fact.head-dimension'),
+      scale: factValue('decoder.fact.scale-factor'),
     },
-    symbolSections: [...document.querySelectorAll('.architecture-notation-section h4')]
-      .map(element => element.textContent.trim()),
+    guidePage: required('[data-guide-page-id]').dataset.guidePageId,
+    guideSections: [...document.querySelectorAll('[data-guide-section-id]')]
+      .map(element => element.dataset.guideSectionId),
+    outlineCount: document.querySelectorAll('.learning-guide-outline a').length,
+    runtimePresentation: Boolean(document.querySelector(
+      '[data-runtime-presentation-id="decoder.runtime.attention-facts"]',
+    )),
     qkvShape: nodeFormula('attention-qkv-projection') ===
       String.raw`Z_{\mathrm{qkv}} = \operatorname{Linear}_{\mathrm{qkv}}(X)`,
     scoreMatmul: nodeText('attention-scores').includes('Score MatMul') &&
@@ -143,18 +141,8 @@ ATTENTION_DETAIL_PROBE = r"""
     captionFormulaCount: document.querySelectorAll(
       '.architecture-attention-figure figcaption [role="math"] .katex',
     ).length,
-    inputFormula: required(
-      '.architecture-attention-input-definition ' +
-        'annotation[encoding="application/x-tex"]',
-    ).textContent.trim() === String.raw`X = X_{\mathrm{LN1}}`,
-    symbolFormulaCount: document.querySelectorAll(
-      '.architecture-attention-symbols dt [role="math"] .katex',
-    ).length,
-    factFormulaCount: document.querySelectorAll(
-      '.architecture-attention-facts dt [role="math"] .katex',
-    ).length,
     plainMathCodeCount: document.querySelectorAll(
-      '.architecture-attention-operation code',
+      '.architecture-attention-diagram code',
     ).length,
     plainConnectorLabelCount: document.querySelectorAll(
       '.architecture-attention-connector-label',

@@ -15,6 +15,7 @@ from pathlib import Path
 
 from browser_architecture_attention_checks import verify_structure
 from browser_architecture_attention_probes import ATTENTION_DETAIL_PROBE
+from browser_input import dispatch_key
 from browser_architecture_navigation import (
     QuietHandler,
     capture,
@@ -109,14 +110,17 @@ def verify_notation(
         score["selectedNode"] == "attention-scores"
         and "Score MatMul" in score["operationCopy"]
         and score["operationFormulaTex"] == r"S_h = Q_h K_h^{\mathsf T}"
-        and score["operationSymbolicTex"]
-        == r"[T,D]\mathbin{@}[D,T]\to[T,T]"
         and "Symbolic shape" in score["operationCopy"]
         and "Current shape" in score["operationCopy"]
         and "실행 후 표시" in score["operationCopy"],
         f"Score MatMul operation panel: {score}",
     )
-    dispatch_click(browser, '[data-node-id="attention-value-aggregation"]')
+    cdp.evaluate(
+        session,
+        "document.querySelector('[data-node-id=\"attention-value-aggregation\"]').focus()",
+    )
+    dispatch_key(cdp, session, "Enter", "Enter", 13)
+    settle(browser)
     value = cdp.evaluate(session, ATTENTION_DETAIL_PROBE, True)
     require(
         value["selectedNode"] == "attention-value-aggregation"

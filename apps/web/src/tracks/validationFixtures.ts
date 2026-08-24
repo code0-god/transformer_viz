@@ -55,6 +55,8 @@ export function rootPageWithBlocks(
 ): LearningGuidePage {
   return {
     ...rootPage,
+    introduction: [],
+    outlineSectionIds: [rootSection.id],
     sections: [{ ...rootSection, blocks }],
   };
 }

@@ -18,6 +18,7 @@ type LearningWorkspacePane = {
 export type LearningRouteHeaderProps = {
   readonly route: LearningWorkspaceRoute;
   readonly controls?: ReactNode;
+  readonly onTitleRef?: (element: HTMLHeadingElement | null) => void;
 };
 
 export type LearningWorkspaceProps = {
@@ -26,16 +27,20 @@ export type LearningWorkspaceProps = {
   readonly guide: LearningWorkspacePane;
   readonly status: LearningFocusStatus;
   readonly headerControls?: ReactNode;
+  readonly onRouteTitleRef?: (element: HTMLHeadingElement | null) => void;
 };
 
 export function LearningRouteHeader({
   route,
   controls,
+  onTitleRef,
 }: LearningRouteHeaderProps): ReactElement {
   return (
     <header className="learning-route-header">
       <div className="learning-route-header__copy">
-        <h2 id="learning-route-title">{route.title}</h2>
+        <h2 id="learning-route-title" ref={onTitleRef} tabIndex={-1}>
+          {route.title}
+        </h2>
         <p>{route.subtitle}</p>
       </div>
       {controls === undefined ? null : (
@@ -60,10 +65,17 @@ export function LearningWorkspace({
   guide,
   status,
   headerControls,
+  onRouteTitleRef,
 }: LearningWorkspaceProps): ReactElement {
   return (
     <section className="learning-workspace" data-learning-route-id={route.id}>
-      <LearningRouteHeader route={route} controls={headerControls} />
+      <LearningRouteHeader
+        route={route}
+        controls={headerControls}
+        {...(onRouteTitleRef === undefined
+          ? {}
+          : { onTitleRef: onRouteTitleRef })}
+      />
       <div className="learning-workspace__body">
         <section
           id="learning-diagram-pane"

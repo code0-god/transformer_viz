@@ -2,12 +2,69 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TypedDict
 
 from browser_architecture_navigation import require
 
 
-def verify_structure(detail: dict[str, Any], mobile: bool) -> None:
+class ProbePoint(TypedDict):
+    x: float
+    y: float
+
+
+class CurrentValues(TypedDict):
+    t: str
+    c: str
+    h: str
+    d: str
+    scale: str
+
+
+class AttentionDetailProbe(TypedDict):
+    attention: bool
+    block: bool
+    breadcrumbBlock: str
+    breadcrumbAttention: str
+    breadcrumbCurrent: str
+    layerButtons: int
+    headButtons: int
+    oneQkvProjection: int
+    splitHeadNodes: int
+    nodeIds: list[str]
+    nodeCapabilities: list[str]
+    nodeRoles: list[str]
+    nodeAriaLabels: list[str]
+    qkvStarts: list[ProbePoint]
+    qToScoresEnd: ProbePoint
+    kToScoresEnd: ProbePoint
+    valueToAggregationEnd: ProbePoint
+    hasValueToScores: bool
+    operationOrder: list[int]
+    currentValues: CurrentValues
+    guidePage: str
+    guideSections: list[str]
+    outlineCount: int
+    runtimePresentation: bool
+    qkvShape: bool
+    scoreMatmul: bool
+    valueMatmul: bool
+    scaleSymbolic: bool
+    formula: bool
+    connectorFormula: bool
+    captionFormulaCount: int
+    plainMathCodeCount: int
+    plainConnectorLabelCount: int
+    formulaMaxHeight: float
+    actualShapeInDiagram: bool
+    legacyNotation: bool
+    attentionOutput: bool
+    hasResidual: bool
+    forbiddenDetail: bool
+    documentOverflow: int
+    localOverflow: int
+
+
+def verify_structure(detail: AttentionDetailProbe, mobile: bool) -> None:
     require(detail["attention"] and not detail["block"], f"attention route: {detail}")
     require(
         detail["breadcrumbBlock"] == "Transformer Block × 2"
@@ -61,8 +118,14 @@ def verify_structure(detail: dict[str, Any], mobile: bool) -> None:
         f"attention current values: {detail}",
     )
     require(
-        detail["symbolSections"] == ["A. 기호", "B. 현재 모델값", "C. 현재 연산"],
-        f"attention panel hierarchy: {detail}",
+        detail["guidePage"] == "decoder-guide-self-attention"
+        and detail["outlineCount"] == 8
+        and detail["runtimePresentation"]
+        and all(
+            section in detail["guideSections"]
+            for section in ("qkv", "heads", "score", "scale", "mask", "softmax", "value", "merge")
+        ),
+        f"attention Guide hierarchy: {detail}",
     )
     require(
         detail["qkvShape"]
@@ -75,9 +138,6 @@ def verify_structure(detail: dict[str, Any], mobile: bool) -> None:
     require(
         detail["connectorFormula"]
         and detail["captionFormulaCount"] == 2
-        and detail["inputFormula"]
-        and detail["symbolFormulaCount"] == 12
-        and detail["factFormulaCount"] == 7
         and detail["plainMathCodeCount"] == 0
         and detail["plainConnectorLabelCount"] == 0,
         f"complete attention math surface: {detail}",

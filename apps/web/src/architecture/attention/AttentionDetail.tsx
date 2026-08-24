@@ -1,6 +1,5 @@
 import { currentAttentionShapes } from "../../domain/shapes";
 import type { ArchitectureNodeId } from "../catalog";
-import { AttentionAnnotation } from "./AttentionAnnotation";
 import { AttentionDiagram } from "./AttentionDiagram";
 import "./attention.css";
 
@@ -13,6 +12,7 @@ export interface AttentionDetailProps {
   readonly selectedHead: number;
   readonly selectedNodeId: ArchitectureNodeId | null;
   readonly highlightedNodeIds?: readonly ArchitectureNodeId[];
+  readonly showRouteControls?: boolean;
   readonly onNavigateRoot: () => void;
   readonly onBack: () => void;
   readonly onSelectLayer: (layer: number) => void;
@@ -63,6 +63,7 @@ function Selector({
 }
 
 export function AttentionDetail(props: AttentionDetailProps) {
+  const showRouteControls = props.showRouteControls ?? true;
   const shapes = currentAttentionShapes(
     { modelWidth: props.modelWidth, headCount: props.headCount },
     props.traceSequenceLength,
@@ -79,60 +80,64 @@ export function AttentionDetail(props: AttentionDetailProps) {
       className="architecture-attention-screen"
       aria-labelledby="architecture-title"
     >
-      <nav
-        className="architecture-breadcrumb"
-        aria-label="Architecture navigation"
-      >
-        <ol>
-          <li>
+      {showRouteControls ? (
+        <>
+          <nav
+            className="architecture-breadcrumb"
+            aria-label="Architecture navigation"
+          >
+            <ol>
+              <li>
+                <button
+                  type="button"
+                  data-testid="architecture-breadcrumb-gpt"
+                  onClick={props.onNavigateRoot}
+                >
+                  GPT
+                </button>
+              </li>
+              <li>
+                <span aria-hidden="true">›</span>
+                <button
+                  type="button"
+                  data-testid="architecture-breadcrumb-block"
+                  onClick={props.onBack}
+                >
+                  Transformer Block × {props.layerCount}
+                </button>
+              </li>
+              <li className="architecture-breadcrumb-current">
+                <span aria-hidden="true">›</span>
+                <span
+                  data-testid="architecture-breadcrumb-attention"
+                  aria-current="page"
+                >
+                  Self-Attention
+                </span>
+              </li>
+            </ol>
+          </nav>
+          <div className="architecture-intro">
+            <div>
+              <h2 id="architecture-title" tabIndex={-1}>
+                Self-Attention
+              </h2>
+              <p>
+                combined QKV projection부터 output projection까지 causal
+                attention의 실제 연산 순서입니다.
+              </p>
+            </div>
             <button
               type="button"
-              data-testid="architecture-breadcrumb-gpt"
-              onClick={props.onNavigateRoot}
-            >
-              GPT
-            </button>
-          </li>
-          <li>
-            <span aria-hidden="true">›</span>
-            <button
-              type="button"
-              data-testid="architecture-breadcrumb-block"
+              className="architecture-back-button"
+              data-testid="architecture-back-block"
               onClick={props.onBack}
             >
-              Transformer Block × {props.layerCount}
+              ← Transformer Block
             </button>
-          </li>
-          <li className="architecture-breadcrumb-current">
-            <span aria-hidden="true">›</span>
-            <span
-              data-testid="architecture-breadcrumb-attention"
-              aria-current="page"
-            >
-              Self-Attention
-            </span>
-          </li>
-        </ol>
-      </nav>
-      <div className="architecture-intro">
-        <div>
-          <h2 id="architecture-title" tabIndex={-1}>
-            Self-Attention
-          </h2>
-          <p>
-            combined QKV projection부터 output projection까지 causal attention의
-            실제 연산 순서입니다.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="architecture-back-button"
-          data-testid="architecture-back-block"
-          onClick={props.onBack}
-        >
-          ← Transformer Block
-        </button>
-      </div>
+          </div>
+        </>
+      ) : null}
       <section
         className="architecture-detail architecture-attention-detail"
         data-testid="attention-detail"
@@ -150,32 +155,28 @@ export function AttentionDetail(props: AttentionDetailProps) {
               계산합니다.
             </p>
           </div>
-          <div className="architecture-attention-selectors">
-            <Selector
-              label="Layer"
-              count={props.layerCount}
-              selected={props.selectedLayer}
-              onSelect={props.onSelectLayer}
-            />
-            <Selector
-              label="Head"
-              count={props.headCount}
-              selected={props.selectedHead}
-              onSelect={props.onSelectHead}
-            />
-          </div>
+          {showRouteControls ? (
+            <div className="architecture-attention-selectors">
+              <Selector
+                label="Layer"
+                count={props.layerCount}
+                selected={props.selectedLayer}
+                onSelect={props.onSelectLayer}
+              />
+              <Selector
+                label="Head"
+                count={props.headCount}
+                selected={props.selectedHead}
+                onSelect={props.onSelectHead}
+              />
+            </div>
+          ) : null}
         </div>
         <div className="architecture-visual-grid architecture-attention-grid">
           <AttentionDiagram
             selectedNodeId={props.selectedNodeId}
             highlightedNodeIds={props.highlightedNodeIds ?? []}
             onSelectNode={props.onSelectNode}
-          />
-          <AttentionAnnotation
-            shapes={shapes}
-            selectedLayer={props.selectedLayer}
-            selectedHead={props.selectedHead}
-            selectedNodeId={props.selectedNodeId}
           />
         </div>
       </section>

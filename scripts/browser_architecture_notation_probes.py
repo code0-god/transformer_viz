@@ -57,11 +57,11 @@ BLOCK_NOTATION_PROBE = r"""
   ).textContent.trim();
   const panelFormulas = [
     ...document.querySelectorAll(
-      '.architecture-annotation annotation[encoding="application/x-tex"]',
+      '.learning-guide annotation[encoding="application/x-tex"]',
     ),
   ].map(element => element.textContent.trim());
   const formulaHeights = [
-    ...document.querySelectorAll('.architecture-annotation [role="math"]'),
+    ...document.querySelectorAll('.learning-guide [role="math"]'),
   ].map(element => element.getBoundingClientRect().height);
   const captionFormulas = [
     ...document.querySelectorAll(
@@ -88,9 +88,9 @@ BLOCK_NOTATION_PROBE = r"""
       String.raw`X_{\mathrm{out}} = X_{\mathrm{res1}} + Y_{\mathrm{MLP}}`,
     ].every(value => panelFormulas.includes(value)),
     layerCount: required(
-      '[data-testid="architecture-model-layer-count"] ' +
-        'annotation[encoding="application/x-tex"]',
-    ).textContent.trim() === String.raw`n_{\mathrm{layer}} = 2`,
+      '[data-runtime-presentation-id="decoder.runtime.block-facts"] ' +
+        '[data-guide-fact-id="decoder.fact.blocks"] [data-fact-status="ready"]',
+    ).textContent.trim() === '2',
     captionFormulas: [
       String.raw`X_{\mathrm{res1}} = X_{\mathrm{in}} + Y_{\mathrm{attn}}`,
       String.raw`X_{\mathrm{out}} = X_{\mathrm{res1}} + Y_{\mathrm{MLP}}`,

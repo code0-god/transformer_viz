@@ -6,7 +6,6 @@ import { LearningGuide } from "../LearningGuide";
 import type { SelectedOperationPresentation } from "../types";
 import { validateLearningProfile } from "../validation";
 import { attentionGuide, attentionGuideGlossary } from "./attentionGuide";
-import { decoderGuideRuntimeAdapterIds } from "./guideRuntime";
 import { decoderOnlyFundamentalsProfile } from "./profile";
 
 const outlineIds = [
@@ -82,12 +81,6 @@ describe("decoder Attention learning guide", () => {
           ...decoderOnlyFundamentalsProfile.guide.pages,
           "decoder.self-attention": attentionGuide,
         },
-        glossary: [
-          ...decoderOnlyFundamentalsProfile.guide.glossary,
-          ...attentionGuideGlossary,
-        ],
-        runtimeAdapterIds: [decoderGuideRuntimeAdapterIds.attentionFacts],
-        operationAdapterIds: [decoderGuideRuntimeAdapterIds.selectedOperation],
       },
     };
 

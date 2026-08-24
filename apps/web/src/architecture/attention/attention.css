@@ -26,7 +26,7 @@
 .architecture-attention-screen .architecture-layer-selector button { min-width: 44px; min-height: 44px; border: 1px solid var(--attention-hairline); border-radius: 6px; background: var(--attention-surface); color: var(--attention-muted); }
 .architecture-attention-screen .architecture-layer-selector button.selected { border-color: #7096c7; background: #e5edf7; color: #315d99; box-shadow: inset 0 0 0 1px #7096c7; }
 .architecture-attention-screen .architecture-visual-grid { display: grid; }
-.architecture-attention-screen .architecture-attention-grid{ grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem); gap: 1rem; align-items: start; }
+.architecture-attention-screen .architecture-attention-grid{ grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start; }
 .architecture-attention-screen .architecture-figure { display: grid; gap: .5rem; min-width: 0; margin: 0; }
 .architecture-attention-screen .architecture-svg-scroll { width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; border-top: 1px solid var(--attention-hairline); background: var(--attention-surface); }
 .architecture-attention-screen .architecture-attention-diagram{ display: block; width: 100%; min-width: 50rem; max-width: 56rem; height: auto; margin-inline: auto; }

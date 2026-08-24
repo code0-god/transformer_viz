@@ -152,11 +152,6 @@ describe("decoder Root beginner guide", () => {
           ...decoderOnlyFundamentalsProfile.guide.pages,
           "decoder.root": decoderRootGuide,
         },
-        glossary: [
-          ...decoderOnlyFundamentalsProfile.guide.glossary,
-          ...decoderRootGlossary,
-        ],
-        runtimeAdapterIds: [decoderGuideRuntimeAdapterIds.rootFacts],
       },
     };
 

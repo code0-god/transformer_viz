@@ -1,8 +1,3 @@
-import { AttentionDetail } from "../../architecture/attention";
-import { TransformerBlockDetail } from "../../architecture/block";
-import type { ArchitectureNodeId } from "../../architecture/catalog";
-import { RootArchitecture } from "../../architecture/root/RootArchitecture";
-import type { ArchitectureView } from "../../architecture/state";
 import { validateProfileCompatibility } from "../compatibility";
 import type {
   ArchitectureRenderContext,
@@ -12,6 +7,7 @@ import type {
   LearningTrackAdapter,
   LearningTrackProfile,
 } from "../types";
+import { DecoderLearningWorkspace } from "./DecoderLearningWorkspace";
 import { decoderGuidePage } from "./guide";
 import { decoderRoute, decoderRouteId } from "./routes";
 
@@ -33,7 +29,7 @@ function routeDefinition(
 
 function guidePage(context: ArchitectureRenderContext): LearningGuidePage {
   const routeId = decoderRouteId(decoderRoute(context.state));
-  return decoderGuidePage(routeId, context.model.config.n_layer);
+  return decoderGuidePage(routeId);
 }
 
 export function createDecoderOnlyFundamentalsAdapter(
@@ -71,78 +67,8 @@ export function createDecoderOnlyFundamentalsAdapter(
     },
     getGuidePage: (context) => guidePage(context),
     getAvailableRoutes: () => profile.routes.definitions,
-    renderArchitecture: (context) => {
-      const config = context.model.config;
-      const activate = (nodeId: ArchitectureNodeId) => {
-        context.navigate({
-          type: "activate-node",
-          nodeId,
-          layerCount: config.n_layer,
-          headCount: config.n_head,
-        });
-      };
-      const navigateTo = (view: ArchitectureView) => {
-        context.navigate({
-          type: "navigate-breadcrumb",
-          view,
-          layerCount: config.n_layer,
-        });
-      };
-      const selectLayer = (layer: number) => {
-        context.navigate({
-          type: "select-layer",
-          layer,
-          layerCount: config.n_layer,
-        });
-      };
-      const selectHead = (head: number) => {
-        context.navigate({
-          type: "select-head",
-          head,
-          headCount: config.n_head,
-        });
-      };
-
-      switch (context.state.view) {
-        case "root":
-          return (
-            <RootArchitecture
-              modelName={context.model.name}
-              config={config}
-              state={context.state}
-              onActivate={activate}
-              onOpenBlock={() => activate("transformer-block")}
-            />
-          );
-        case "transformer-block":
-          return (
-            <TransformerBlockDetail
-              config={config}
-              selectedLayer={context.state.selectedLayer}
-              selectedNodeId={context.state.selectedNodeId}
-              onActivateNode={activate}
-              onNavigate={navigateTo}
-              onSelectLayer={selectLayer}
-            />
-          );
-        case "self-attention":
-          return (
-            <AttentionDetail
-              layerCount={config.n_layer}
-              headCount={config.n_head}
-              modelWidth={config.n_embd}
-              traceSequenceLength={context.replaySequenceLength}
-              selectedLayer={context.state.selectedLayer}
-              selectedHead={context.state.selectedHead}
-              selectedNodeId={context.state.selectedNodeId}
-              onNavigateRoot={() => navigateTo("root")}
-              onBack={() => navigateTo("transformer-block")}
-              onSelectLayer={selectLayer}
-              onSelectHead={selectHead}
-              onSelectNode={activate}
-            />
-          );
-      }
-    },
+    renderArchitecture: (context) => (
+      <DecoderLearningWorkspace context={context} profile={profile} />
+    ),
   };
 }

@@ -136,6 +136,7 @@ export function LearningGuide<Id extends string>({
               ref={(element) => onSectionRef?.(section.id, element)}
               className="learning-guide-section"
               data-guide-section-id={section.id}
+              tabIndex={-1}
               data-primary-node-id={section.primaryNodeId}
               data-associated-node-ids={section.associatedNodeIds?.join(" ")}
               data-active={isActive}

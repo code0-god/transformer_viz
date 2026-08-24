@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StrictMode } from "react";
 import { App } from "./App";
@@ -199,45 +199,10 @@ describe("production React Worker integration", () => {
       screen.getByRole("button", { name: /Causal Multi-Head Self-Attention/ }),
     );
     expect(
-      within(screen.getByLabelText("현재 모델값")).getByText("5", {
-        selector: "dd",
-      }),
-    ).toBeInTheDocument();
-  });
-
-  test("keeps architecture navigation pure and preserves layer, head, and operation", async () => {
-    const { worker } = await readyApp();
-    const user = userEvent.setup();
-    await user.click(
-      screen.getByRole("button", { name: /반복 Transformer Blocks/ }),
-    );
-    await user.click(screen.getByRole("button", { name: "2" }));
-    await user.click(
-      screen.getByRole("button", { name: /Causal Multi-Head Self-Attention/ }),
-    );
-    await user.click(screen.getByRole("button", { name: "Head 2" }));
-    await user.click(screen.getByLabelText(/Softmax.*선택 가능/));
-    await user.click(screen.getByTestId("architecture-breadcrumb-gpt"));
-    await user.click(
-      screen.getByRole("button", { name: /반복 Transformer Blocks/ }),
-    );
-    await user.click(
-      screen.getByRole("button", { name: /Causal Multi-Head Self-Attention/ }),
-    );
-
-    expect(screen.getByTestId("attention-detail")).toHaveAttribute(
-      "data-selected-layer",
-      "2",
-    );
-    expect(screen.getByTestId("attention-detail")).toHaveAttribute(
-      "data-selected-head",
-      "2",
-    );
-    expect(screen.getByLabelText(/Softmax.*선택 가능/)).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    expect(worker.posted).toHaveLength(1);
+      document.querySelector(
+        '[data-runtime-presentation-id="decoder.runtime.attention-facts"] [data-guide-fact-id="decoder.fact.sequence-length"] [data-fact-status="ready"]',
+      ),
+    ).toHaveTextContent("5");
   });
 
   test("surfaces guard rejection and never renders prompt text through KaTeX", async () => {

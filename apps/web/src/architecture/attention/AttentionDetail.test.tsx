@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 
@@ -105,10 +105,11 @@ describe("AttentionDetail", () => {
     expect(screen.getByText("Attention Output")).toBeInTheDocument();
   });
 
-  test("selects operations by pointer and keyboard and renders KaTeX math", () => {
+  test("selects operations by pointer and keyboard", () => {
     const onSelectNode = vi.fn();
     const { rerender, props } = renderAttention({ onSelectNode });
     const score = screen.getByLabelText(/Score MatMul.*선택 가능/);
+
     fireEvent.keyDown(score, { key: "Enter" });
     expect(onSelectNode).toHaveBeenCalledWith("attention-scores");
 
@@ -117,47 +118,6 @@ describe("AttentionDetail", () => {
       "aria-pressed",
       "true",
     );
-    const operation = screen.getByTestId("attention-operation-copy");
-    const formula = within(operation).getByLabelText(
-      /^Score MatMul, Query와 전치된 Key의 행렬곱$/,
-    );
-    expect(formula).toHaveClass("katex");
-    expect(formula.textContent).not.toContain("@");
-    expect(
-      operation.querySelector(".architecture-symbolic-shape .katex"),
-    ).not.toBeNull();
-    expect(
-      operation.querySelector(".architecture-actual-shape .katex"),
-    ).not.toBeNull();
-    expect(
-      operation.querySelector(".architecture-actual-shape"),
-    ).not.toHaveTextContent("[3, 4] @ [4, 3] → [3, 3]");
-    expect(
-      operation.querySelector(
-        '.architecture-actual-shape annotation[encoding="application/x-tex"]',
-      ),
-    ).toHaveTextContent(String.raw`[3,4]\mathbin{@}[4,3]\to[3,3]`);
-
-    rerender(
-      <AttentionDetail
-        {...props}
-        selectedNodeId="attention-value-aggregation"
-      />,
-    );
-    const valueFormula = within(
-      screen.getByTestId("attention-operation-copy"),
-    ).getByLabelText(/^Value MatMul, attention probability와 Value의 행렬곱$/);
-    expect(valueFormula).toHaveClass("katex");
-    expect(valueFormula.textContent).not.toContain("@");
-
-    rerender(
-      <AttentionDetail {...props} selectedNodeId="attention-causal-mask" />,
-    );
-    expect(
-      screen
-        .getByTestId("attention-operation-copy")
-        .querySelectorAll(".architecture-mask-conditions .katex"),
-    ).toHaveLength(2);
   });
 
   test("renders every canvas subtitle through the canonical math surface", () => {
@@ -181,35 +141,11 @@ describe("AttentionDetail", () => {
     expect(caption?.querySelectorAll(".katex")).toHaveLength(2);
   });
 
-  test("uses config values and trace-only dimensions without invented values", () => {
-    const { rerender, props } = renderAttention({ traceSequenceLength: null });
-    expect(screen.getByText("A. 기호")).toBeInTheDocument();
-    expect(
-      document.querySelectorAll(".architecture-attention-symbols dt .katex"),
-    ).toHaveLength(12);
-    expect(
-      document.querySelectorAll(".architecture-attention-facts dt .katex"),
-    ).toHaveLength(7);
-    expect(
-      document.querySelectorAll(
-        ".architecture-attention-input-definition .katex",
-      ),
-    ).toHaveLength(1);
-    const facts = screen.getByLabelText("현재 모델값");
-    expect(within(facts).getByText("16")).toBeInTheDocument();
-    expect(within(facts).getAllByText("4", { selector: "dd" })).toHaveLength(2);
-    expect(within(facts).getByText("—")).toBeInTheDocument();
-    expect(within(facts).getAllByText("실행 후 표시")).toHaveLength(2);
+  test("rejects model dimensions that cannot form attention heads", () => {
+    renderAttention({ headCount: 0 });
 
-    rerender(<AttentionDetail {...props} traceSequenceLength={5} />);
-    expect(
-      screen.getByLabelText("현재 모델값").querySelectorAll('[role="math"]'),
-    ).toHaveLength(9);
-    expect(
-      within(screen.getByLabelText("현재 모델값")).getByText("5", {
-        selector: "dd",
-      }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.queryByTestId("attention-detail")).not.toBeInTheDocument();
   });
 
   test("highlights Guide targets independently from operation selection", () => {

@@ -96,7 +96,7 @@ export const edgeIssueFixtures = [
     expected: {
       code: "duplicate-glossary-id",
       path: `guide.glossary[${decoderOnlyFundamentalsProfile.guide.glossary.length}].id`,
-      relatedId: "attention-symbol-T",
+      relatedId: firstGlossaryEntry.id,
     },
   },
   {
