@@ -1,0 +1,281 @@
+.learning-guide {
+  display: grid;
+  gap: var(--s5, 1.5rem);
+  min-inline-size: 0;
+  color: var(--ink, #24231f);
+  font-size: 0.94rem;
+  line-height: 1.7;
+}
+
+.learning-guide-header {
+  display: grid;
+  gap: var(--s3, 0.75rem);
+}
+
+.learning-guide-header h3,
+.learning-guide-section h4,
+.learning-guide-takeaway h4,
+.learning-guide-glossary h4 {
+  color: var(--ink, #24231f);
+  line-height: 1.3;
+}
+
+.learning-guide-goal {
+  display: grid;
+  gap: var(--s1, 0.25rem);
+  padding-block: var(--s3, 0.75rem);
+  border-block: 1px solid var(--hairline, #d3ccbd);
+}
+
+.learning-guide-goal strong,
+.learning-guide-outline,
+.learning-guide-section-control {
+  color: var(--accent, #a53d23);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.learning-guide-goal span,
+.learning-guide p,
+.learning-guide dd,
+.learning-guide li > span {
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.learning-guide-outline {
+  padding: var(--s3, 0.75rem) var(--s4, 1rem);
+  border-radius: 12px;
+  background: var(--surface-strong, #ece7db);
+}
+
+.learning-guide-outline ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2, 0.5rem) var(--s4, 1rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learning-guide-outline a {
+  color: inherit;
+  text-underline-offset: 0.22em;
+}
+
+.learning-guide-introduction,
+.learning-guide-sections,
+.learning-guide-section,
+.learning-guide-takeaway,
+.learning-guide-glossary {
+  display: grid;
+  gap: var(--s4, 1rem);
+  min-inline-size: 0;
+}
+
+.learning-guide-section {
+  position: relative;
+  padding-block: var(--s5, 1.5rem);
+  border-block-start: 1px solid var(--hairline, #d3ccbd);
+}
+
+.learning-guide-section[data-active="true"] {
+  background: linear-gradient(90deg, var(--accent-soft, #f1d4c8), transparent 42%);
+}
+
+.learning-guide-section[data-active="true"]::before {
+  position: absolute;
+  inset-block: var(--s5, 1.5rem);
+  inset-inline-start: calc(var(--s3, 0.75rem) * -1);
+  inline-size: 1px;
+  background: var(--accent, #a53d23);
+  content: "";
+}
+
+.learning-guide-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3, 0.75rem);
+}
+
+.learning-guide-section-control {
+  flex: none;
+  border-color: var(--hairline, #d3ccbd);
+  background: var(--surface, #fbfaf6);
+}
+
+.learning-guide ul,
+.learning-guide ol {
+  margin: 0;
+  padding-inline-start: 1.35rem;
+}
+
+.learning-guide li + li {
+  margin-block-start: var(--s2, 0.5rem);
+}
+
+.learning-guide li strong,
+.learning-guide li > span {
+  display: block;
+}
+
+.learning-guide a,
+.learning-guide code {
+  color: var(--accent, #a53d23);
+}
+
+.learning-guide code {
+  padding: 0.12em 0.32em;
+  border-radius: 4px;
+  background: var(--surface-strong, #ece7db);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.88em;
+}
+
+.learning-guide-math-scroll {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.learning-guide-math-scroll .katex-display {
+  min-inline-size: max-content;
+  margin: var(--s2, 0.5rem) 0;
+  text-align: start;
+}
+
+.learning-guide-formula {
+  padding-block: var(--s2, 0.5rem);
+}
+
+.learning-guide-callout,
+.learning-guide-runtime,
+.learning-guide-operation,
+.learning-guide-example {
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--s4, 1rem);
+  border: 1px solid var(--hairline, #d3ccbd);
+  border-radius: 12px;
+  background: var(--surface, #fbfaf6);
+}
+
+.learning-guide-callout[data-guide-tone="important"],
+.learning-guide-operation {
+  border-color: color-mix(in srgb, var(--accent, #a53d23) 48%, var(--hairline, #d3ccbd));
+}
+
+.learning-guide-callout[data-guide-tone="warning"] {
+  border-color: var(--error, #a73c31);
+}
+
+.learning-guide-callout[data-guide-tone="analogy"] {
+  background: var(--normalization-soft, #fbf2d8);
+}
+
+.learning-guide-comparison {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
+  gap: var(--s4, 1rem);
+}
+
+.learning-guide-comparison section {
+  padding-block-start: var(--s3, 0.75rem);
+  border-block-start: 1px solid var(--line, #8b8374);
+}
+
+.learning-guide-example figcaption {
+  font-weight: 800;
+}
+
+.learning-guide-example pre {
+  margin: var(--s2, 0.5rem) 0 0;
+  overflow-x: auto;
+  color: var(--ink-muted, #68645c);
+  font: inherit;
+  white-space: pre-wrap;
+}
+
+.learning-guide-term,
+.learning-guide-runtime dl,
+.learning-guide-operation dl,
+.learning-guide-glossary dl {
+  margin: 0;
+}
+
+.learning-guide-term dt,
+.learning-guide-runtime dt,
+.learning-guide-operation dt,
+.learning-guide-glossary dt {
+  font-weight: 800;
+}
+
+.learning-guide-runtime dl,
+.learning-guide-operation dl,
+.learning-guide-glossary dl {
+  display: grid;
+  gap: var(--s3, 0.75rem);
+}
+
+.learning-guide-runtime dl > div,
+.learning-guide-operation dl > div,
+.learning-guide-glossary dl > div {
+  display: grid;
+  grid-template-columns: minmax(7rem, 0.4fr) minmax(0, 1fr);
+  gap: var(--s3, 0.75rem);
+}
+
+.learning-guide-runtime dd,
+.learning-guide-operation dd,
+.learning-guide-glossary dd {
+  color: var(--ink-muted, #68645c);
+}
+
+.learning-guide-runtime dd span,
+.learning-guide-runtime dd small,
+.learning-guide-operation dd span,
+.learning-guide-operation dd small {
+  display: block;
+}
+
+.learning-guide [data-fact-status="pending"] {
+  color: var(--ink-muted, #68645c);
+  font-style: italic;
+}
+
+.learning-guide-takeaway {
+  padding: var(--s4, 1rem);
+  border-radius: 12px;
+  background: var(--ready-soft, #e1eee6);
+}
+
+.learning-guide-next-step {
+  display: flex;
+  justify-content: flex-end;
+  padding-block-start: var(--s3, 0.75rem);
+  border-block-start: 1px solid var(--hairline, #d3ccbd);
+}
+
+.learning-guide-next-step button {
+  border-color: var(--accent, #a53d23);
+  color: var(--accent, #a53d23);
+}
+
+@media (max-width: 44rem) {
+  .learning-guide-section-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .learning-guide-section-control {
+    inline-size: 100%;
+  }
+
+  .learning-guide-runtime dl > div,
+  .learning-guide-operation dl > div,
+  .learning-guide-glossary dl > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s1, 0.25rem);
+  }
+}
