@@ -26,19 +26,23 @@ protocol, generation, replay, trace retention, model assets, or numerical semant
 
 ### Ownership matrix
 
-| Boundary | Owns | Does not own | Source contract |
+| Boundary | Owns | Current limitation / does not own | Source contract |
 |---|---|---|---|
-| Generic profile contracts | Model-neutral route, node, page, section, block, inline, runtime-presentation, and selected-operation presentation types | Decoder route names, Korean teaching copy, runtime adapter implementations | [`guideTypes.ts`](../../apps/web/src/tracks/guideTypes.ts), [`workspaceTypes.ts`](../../apps/web/src/tracks/workspaceTypes.ts), [`types.ts`](../../apps/web/src/tracks/types.ts) |
-| Generic validation | Structured issue production and registry-construction rejection | Prose wording or decoder-specific completeness rules | [`validation.ts`](../../apps/web/src/tracks/validation.ts), [`validationContent.ts`](../../apps/web/src/tracks/validationContent.ts), [`validationMappings.ts`](../../apps/web/src/tracks/validationMappings.ts), [`registry.ts`](../../apps/web/src/tracks/registry.ts) |
-| Generic Guide rendering | Learning goal, introduction, ordered sections, outline, rich blocks, formulas, runtime facts, selected-operation presentation, takeaway, glossary, and next step | Model calculations, decoder prose, runtime adapter resolution | [`LearningGuide.tsx`](../../apps/web/src/tracks/LearningGuide.tsx), [`GuideBlocks.tsx`](../../apps/web/src/tracks/GuideBlocks.tsx), [`GuideDynamicBlocks.tsx`](../../apps/web/src/tracks/GuideDynamicBlocks.tsx), [`GuideInline.tsx`](../../apps/web/src/tracks/GuideInline.tsx) |
-| Generic workspace and focus | Route header, Diagram/Guide panes, focus state, typed target registration, reveal, nearest-edge scrolling, reduced-motion behavior, and focus availability status | Architecture selection, route transitions, layer/head selection, Worker requests | [`LearningWorkspace.tsx`](../../apps/web/src/tracks/LearningWorkspace.tsx), [`learningFocus.ts`](../../apps/web/src/tracks/learningFocus.ts) |
-| Decoder-only profile | Route pages, Korean content, glossary, misconceptions, namespaced learning-node mapping, notation catalog, runtime/operation adapter names and resolvers, route controls, and display-ready facts | Generic rendering and validation policy | [`profile.ts`](../../apps/web/src/tracks/decoder-only-fundamentals/profile.ts), [`guide.ts`](../../apps/web/src/tracks/decoder-only-fundamentals/guide.ts), [`nodes.ts`](../../apps/web/src/tracks/decoder-only-fundamentals/nodes.ts), [`guideRuntime.ts`](../../apps/web/src/tracks/decoder-only-fundamentals/guideRuntime.ts), [`DecoderRouteControls.tsx`](../../apps/web/src/tracks/decoder-only-fundamentals/DecoderRouteControls.tsx) |
+| Reusable content and presentation shapes | Structurally reusable Guide block/inline variants plus display-ready runtime-fact and selected-operation shapes | Guide route/node fields still depend on the current identifier unions; these contracts are not fully model-neutral | [`guideTypes.ts`](../../apps/web/src/tracks/guideTypes.ts), [`workspaceTypes.ts`](../../apps/web/src/tracks/workspaceTypes.ts), [`types.ts`](../../apps/web/src/tracks/types.ts) |
+| Current identifier contracts | Decoder and canonical track forms, decoder route/node namespaces, and a `canonical.*` test/representability lane | `LearningTrackId`, `LearningRouteId`, and `LearningNodeId` are closed around current decoder/canonical forms and must be generalized or parameterized for another real profile | [`workspaceTypes.ts`](../../apps/web/src/tracks/workspaceTypes.ts) |
+| Shared validation core | Structured `{code,path,relatedId?}` issues, content/reference/order checks, route/page checks, and registry-construction rejection | Its validation inputs use the current identifier contracts; it does not by itself make arbitrary profile routes pluggable | [`validation.ts`](../../apps/web/src/tracks/validation.ts), [`validationContent.ts`](../../apps/web/src/tracks/validationContent.ts), [`validationTypes.ts`](../../apps/web/src/tracks/validationTypes.ts), [`registry.ts`](../../apps/web/src/tracks/registry.ts) |
+| Decoder-specific mapping validation | Decoder prefix-to-route resolution and current architecture-catalog capability checks for associations, primary nodes, interactive coverage, and drill-down exemptions | Another profile cannot reuse these mapping rules unchanged | [`validationMappings.ts`](../../apps/web/src/tracks/validationMappings.ts), [`catalog.ts`](../../apps/web/src/architecture/catalog.ts) |
+| Reusable Guide rendering | Learning goal, introduction, ordered sections, outline, rich blocks, formulas, runtime facts, selected-operation presentation, takeaway, glossary, and next step | Model calculations, decoder prose, and runtime adapter resolution; typed route/node inputs still use the current ID contracts | [`LearningGuide.tsx`](../../apps/web/src/tracks/LearningGuide.tsx), [`GuideBlocks.tsx`](../../apps/web/src/tracks/GuideBlocks.tsx), [`GuideDynamicBlocks.tsx`](../../apps/web/src/tracks/GuideDynamicBlocks.tsx), [`GuideInline.tsx`](../../apps/web/src/tracks/GuideInline.tsx) |
+| Reusable workspace/focus behavior | Model-copy-free route header, Diagram/Guide panes, focus transitions, typed target registration, reveal, nearest-edge scrolling, reduced-motion behavior, and focus status | Architecture selection, route transitions, layer/head selection, and Worker requests; another profile also needs generalized route/node ID types | [`LearningWorkspace.tsx`](../../apps/web/src/tracks/LearningWorkspace.tsx), [`learningFocus.ts`](../../apps/web/src/tracks/learningFocus.ts) |
+| Decoder-only profile | Route pages, Korean content, glossary, misconceptions, namespaced learning-node mapping, notation catalog, runtime/operation adapter names and resolvers, route controls, and display-ready facts | Shared rendering behavior and shared validation envelope/content checks | [`profile.ts`](../../apps/web/src/tracks/decoder-only-fundamentals/profile.ts), [`guide.ts`](../../apps/web/src/tracks/decoder-only-fundamentals/guide.ts), [`nodes.ts`](../../apps/web/src/tracks/decoder-only-fundamentals/nodes.ts), [`guideRuntime.ts`](../../apps/web/src/tracks/decoder-only-fundamentals/guideRuntime.ts), [`DecoderRouteControls.tsx`](../../apps/web/src/tracks/decoder-only-fundamentals/DecoderRouteControls.tsx) |
 | Existing architecture and application path | True route, selected node, layer and head; Diagram activation; generation and retained-step replay commands and state | Guide-only focus and highlight | [`state.ts`](../../apps/web/src/architecture/state.ts), [`DecoderLearningWorkspace.tsx`](../../apps/web/src/tracks/decoder-only-fundamentals/DecoderLearningWorkspace.tsx), [`AppContext.tsx`](../../apps/web/src/app/AppContext.tsx), [`appReducer.ts`](../../apps/web/src/app/appReducer.ts) |
 | Worker and Rust runtime | Model loading, tokenization, inference, generation, retained-step reconstruction, and validated responses | Learning Guide content, focus, highlight, and reveal | [`WorkerRequest.ts`](../../apps/web/src/generated/schema/WorkerRequest.ts), [`WorkerClient.ts`](../../apps/web/src/worker/WorkerClient.ts), [`apps/worker`](../../apps/worker/) |
 
-The generic layer therefore owns reusable shape, validation, rendering, workspace, focus, and
-reference-registry machinery. The `decoder-only-fundamentals` profile owns every current educational
-choice and every conversion from decoder runtime state to display-ready Guide data.
+The renderer, block presentation, workspace, focus, and reference-registry behavior are reusable and
+contain no decoder teaching copy. The structured issue envelope and content checks are also shared.
+The current route/node types and mapping coverage logic remain decoder-specific integration seams.
+The `decoder-only-fundamentals` profile owns every current educational choice and conversion from
+decoder runtime state to display-ready Guide data.
 
 ### Selection and learning focus
 
@@ -117,9 +121,11 @@ Validation enforces:
 - coverage for every route-visible selectable or drill-down node, unless a declared exemption is a
   known, same-route, non-duplicated drill-down transition.
 
-The validator checks IDs, references, ordering, mappings, and coverage, not Korean wording. A
-model-neutral `canonical.*` page can satisfy the contracts without registering or shipping a second
-profile.
+The shared validator checks IDs, references, ordering, and route/page consistency, not Korean
+wording. Mapping, interactive coverage, primary-node, and exemption checks additionally use the
+current decoder prefix rules and architecture catalog. A `canonical.*` fixture demonstrates that
+the content schema can represent an unregistered future page; it does not prove that a second
+profile can register without first generalizing those identifier and mapping seams.
 
 ### Content and rendering rules
 
@@ -180,20 +186,27 @@ five linked PNGs are the committed release views.
   inference and because it would change Worker and replay semantics.
 - **Retain a full trace for every generated step.** Rejected; the existing compact-step and selected
   replay boundary remains unchanged.
-- **Add a universal conditional Transformer graph.** Rejected; a future architecture must supply
-  its own profile, mappings, content, runtime adapters, and compatible runtime implementation.
+- **Treat the current ID unions and prefix mapper as already generic.** Rejected because
+  `workspaceTypes.ts` closes the current namespaces and `validationMappings.ts` explicitly maps
+  decoder prefixes. A second profile requires those seams to be generalized or parameterized.
+- **Add a universal conditional Transformer graph.** Rejected; after the shared seams are
+  generalized, a future architecture must still supply its own profile, mappings, content, runtime
+  adapters, and compatible runtime implementation.
 
 ## Consequences
 
 The shipped Workspace makes Diagram and Guide peers while preserving one architecture truth source.
 Guide interactions are deterministic UI work and can be tested independently of Worker execution.
-Profile construction fails early on broken machine-consumed content links, and the generic renderer
-remains reusable without embedding decoder knowledge.
+Profile construction fails early on broken machine-consumed content links. The renderer and
+workspace behavior remain reusable without embedding decoder teaching copy, but the current profile
+contract and mapping validator are not a drop-in multi-profile extension point.
 
-The cost is explicit profile work: each future profile must define complete routes, pages, glossary,
-notation, mappings, coverage decisions, and runtime/operation adapters. It must also provide runtime
-metadata and Worker/trace behavior appropriate to that architecture; the generic contracts do not
-make an unsupported architecture executable.
+The cost is both shared-seam and profile work. Before registering another real profile, route/track/
+node identifiers and mapping/coverage validation must be generalized or parameterized. The new
+profile must then define complete routes, pages, glossary, notation, mappings, coverage decisions,
+and runtime/operation adapters. It must also provide runtime metadata and Worker/trace behavior
+appropriate to that architecture; the current contracts do not make an unsupported architecture
+executable.
 
 ## Track B and future work
 

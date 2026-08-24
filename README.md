@@ -58,8 +58,8 @@ Currently bundled runtime model:
 
 The application resolves runtime architecture metadata through a Learning Track registry. The
 current profile owns GPT Root, Transformer Block, Self-Attention, guide content, and notation while
-the React shell remains model-independent. This profile architecture is designed to admit future
-learning tracks without changing the generic shell.
+the renderer/workspace behavior contains no model-specific teaching copy. A second profile still
+requires the current route/node identifier and coverage-mapping seams to be generalized.
 
 ### Learning Workspace
 
