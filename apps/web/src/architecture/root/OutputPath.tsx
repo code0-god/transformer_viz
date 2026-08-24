@@ -13,6 +13,7 @@ import { StageNode } from "./StageNode";
 interface OutputPathProps {
   readonly layout: DiagramLayout;
   readonly selectedNodeId: ArchitectureNodeId | null;
+  readonly highlightedNodeIds: readonly ArchitectureNodeId[];
   readonly onActivate: (id: ArchitectureNodeId) => void;
 }
 
@@ -65,6 +66,7 @@ const CONNECTOR_NAMES: readonly [
 export function OutputPath({
   layout,
   selectedNodeId,
+  highlightedNodeIds,
   onActivate,
 }: OutputPathProps) {
   const starts = [
@@ -83,6 +85,7 @@ export function OutputPath({
             className={className}
             bounds={bounds}
             selected={selectedNodeId === id}
+            highlighted={highlightedNodeIds.includes(id)}
             onActivate={onActivate}
           />
         );

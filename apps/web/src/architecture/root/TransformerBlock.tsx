@@ -13,6 +13,7 @@ import {
 interface TransformerBlockProps {
   readonly layerCount: number;
   readonly selected: boolean;
+  readonly highlighted?: boolean;
   readonly onActivate: (id: ArchitectureNodeId) => void;
 }
 
@@ -70,6 +71,7 @@ function ResidualAdd({ index }: Readonly<{ index: 0 | 1 }>) {
 export function TransformerBlock({
   layerCount,
   selected,
+  highlighted = false,
   onActivate,
 }: TransformerBlockProps) {
   const [ln1, attention, ln2, mlp] = BLOCK_MODULES;
@@ -80,6 +82,7 @@ export function TransformerBlock({
       id="transformer-block"
       bounds={{ ...BLOCK, radius: 16 }}
       selected={selected}
+      highlighted={highlighted}
       onActivate={onActivate}
       drillDownIndicator={{
         label: "자세히 보기 ›",

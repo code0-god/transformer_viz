@@ -82,6 +82,7 @@
 .architecture-root-screen .architecture-block-group > g.architecture-block-mlp > rect{ fill: #e5edf7; stroke: #7096c7; }
 .architecture-root-screen .architecture-residual-add,
 .architecture-root-screen .architecture-add { fill: var(--surface, #fffaf0); stroke: var(--line, #9c8f7b); stroke-width: 1.5; }
+.architecture-root-screen .architecture-add.is-learning-highlighted { stroke: var(--accent); stroke-width: 3; }
 .architecture-root-screen .architecture-node > g.architecture-node-normalization > rect:not(.architecture-node-focus-outline){ fill: var(--normalization-soft, #fff0c9); stroke: #d6a94b; }
 .architecture-root-screen .architecture-node > g.architecture-node-projection > rect:not(.architecture-node-focus-outline){ fill: var(--projection-soft, #eee4f5); stroke: #9d83bd; }
 .architecture-root-screen .architecture-node > g.architecture-node-logits > rect:not(.architecture-node-focus-outline){ fill: var(--token-soft, #f9e1d9); stroke: #d77761; }

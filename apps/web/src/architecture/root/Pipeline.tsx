@@ -19,13 +19,18 @@ interface PipelineProps {
   readonly layerCount: number;
   readonly layout: DiagramLayout;
   readonly selectedNodeId: ArchitectureNodeId | null;
+  readonly highlightedNodeIds: readonly ArchitectureNodeId[];
   readonly onActivate: (id: ArchitectureNodeId) => void;
 }
 
 function InputPath({
   selectedNodeId,
+  highlightedNodeIds,
   onActivate,
-}: Pick<PipelineProps, "selectedNodeId" | "onActivate">) {
+}: Pick<
+  PipelineProps,
+  "selectedNodeId" | "highlightedNodeIds" | "onActivate"
+>) {
   const [token, position] = EMBEDDINGS;
   return (
     <>
@@ -34,6 +39,7 @@ function InputPath({
         className="architecture-node-input"
         bounds={INPUT}
         selected={selectedNodeId === "input-context"}
+        highlighted={highlightedNodeIds.includes("input-context")}
         onActivate={onActivate}
       />
       <StageNode
@@ -41,6 +47,7 @@ function InputPath({
         className="architecture-node-embedding"
         bounds={token}
         selected={selectedNodeId === "token-embedding"}
+        highlighted={highlightedNodeIds.includes("token-embedding")}
         onActivate={onActivate}
       />
       <StageNode
@@ -48,6 +55,7 @@ function InputPath({
         className="architecture-node-embedding"
         bounds={position}
         selected={selectedNodeId === "position-embedding"}
+        highlighted={highlightedNodeIds.includes("position-embedding")}
         onActivate={onActivate}
       />
       <path
@@ -61,7 +69,10 @@ function InputPath({
         d={`M ${CENTER_X} ${INPUT.y + INPUT.height} V ${EMBEDDING_BRANCH_Y} H ${position.x + position.width / 2} V ${position.y}`}
       />
       <circle
-        className="architecture-add"
+        className={`architecture-add${highlightedNodeIds.includes("embedding-add") ? " is-learning-highlighted" : ""}`}
+        data-learning-highlighted={
+          highlightedNodeIds.includes("embedding-add") ? "true" : undefined
+        }
         cx={EMBEDDING_ADD.x}
         cy={EMBEDDING_ADD.y}
         r={EMBEDDING_ADD.radius}
@@ -71,6 +82,7 @@ function InputPath({
         className="architecture-node-hidden"
         bounds={HIDDEN}
         selected={false}
+        highlighted={highlightedNodeIds.includes("hidden-state")}
         onActivate={onActivate}
       />
       <path
@@ -103,12 +115,18 @@ function InputPath({
   );
 }
 
-function BlockPath({ layerCount, selectedNodeId, onActivate }: PipelineProps) {
+function BlockPath({
+  layerCount,
+  selectedNodeId,
+  highlightedNodeIds,
+  onActivate,
+}: PipelineProps) {
   return (
     <>
       <TransformerBlock
         layerCount={layerCount}
         selected={selectedNodeId === "transformer-block"}
+        highlighted={highlightedNodeIds.includes("transformer-block")}
         onActivate={onActivate}
       />
       <line
@@ -150,6 +168,7 @@ export function Pipeline(props: PipelineProps) {
     <>
       <InputPath
         selectedNodeId={props.selectedNodeId}
+        highlightedNodeIds={props.highlightedNodeIds}
         onActivate={props.onActivate}
       />
       <BlockPath {...props} />
