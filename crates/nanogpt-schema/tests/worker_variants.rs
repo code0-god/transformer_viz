@@ -36,17 +36,40 @@ fn worker_request_variants_round_trip_with_exact_u64_flow() -> Result<(), serde_
 fn state_and_error_response_variants_round_trip_with_exact_tags() -> Result<(), serde_json::Error> {
     // Given: exact non-trace response JSON.
     let model = json!({
+        "model_id":"nanogpt-edu",
         "name":"tiny",
         "corpus":"fixture",
         "nanogpt_commit":"abc",
         "parameter_count":42,
+        "architecture": {
+            "architecture_id": "nanogpt-decoder-v1",
+            "family": "decoder_only",
+            "normalization": "layer_norm",
+            "norm_placement": "pre_norm",
+            "position_encoding": "learned_absolute",
+            "attention": {
+                "self_attention": "causal_multi_head",
+                "cross_attention": false
+            },
+            "feed_forward": {"kind": "gelu_mlp"},
+            "generation": {
+                "kind": "autoregressive",
+                "kv_cache": false
+            },
+            "lm_head": {
+                "tied_token_embedding": true,
+                "bias": false
+            },
+            "dropout": 0.0
+        },
         "config": {
             "block_size":24,
             "vocab_size":259,
             "n_layer":2,
             "n_head":4,
             "n_embd":64,
-            "bias":true
+            "bias":true,
+            "dropout":0.0
         }
     });
     let values = [
