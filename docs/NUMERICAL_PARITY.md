@@ -9,7 +9,7 @@
 - Prompt token IDs: `[0, 119, 107, 104, 35, 102, 100, 119, 35, 118, 100, 119, 35, 114, 113, 35, 119, 107, 104, 1]`.
 - Model SHA-256: `8fd76c662da0d0cb9fe1035cb205b1a071ad95f9e22d116578a0a8bec0754be9`.
 - Trace SHA-256: `b441b99f8392b80784adadcc249a961b148908012ec4ee15f473494c6d5e5f56`.
-- Config SHA-256: `a81ea5a170d8dd7f75064b4962076d0d54adcc55440bc98aed9c52c664b99c64`.
+- Config SHA-256: `c037b9f98ff66e1834a86052afb595df3c0d5543621e36af609095524efcc1b9`.
 - Tokenizer SHA-256: `dd6f35a39cd126462a8d34f9e2832cca2ae2851fb7290761ab63dd2c3fbf572e`.
 - The fixture is committed Python output; Rust does not generate or round it.
 
