@@ -13,7 +13,7 @@ import threading
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 from browser_input import dispatch_key
 from browser_probes import READY_PROBE
@@ -113,6 +113,23 @@ def require(condition: bool, message: str) -> None:
         raise NavigationContractError(message)
 
 
+def verify_detail_contract(detail: dict[str, Any], initial: dict[str, Any]) -> None:
+    require(not detail["root"] and bool(detail["detail"]), f"detail route: {detail}")
+    require(detail["selectedLayer"] == 0 and detail["layerButtons"] == 2, f"layer config: {detail}")
+    require(detail["breadcrumb"] == "Transformer Block × 2", f"breadcrumb: {detail}")
+    require(detail["breadcrumbCurrent"] == "page", f"breadcrumb current: {detail}")
+    require("M 390 108 H 700 V 492 H 412" == detail["firstPath"], f"residual 1: {detail}")
+    require("M 390 660 H 700 V 1040 H 412" == detail["secondPath"], f"residual 2: {detail}")
+    require(detail["firstJunctionY"] == 108 and detail["secondJunctionY"] == 660, f"junctions: {detail}")
+    require(detail["internalNodeCount"] == 6, f"internal node count: {detail}")
+    require(all(role == "button" for role in detail["internalRoles"]), f"internal a11y: {detail}")
+    require(not detail["forbiddenDetail"], f"forbidden depth rendered: {detail}")
+    require(detail["prompt"] == initial["prompt"], f"prompt changed: {detail}")
+    require(detail["workerPosts"] == initial["workerPosts"], f"navigation called Worker: {detail}")
+    require(detail["documentOverflow"] == 0, f"document overflow: {detail}")
+    require(detail["localOverflow"] == 0, f"local overflow: {detail}")
+
+
 def verify_navigation(
     browser: ChromeSession,
     url: str,
@@ -178,21 +195,7 @@ def verify_navigation(
 
     dispatch_click(browser, '[data-node-id="transformer-block"]')
     detail = cdp.evaluate(session, DETAIL_PROBE, True)
-    require(not detail["root"] and detail["detail"], f"detail route: {detail}")
-    require(detail["selectedLayer"] == 0 and detail["layerButtons"] == 2, f"layer config: {detail}")
-    require(detail["breadcrumb"] == "Transformer Block × 2", f"breadcrumb: {detail}")
-    require(detail["breadcrumbCurrent"] == "page", f"breadcrumb current: {detail}")
-    require("M 390 108 H 700 V 382 H 412" == detail["firstPath"], f"residual 1: {detail}")
-    require("M 390 518 H 700 V 790 H 412" == detail["secondPath"], f"residual 2: {detail}")
-    require(detail["firstJunctionY"] == 108 and detail["secondJunctionY"] == 518, f"junctions: {detail}")
-    require(detail["internalNodeCount"] == 6, f"internal node count: {detail}")
-    require(all(role == "button" for role in detail["internalRoles"]), f"internal a11y: {detail}")
-    require(not detail["forbiddenDetail"], f"forbidden depth rendered: {detail}")
-    require(detail["prompt"] == initial["prompt"], f"prompt changed: {detail}")
-    require(detail["workerPosts"] == initial["workerPosts"], f"navigation called Worker: {detail}")
-    require(detail["documentOverflow"] == 0, f"document overflow: {detail}")
-    if mobile:
-        require(detail["localOverflow"] > 0, f"mobile detail lacks local overflow: {detail}")
+    verify_detail_contract(detail, initial)
     if evidence is not None:
         cdp.send(
             "Input.dispatchMouseEvent",

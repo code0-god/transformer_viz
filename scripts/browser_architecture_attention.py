@@ -12,6 +12,7 @@ import threading
 from functools import partial
 from http.server import ThreadingHTTPServer
 from pathlib import Path
+from typing import Any
 
 from browser_architecture_attention_probes import (
     ATTENTION_DETAIL_PROBE,
@@ -51,6 +52,49 @@ def hover(browser: ChromeSession, selector: str) -> None:
     settle(browser)
 
 
+def verify_block_attention_contract(block: dict[str, Any]) -> None:
+    require(block["block"] and not block["attention"], f"block route: {block}")
+    require(
+        block["capability"] == "drill-down"
+        and block["role"] == "button"
+        and block["tabIndex"] == "0"
+        and block["indicator"] == "자세히 보기 ›",
+        f"Self-Attention affordance: {block}",
+    )
+    require(
+        block["firstResidual"] == "M 390 108 H 700 V 492 H 412"
+        and block["secondResidual"] == "M 390 660 H 700 V 1040 H 412",
+        f"Block residual changed: {block}",
+    )
+
+
+def verify_attention_state_preservation(browser: ChromeSession, initial: dict[str, Any]) -> None:
+    cdp, session = browser.require_cdp(), browser.page_session
+    dispatch_click(browser, '[data-layer-index="1"]')
+    dispatch_click(browser, '[data-head-index="3"]')
+    dispatch_click(browser, '[data-node-id="attention-causal-mask"]')
+    selected = cdp.evaluate(session, ATTENTION_DETAIL_PROBE, True)
+    require(
+        selected["selectedLayer"] == 1 and selected["selectedHead"] == 3
+        and selected["selectedNode"] == "attention-causal-mask" and "Causal Mask" in selected["operationCopy"],
+        f"attention selection state: {selected}",
+    )
+    require(selected["workerPosts"] == initial["workerPosts"], f"selection called Worker: {selected}")
+    dispatch_click(browser, '[data-testid="architecture-breadcrumb-block"]')
+    returned_block = cdp.evaluate(session, BLOCK_ATTENTION_PROBE, True)
+    require(returned_block["selectedLayer"] == 1, f"layer not preserved: {returned_block}")
+    focus_by_tab(browser, '[data-node-id="self-attention"]')
+    dispatch_key(cdp, session, " ", "Space", 32)
+    settle(browser)
+    returned_attention = cdp.evaluate(session, ATTENTION_DETAIL_PROBE, True)
+    require(returned_attention["selectedHead"] == 3, f"head not preserved: {returned_attention}")
+    dispatch_click(browser, '[data-testid="architecture-breadcrumb-gpt"]')
+    returned_root = cdp.evaluate(session, ROOT_PROBE, True)
+    require(returned_root["root"], f"GPT breadcrumb failed: {returned_root}")
+    require(returned_root["prompt"] == initial["prompt"], f"root prompt changed: {returned_root}")
+    require(returned_root["workerPosts"] == initial["workerPosts"], f"root navigation called Worker: {returned_root}")
+
+
 def verify_attention(
     browser: ChromeSession,
     url: str,
@@ -84,19 +128,7 @@ def verify_attention(
 
     dispatch_click(browser, '[data-node-id="transformer-block"]')
     block = cdp.evaluate(session, BLOCK_ATTENTION_PROBE, True)
-    require(block["block"] and not block["attention"], f"block route: {block}")
-    require(
-        block["capability"] == "drill-down"
-        and block["role"] == "button"
-        and block["tabIndex"] == "0"
-        and block["indicator"] == "자세히 보기 ›",
-        f"Self-Attention affordance: {block}",
-    )
-    require(
-        block["firstResidual"] == "M 390 108 H 700 V 382 H 412"
-        and block["secondResidual"] == "M 390 518 H 700 V 790 H 412",
-        f"Block residual changed: {block}",
-    )
+    verify_block_attention_contract(block)
     focus_by_tab(browser, '[data-node-id="self-attention"]')
     settle(browser)
     focused = cdp.evaluate(session, BLOCK_ATTENTION_PROBE, True)
@@ -130,36 +162,7 @@ def verify_attention(
     settle(browser)
     require(cdp.evaluate(session, ATTENTION_DETAIL_PROBE, True)["attention"], "Enter failed")
 
-    dispatch_click(browser, '[data-layer-index="1"]')
-    dispatch_click(browser, '[data-head-index="3"]')
-    dispatch_click(browser, '[data-node-id="attention-causal-mask"]')
-    selected = cdp.evaluate(session, ATTENTION_DETAIL_PROBE, True)
-    require(
-        selected["selectedLayer"] == 1
-        and selected["selectedHead"] == 3
-        and selected["selectedNode"] == "attention-causal-mask"
-        and "Causal Mask" in selected["operationCopy"],
-        f"attention selection state: {selected}",
-    )
-    require(selected["workerPosts"] == initial["workerPosts"], f"selection called Worker: {selected}")
-
-    dispatch_click(browser, '[data-testid="architecture-breadcrumb-block"]')
-    returned_block = cdp.evaluate(session, BLOCK_ATTENTION_PROBE, True)
-    require(returned_block["selectedLayer"] == 1, f"layer not preserved: {returned_block}")
-    focus_by_tab(browser, '[data-node-id="self-attention"]')
-    dispatch_key(cdp, session, " ", "Space", 32)
-    settle(browser)
-    returned_attention = cdp.evaluate(session, ATTENTION_DETAIL_PROBE, True)
-    require(returned_attention["selectedHead"] == 3, f"head not preserved: {returned_attention}")
-
-    dispatch_click(browser, '[data-testid="architecture-breadcrumb-gpt"]')
-    returned_root = cdp.evaluate(session, ROOT_PROBE, True)
-    require(returned_root["root"], f"GPT breadcrumb failed: {returned_root}")
-    require(returned_root["prompt"] == initial["prompt"], f"root prompt changed: {returned_root}")
-    require(
-        returned_root["workerPosts"] == initial["workerPosts"],
-        f"root navigation called Worker: {returned_root}",
-    )
+    verify_attention_state_preservation(browser, initial)
 
 
 def main() -> int:

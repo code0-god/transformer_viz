@@ -20,6 +20,7 @@ from typing import Final, Protocol
 from browser_learning_workspace_actions import (
     NODE_SELECTORS,
     ActionRecord,
+    AttentionScrollerGeometry,
     ExpectedState,
     WorkspaceContractError,
     guide_selector,
@@ -61,11 +62,8 @@ def parse_viewports(source: str) -> tuple[tuple[int, int], ...]:
     return tuple(parsed)
 
 
-def validate_metrics(metrics: VisualMetrics) -> tuple[str, ...]:
-    viewport, layout = metrics["viewport"], metrics["layout"]
-    typography, health = metrics["typography"], metrics["health"]
-    controls, content = metrics["controls"], metrics["content"]
-    width = viewport["width"]
+def _layout_failures(metrics: VisualMetrics) -> list[str]:
+    width, layout = metrics["viewport"]["width"], metrics["layout"]
     failures: list[str] = []
     if width == 1440:
         if layout["mode"] != "grid" or not 46 <= layout["diagramShare"] <= 50 or not 50 <= layout["guideShare"] <= 54:
@@ -74,32 +72,35 @@ def validate_metrics(metrics: VisualMetrics) -> tuple[str, ...]:
             failures.append("desktop Diagram must remain visible after Guide document scroll")
     elif layout["mode"] != "stack":
         failures.append(f"{width}px layout must stack Diagram then Guide")
-    if layout["documentOverflow"] != 0:
-        failures.append("document horizontal overflow must be 0")
-    if layout["unexpectedOverflowOwners"]:
-        failures.append("only intended diagram/formula scrollers may overflow")
-    if typography["fontSize"] < 15:
-        failures.append("Guide body font-size must be at least 15px")
-    if typography["lineHeightRatio"] < 1.65:
-        failures.append("Guide line-height ratio must be at least 1.65")
-    if health["workerStarts"] != 1:
-        failures.append("Worker startup count must be exactly 1")
-    if not health["workerReadyObserved"]:
-        failures.append("Worker Ready must be observed before generation")
+    checks = (
+        (layout["documentOverflow"] != 0, "document horizontal overflow must be 0"),
+        (bool(layout["unexpectedOverflowOwners"]), "only intended diagram/formula scrollers may overflow"),
+    )
+    failures.extend(message for failed, message in checks if failed)
+    return failures
+
+
+def _content_health_failures(metrics: VisualMetrics) -> list[str]:
+    typography, health = metrics["typography"], metrics["health"]
+    controls, content = metrics["controls"], metrics["content"]
     error_keys = ("consoleErrors", "networkErrors", "runtimeErrors", "katexErrors")
-    if any(health[key] != 0 for key in error_keys):
-        failures.append("browser error counts must all be 0")
-    if health["status"] != "ready":
-        failures.append("Worker status must be ready")
-    if controls["targetViolations"]:
-        failures.append("interactive targets must be at least 44px")
-    if content["outlineCount"] < 1 or content["sectionControlCount"] < 1 or content["runtimeFactsCount"] < 1:
-        failures.append("outline, Guide controls, and runtime facts must be present")
-    if metrics["routeId"] == "decoder.self-attention" and content["selectedOperationCount"] < 1:
-        failures.append("Attention selected operation must be present")
-    if content["pendingFactCount"] > 0 or content["readyFactCount"] < 1:
-        failures.append("runtime and selected-operation facts must be trace-ready")
-    return tuple(failures)
+    checks = (
+        (typography["fontSize"] < 15, "Guide body font-size must be at least 15px"),
+        (typography["lineHeightRatio"] < 1.65, "Guide line-height ratio must be at least 1.65"),
+        (health["workerStarts"] != 1, "Worker startup count must be exactly 1"),
+        (not health["workerReadyObserved"], "Worker Ready must be observed before generation"),
+        (any(health[key] != 0 for key in error_keys), "browser error counts must all be 0"),
+        (health["status"] != "ready", "Worker status must be ready"),
+        (bool(controls["targetViolations"]), "interactive targets must be at least 44px"),
+        (content["outlineCount"] < 1 or content["sectionControlCount"] < 1 or content["runtimeFactsCount"] < 1, "outline, Guide controls, and runtime facts must be present"),
+        (metrics["routeId"] == "decoder.self-attention" and content["selectedOperationCount"] < 1, "Attention selected operation must be present"),
+        (content["pendingFactCount"] > 0 or content["readyFactCount"] < 1, "runtime and selected-operation facts must be trace-ready"),
+    )
+    return [message for failed, message in checks if failed]
+
+
+def validate_metrics(metrics: VisualMetrics) -> tuple[str, ...]:
+    return tuple(_layout_failures(metrics) + _content_health_failures(metrics))
 
 
 class LogValue(Protocol):
@@ -109,6 +110,60 @@ class LogValue(Protocol):
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, format: str, *args: LogValue) -> None:
         return
+
+
+def attention_scroller_geometry(browser: ChromeSession) -> AttentionScrollerGeometry:
+    geometry = browser.require_cdp().evaluate(
+        browser.page_session,
+        """(() => {
+          const scroller = document.getElementsByClassName('architecture-attention-scroll')[0];
+          const target = Array.from(document.getElementsByTagName('*'))
+            .find(element => element.dataset.nodeId === 'attention-query');
+          if (!(scroller instanceof HTMLElement) || !(target instanceof Element)) {
+            throw new Error('missing registered attention scroller or target');
+          }
+          const scrollerBox = scroller.getBoundingClientRect();
+          const targetBox = target.getBoundingClientRect();
+          const before = scroller.scrollLeft;
+          scroller.scrollLeft = scroller.scrollWidth;
+          const after = scroller.scrollLeft;
+          return {
+            viewportWidth: innerWidth,
+            viewportHeight: innerHeight,
+            reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+            clientWidth: scroller.clientWidth,
+            scrollWidth: scroller.scrollWidth,
+            effectiveMax: Math.max(0, scroller.scrollWidth - scroller.clientWidth),
+            scrollLeftBeforeAssignment: before,
+            scrollLeftAfterMaxAssignment: after,
+            overflowX: getComputedStyle(scroller).overflowX,
+            documentOverflow: Math.max(0,
+              document.documentElement.scrollWidth - document.documentElement.clientWidth),
+            targetFullyInsideScroller:
+              targetBox.left >= scrollerBox.left && targetBox.right <= scrollerBox.right &&
+              targetBox.top >= scrollerBox.top && targetBox.bottom <= scrollerBox.bottom,
+          };
+        })()""",
+        True,
+    )
+    checks = {
+        "390x844 viewport": (geometry["viewportWidth"], geometry["viewportHeight"])
+        == (390, 844),
+        "reduced motion": geometry["reducedMotion"],
+        "equal scroller widths": geometry["clientWidth"] == geometry["scrollWidth"],
+        "zero effective maximum": geometry["effectiveMax"] == 0,
+        "zero scrollLeft before assignment": geometry["scrollLeftBeforeAssignment"] == 0,
+        "zero scrollLeft after maximum assignment": geometry["scrollLeftAfterMaxAssignment"]
+        == 0,
+        "zero document overflow": geometry["documentOverflow"] == 0,
+        "target inside registered scroller": geometry["targetFullyInsideScroller"],
+    }
+    failures = [name for name, passed in checks.items() if not passed]
+    if failures:
+        raise WorkspaceContractError(
+            f"reduced-motion scroller geometry failed {failures}: {geometry}"
+        )
+    return geometry
 
 
 def run_actions(browser: ChromeSession) -> list[ActionRecord]:
@@ -131,11 +186,24 @@ def run_actions(browser: ChromeSession) -> list[ActionRecord]:
     cdp = browser.require_cdp()
     cdp.send("Emulation.setDeviceMetricsOverride", {"width": 390, "height": 844, "deviceScaleFactor": 1, "mobile": False}, browser.page_session)
     cdp.send("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": "reduce"}]}, browser.page_session)
-    cdp.evaluate(browser.page_session, """(() => {
-      const scroll = document.getElementsByClassName('architecture-attention-scroll')[0];
-      scroll.scrollLeft = scroll.scrollWidth;
-    })()""")
-    record_click(browser, records, "attention.guide.heads.reduced-motion", guide_selector("heads"), ExpectedState(attention, "attention-value-aggregation", "heads", "attention-query", ("attention-key", "attention-query", "attention-value"), guide_action=True, scroll_behavior="auto"))
+    reduced_motion_geometry = attention_scroller_geometry(browser)
+    record_click(
+        browser,
+        records,
+        "attention.guide.heads.reduced-motion",
+        guide_selector("heads"),
+        ExpectedState(
+            attention,
+            "attention-value-aggregation",
+            "heads",
+            "attention-query",
+            ("attention-key", "attention-query", "attention-value"),
+            focus_delta=1,
+            guide_action=True,
+            scroll_behavior="none",
+        ),
+        reduced_motion_geometry,
+    )
     cdp.send("Emulation.clearDeviceMetricsOverride", session_id=browser.page_session)
     cdp.send("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": "no-preference"}]}, browser.page_session)
     record_click(browser, records, "attention.guide.qkv", guide_selector("qkv"), ExpectedState(attention, "attention-value-aggregation", "qkv", "attention-qkv-projection", ("attention-qkv-projection",), guide_action=True))
@@ -185,7 +253,12 @@ def verify_entry(root: Path, entry: str, evidence: Path) -> None:
                 raise WorkspaceContractError(f"browser errors: {errors}")
             evidence.mkdir(parents=True, exist_ok=True)
             (evidence / "actions.json").write_text(json.dumps(records, ensure_ascii=False, indent=2) + "\n")
-            (evidence / "browser-summary.json").write_text(json.dumps({"entry": entry, "startupWorkerCount": startup["workerStarts"], "actionCount": len(records), "health": health, "errors": errors}, ensure_ascii=False, indent=2) + "\n")
+            reduced_motion = next(
+                record
+                for record in records
+                if record["action"] == "attention.guide.heads.reduced-motion"
+            )
+            (evidence / "browser-summary.json").write_text(json.dumps({"entry": entry, "startupWorkerCount": startup["workerStarts"], "actionCount": len(records), "reducedMotion": {"scrollExpectation": "none", "scrollBehaviorEvents": reduced_motion["scrollBehaviorEvents"], "scrollEventSource": reduced_motion["scrollEventSource"], "focusDelta": reduced_motion["focusDelta"], "workerDelta": reduced_motion["workerDelta"], "geometry": reduced_motion["geometry"]}, "health": health, "errors": errors}, ensure_ascii=False, indent=2) + "\n")
             guide_deltas = [record["workerDelta"] for record in records if ".guide." in record["action"]]
             if len(guide_deltas) != 8 or any(delta != 0 for delta in guide_deltas):
                 raise WorkspaceContractError(f"Guide Worker deltas failed: {guide_deltas}")

@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Final, TypedDict
+from typing import Final, Literal, TypedDict
 
 from browser_input import dispatch_key
 from browser_learning_workspace_probes import STATE_PROBE
 from browser_session import ChromeSession
+
+
+ScrollEventBehavior = Literal["auto", "smooth"]
+ScrollExpectation = Literal["none", "auto", "smooth"]
 
 
 class WorkspaceState(TypedDict):
@@ -22,7 +26,21 @@ class WorkspaceState(TypedDict):
     headingFocuses: int
     focusInvocations: int
     focusAvailability: str | None
-    scrollBehaviors: list[str]
+    scrollBehaviors: list[ScrollEventBehavior]
+
+
+class AttentionScrollerGeometry(TypedDict):
+    viewportWidth: int
+    viewportHeight: int
+    reducedMotion: bool
+    clientWidth: int
+    scrollWidth: int
+    effectiveMax: int
+    scrollLeftBeforeAssignment: int
+    scrollLeftAfterMaxAssignment: int
+    overflowX: str
+    documentOverflow: int
+    targetFullyInsideScroller: bool
 
 
 class ActionRecord(TypedDict):
@@ -31,6 +49,9 @@ class ActionRecord(TypedDict):
     after: WorkspaceState
     workerDelta: int
     focusDelta: int
+    scrollBehaviorEvents: list[ScrollEventBehavior]
+    scrollEventSource: Literal["product HTMLElement.scrollBy"]
+    geometry: AttentionScrollerGeometry | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,7 +64,7 @@ class ExpectedState:
     heading_focus_delta: int = 0
     focus_delta: int = 0
     guide_action: bool = False
-    scroll_behavior: str | None = None
+    scroll_behavior: ScrollExpectation | None = None
     focus_availability: str = "available"
 
 
@@ -173,9 +194,13 @@ def verify(actual: WorkspaceState, expected: ExpectedState, before: WorkspaceSta
         "focusAvailability": actual["focusAvailability"] == expected.focus_availability,
     }
     if expected.scroll_behavior is not None:
-        checks["scrollBehavior"] = len(actual["scrollBehaviors"]) > len(
-            before["scrollBehaviors"]
-        ) and actual["scrollBehaviors"][-1] == expected.scroll_behavior
+        expected_events: list[ScrollEventBehavior] = (
+            [] if expected.scroll_behavior == "none" else [expected.scroll_behavior]
+        )
+        checks["scrollBehavior"] = (
+            actual["scrollBehaviors"][len(before["scrollBehaviors"]) :]
+            == expected_events
+        )
     if expected.focused_element is not None:
         checks["focusedElement"] = actual["focusedElement"] == expected.focused_element
     failures = [name for name, passed in checks.items() if not passed]
@@ -187,24 +212,40 @@ def verify(actual: WorkspaceState, expected: ExpectedState, before: WorkspaceSta
         raise WorkspaceContractError(f"Guide action posted to Worker: {before} -> {actual}")
 
 
-def _append_record(records: list[ActionRecord], name: str, before: WorkspaceState, after: WorkspaceState) -> None:
+def _append_record(
+    records: list[ActionRecord],
+    name: str,
+    before: WorkspaceState,
+    after: WorkspaceState,
+    geometry: AttentionScrollerGeometry | None = None,
+) -> None:
     records.append({
         "action": name,
         "before": before,
         "after": after,
         "workerDelta": after["workerPosts"] - before["workerPosts"],
         "focusDelta": after["focusInvocations"] - before["focusInvocations"],
+        "scrollBehaviorEvents": after["scrollBehaviors"][len(before["scrollBehaviors"]) :],
+        "scrollEventSource": "product HTMLElement.scrollBy",
+        "geometry": geometry,
     })
 
 
-def record_click(browser: ChromeSession, records: list[ActionRecord], name: str, locator: str, expected: ExpectedState) -> None:
+def record_click(
+    browser: ChromeSession,
+    records: list[ActionRecord],
+    name: str,
+    locator: str,
+    expected: ExpectedState,
+    geometry: AttentionScrollerGeometry | None = None,
+) -> None:
     before = state(browser)
     arm_wait(browser, expected, before)
     click(browser, locator)
     await_wait(browser)
     after = state(browser)
     verify(after, expected, before)
-    _append_record(records, name, before, after)
+    _append_record(records, name, before, after, geometry)
 
 
 def record_keyboard(browser: ChromeSession, records: list[ActionRecord], name: str, locator: str, expected: ExpectedState) -> None:

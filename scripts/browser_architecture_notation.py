@@ -87,8 +87,8 @@ def verify_notation(
         f"block notation: {block}",
     )
     require(
-        block["firstResidual"] == "M 390 108 H 700 V 382 H 412"
-        and block["secondResidual"] == "M 390 518 H 700 V 790 H 412",
+        block["firstResidual"] == "M 390 108 H 700 V 492 H 412"
+        and block["secondResidual"] == "M 390 660 H 700 V 1040 H 412",
         f"block residual geometry: {block}",
     )
     require(not block["legacyNotation"], f"block legacy notation: {block}")

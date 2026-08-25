@@ -149,5 +149,4 @@ def verify_structure(detail: AttentionDetailProbe, mobile: bool) -> None:
     require(not detail["hasResidual"], f"residual duplicated: {detail}")
     require(not detail["forbiddenDetail"], f"forbidden detail rendered: {detail}")
     require(detail["documentOverflow"] == 0, f"document overflow: {detail}")
-    if mobile:
-        require(detail["localOverflow"] > 0, f"mobile lacks local overflow: {detail}")
+    require(detail["localOverflow"] == 0, f"local overflow: {detail}")
