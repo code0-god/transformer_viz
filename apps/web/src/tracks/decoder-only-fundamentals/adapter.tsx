@@ -7,7 +7,7 @@ import type {
   LearningTrackAdapter,
   LearningTrackProfile,
 } from "../types";
-import { DecoderLearningWorkspace } from "./DecoderLearningWorkspace";
+import { DecoderTrackWorkspace } from "./curriculum/DecoderTrackWorkspace";
 import { decoderGuidePage } from "./guide";
 import { decoderRoute, decoderRouteId } from "./routes";
 
@@ -68,7 +68,7 @@ export function createDecoderOnlyFundamentalsAdapter(
     getGuidePage: (context) => guidePage(context),
     getAvailableRoutes: () => profile.routes.definitions,
     renderArchitecture: (context) => (
-      <DecoderLearningWorkspace context={context} profile={profile} />
+      <DecoderTrackWorkspace context={context} profile={profile} />
     ),
   };
 }
