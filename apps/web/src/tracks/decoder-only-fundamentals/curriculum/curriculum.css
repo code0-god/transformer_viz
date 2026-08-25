@@ -155,6 +155,175 @@
   overflow-wrap: anywhere;
 }
 
+.part0-diagram {
+  display: grid;
+  gap: var(--s4);
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--s4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.part0-diagram svg {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  max-inline-size: 100%;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.part0-diagram__path {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 2;
+}
+
+.part0-diagram marker path {
+  fill: var(--line);
+}
+
+.part0-diagram__stage rect,
+.part0-diagram__lens > rect,
+.part0-diagram__address-board > rect,
+.part0-diagram__method-row > rect,
+.part0-diagram__reserved-legend > rect {
+  fill: var(--paper);
+  stroke: var(--hairline);
+  stroke-width: 1.5;
+}
+
+.part0-diagram__stage:nth-of-type(2n) rect,
+.part0-diagram__lens:nth-of-type(2n) > rect,
+.part0-diagram__method-row:nth-of-type(2n) > rect {
+  fill: var(--surface-strong);
+}
+
+.part0-diagram__stage text,
+.part0-diagram__lens > text,
+.part0-diagram__address-board > text,
+.part0-diagram__sequence-board > text,
+.part0-diagram__method-row > text:first-of-type,
+.part0-diagram__reserved-legend > text:first-of-type {
+  fill: var(--ink);
+  font-weight: 800;
+}
+
+.part0-diagram__note,
+.part0-diagram__example,
+.part0-diagram__axis-headings text,
+.part0-diagram__utf8-note text {
+  fill: var(--ink-muted);
+}
+
+.part0-diagram__example {
+  font-weight: 750;
+}
+
+.part0-diagram__lens line {
+  stroke: var(--hairline);
+}
+
+.part0-diagram__token-cell rect,
+.part0-diagram__sequence-token rect,
+.part0-diagram__address-row rect {
+  fill: var(--accent-soft);
+  stroke: color-mix(in srgb, var(--accent) 45%, var(--hairline));
+}
+
+.part0-diagram__token-cell text,
+.part0-diagram__sequence-token text,
+.part0-diagram__address-row text {
+  fill: var(--accent);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.part0-diagram__badge {
+  fill: var(--accent);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .08em;
+}
+
+.part0-diagram__method-row[data-current-runtime="true"] > rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.part0-diagram__fallback {
+  min-inline-size: 0;
+  padding-block-start: var(--s3);
+  border-block-start: 1px solid var(--hairline);
+  color: var(--ink-muted);
+  font-size: .82rem;
+}
+
+.part0-diagram__fallback fieldset {
+  min-inline-size: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.part0-diagram__fallback ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.part0-diagram__fallback ol li:not(:last-child)::after {
+  padding-inline-start: var(--s2);
+  content: "→";
+}
+
+.part0-diagram__fallback table {
+  inline-size: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.part0-diagram__fallback caption {
+  margin-block-end: var(--s2);
+  color: var(--ink);
+  font-weight: 800;
+  text-align: start;
+}
+
+.part0-diagram__fallback th,
+.part0-diagram__fallback td {
+  padding: var(--s2);
+  border-block-start: 1px solid var(--hairline);
+  overflow-wrap: anywhere;
+  text-align: start;
+  vertical-align: top;
+}
+
+.part0-diagram__fallback p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.part0-diagram__fallback p + p {
+  margin-block-start: var(--s2);
+}
+
+.part0-diagram__focus {
+  min-block-size: 44px;
+  justify-self: start;
+  border-color: var(--accent);
+  background: var(--paper);
+  color: var(--accent);
+}
+
 @media (min-width: 80rem) {
   .curriculum-workspace .learning-workspace__body {
     grid-template-columns: minmax(0, 48fr) minmax(0, 52fr);
@@ -181,6 +350,47 @@
 }
 
 @media (max-width: 40rem) {
+  .part0-diagram {
+    padding: var(--s3);
+  }
+
+  .part0-diagram__fallback table,
+  .part0-diagram__fallback thead,
+  .part0-diagram__fallback tbody,
+  .part0-diagram__fallback tr,
+  .part0-diagram__fallback th,
+  .part0-diagram__fallback td {
+    display: block;
+    inline-size: 100%;
+  }
+
+  .part0-diagram__fallback caption {
+    display: block;
+    inline-size: 100%;
+    word-break: keep-all;
+  }
+
+  .part0-diagram__fallback thead {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .part0-diagram__fallback td {
+    padding-block-start: var(--s1);
+    border-block-start: 0;
+  }
+
+  .part0-diagram__fallback tr + tr {
+    margin-block-start: var(--s2);
+  }
+
+  .part0-diagram__focus {
+    inline-size: 100%;
+  }
+
   .curriculum-toc {
     grid-template-columns: minmax(0, 1fr);
   }

@@ -4,6 +4,20 @@ const ACCESS_DATE = "2026-08-25";
 const ORIGINALITY_EXCLUSION =
   "No prose, examples, ordering, tables, code, images, or visual composition reused";
 
+export type CurriculumAuthorshipProvenance = {
+  readonly kind: "independently-composed";
+  readonly sourceBoundary: "plan-and-runtime-facts-only";
+  readonly humanSideBySide: "pending";
+  readonly rightsClearance: "not-claimed";
+};
+
+export const curriculumAuthorshipProvenance = {
+  kind: "independently-composed",
+  sourceBoundary: "plan-and-runtime-facts-only",
+  humanSideBySide: "pending",
+  rightsClearance: "not-claimed",
+} as const satisfies CurriculumAuthorshipProvenance;
+
 const EXPECTED_REFERENCE_ROLES: Readonly<Record<string, string>> = {
   "ref.tistory.21": "pedagogical-reference",
   "ref.tistory.22": "pedagogical-reference",

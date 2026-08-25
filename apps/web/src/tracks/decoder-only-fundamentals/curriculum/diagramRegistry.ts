@@ -1,7 +1,15 @@
+import type { ComponentType } from "react";
+
+import type { CurriculumDiagramRendererProps } from "./DecoderTrackWorkspace";
+import { NlpPipelineDiagram } from "./diagrams/part0/NlpPipelineDiagram";
+import { TokenComparisonDiagram } from "./diagrams/part0/TokenComparisonDiagram";
+import { TokenizationMethodsDiagram } from "./diagrams/part0/TokenizationMethodsDiagram";
+import { VocabularyAddressDiagram } from "./diagrams/part0/VocabularyAddressDiagram";
 import type {
   CurriculumConceptCandidate,
   CurriculumIssue,
   CurriculumRegistries,
+  DiagramId,
 } from "./types";
 
 export const CURRICULUM_DIAGRAM_IDS = [
@@ -22,6 +30,21 @@ export const curriculumDiagramIds: ReadonlySet<string> = new Set(
   CURRICULUM_DIAGRAM_IDS,
 );
 export const curriculumVisualizationIds: ReadonlySet<string> = new Set();
+
+const curriculumDiagramComponents: Readonly<
+  Record<string, ComponentType<CurriculumDiagramRendererProps>>
+> = {
+  "decoder.diagram.intro.nlp": NlpPipelineDiagram,
+  "decoder.diagram.tokenization.token": TokenComparisonDiagram,
+  "decoder.diagram.tokenization.vocabulary": VocabularyAddressDiagram,
+  "decoder.diagram.tokenization.methods": TokenizationMethodsDiagram,
+};
+
+export function curriculumDiagramComponent(
+  diagramId: DiagramId,
+): ComponentType<CurriculumDiagramRendererProps> | undefined {
+  return curriculumDiagramComponents[diagramId];
+}
 
 export function conceptRegistryIssues(
   concept: CurriculumConceptCandidate,

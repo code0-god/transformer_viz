@@ -51,6 +51,21 @@ function FixtureDiagram({
   );
 }
 
+const PART0_PRODUCTION_CHAPTERS = [
+  ["자연어 처리란?", "decoder.curriculum.guide.0.1", "자연어 처리 추론 경로"],
+  ["Token이란?", "decoder.curriculum.guide.0.2", "Token 경계 비교"],
+  [
+    "Vocabulary와 Token ID",
+    "decoder.curriculum.guide.0.3",
+    "Vocabulary 주소와 순서",
+  ],
+  [
+    "Tokenization 방식",
+    "decoder.curriculum.guide.0.4",
+    "Tokenization 방식의 정성 비교",
+  ],
+] as const;
+
 const fixtureRegistry: CurriculumRendererRegistry = {
   resolveGuidePage: () => fixturePage,
   resolveDiagram: () => FixtureDiagram,
@@ -120,7 +135,9 @@ describe("Decoder curriculum production integration", () => {
     await user.click(within(toc).getByRole("button", { name: /Token이란\?/ }));
 
     // Then: Chapter state changes in place and focus follows once.
-    expect(screen.getByRole("heading", { name: "Token이란?" })).toHaveFocus();
+    expect(
+      screen.getByRole("heading", { name: "Token이란?", level: 1 }),
+    ).toHaveFocus();
     expect(screen.getByText("현재 Chapter 2 / 14")).toBeInTheDocument();
     expect(window.location.href).toBe(locationBefore);
     expect(worker.posted).toHaveLength(postsBefore);
@@ -297,6 +314,147 @@ describe("Decoder curriculum production integration", () => {
       expect(screen.queryByText("Focus target unavailable.")).toBeNull();
     },
   );
+
+  test("keeps the production registry inactive until current 0.1 is selected", async () => {
+    // Given: the production app begins on the incumbent architecture.
+    const worker = readyCurriculum();
+    const user = userEvent.setup();
+    const postsBefore = worker.posted.length;
+    const hrefBefore = window.location.href;
+    const historyBefore = window.history.length;
+    const opener = screen.getByRole("button", { name: "목차 열기" });
+    opener.focus();
+    expect(screen.getByTestId("architecture-root")).toBeInTheDocument();
+    expect(
+      document.querySelector(
+        "[data-guide-page-id='decoder.curriculum.guide.0.1']",
+      ),
+    ).toBeNull();
+
+    // When: only the ToC disclosure is opened.
+    await user.click(opener);
+
+    // Then: the opener is inert with one current item and unchanged side effects.
+    const toc = screen.getByRole("navigation", { name: "Chapter 목차" });
+    expect(screen.getByTestId("architecture-root")).toBeInTheDocument();
+    expect(document.activeElement).toBe(opener);
+    expect(within(toc).getAllByRole("button")).toHaveLength(14);
+    expect(
+      within(toc).getAllByRole("button", { current: "page" }),
+    ).toHaveLength(1);
+    expect(screen.getByText("현재 Chapter 1 / 14")).toBeInTheDocument();
+    expect(window.location.href).toBe(hrefBefore);
+    expect(window.history.length).toBe(historyBefore);
+    expect(worker.posted).toHaveLength(postsBefore);
+
+    // When: the already-current Chapter is explicitly selected.
+    await user.click(
+      within(toc).getByRole("button", { name: "자연어 처리란?" }),
+    );
+
+    // Then: production Part 0 replaces legacy and owns heading focus once.
+    expect(screen.queryByTestId("architecture-root")).toBeNull();
+    expect(
+      document.querySelector(
+        "[data-guide-page-id='decoder.curriculum.guide.0.1']",
+      ),
+    ).not.toBeNull();
+    expect(
+      screen.getByRole("img", { name: "자연어 처리 추론 경로" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "자연어 처리란?", level: 1 }),
+    ).toHaveFocus();
+    expect(window.location.href).toBe(hrefBefore);
+    expect(window.history.length).toBe(historyBefore);
+    expect(worker.posted).toHaveLength(postsBefore);
+  });
+
+  test.each(PART0_PRODUCTION_CHAPTERS)(
+    "traverses production %s with exact page and Diagram identity",
+    async (chapterTitle, pageId, imageName) => {
+      // Given: fresh inactive production state and unchanged side-effect counters.
+      const worker = readyCurriculum();
+      const user = userEvent.setup();
+      const postsBefore = worker.posted.length;
+      const hrefBefore = window.location.href;
+      const historyBefore = window.history.length;
+      await user.click(screen.getByRole("button", { name: "목차 열기" }));
+
+      // When: the requested Part 0 Chapter is explicitly selected.
+      await user.click(
+        within(
+          screen.getByRole("navigation", { name: "Chapter 목차" }),
+        ).getByRole("button", {
+          name: new RegExp(chapterTitle.replace("?", "\\?")),
+        }),
+      );
+
+      // Then: page, Diagram, focus, progress, and side effects are exact.
+      expect(
+        document.querySelector(`[data-guide-page-id='${pageId}']`),
+      ).not.toBeNull();
+      expect(screen.getByRole("img", { name: imageName })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: chapterTitle, level: 1 }),
+      ).toHaveFocus();
+      const ordinal = PART0_PRODUCTION_CHAPTERS.findIndex(
+        ([title]) => title === chapterTitle,
+      );
+      expect(
+        screen.getByText(`현재 Chapter ${ordinal + 1} / 14`),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/Visualization/)).toBeNull();
+      expect(screen.queryByRole("slider")).toBeNull();
+      expect(screen.queryByRole("switch")).toBeNull();
+      expect(window.location.href).toBe(hrefBefore);
+      expect(window.history.length).toBe(historyBefore);
+      expect(worker.posted).toHaveLength(postsBefore);
+
+      // And: reopening the ToC preserves exactly one matching current item.
+      await user.click(screen.getByRole("button", { name: "목차 열기" }));
+      const toc = screen.getByRole("navigation", { name: "Chapter 목차" });
+      expect(
+        within(toc).getAllByRole("button", { current: "page" }),
+      ).toHaveLength(1);
+      expect(
+        within(toc).getByRole("button", {
+          name: new RegExp(chapterTitle.replace("?", "\\?")),
+        }),
+      ).toHaveAttribute("aria-current", "page");
+    },
+  );
+
+  test("falls back atomically when an activated Part 1 Chapter has no renderers", async () => {
+    // Given: production Part 0 has already been explicitly activated.
+    const worker = readyCurriculum();
+    const user = userEvent.setup();
+    const postsBefore = worker.posted.length;
+    await user.click(screen.getByRole("button", { name: "목차 열기" }));
+    await user.click(
+      within(
+        screen.getByRole("navigation", { name: "Chapter 목차" }),
+      ).getByRole("button", { name: "자연어 처리란?" }),
+    );
+    await user.click(screen.getByRole("button", { name: "목차 열기" }));
+
+    // When: a Chapter without both production resolvers is selected.
+    await user.click(
+      within(
+        screen.getByRole("navigation", { name: "Chapter 목차" }),
+      ).getByRole("button", { name: "언어 모델이란?" }),
+    );
+
+    // Then: only the incumbent architecture mounts without a flash.
+    expect(screen.getByTestId("architecture-root")).toBeInTheDocument();
+    expect(
+      document.querySelector(
+        "[data-guide-page-id='decoder.curriculum.guide.1.1']",
+      ),
+    ).toBeNull();
+    expect(screen.queryByText("Focus target unavailable.")).toBeNull();
+    expect(worker.posted).toHaveLength(postsBefore);
+  });
 
   test("keeps one conceptual image and separate native controls", () => {
     // Given/When: the root curriculum surface is rendered.

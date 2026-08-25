@@ -1,8 +1,15 @@
 import { decoderNodeMap } from "../nodes";
+import { part0Glossary } from "./content/part0/glossary";
+import type {
+  CurriculumRendererRegistry,
+  RenderableCurriculum,
+} from "./DecoderTrackWorkspace";
 import {
+  curriculumDiagramComponent,
   curriculumDiagramIds,
   curriculumVisualizationIds,
 } from "./diagramRegistry";
+import { curriculumGuidePage, curriculumGuidePages } from "./guidePages";
 import { CHAPTER_IDS, GUIDE_PAGE_IDS, PART_IDS } from "./ids";
 import { curriculumReferences } from "./references";
 import type {
@@ -11,7 +18,6 @@ import type {
   DiagramId,
   GuidePageId,
   LearningChapter,
-  LearningCurriculum,
   LearningPart,
   PartId,
   ReferenceId,
@@ -261,13 +267,19 @@ const parts: readonly LearningPart[] = PART_SPECS.map(
   }),
 );
 
-export const decoderCurriculum: LearningCurriculum = {
+const rendererRegistry = {
+  resolveGuidePage: curriculumGuidePage,
+  resolveDiagram: curriculumDiagramComponent,
+  glossary: part0Glossary,
+  formulas: {},
+  runtimeFacts: {},
+} satisfies CurriculumRendererRegistry;
+
+export const decoderCurriculum = {
   parts,
-  guidePages: GUIDE_PAGE_IDS.map((id) => ({
-    id,
-    sections: [{ id: `${id}.section`, title: id, blocks: [] }],
-  })),
-};
+  guidePages: curriculumGuidePages,
+  rendererRegistry,
+} satisfies RenderableCurriculum;
 
 export const decoderCurriculumRegistries: CurriculumRegistries = {
   diagramIds: new Set([
@@ -279,6 +291,6 @@ export const decoderCurriculumRegistries: CurriculumRegistries = {
   visualizationIds: curriculumVisualizationIds,
   nodeIds: new Set(Object.keys(decoderNodeMap)),
   formulaIds: new Set(),
-  termIds: new Set(),
+  termIds: new Set(part0Glossary.map(({ id }) => id)),
   references: curriculumReferences,
 };
