@@ -58,6 +58,47 @@ describe("learning profile structured validation", () => {
     },
   );
 
+  test("preserves Guide page-content issue order and messages", () => {
+    // Given: one page violating required fields and a glossary foreign key.
+    const { nextStep: _nextStep, ...page } = rootPage;
+    const profile = withRootPage({
+      ...page,
+      learningGoal: "",
+      keyTakeaway: [],
+      glossary: ["missing-term"],
+    });
+    // When: the existing profile validator scans the malformed page.
+    const issues = validateLearningProfile(profile).filter(({ code }) =>
+      [
+        "missing-learning-goal",
+        "missing-key-takeaway",
+        "missing-next-step",
+        "unknown-glossary-term",
+      ].includes(code),
+    );
+    // Then: issue order and every machine-consumed field stay exact.
+    expect(
+      issues.map(({ code, path, relatedId }) => [code, path, relatedId]),
+    ).toEqual([
+      [
+        "missing-learning-goal",
+        "guide.pages.decoder.root.learningGoal",
+        undefined,
+      ],
+      [
+        "missing-key-takeaway",
+        "guide.pages.decoder.root.keyTakeaway",
+        undefined,
+      ],
+      ["missing-next-step", "guide.pages.decoder.root.nextStep", undefined],
+      [
+        "unknown-glossary-term",
+        "guide.pages.decoder.root.glossary[0]",
+        "missing-term",
+      ],
+    ]);
+  });
+
   test("reports an empty guide page ID", () => {
     const profile = withRootPage({ ...rootPage, id: "" });
     const fixture = {

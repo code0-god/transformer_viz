@@ -20,7 +20,7 @@ export class LearningProfileValidationError extends Error {
   }
 }
 
-function pageIssues<Id extends string>(
+export function validateGuidePageContent<Id extends string>(
   page: LearningGuidePage<Id>,
   pagePath: string,
   context: ValidationContext<Id>,
@@ -119,7 +119,6 @@ function pageIssues<Id extends string>(
     scanGuideBlock(block, `${pagePath}.keyTakeaway[${index}]`, scan);
   });
   issues.push(...scan.issues);
-  issues.push(...mappingIssues({ page, pagePath, profile: context.profile }));
   return issues;
 }
 
@@ -200,7 +199,8 @@ export function validateLearningProfile<Id extends string>(
         relatedId: route.guidePageId,
       });
     }
-    issues.push(...pageIssues(page, pagePath, context));
+    issues.push(...validateGuidePageContent(page, pagePath, context));
+    issues.push(...mappingIssues({ page, pagePath, profile: context.profile }));
   }
   for (const route of profile.routes.definitions) {
     if (profile.guide.pages[route.id] === undefined) {
