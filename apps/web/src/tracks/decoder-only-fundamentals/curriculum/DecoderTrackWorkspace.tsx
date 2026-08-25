@@ -8,7 +8,6 @@ import {
   useState,
 } from "react";
 
-import type { ArchitectureView } from "../../../architecture/state";
 import type { FormulaDefinition } from "../../../math/formulaCatalog";
 import { LearningGuide } from "../../LearningGuide";
 import { LearningWorkspace } from "../../LearningWorkspace";
@@ -30,7 +29,13 @@ import {
   initialCurriculumState,
   selectCurriculumChapter,
 } from "./curriculumState";
-import { chapterNavigation, destinationForChapter } from "./navigation";
+import {
+  chapterNavigation,
+  destinationForChapter,
+  incumbentGuideDestination,
+  transitionToCurriculumRoute,
+  useGeneratedTokenFocus,
+} from "./navigation";
 import { initialLearningPaneState } from "./paneMode";
 import type {
   ChapterId,
@@ -80,6 +85,7 @@ export function DecoderTrackWorkspace({
   const diagramFocusRef = useRef<HTMLButtonElement | null>(null);
   const workspaceRef = useRef<HTMLElement | null>(null);
   const focusInPlaceRef = useRef(false);
+  useGeneratedTokenFocus(workspaceRef, context.state.selectedNodeId);
   const routeId = decoderRouteId(decoderRoute(context.state));
   const navigation = chapterNavigation(chapterId);
   const chapter = navigation?.current;
@@ -114,7 +120,15 @@ export function DecoderTrackWorkspace({
     }
     const destination = destinationForChapter(chapterId);
     if (destination.routeId !== routeId) return;
-    handoff.register({ ...destination, element: heading });
+    const incumbent = incumbentGuideDestination(chapterId);
+    const registeredElement =
+      incumbent === undefined
+        ? heading
+        : workspaceRef.current?.querySelector(
+            `[data-guide-page-id='${incumbent.pageId}'] [data-guide-section-id='${incumbent.sectionId}']`,
+          );
+    if (!(registeredElement instanceof HTMLElement)) return;
+    handoff.register({ ...destination, element: registeredElement });
     setCurriculumState((current) => {
       const pending = current.pending;
       if (
@@ -129,36 +143,10 @@ export function DecoderTrackWorkspace({
     });
   }, [chapterId, handoff, isActive, routeId]);
 
-  const transitionTo = (view: ArchitectureView): void => {
-    switch (view) {
-      case "root":
-        context.navigate({
-          type: "navigate-breadcrumb",
-          view,
-          layerCount: context.model.config.n_layer,
-        });
-        return;
-      case "transformer-block":
-        context.navigate({
-          type: "navigate-breadcrumb",
-          view,
-          layerCount: context.model.config.n_layer,
-        });
-        return;
-      case "self-attention":
-        context.navigate({
-          type: "activate-node",
-          nodeId: "self-attention",
-          layerCount: context.model.config.n_layer,
-          headCount: context.model.config.n_head,
-        });
-        return;
-    }
-  };
-
   const navigateChapter = (nextChapterId: ChapterId): void => {
     const destination = destinationForChapter(nextChapterId);
-    if (destination.routeId === routeId) {
+    const incumbent = incumbentGuideDestination(nextChapterId);
+    if (destination.routeId === routeId && incumbent === undefined) {
       focusInPlaceRef.current = true;
       setCurriculumState((current) =>
         selectCurriculumChapter(current, nextChapterId),
@@ -169,17 +157,13 @@ export function DecoderTrackWorkspace({
       setCurriculumState((current) =>
         beginCurriculumNavigation(current, nextChapterId, destination),
       );
-      switch (destination.routeId) {
-        case "decoder.root":
-          transitionTo("root");
-          return;
-        case "decoder.block":
-          transitionTo("transformer-block");
-          return;
-        case "decoder.self-attention":
-          transitionTo("self-attention");
-          return;
-      }
+      if (destination.routeId === routeId) return;
+      transitionToCurriculumRoute(
+        destination.routeId,
+        context.navigate,
+        context.model.config.n_layer,
+        context.model.config.n_head,
+      );
     });
   };
 

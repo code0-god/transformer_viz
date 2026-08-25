@@ -14,6 +14,7 @@ import {
   MLP_HEIGHT,
   MLP_Y,
   OUTPUT_Y,
+  RAIL_X,
   RESIDUAL_STATE_Y,
   SECOND_JUNCTION_Y,
   STATE_HEIGHT,
@@ -59,7 +60,7 @@ export function BlockConnectors() {
       <path
         className="architecture-detail-residual"
         data-connector="input-to-residual1"
-        d="M 390 108 H 700 V 382 H 412"
+        d={`M ${CENTER_X} ${FIRST_JUNCTION_Y} H ${RAIL_X} V ${ADD1_Y} H ${CENTER_X + ADD_RADIUS}`}
       />
       <VerticalConnector
         name="add1-to-x-prime"
@@ -84,7 +85,7 @@ export function BlockConnectors() {
       <path
         className="architecture-detail-residual"
         data-connector="x-prime-to-residual2"
-        d="M 390 518 H 700 V 790 H 412"
+        d={`M ${CENTER_X} ${SECOND_JUNCTION_Y} H ${RAIL_X} V ${ADD2_Y} H ${CENTER_X + ADD_RADIUS}`}
       />
       <VerticalConnector
         name="add2-to-output"

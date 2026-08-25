@@ -1,7 +1,13 @@
-import { describe, expect, test } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { describe, expect, test, vi } from "vitest";
 
 import { CHAPTER_IDS } from "./ids";
-import { chapterNavigation, curriculumChapters } from "./navigation";
+import {
+  chapterNavigation,
+  curriculumChapters,
+  transitionToCurriculumRoute,
+} from "./navigation";
 
 describe("curriculum chapter navigation", () => {
   test("derives one ordered spine and named neighbors when a middle chapter is current", () => {
@@ -29,6 +35,67 @@ describe("curriculum chapter navigation", () => {
     expect(first).toHaveProperty("next.id", CHAPTER_IDS[1]);
     expect(last).toHaveProperty("previous.id", CHAPTER_IDS[12]);
     expect(last).not.toHaveProperty("next");
+  });
+
+  test.each([
+    [
+      "decoder.root",
+      {
+        type: "navigate-breadcrumb",
+        view: "root",
+        layerCount: 2,
+      },
+    ],
+    [
+      "decoder.block",
+      {
+        type: "navigate-breadcrumb",
+        view: "transformer-block",
+        layerCount: 2,
+      },
+    ],
+    [
+      "decoder.self-attention",
+      {
+        type: "activate-node",
+        nodeId: "self-attention",
+        layerCount: 2,
+        headCount: 4,
+      },
+    ],
+  ] as const)(
+    "dispatches %s through the architecture action contract",
+    (routeId, action) => {
+      const navigate = vi.fn();
+
+      transitionToCurriculumRoute(routeId, navigate, 2, 4);
+
+      expect(navigate).toHaveBeenCalledOnce();
+      expect(navigate).toHaveBeenCalledWith(action);
+    },
+  );
+
+  test("keeps workspace orchestration below the implementation size limit", () => {
+    const source = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/tracks/decoder-only-fundamentals/curriculum/DecoderTrackWorkspace.tsx",
+      ),
+      "utf8",
+    );
+    const pureLines = source.split("\n").filter((line) => {
+      const trimmed = line.trim();
+      return (
+        trimmed.length > 0 &&
+        !trimmed.startsWith("//") &&
+        !trimmed.startsWith("/*") &&
+        !trimmed.startsWith("*") &&
+        !trimmed.endsWith("*/")
+      );
+    });
+
+    expect(source).not.toContain("SIZE_OK");
+    expect(pureLines.length).toBeLessThanOrEqual(250);
   });
 
   test("returns no navigation for a malformed destination", () => {

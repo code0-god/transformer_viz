@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 
 import { AttentionDetail } from "./AttentionDetail";
+import { ATTENTION_WIDTH, geometry } from "./geometry";
 
 function renderAttention(
   overrides: Partial<React.ComponentProps<typeof AttentionDetail>> = {},
@@ -27,29 +28,29 @@ function renderAttention(
 
 const connectorContracts = [
   ["input-to-qkv", "line", "470", "80", "470", "120"],
-  ["qkv-to-query", "path", "M 470 192 V 225 H 180 V 260"],
+  ["qkv-to-query", "path", "M 470 192 V 226 H 180 V 260"],
   ["qkv-to-key", "path", "M 470 192 V 260"],
-  ["qkv-to-value", "path", "M 470 192 V 225 H 760 V 260"],
+  ["qkv-to-value", "path", "M 470 192 V 226 H 760 V 260"],
   ["query-to-heads", "line", "180", "328", "180", "380"],
   ["key-to-heads", "line", "470", "328", "470", "380"],
   ["value-to-heads", "line", "760", "328", "760", "380"],
-  ["query-heads-to-scores", "path", "M 180 452 V 482 H 300 V 520"],
-  ["key-heads-to-scores", "path", "M 470 452 V 482 H 420 V 520"],
-  ["scores-to-scale", "line", "360", "592", "360", "640"],
-  ["scale-to-mask", "line", "360", "704", "360", "750"],
-  ["mask-to-softmax", "line", "360", "822", "360", "870"],
-  ["softmax-to-value-aggregation", "path", "M 360 942 V 980 H 470 V 1010"],
-  ["value-heads-to-aggregation", "path", "M 760 452 V 1046 H 620"],
-  ["aggregation-to-head-outputs", "line", "470", "1082", "470", "1130"],
-  ["head-outputs-to-merge", "line", "470", "1188", "470", "1235"],
-  ["merge-to-output-projection", "line", "470", "1307", "470", "1355"],
+  ["query-heads-to-scores", "path", "M 180 452 V 486 H 300 V 520"],
+  ["key-heads-to-scores", "path", "M 470 452 V 486 H 420 V 520"],
+  ["scores-to-scale", "line", "360", "592", "360", "660"],
+  ["scale-to-mask", "line", "360", "724", "360", "792"],
+  ["mask-to-softmax", "line", "360", "864", "360", "928"],
+  ["softmax-to-value-aggregation", "path", "M 360 1000 V 1032 H 470 V 1064"],
+  ["value-heads-to-aggregation", "path", "M 760 452 V 1100 H 620"],
+  ["aggregation-to-head-outputs", "line", "470", "1136", "470", "1180"],
+  ["head-outputs-to-merge", "line", "470", "1238", "470", "1258"],
+  ["merge-to-output-projection", "line", "470", "1330", "470", "1394"],
   [
     "output-projection-to-attention-output",
     "line",
     "470",
-    "1427",
+    "1466",
     "470",
-    "1470",
+    "1500",
   ],
 ];
 
@@ -57,7 +58,7 @@ describe("AttentionDetail", () => {
   test("renders the exact attention geometry and ordered connectors", () => {
     const { container } = renderAttention();
     const diagram = container.querySelector(".architecture-attention-diagram");
-    expect(diagram).toHaveAttribute("viewBox", "0 0 1000 1555");
+    expect(diagram).toHaveAttribute("viewBox", "0 0 1000 1582");
     expect(screen.getAllByText("Split Heads")).toHaveLength(3);
 
     const connectors = Array.from(
@@ -79,6 +80,41 @@ describe("AttentionDetail", () => {
         expect(connector).toHaveAttribute("y2", contract[5]);
       }
     });
+  });
+
+  test("keeps every actionable target disjoint and horizontally contained", () => {
+    const targets = [
+      geometry.qkv,
+      geometry.query,
+      geometry.key,
+      geometry.value,
+      geometry.scores,
+      geometry.scale,
+      geometry.mask,
+      geometry.softmax,
+      geometry.aggregation,
+      geometry.merge,
+      geometry.projection,
+    ].map(({ x, y, width, height }) => ({
+      x: x + width / 2 - Math.max(width, 136) / 2,
+      y: y + height / 2 - Math.max(height, 136) / 2,
+      width: Math.max(width, 136),
+      height: Math.max(height, 136),
+    }));
+
+    for (const [index, target] of targets.entries()) {
+      expect(target.x).toBeGreaterThanOrEqual(0);
+      expect(target.x + target.width).toBeLessThanOrEqual(ATTENTION_WIDTH);
+      for (const other of targets.slice(index + 1)) {
+        const overlapWidth =
+          Math.min(target.x + target.width, other.x + other.width) -
+          Math.max(target.x, other.x);
+        const overlapHeight =
+          Math.min(target.y + target.height, other.y + other.height) -
+          Math.max(target.y, other.y);
+        expect(Math.max(0, overlapWidth) * Math.max(0, overlapHeight)).toBe(0);
+      }
+    }
   });
 
   test("preserves the operation order without a residual duplicate", () => {

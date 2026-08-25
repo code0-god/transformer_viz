@@ -116,6 +116,8 @@ export function ArchitectureNode({
         ? ", 선택 가능"
         : "";
   const className = `architecture-node architecture-node--${definition.capability}${stateClass}${highlightClass}${disabledClass}`;
+  const targetWidth = Math.max(bounds.width, 136);
+  const targetHeight = Math.max(bounds.height, 136);
   const content = (
     <>
       {children}
@@ -206,6 +208,17 @@ export function ArchitectureNode({
       data-learning-highlighted={highlighted ? "true" : undefined}
       {...interactionProps}
     >
+      <rect
+        className="architecture-node__hit-target"
+        fill="currentColor"
+        fillOpacity={0.001}
+        pointerEvents="all"
+        x={bounds.x + (bounds.width - targetWidth) / 2}
+        y={bounds.y + (bounds.height - targetHeight) / 2}
+        width={targetWidth}
+        height={targetHeight}
+        rx={bounds.radius}
+      />
       {content}
     </g>
   );

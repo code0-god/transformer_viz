@@ -210,7 +210,7 @@ describe("Decoder curriculum production integration", () => {
       ]);
       expect(screen.getByTestId("architecture-detail")).toBeInTheDocument();
       expect(
-        screen.getByRole("heading", { name: "Transformer Block", level: 1 }),
+        document.querySelector("[data-guide-section-id='block-overview']"),
       ).toHaveFocus();
       expect(screen.queryByText("Focus target unavailable.")).toBeNull();
       expect(worker.posted).toHaveLength(postsBefore);

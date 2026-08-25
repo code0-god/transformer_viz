@@ -49,6 +49,7 @@ export const decoderLearningNodeByArchitecture: Readonly<
   "lm-head": "decoder.root.lm-head",
   logits: "decoder.root.logits",
   "token-selection": "decoder.root.token-selection",
+  "generated-token": "decoder.root.generated-token",
   "append-context": "decoder.root.append-context",
   "layer-norm-1": "decoder.block.layer-norm-1",
   "self-attention": "decoder.block.self-attention",

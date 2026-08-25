@@ -45,6 +45,7 @@ type ChapterSpec = {
   readonly conceptId: ConceptId;
   readonly conceptTitle: string;
   readonly pageId?: GuidePageId;
+  readonly incumbentSectionId?: string;
   readonly diagramId: DiagramId;
   readonly nodeId: string;
   readonly references: readonly ReferenceId[];
@@ -195,6 +196,7 @@ const CHAPTER_SPECS = [
     title: "GPT",
     conceptId: "decoder.architecture.gpt",
     conceptTitle: "GPT",
+    incumbentSectionId: "root-generation-overview",
     diagramId: "root",
     nodeId: "decoder.root.architecture",
     references: [
@@ -210,6 +212,7 @@ const CHAPTER_SPECS = [
     title: "Transformer Block",
     conceptId: "decoder.architecture.block",
     conceptTitle: "Transformer Block",
+    incumbentSectionId: "block-overview",
     diagramId: "transformer-block",
     nodeId: "decoder.root.transformer-block",
     references: [
@@ -225,6 +228,7 @@ const CHAPTER_SPECS = [
     title: "Self-Attention",
     conceptId: "decoder.attention.self",
     conceptTitle: "Self-Attention",
+    incumbentSectionId: "qkv",
     diagramId: "self-attention",
     nodeId: "decoder.block.self-attention",
     references: [
@@ -241,7 +245,11 @@ function chapterFromSpec(spec: ChapterSpec): LearningChapter {
     chapterId: spec.id,
     title: spec.conceptTitle,
     guideSectionIds:
-      spec.pageId === undefined ? [] : [`${spec.pageId}.section`],
+      spec.pageId === undefined
+        ? spec.incumbentSectionId === undefined
+          ? []
+          : [spec.incumbentSectionId]
+        : [`${spec.pageId}.section`],
     relatedNodeIds: [spec.nodeId],
     diagramId: spec.diagramId,
     visualizationCtaCount: 0,

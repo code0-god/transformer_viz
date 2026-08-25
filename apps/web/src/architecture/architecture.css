@@ -3,6 +3,18 @@
   outline: none;
 }
 
+.architecture-flow,
+.architecture-repeat,
+.architecture-merge,
+.architecture-residual,
+.architecture-forward-guide,
+.architecture-residual-junction,
+.architecture-detail-flow,
+.architecture-detail-residual,
+.architecture-attention-flow {
+  pointer-events: none;
+}
+
 .architecture-node--static,
 .architecture-node.is-disabled {
   cursor: default;

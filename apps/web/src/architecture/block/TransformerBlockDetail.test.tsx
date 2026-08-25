@@ -2,6 +2,17 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { vi } from "vitest";
 
 import type { ArchitectureNodeId } from "../catalog";
+import {
+  ADD1_Y,
+  ADD2_Y,
+  ATTENTION_HEIGHT,
+  ATTENTION_Y,
+  LN_HEIGHT,
+  LN1_Y,
+  LN2_Y,
+  MLP_HEIGHT,
+  MLP_Y,
+} from "./blockGeometry";
 import { TransformerBlockDetail } from "./TransformerBlockDetail";
 
 const config = { n_layer: 3 };
@@ -35,17 +46,17 @@ function connectorNames(container: HTMLElement): (string | null)[] {
 }
 
 describe("TransformerBlockDetail", () => {
-  test("ports the 900 by 930 diagram and exact residual geometry", () => {
+  test("ports the vertically reflowed diagram and exact residual geometry", () => {
     const { container } = renderDetail();
     const diagram = container.querySelector("svg");
-    expect(diagram).toHaveAttribute("viewBox", "0 0 900 930");
+    expect(diagram).toHaveAttribute("viewBox", "0 0 900 1208");
 
     expect(
       container.querySelector('[data-connector="input-to-residual1"]'),
-    ).toHaveAttribute("d", "M 390 108 H 700 V 382 H 412");
+    ).toHaveAttribute("d", "M 390 108 H 700 V 492 H 412");
     expect(
       container.querySelector('[data-connector="x-prime-to-residual2"]'),
-    ).toHaveAttribute("d", "M 390 518 H 700 V 790 H 412");
+    ).toHaveAttribute("d", "M 390 660 H 700 V 1040 H 412");
 
     expect(connectorNames(container)).toEqual([
       "input-to-ln1",
@@ -69,14 +80,14 @@ describe("TransformerBlockDetail", () => {
         ],
       ),
     ).toEqual([
-      ["390", "80", "390", "146"],
-      ["390", "202", "390", "250"],
-      ["390", "330", "390", "360"],
-      ["390", "404", "390", "438"],
-      ["390", "486", "390", "560"],
-      ["390", "616", "390", "664"],
-      ["390", "736", "390", "768"],
-      ["390", "812", "390", "850"],
+      ["390", "72", "390", "160"],
+      ["390", "216", "390", "312"],
+      ["390", "392", "390", "470"],
+      ["390", "514", "390", "580"],
+      ["390", "628", "390", "712"],
+      ["390", "768", "390", "864"],
+      ["390", "936", "390", "1018"],
+      ["390", "1062", "390", "1128"],
     ]);
   });
 
@@ -88,24 +99,24 @@ describe("TransformerBlockDetail", () => {
     expect(states[0]?.querySelector("rect")).toHaveAttribute("y", "24");
     expect(states[0]?.querySelector("rect")).toHaveAttribute("width", "330");
     expect(states[0]?.querySelector("rect")).toHaveAttribute("height", "48");
-    expect(states[1]?.querySelector("rect")).toHaveAttribute("y", "438");
-    expect(states[2]?.querySelector("rect")).toHaveAttribute("y", "850");
+    expect(states[1]?.querySelector("rect")).toHaveAttribute("y", "580");
+    expect(states[2]?.querySelector("rect")).toHaveAttribute("y", "1128");
     expect(states[0]).toHaveAttribute("data-state-node", "block-input");
     expect(states[2]).toHaveAttribute("data-state-node", "block-output");
 
     const plusNodes = container.querySelectorAll(".architecture-residual-add");
     expect(plusNodes).toHaveLength(2);
     expect(plusNodes[0]).toHaveAttribute("cx", "390");
-    expect(plusNodes[0]).toHaveAttribute("cy", "382");
+    expect(plusNodes[0]).toHaveAttribute("cy", "492");
     expect(plusNodes[0]).toHaveAttribute("r", "22");
-    expect(plusNodes[1]).toHaveAttribute("cy", "790");
+    expect(plusNodes[1]).toHaveAttribute("cy", "1040");
 
     expect(
       container.querySelector('[data-junction="block-input-junction"]'),
     ).toHaveAttribute("cy", "108");
     expect(
       container.querySelector('[data-junction="x-prime-junction"]'),
-    ).toHaveAttribute("cy", "518");
+    ).toHaveAttribute("cy", "660");
 
     const modules = Array.from(
       container.querySelectorAll(".architecture-block-module > rect"),
@@ -116,11 +127,37 @@ describe("TransformerBlockDetail", () => {
       rect.getAttribute("height"),
     ]);
     expect(modules).toEqual([
-      ["225", "146", "330", "56"],
-      ["225", "250", "330", "80"],
-      ["225", "560", "330", "56"],
-      ["225", "664", "330", "72"],
+      ["225", "160", "330", "56"],
+      ["225", "312", "330", "80"],
+      ["225", "712", "330", "56"],
+      ["225", "864", "330", "72"],
     ]);
+  });
+
+  test("keeps actionable 136-unit targets free of positive-area overlap", () => {
+    const bounds = [
+      { y: LN1_Y, height: LN_HEIGHT },
+      { y: ATTENTION_Y, height: ATTENTION_HEIGHT },
+      { y: ADD1_Y - 22, height: 44 },
+      { y: LN2_Y, height: LN_HEIGHT },
+      { y: MLP_Y, height: MLP_HEIGHT },
+      { y: ADD2_Y - 22, height: 44 },
+    ].map(({ y, height }) => ({
+      top: y + height / 2 - Math.max(height, 136) / 2,
+      bottom: y + height / 2 + Math.max(height, 136) / 2,
+    }));
+
+    for (const [index, target] of bounds.entries()) {
+      for (const other of bounds.slice(index + 1)) {
+        expect(
+          Math.max(
+            0,
+            Math.min(target.bottom, other.bottom) -
+              Math.max(target.top, other.top),
+          ),
+        ).toBe(0);
+      }
+    }
   });
 
   test("derives layers from config and reports selected layer changes", () => {
@@ -223,7 +260,7 @@ describe("TransformerBlockDetail", () => {
       ".architecture-node__drill-down--label",
     );
     expect(drillDownLabel).toHaveAttribute("x", "539");
-    expect(drillDownLabel).toHaveAttribute("y", "318");
+    expect(drillDownLabel).toHaveAttribute("y", "380");
     const caption = container.querySelector("figcaption");
     expect(caption?.querySelectorAll('[role="math"]')).toHaveLength(2);
     expect(caption?.querySelectorAll(".katex")).toHaveLength(2);

@@ -36,7 +36,7 @@ describe("RootArchitecture", () => {
     const { container } = renderRoot();
     const svg = screen.getByTestId("architecture-root");
 
-    expect(svg).toHaveAttribute("viewBox", "0 0 1000 1332");
+    expect(svg).toHaveAttribute("viewBox", "0 0 1000 1720");
     expect(
       container.querySelectorAll(".architecture-block-group"),
     ).toHaveLength(1);
@@ -89,7 +89,7 @@ describe("RootArchitecture", () => {
     );
     expect(container.querySelector(".architecture-repeat")).toHaveAttribute(
       "d",
-      "M 305 1262 H 80 V 52 H 320",
+      "M 305 1625 H 80 V 68 H 320",
     );
     expect(
       container.querySelector('[data-connector="block-input-to-add1"]'),

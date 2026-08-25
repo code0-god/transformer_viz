@@ -568,6 +568,11 @@
   .curriculum-workspace .learning-workspace__body {
     grid-template-columns: minmax(0, 48fr) minmax(0, 52fr);
   }
+
+  .curriculum-workspace
+    .learning-workspace__pane--diagram:has(.architecture-node__hit-target) {
+    position: static;
+  }
 }
 
 @media (max-width: 79.999rem) {
@@ -590,6 +595,13 @@
 }
 
 @media (max-width: 40rem) {
+  .curriculum-workspace
+    [data-guide-page-id="decoder-guide-self-attention"]
+    .learning-guide-formula.learning-guide-math-scroll
+    .katex {
+    font-size: 1.17em;
+  }
+
   .part0-diagram,
   .part1-diagram,
   .part2-diagram {

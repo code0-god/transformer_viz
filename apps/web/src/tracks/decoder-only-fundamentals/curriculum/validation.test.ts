@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { decoderCurriculum, decoderCurriculumRegistries } from "./catalog";
 import { CHAPTER_IDS, CONCEPT_IDS, GUIDE_PAGE_IDS, PART_IDS } from "./ids";
+import { destinationForChapter } from "./navigation";
 import {
   type CurriculumCandidate,
   type CurriculumConceptCandidate,
@@ -65,6 +66,8 @@ function issueCodes(
 const firstPart = fixtureValue(decoderCurriculum.parts[0]);
 const firstChapter = fixtureValue(firstPart.chapters[0]);
 const firstPage = fixtureValue(decoderCurriculum.guidePages[0]);
+
+// allow: SIZE_OK — fixed curriculum validator mutation matrix
 
 describe("decoder curriculum structural validation", () => {
   test("models the exact fixed spine and eleven independent pages", () => {
@@ -250,6 +253,57 @@ describe("decoder curriculum structural validation", () => {
     ],
   ] as const)("reports %s", (_name, candidate, code) => {
     expect(issueCodes(candidate)).toContain(code);
+  });
+
+  test("rejects synthetic and duplicate incumbent Guide pages", () => {
+    // Given: the fixed curriculum and a duplicate fixture using an incumbent page ID.
+    const incumbentRootPage = {
+      ...firstPage,
+      id: "decoder-guide-root",
+    };
+    const duplicateRoot = {
+      ...decoderCurriculum,
+      guidePages: [
+        ...decoderCurriculum.guidePages,
+        incumbentRootPage,
+        incumbentRootPage,
+      ],
+    };
+
+    // When/Then: no synthetic Part 3–5 page exists and duplicate incumbent identity is rejected.
+    expect(decoderCurriculum.guidePages.map(({ id }) => id)).toEqual(
+      GUIDE_PAGE_IDS,
+    );
+    expect(issueCodes(duplicateRoot)).toContain("duplicate-guide-page-id");
+  });
+
+  test("maps Parts 3 through 5 only to exact incumbent destinations", () => {
+    // Given/When: architecture Chapter destinations are resolved from the fixed spine.
+    const destinations = CHAPTER_IDS.slice(11).map((chapterId) =>
+      destinationForChapter(chapterId),
+    );
+
+    // Then: no synthetic route or section enters the curriculum boundary.
+    expect(destinations).toEqual([
+      {
+        routeId: "decoder.root",
+        pageId: "decoder-guide-root",
+        sectionId: "root-generation-overview",
+        nodeId: "decoder.root.architecture",
+      },
+      {
+        routeId: "decoder.block",
+        pageId: "decoder-guide-block",
+        sectionId: "block-overview",
+        nodeId: "decoder.root.transformer-block",
+      },
+      {
+        routeId: "decoder.self-attention",
+        pageId: "decoder-guide-self-attention",
+        sectionId: "qkv",
+        nodeId: "decoder.attention.qkv-projection",
+      },
+    ]);
   });
 
   test("derives successor and exposes a wrong-next CTA adjacency mutant", () => {
