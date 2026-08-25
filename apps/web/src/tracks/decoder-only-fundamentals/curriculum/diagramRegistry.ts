@@ -9,6 +9,9 @@ import { AutoregressiveLoopDiagram } from "./diagrams/part1/AutoregressiveLoopDi
 import { ConditionalProbabilityDiagram } from "./diagrams/part1/ConditionalProbabilityDiagram";
 import { LanguageModelDiagram } from "./diagrams/part1/LanguageModelDiagram";
 import { NextTokenPredictionDiagram } from "./diagrams/part1/NextTokenPredictionDiagram";
+import { HiddenStateDiagram } from "./diagrams/part2/HiddenStateDiagram";
+import { PositionEmbeddingDiagram } from "./diagrams/part2/PositionEmbeddingDiagram";
+import { TokenEmbeddingDiagram } from "./diagrams/part2/TokenEmbeddingDiagram";
 import type {
   CurriculumConceptCandidate,
   CurriculumIssue,
@@ -47,6 +50,9 @@ const curriculumDiagramComponents: Readonly<
   "decoder.diagram.language-model.conditional-probability":
     ConditionalProbabilityDiagram,
   "decoder.diagram.language-model.autoregressive": AutoregressiveLoopDiagram,
+  "decoder.diagram.representation.embedding": TokenEmbeddingDiagram,
+  "decoder.diagram.representation.position": PositionEmbeddingDiagram,
+  "decoder.diagram.representation.hidden-state": HiddenStateDiagram,
 };
 
 export function curriculumDiagramComponent(

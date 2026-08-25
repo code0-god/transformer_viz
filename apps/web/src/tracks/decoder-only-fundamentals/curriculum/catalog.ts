@@ -2,6 +2,7 @@ import { FORMULA_IDS, formulaCatalog } from "../../../math/formulaCatalog";
 import { decoderNodeMap } from "../nodes";
 import { part0Glossary } from "./content/part0/glossary";
 import { part1Glossary } from "./content/part1/glossary";
+import { part2Glossary } from "./content/part2/glossary";
 import type {
   CurriculumRendererRegistry,
   RenderableCurriculum,
@@ -14,6 +15,7 @@ import {
 import { curriculumGuidePage, curriculumGuidePages } from "./guidePages";
 import { CHAPTER_IDS, GUIDE_PAGE_IDS, PART_IDS } from "./ids";
 import { curriculumReferences } from "./references";
+import { guideRuntimeFacts } from "./runtimeFacts";
 import type {
   ChapterId,
   ConceptId,
@@ -269,14 +271,18 @@ const parts: readonly LearningPart[] = PART_SPECS.map(
   }),
 );
 
-const curriculumGlossary = [...part0Glossary, ...part1Glossary] as const;
+const curriculumGlossary = [
+  ...part0Glossary,
+  ...part1Glossary,
+  ...part2Glossary,
+] as const;
 
 const rendererRegistry = {
   resolveGuidePage: curriculumGuidePage,
   resolveDiagram: curriculumDiagramComponent,
   glossary: curriculumGlossary,
   formulas: formulaCatalog,
-  runtimeFacts: {},
+  runtimeFacts: guideRuntimeFacts,
 } satisfies CurriculumRendererRegistry;
 
 export const decoderCurriculum = {

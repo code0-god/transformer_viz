@@ -86,6 +86,24 @@ const PART1_PRODUCTION_CHAPTERS = [
   ],
 ] as const;
 
+const PART2_PRODUCTION_CHAPTERS = [
+  [
+    "Token Embedding",
+    "decoder.curriculum.guide.2.1",
+    "Token ID와 embedding table row lookup",
+  ],
+  [
+    "Position Embedding",
+    "decoder.curriculum.guide.2.2",
+    "Token과 learned absolute position embedding의 합",
+  ],
+  [
+    "Hidden State",
+    "decoder.curriculum.guide.2.3",
+    "Causal prefix를 반영하는 hidden state 흐름",
+  ],
+] as const;
+
 const fixtureRegistry: CurriculumRendererRegistry = {
   resolveGuidePage: () => fixturePage,
   resolveDiagram: () => FixtureDiagram,
@@ -481,36 +499,44 @@ describe("Decoder curriculum production integration", () => {
     },
   );
 
-  test("falls back atomically when an activated Part 2 Chapter has no renderers", async () => {
-    // Given: production Part 0 has already been explicitly activated.
-    const worker = readyCurriculum();
-    const user = userEvent.setup();
-    const postsBefore = worker.posted.length;
-    await user.click(screen.getByRole("button", { name: "목차 열기" }));
-    await user.click(
-      within(
-        screen.getByRole("navigation", { name: "Chapter 목차" }),
-      ).getByRole("button", { name: "자연어 처리란?" }),
-    );
-    await user.click(screen.getByRole("button", { name: "목차 열기" }));
+  test.each(PART2_PRODUCTION_CHAPTERS)(
+    "activates production %s with typed runtime facts and no side effects",
+    async (chapterTitle, pageId, imageName) => {
+      // Given: a fresh inactive app with URL, history, and Worker counters.
+      const worker = readyCurriculum();
+      const user = userEvent.setup();
+      const postsBefore = worker.posted.length;
+      const hrefBefore = window.location.href;
+      const historyBefore = window.history.length;
+      await user.click(screen.getByRole("button", { name: "목차 열기" }));
 
-    // When: a Chapter without both production resolvers is selected.
-    await user.click(
-      within(
-        screen.getByRole("navigation", { name: "Chapter 목차" }),
-      ).getByRole("button", { name: "Token Embedding" }),
-    );
+      // When: the Part 2 Chapter is explicitly selected.
+      await user.click(
+        within(
+          screen.getByRole("navigation", { name: "Chapter 목차" }),
+        ).getByRole("button", { name: chapterTitle }),
+      );
 
-    // Then: only the incumbent architecture mounts without a flash.
-    expect(screen.getByTestId("architecture-root")).toBeInTheDocument();
-    expect(
-      document.querySelector(
-        "[data-guide-page-id='decoder.curriculum.guide.2.1']",
-      ),
-    ).toBeNull();
-    expect(screen.queryByText("Focus target unavailable.")).toBeNull();
-    expect(worker.posted).toHaveLength(postsBefore);
-  });
+      // Then: the exact content pair and current facts replace legacy atomically.
+      expect(
+        document.querySelector(`[data-guide-page-id='${pageId}']`),
+      ).not.toBeNull();
+      expect(screen.getByRole("img", { name: imageName })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: chapterTitle, level: 1 }),
+      ).toHaveFocus();
+      expect(
+        document.querySelectorAll("[data-runtime-presentation-id]").length,
+      ).toBeGreaterThanOrEqual(1);
+      expect(screen.queryByTestId("architecture-root")).toBeNull();
+      expect(screen.queryByText(/Visualization/)).toBeNull();
+      expect(screen.queryByRole("slider")).toBeNull();
+      expect(screen.queryByRole("switch")).toBeNull();
+      expect(window.location.href).toBe(hrefBefore);
+      expect(window.history.length).toBe(historyBefore);
+      expect(worker.posted).toHaveLength(postsBefore);
+    },
+  );
 
   test("keeps one conceptual image and separate native controls", () => {
     // Given/When: the root curriculum surface is rendered.

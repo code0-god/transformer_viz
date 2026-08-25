@@ -7,6 +7,9 @@ import { autoregressiveChapterContent } from "./content/part1/autoregressive";
 import { conditionalProbabilityChapterContent } from "./content/part1/conditionalProbability";
 import { definitionChapterContent } from "./content/part1/definition";
 import { nextTokenChapterContent } from "./content/part1/nextToken";
+import { embeddingChapterContent } from "./content/part2/embedding";
+import { hiddenStateChapterContent } from "./content/part2/hiddenState";
+import { positionChapterContent } from "./content/part2/position";
 import { GUIDE_PAGE_IDS } from "./ids";
 import type { GuidePageId } from "./types";
 
@@ -24,9 +27,18 @@ export const part1GuidePages = [
   autoregressiveChapterContent.page,
 ] as const satisfies readonly LearningGuidePage<string>[];
 
+export const part2GuidePages = [
+  embeddingChapterContent.page,
+  positionChapterContent.page,
+  hiddenStateChapterContent.page,
+] as const satisfies readonly LearningGuidePage<string>[];
+
 const guidePageById: Readonly<Record<string, LearningGuidePage<string>>> =
   Object.fromEntries(
-    [...part0GuidePages, ...part1GuidePages].map((page) => [page.id, page]),
+    [...part0GuidePages, ...part1GuidePages, ...part2GuidePages].map((page) => [
+      page.id,
+      page,
+    ]),
   );
 
 export function curriculumGuidePage(

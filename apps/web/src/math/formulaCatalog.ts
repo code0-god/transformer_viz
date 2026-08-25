@@ -22,7 +22,9 @@ export type FormulaId =
   | "attention-output-state"
   | "fundamentals-next-token-softmax"
   | "fundamentals-chain-rule-three-token"
-  | "fundamentals-chain-rule-sequence";
+  | "fundamentals-chain-rule-sequence"
+  | "fundamentals-embedding-table-shape"
+  | "fundamentals-hidden-state-shape";
 
 export type RuntimeFormulaId =
   | "root-model-width-value"
@@ -93,6 +95,8 @@ export const FORMULA_IDS: readonly FormulaId[] = [
   "fundamentals-next-token-softmax",
   "fundamentals-chain-rule-three-token",
   "fundamentals-chain-rule-sequence",
+  "fundamentals-embedding-table-shape",
+  "fundamentals-hidden-state-shape",
   ...INLINE_FORMULA_IDS,
 ];
 
@@ -194,6 +198,18 @@ export const formulaCatalog: Readonly<
     tex: "P(w_1,\\ldots,w_n)=\\prod_{t=1}^{n}P(w_t\\mid w_1,\\ldots,w_{t-1})",
     plainText: "P(w1,...,wn) = product from t=1 to n of P(wt | w1,...,w(t-1))",
     accessibleLabel: "Sequence probability chain rule",
+  },
+  "fundamentals-embedding-table-shape": {
+    id: "fundamentals-embedding-table-shape",
+    tex: "W_E \\in \\mathbb{R}^{Vocab \\times C}",
+    plainText: "W_E is in R^(Vocab by C)",
+    accessibleLabel: "Token embedding table shape, vocabulary by channels",
+  },
+  "fundamentals-hidden-state-shape": {
+    id: "fundamentals-hidden-state-shape",
+    tex: "X \\in \\mathbb{R}^{T \\times C}",
+    plainText: "X is in R^(T by C)",
+    accessibleLabel: "Batch-one hidden state shape, tokens by channels",
   },
   ...inlineFormulaCatalog,
 };

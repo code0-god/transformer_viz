@@ -7,17 +7,25 @@ const PART1_FORMULAS = {
   "fundamentals-chain-rule-three-token": String.raw`P(w_1,w_2,w_3)=P(w_1)P(w_2\mid w_1)P(w_3\mid w_1,w_2)`,
   "fundamentals-chain-rule-sequence": String.raw`P(w_1,\ldots,w_n)=\prod_{t=1}^{n}P(w_t\mid w_1,\ldots,w_{t-1})`,
 } as const;
-const PART1_FORMULA_IDS = Object.keys(PART1_FORMULAS);
+const PART2_FORMULAS = {
+  "fundamentals-embedding-table-shape": String.raw`W_E \in \mathbb{R}^{Vocab \times C}`,
+  "fundamentals-hidden-state-shape": String.raw`X \in \mathbb{R}^{T \times C}`,
+} as const;
+const FUNDAMENTALS_FORMULAS = {
+  ...PART1_FORMULAS,
+  ...PART2_FORMULAS,
+} as const;
+const FUNDAMENTALS_FORMULA_IDS = Object.keys(FUNDAMENTALS_FORMULAS);
 
-describe("Part 1 trusted Formula catalog", () => {
-  test("adds exactly the three locked Part 1 Formula IDs", () => {
+describe("fundamentals trusted Formula catalog", () => {
+  test("closes exactly the five locked fundamentals Formula IDs", () => {
     // Given: the trusted static Formula catalog.
     const fundamentalsIds = FORMULA_IDS.filter((id) =>
       id.startsWith("fundamentals-"),
     );
 
-    // When/Then: only the three Phase 5 IDs are present.
-    expect(fundamentalsIds).toEqual(PART1_FORMULA_IDS);
+    // When/Then: the three Phase 5 IDs and two Phase 6 IDs are the full closure.
+    expect(fundamentalsIds).toEqual(FUNDAMENTALS_FORMULA_IDS);
   });
 
   test("keeps key and record identity in exact parity", () => {
@@ -27,11 +35,11 @@ describe("Part 1 trusted Formula catalog", () => {
     // When/Then: every ID is unique and names its own trusted record.
     expect(new Set(FORMULA_IDS).size).toBe(FORMULA_IDS.length);
     expect(catalogKeys).toEqual([...FORMULA_IDS]);
-    for (const id of PART1_FORMULA_IDS) {
+    for (const id of FUNDAMENTALS_FORMULA_IDS) {
       expect(Object.hasOwn(formulaCatalog, id)).toBe(true);
       expect(Reflect.get(formulaCatalog, id)).toMatchObject({
         id,
-        tex: Reflect.get(PART1_FORMULAS, id),
+        tex: Reflect.get(FUNDAMENTALS_FORMULAS, id),
       });
     }
   });
