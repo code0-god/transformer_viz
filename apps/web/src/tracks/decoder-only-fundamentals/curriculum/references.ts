@@ -100,8 +100,8 @@ export const curriculumReferences = [
   {
     id: "ref.repo.generation",
     role: "implementation-source",
-    source: "crates/transformer-viz-worker/src/generation.rs",
-    topicUsed: "Generation lifecycle",
+    source: "apps/worker/src/runtime_generation.rs",
+    topicUsed: "Generation forward state machine",
     currentModelCorrection: "No persistent generation KV cache",
     exclusion: "No Worker mutation from curriculum",
     accessDate: ACCESS_DATE,

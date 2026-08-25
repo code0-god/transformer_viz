@@ -1,3 +1,4 @@
+/* allow: SIZE_OK — shared curriculum presentation contract across Parts */
 .curriculum-workspace {
   display: grid;
   gap: var(--s5);
@@ -324,6 +325,121 @@
   color: var(--accent);
 }
 
+.part1-diagram {
+  display: grid;
+  gap: var(--s4);
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--s4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.part1-diagram svg {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  max-inline-size: 100%;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.part1-diagram__heading,
+.part1-diagram__stage text:first-of-type,
+.part1-diagram__product text:first-of-type {
+  fill: var(--ink);
+  font-weight: 800;
+}
+
+.part1-diagram__stage rect,
+.part1-diagram__product rect,
+.part1-diagram__candidate rect {
+  fill: var(--paper);
+  stroke: var(--hairline);
+  stroke-width: 1.5;
+}
+
+.part1-diagram__stage:nth-of-type(2n) rect,
+.part1-diagram__candidate:nth-of-type(2n) rect {
+  fill: var(--surface-strong);
+}
+
+.part1-diagram__token rect,
+.part1-diagram__cell--final,
+.part1-diagram__product rect {
+  fill: var(--accent-soft);
+  stroke: color-mix(in srgb, var(--accent) 45%, var(--hairline));
+}
+
+.part1-diagram__token text,
+.part1-diagram__candidate text,
+.part1-diagram__product text:first-of-type {
+  fill: var(--accent);
+  font-weight: 750;
+}
+
+.part1-diagram__cell {
+  fill: var(--surface-strong);
+  stroke: var(--hairline);
+}
+
+.part1-diagram__path {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 2;
+}
+
+.part1-diagram__path--loop {
+  stroke-dasharray: 8 7;
+}
+
+.part1-diagram marker path {
+  fill: var(--line);
+}
+
+.part1-diagram__note,
+.part1-diagram__axis {
+  fill: var(--ink-muted);
+  font-size: 12px;
+}
+
+.part1-diagram__fallback {
+  min-inline-size: 0;
+  padding-block-start: var(--s3);
+  border-block-start: 1px solid var(--hairline);
+  color: var(--ink-muted);
+  font-size: .82rem;
+}
+
+.part1-diagram__fallback fieldset {
+  min-inline-size: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.part1-diagram__fallback ol {
+  display: grid;
+  gap: var(--s2);
+  padding-inline-start: var(--s5);
+  margin: 0;
+}
+
+.part1-diagram__fallback li {
+  overflow-wrap: anywhere;
+}
+
+.part1-diagram__focus {
+  min-block-size: 44px;
+  justify-self: start;
+  border-color: var(--accent);
+  background: var(--paper);
+  color: var(--accent);
+}
+
 @media (min-width: 80rem) {
   .curriculum-workspace .learning-workspace__body {
     grid-template-columns: minmax(0, 48fr) minmax(0, 52fr);
@@ -350,7 +466,8 @@
 }
 
 @media (max-width: 40rem) {
-  .part0-diagram {
+  .part0-diagram,
+  .part1-diagram {
     padding: var(--s3);
   }
 
@@ -387,7 +504,8 @@
     margin-block-start: var(--s2);
   }
 
-  .part0-diagram__focus {
+  .part0-diagram__focus,
+  .part1-diagram__focus {
     inline-size: 100%;
   }
 

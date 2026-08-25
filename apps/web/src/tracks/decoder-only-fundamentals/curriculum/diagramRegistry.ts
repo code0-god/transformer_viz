@@ -5,6 +5,10 @@ import { NlpPipelineDiagram } from "./diagrams/part0/NlpPipelineDiagram";
 import { TokenComparisonDiagram } from "./diagrams/part0/TokenComparisonDiagram";
 import { TokenizationMethodsDiagram } from "./diagrams/part0/TokenizationMethodsDiagram";
 import { VocabularyAddressDiagram } from "./diagrams/part0/VocabularyAddressDiagram";
+import { AutoregressiveLoopDiagram } from "./diagrams/part1/AutoregressiveLoopDiagram";
+import { ConditionalProbabilityDiagram } from "./diagrams/part1/ConditionalProbabilityDiagram";
+import { LanguageModelDiagram } from "./diagrams/part1/LanguageModelDiagram";
+import { NextTokenPredictionDiagram } from "./diagrams/part1/NextTokenPredictionDiagram";
 import type {
   CurriculumConceptCandidate,
   CurriculumIssue,
@@ -38,6 +42,11 @@ const curriculumDiagramComponents: Readonly<
   "decoder.diagram.tokenization.token": TokenComparisonDiagram,
   "decoder.diagram.tokenization.vocabulary": VocabularyAddressDiagram,
   "decoder.diagram.tokenization.methods": TokenizationMethodsDiagram,
+  "decoder.diagram.language-model.definition": LanguageModelDiagram,
+  "decoder.diagram.language-model.next-token": NextTokenPredictionDiagram,
+  "decoder.diagram.language-model.conditional-probability":
+    ConditionalProbabilityDiagram,
+  "decoder.diagram.language-model.autoregressive": AutoregressiveLoopDiagram,
 };
 
 export function curriculumDiagramComponent(

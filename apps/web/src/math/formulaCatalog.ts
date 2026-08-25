@@ -19,7 +19,10 @@ export type FormulaId =
   | "attention-key-heads"
   | "attention-value-heads"
   | "attention-head-outputs"
-  | "attention-output-state";
+  | "attention-output-state"
+  | "fundamentals-next-token-softmax"
+  | "fundamentals-chain-rule-three-token"
+  | "fundamentals-chain-rule-sequence";
 
 export type RuntimeFormulaId =
   | "root-model-width-value"
@@ -87,6 +90,9 @@ export const FORMULA_IDS: readonly FormulaId[] = [
   "attention-value-heads",
   "attention-head-outputs",
   "attention-output-state",
+  "fundamentals-next-token-softmax",
+  "fundamentals-chain-rule-three-token",
+  "fundamentals-chain-rule-sequence",
   ...INLINE_FORMULA_IDS,
 ];
 
@@ -170,6 +176,24 @@ export const formulaCatalog: Readonly<
     tex: "Y_{\\mathrm{attn}}\\;[T,C]",
     plainText: "Y_attn [T, C]",
     accessibleLabel: "Attention output tensor Y attention, shape T by C",
+  },
+  "fundamentals-next-token-softmax": {
+    id: "fundamentals-next-token-softmax",
+    tex: "P(w_{t+1}=i \\mid w_{1:t}) = \\frac{\\exp(z_i)}{\\sum_j \\exp(z_j)}",
+    plainText: "P(w_(t+1)=i | w_(1:t)) = exp(z_i) / sum_j exp(z_j)",
+    accessibleLabel: "Next-token full-vocabulary softmax probability",
+  },
+  "fundamentals-chain-rule-three-token": {
+    id: "fundamentals-chain-rule-three-token",
+    tex: "P(w_1,w_2,w_3)=P(w_1)P(w_2\\mid w_1)P(w_3\\mid w_1,w_2)",
+    plainText: "P(w1,w2,w3) = P(w1) P(w2 | w1) P(w3 | w1,w2)",
+    accessibleLabel: "Three-token probability chain rule",
+  },
+  "fundamentals-chain-rule-sequence": {
+    id: "fundamentals-chain-rule-sequence",
+    tex: "P(w_1,\\ldots,w_n)=\\prod_{t=1}^{n}P(w_t\\mid w_1,\\ldots,w_{t-1})",
+    plainText: "P(w1,...,wn) = product from t=1 to n of P(wt | w1,...,w(t-1))",
+    accessibleLabel: "Sequence probability chain rule",
   },
   ...inlineFormulaCatalog,
 };

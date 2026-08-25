@@ -1,3 +1,4 @@
+// allow: SIZE_OK — curriculum end-to-end integration matrix
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { type ReactElement, StrictMode } from "react";
@@ -63,6 +64,25 @@ const PART0_PRODUCTION_CHAPTERS = [
     "Tokenization 방식",
     "decoder.curriculum.guide.0.4",
     "Tokenization 방식의 정성 비교",
+  ],
+] as const;
+
+const PART1_PRODUCTION_CHAPTERS = [
+  [
+    "언어 모델이란?",
+    "decoder.curriculum.guide.1.1",
+    "언어 모델의 위치별 다음-token 점수",
+  ],
+  ["다음 Token 예측", "decoder.curriculum.guide.1.2", "다음 Token 선택 단계"],
+  [
+    "조건부 확률",
+    "decoder.curriculum.guide.1.3",
+    "Prefix 조건부 확률과 chain rule",
+  ],
+  [
+    "Autoregressive Generation",
+    "decoder.curriculum.guide.1.4",
+    "Autoregressive predict append repeat loop",
   ],
 ] as const;
 
@@ -425,7 +445,43 @@ describe("Decoder curriculum production integration", () => {
     },
   );
 
-  test("falls back atomically when an activated Part 1 Chapter has no renderers", async () => {
+  test.each(PART1_PRODUCTION_CHAPTERS)(
+    "activates production %s without URL, history, or Worker mutation",
+    async (chapterTitle, pageId, imageName) => {
+      // Given: a fresh inactive app with side-effect counters.
+      const worker = readyCurriculum();
+      const user = userEvent.setup();
+      const postsBefore = worker.posted.length;
+      const hrefBefore = window.location.href;
+      const historyBefore = window.history.length;
+      await user.click(screen.getByRole("button", { name: "목차 열기" }));
+
+      // When: the Part 1 Chapter is explicitly selected.
+      await user.click(
+        within(
+          screen.getByRole("navigation", { name: "Chapter 목차" }),
+        ).getByRole("button", { name: chapterTitle }),
+      );
+
+      // Then: the exact content pair replaces legacy atomically.
+      expect(
+        document.querySelector(`[data-guide-page-id='${pageId}']`),
+      ).not.toBeNull();
+      expect(screen.getByRole("img", { name: imageName })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: chapterTitle, level: 1 }),
+      ).toHaveFocus();
+      expect(screen.queryByTestId("architecture-root")).toBeNull();
+      expect(screen.queryByText(/Visualization/)).toBeNull();
+      expect(screen.queryByRole("slider")).toBeNull();
+      expect(screen.queryByRole("switch")).toBeNull();
+      expect(window.location.href).toBe(hrefBefore);
+      expect(window.history.length).toBe(historyBefore);
+      expect(worker.posted).toHaveLength(postsBefore);
+    },
+  );
+
+  test("falls back atomically when an activated Part 2 Chapter has no renderers", async () => {
     // Given: production Part 0 has already been explicitly activated.
     const worker = readyCurriculum();
     const user = userEvent.setup();
@@ -442,14 +498,14 @@ describe("Decoder curriculum production integration", () => {
     await user.click(
       within(
         screen.getByRole("navigation", { name: "Chapter 목차" }),
-      ).getByRole("button", { name: "언어 모델이란?" }),
+      ).getByRole("button", { name: "Token Embedding" }),
     );
 
     // Then: only the incumbent architecture mounts without a flash.
     expect(screen.getByTestId("architecture-root")).toBeInTheDocument();
     expect(
       document.querySelector(
-        "[data-guide-page-id='decoder.curriculum.guide.1.1']",
+        "[data-guide-page-id='decoder.curriculum.guide.2.1']",
       ),
     ).toBeNull();
     expect(screen.queryByText("Focus target unavailable.")).toBeNull();

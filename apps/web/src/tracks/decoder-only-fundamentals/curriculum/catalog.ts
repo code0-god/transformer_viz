@@ -1,5 +1,7 @@
+import { FORMULA_IDS, formulaCatalog } from "../../../math/formulaCatalog";
 import { decoderNodeMap } from "../nodes";
 import { part0Glossary } from "./content/part0/glossary";
+import { part1Glossary } from "./content/part1/glossary";
 import type {
   CurriculumRendererRegistry,
   RenderableCurriculum,
@@ -267,11 +269,13 @@ const parts: readonly LearningPart[] = PART_SPECS.map(
   }),
 );
 
+const curriculumGlossary = [...part0Glossary, ...part1Glossary] as const;
+
 const rendererRegistry = {
   resolveGuidePage: curriculumGuidePage,
   resolveDiagram: curriculumDiagramComponent,
-  glossary: part0Glossary,
-  formulas: {},
+  glossary: curriculumGlossary,
+  formulas: formulaCatalog,
   runtimeFacts: {},
 } satisfies CurriculumRendererRegistry;
 
@@ -290,7 +294,7 @@ export const decoderCurriculumRegistries: CurriculumRegistries = {
   ]),
   visualizationIds: curriculumVisualizationIds,
   nodeIds: new Set(Object.keys(decoderNodeMap)),
-  formulaIds: new Set(),
-  termIds: new Set(part0Glossary.map(({ id }) => id)),
+  formulaIds: new Set(FORMULA_IDS),
+  termIds: new Set(curriculumGlossary.map(({ id }) => id)),
   references: curriculumReferences,
 };
