@@ -25,6 +25,7 @@ from browser_worker_integrity_server import (
     IntegrityMode,
 )
 from browser_worker_startup import verify_startup_layout, verify_worker_loader_failure
+from browser_urls import lab_url
 
 
 def worker_probe(loader: str, base: str) -> str:
@@ -87,7 +88,7 @@ def run(root: Path) -> None:
                     browser.page_session,
                 )
                 AssetHandler.mode = IntegrityMode.NORMAL
-                browser.navigate(origin + base)
+                browser.navigate(lab_url(origin, base))
                 cdp.evaluate(browser.page_session, READY_PROBE, True)
                 print(f"{base} canonical initialization: PASS")
                 redirect_modes = (

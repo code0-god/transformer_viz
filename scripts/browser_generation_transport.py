@@ -17,6 +17,7 @@ from typing import Any
 
 from browser_probes import READY_PROBE
 from browser_session import ChromeSession
+from browser_urls import lab_url
 
 MAX_SAFE_SEED = "9007199254740991"
 U64_MAX = "18446744073709551615"
@@ -168,15 +169,20 @@ def run(root: Path, selected: str) -> None:
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
-    origin = f"http://127.0.0.1:{server.server_port}/"
-    results: dict[str, dict[str, Any]] = {}
+    origin = f"http://127.0.0.1:{server.server_port}"
+    results: dict[str, dict[str, dict[str, Any]]] = {}
     try:
-        if selected in ("all", "large-seed"):
-            results["largeSeed"] = browser_probe(origin, LARGE_SEED_PROBE)
-            assert_large_seed(results["largeSeed"])
-        if selected in ("all", "post-failure"):
-            results["postFailure"] = browser_probe(origin, POST_FAILURE_PROBE)
-            assert_post_failure(results["postFailure"])
+        for label, base_path in (
+            ("root", "/"),
+            ("subpath", "/transformer_viz/"),
+        ):
+            results[label] = {}
+            if selected in ("all", "large-seed"):
+                results[label]["largeSeed"] = browser_probe(lab_url(origin, base_path), LARGE_SEED_PROBE)
+                assert_large_seed(results[label]["largeSeed"])
+            if selected in ("all", "post-failure"):
+                results[label]["postFailure"] = browser_probe(lab_url(origin, base_path), POST_FAILURE_PROBE)
+                assert_post_failure(results[label]["postFailure"])
     finally:
         server.shutdown()
         server.server_close()

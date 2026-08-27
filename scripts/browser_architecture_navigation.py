@@ -18,6 +18,7 @@ from typing import Any, Protocol
 from browser_input import dispatch_key
 from browser_probes import READY_PROBE
 from browser_session import ChromeSession
+from browser_urls import lab_url
 from browser_architecture_navigation_probes import (
     DETAIL_PROBE,
     INSTRUMENT_WORKER,
@@ -233,7 +234,7 @@ def main() -> int:
             for mobile in (False, True):
                 evidence = args.evidence if label == "root" else None
                 with ChromeSession() as browser:
-                    verify_navigation(browser, origin + base, mobile, evidence)
+                    verify_navigation(browser, lab_url(origin, base), mobile, evidence)
             print(f"{base} architecture navigation desktop/mobile: PASS")
     finally:
         server.shutdown()

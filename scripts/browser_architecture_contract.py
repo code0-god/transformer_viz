@@ -22,6 +22,7 @@ from typing import Final, Protocol, TypeAlias, TypedDict, cast
 from browser_cdp import Cdp
 from browser_probes import READY_PROBE
 from browser_session import ChromeSession
+from browser_urls import lab_url
 
 
 JsonValue: TypeAlias = None | bool | int | float | str | list["JsonValue"] | dict[str, "JsonValue"]
@@ -95,6 +96,13 @@ CHAPTERS: Final[tuple[Chapter, ...]] = tuple(
     )
 )
 ACTIONABLE: Final = "button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary,[role=button]:not([aria-disabled=true]),[role=link],[role=checkbox],[role=radio],[role=switch],[role=slider],[role=tab]"
+
+
+def _chapter_url(origin: str, chapter: Chapter) -> str:
+    slug = chapter["id"].removeprefix("decoder.chapter.").replace(".", "-")
+    return f"{origin}#/learn/decoder-only-fundamentals/{slug}"
+
+
 INSTRUMENT: Final = """(() => {
   window.__releaseWorkerPosts = 0;
   window.__releaseHistoryCalls = 0;
@@ -235,7 +243,7 @@ def _select_chapter_with_focus_event(cdp: Cdp, session: str, title: str) -> dict
         document.addEventListener('focusin', handler, true);
       });
     })()""")
-    _keyboard_activate(cdp, session, f"#curriculum-toc button[aria-label={json.dumps(title, ensure_ascii=False)}]")
+    _keyboard_activate(cdp, session, f"#curriculum-toc a[aria-label={json.dumps(title, ensure_ascii=False)}]")
     focus = cdp.evaluate(session, "window.__releaseHeadingFocus", True)
     if not isinstance(focus, dict):
         raise ArchitectureContractError(f"heading focus event absent: {title}")
@@ -246,7 +254,7 @@ def _select_chapter_with_curriculum_event(cdp: Cdp, session: str, title: str) ->
     cdp.evaluate(session, """(() => {
       window.__releaseCurriculumFocus = new Promise(resolve => window.addEventListener('curriculum-focus', event => resolve({type:'curriculum-focus',detail:event.detail}), {once:true}));
     })()""")
-    _keyboard_activate(cdp, session, f"#curriculum-toc button[aria-label={json.dumps(title, ensure_ascii=False)}]")
+    _keyboard_activate(cdp, session, f"#curriculum-toc a[aria-label={json.dumps(title, ensure_ascii=False)}]")
     focus = cdp.evaluate(session, "window.__releaseCurriculumFocus", True)
     if not isinstance(focus, dict):
         raise ArchitectureContractError(f"curriculum focus event absent: {title}")
@@ -290,7 +298,7 @@ def _capture_chrome_ax_focus_transcript(
         cdp, session = browser.require_cdp(), browser.page_session
         cdp.send("Page.addScriptToEvaluateOnNewDocument", {"source": INSTRUMENT}, session)
         _set_viewport(cdp, session, 1440, 900)
-        browser.navigate(origin)
+        browser.navigate(_chapter_url(origin, CHAPTERS[0]))
         cdp.evaluate(session, READY_PROBE, True)
         worker_baseline = cdp.evaluate(session, "window.__releaseWorkerPosts", True)
         history_baseline = cdp.evaluate(session, "window.__releaseHistoryCalls", True)
@@ -299,7 +307,7 @@ def _capture_chrome_ax_focus_transcript(
         toc = cdp.evaluate(session, """(() => {
           const opener=document.querySelector("button[aria-controls='curriculum-toc']");
           const current=document.querySelector('#curriculum-toc [aria-current=page]');
-          return {source:'keyboard-space',expanded:opener?.getAttribute('aria-expanded')==='true',controlCount:document.querySelectorAll('#curriculum-toc button').length,currentCount:document.querySelectorAll('#curriculum-toc [aria-current=page]').length,currentName:current?.getAttribute('aria-label')||''};
+          return {source:'keyboard-space',expanded:opener?.getAttribute('aria-expanded')==='true',controlCount:document.querySelectorAll('#curriculum-toc a').length,currentCount:document.querySelectorAll('#curriculum-toc [aria-current=page]').length,currentName:current?.getAttribute('aria-label')||''};
         })()""", True)
         heading_focus = _select_chapter_with_focus_event(cdp, session, "자연어 처리란?")
         heading_ax = _ax_role_name(_partial_ax(cdp, session, ".curriculum-workspace__chapter-copy h1"), "heading")
@@ -309,7 +317,7 @@ def _capture_chrome_ax_focus_transcript(
           const figure=document.querySelector('.learning-workspace__pane--diagram figure');
           return {fallbackText:figure?.querySelector('figcaption')?.textContent?.replace(/\\s+/g,' ').trim()||'',siblingControls:[...(figure?.querySelectorAll(':scope > button')||[])].map(button=>button.textContent?.trim()||button.getAttribute('aria-label')||'')};
         })()""", True)
-        adjacent = cdp.evaluate(session, "[...document.querySelectorAll('.curriculum-navigation__adjacent button')].map(button=>button.textContent.trim())", True)
+        adjacent = cdp.evaluate(session, "[...document.querySelectorAll('.curriculum-navigation__adjacent a')].map(link=>link.textContent.trim())", True)
         progress = _ax_role_name(_partial_ax(cdp, session, "[role=progressbar]"), "progressbar")
         progress["valueNow"] = cdp.evaluate(session, "Number(document.querySelector('[role=progressbar]').getAttribute('aria-valuenow'))", True)
         if not isinstance(toc, dict) or not isinstance(diagram_dom, dict):
@@ -317,8 +325,9 @@ def _capture_chrome_ax_focus_transcript(
 
         worker_deltas = [cdp.evaluate(session, "window.__releaseWorkerPosts", True) - worker_baseline]
         history_deltas = [cdp.evaluate(session, "window.__releaseHistoryCalls", True) - history_baseline]
+        chapter_hashes = [cdp.evaluate(session, "location.hash", True)]
 
-        browser.navigate(origin)
+        browser.navigate(_chapter_url(origin, CHAPTERS[0]))
         cdp.evaluate(session, READY_PROBE, True)
         worker_baseline = cdp.evaluate(session, "window.__releaseWorkerPosts", True)
         history_baseline = cdp.evaluate(session, "window.__releaseHistoryCalls", True)
@@ -350,8 +359,9 @@ def _capture_chrome_ax_focus_transcript(
             raise ArchitectureContractError("generated-token focus event absent")
         worker_deltas.append(cdp.evaluate(session, "window.__releaseWorkerPosts", True) - worker_baseline)
         history_deltas.append(cdp.evaluate(session, "window.__releaseHistoryCalls", True) - history_baseline)
+        chapter_hashes.append(cdp.evaluate(session, "location.hash", True))
 
-        browser.navigate(origin)
+        browser.navigate(_chapter_url(origin, CHAPTERS[0]))
         cdp.evaluate(session, READY_PROBE, True)
         worker_baseline = cdp.evaluate(session, "window.__releaseWorkerPosts", True)
         history_baseline = cdp.evaluate(session, "window.__releaseHistoryCalls", True)
@@ -360,8 +370,14 @@ def _capture_chrome_ax_focus_transcript(
         math_ax = _named_math_ax(cdp, session)
         worker_deltas.append(cdp.evaluate(session, "window.__releaseWorkerPosts", True) - worker_baseline)
         history_deltas.append(cdp.evaluate(session, "window.__releaseHistoryCalls", True) - history_baseline)
-        if any(worker_deltas) or any(history_deltas):
-            raise ArchitectureContractError(f"transcript action boundary failed: worker={worker_deltas} history={history_deltas}")
+        chapter_hashes.append(cdp.evaluate(session, "location.hash", True))
+        expected_hashes = (
+            "#/learn/decoder-only-fundamentals/0-1",
+            "#/learn/decoder-only-fundamentals/3-1",
+            "#/learn/decoder-only-fundamentals/1-2",
+        )
+        if any(worker_deltas) or any(history_deltas) or tuple(chapter_hashes) != expected_hashes:
+            raise ArchitectureContractError(f"transcript action boundary failed: worker={worker_deltas} history={history_deltas} hashes={chapter_hashes}")
 
     events: list[JsonValue] = [
         {"id": "toc-expanded-current", **toc},
@@ -381,6 +397,7 @@ def _capture_chrome_ax_focus_transcript(
         "evidenceKind": "chrome-ax-keyboard-focus-events",
         "workerActionDeltas": worker_deltas,
         "historyActionDeltas": history_deltas,
+        "chapterHashes": chapter_hashes,
         "events": events,
     }
     return _write_ax_transcript(evidence, contract, events)
@@ -407,15 +424,15 @@ def _capture_one(origin: str, chapter: Chapter | None, viewport: tuple[int, int]
         cdp, session = browser.require_cdp(), browser.page_session
         cdp.send("Page.addScriptToEvaluateOnNewDocument", {"source": INSTRUMENT}, session)
         _set_viewport(cdp, session, width, height)
-        browser.navigate(origin)
+        browser.navigate(origin if chapter is None else _chapter_url(origin, chapter))
         cdp.evaluate(session, READY_PROBE, True)
         baseline = cdp.evaluate(session, "window.__releaseWorkerPosts", True)
         if chapter is not None:
             _keyboard_activate(cdp, session, "button[aria-controls='curriculum-toc']")
-            open_state = cdp.evaluate(session, "({count:document.querySelectorAll('#curriculum-toc button').length,current:document.querySelectorAll('#curriculum-toc [aria-current=page]').length})", True)
+            open_state = cdp.evaluate(session, "({count:document.querySelectorAll('#curriculum-toc a').length,current:document.querySelectorAll('#curriculum-toc [aria-current=page]').length})", True)
             if open_state != {"count": 14, "current": 1}:
                 raise ArchitectureContractError(f"ToC open contract failed: {open_state}")
-            _keyboard_activate(cdp, session, f"#curriculum-toc button[aria-label={json.dumps(chapter['title'], ensure_ascii=False)}]")
+            _keyboard_activate(cdp, session, f"#curriculum-toc a[aria-label={json.dumps(chapter['title'], ensure_ascii=False)}]")
         state = cdp.evaluate(session, STATE_PROBE, True)
         ax_summary, ax_nodes = _ax(cdp, session, chapter["order"] if chapter else 0)
         image = cdp.send("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": False, "fromSurface": True}, session)["data"]
@@ -544,7 +561,7 @@ def main() -> int:
     try:
         for base in ("/","/transformer_viz/"):
             for mobile in (False,True):
-                with ChromeSession() as browser: verify_surface(browser,f"http://127.0.0.1:{server.server_port}{base}",mobile)
+                with ChromeSession() as browser: verify_surface(browser,lab_url(f"http://127.0.0.1:{server.server_port}",base),mobile)
     finally: server.shutdown();server.server_close();thread.join(timeout=10)
     return 0
 

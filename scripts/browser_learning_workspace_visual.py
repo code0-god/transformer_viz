@@ -36,6 +36,7 @@ from browser_learning_workspace_probes import (
 )
 from browser_probes import READY_PROBE
 from browser_session import ChromeSession
+from browser_urls import lab_url
 
 
 class VisualMetricError(RuntimeError):
@@ -284,7 +285,7 @@ def verify_visual(config: VisualCaptureConfig) -> None:
         for route in ROUTES:
             for viewport in config.viewports:
                 with ChromeSession() as browser:
-                    url = f"http://127.0.0.1:{server.server_port}/{config.entry}"
+                    url = lab_url(f"http://127.0.0.1:{server.server_port}", "/" if config.entry == "index.html" else "/transformer_viz/")
                     _capture_screen(ScreenCapture(browser, url, route, viewport, config))
     finally:
         server.shutdown()

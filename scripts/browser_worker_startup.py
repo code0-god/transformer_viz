@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from browser_session import ChromeSession
+from browser_urls import lab_url
 from browser_worker_integrity_server import AssetHandler, IntegrityError
 
 STARTUP_READY_PROBE = r"""new Promise((resolve, reject) => {
@@ -14,7 +15,7 @@ STARTUP_READY_PROBE = r"""new Promise((resolve, reject) => {
   };
   const check = () => {
     if (document.readyState === 'complete' &&
-        document.querySelector('.startup-shell__surface h2') &&
+        document.querySelector('.startup-shell__surface h1') &&
         document.querySelector('.startup-shell__path ol')) finish();
   };
   addEventListener('load', check);
@@ -22,7 +23,7 @@ STARTUP_READY_PROBE = r"""new Promise((resolve, reject) => {
 })"""
 
 STARTUP_LAYOUT_PROBE = r"""(() => {
-  const heading = document.querySelector('.startup-shell__surface h2');
+  const heading = document.querySelector('.startup-shell__surface h1');
   const textNode = heading?.firstChild;
   const text = textNode?.textContent?.trim() ?? '';
   const lastWord = text.split(/\s+/).at(-1) ?? '';
@@ -87,7 +88,7 @@ def verify_startup_layout(origin: str, base: str) -> None:
             {"urls": ["*.js", "*.wasm"]},
             session,
         )
-        browser.navigate(origin + base)
+        browser.navigate(lab_url(origin, base))
         cdp.evaluate(session, STARTUP_READY_PROBE, True)
         state = cdp.evaluate(session, STARTUP_LAYOUT_PROBE)
         if (
@@ -108,7 +109,7 @@ def verify_worker_loader_failure(origin: str, base: str, loader: str) -> None:
         cdp = browser.require_cdp()
         session = browser.page_session
         cdp.send("Network.setBlockedURLs", {"urls": [f"*{loader}"]}, session)
-        browser.navigate(origin + base)
+        browser.navigate(lab_url(origin, base))
         cdp.evaluate(session, WORKER_FAILURE_PROBE, True)
         state = cdp.evaluate(
             session,

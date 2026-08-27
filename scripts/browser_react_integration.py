@@ -12,6 +12,7 @@ from typing import Protocol
 from urllib.parse import urlsplit
 
 from browser_session import ChromeSession
+from browser_urls import lab_url
 
 
 class ReactIntegrationError(RuntimeError):
@@ -162,7 +163,7 @@ def verify(root: Path, entry: str) -> None:
             origin = f"http://127.0.0.1:{server.server_port}"
             navigation = cdp.send(
                 "Page.navigate",
-                {"url": f"{origin}/{entry}"},
+                {"url": lab_url(origin, "/" if entry == "index.html" else "/transformer_viz/")},
                 browser.page_session,
             )
             loader_id = navigation.get("loaderId")

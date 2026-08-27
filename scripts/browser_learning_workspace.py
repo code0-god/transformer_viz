@@ -42,6 +42,7 @@ from browser_learning_workspace_visual import (
 )
 from browser_probes import READY_PROBE
 from browser_session import ChromeSession
+from browser_urls import lab_url
 
 
 DEFAULT_VIEWPORTS: Final = "1440x900,1024x768,390x844"
@@ -231,7 +232,7 @@ def verify_entry(root: Path, entry: str, evidence: Path) -> None:
         with ChromeSession() as browser:
             cdp = browser.require_cdp()
             cdp.send("Page.addScriptToEvaluateOnNewDocument", {"source": INSTRUMENT_LEARNING_WORKSPACE}, browser.page_session)
-            browser.navigate(f"http://127.0.0.1:{server.server_port}/{entry}")
+            browser.navigate(lab_url(f"http://127.0.0.1:{server.server_port}", "/" if entry == "index.html" else "/transformer_viz/"))
             cdp.evaluate(browser.page_session, READY_PROBE, True)
             cdp.evaluate(browser.page_session, WORKSPACE_READY, True)
             startup = state(browser)

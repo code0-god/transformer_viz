@@ -11,6 +11,7 @@ from pathlib import Path
 
 from browser_react_integration import QuietHandler, ReactIntegrationError
 from browser_session import ChromeSession
+from browser_urls import lab_url
 
 INSTRUMENT_WORKER = r"""(() => {
   const OriginalWorker = window.Worker;
@@ -220,7 +221,7 @@ def verify(root: Path) -> None:
         origin = f"http://127.0.0.1:{server.server_port}"
         for entry in ("/index.html", "/transformer_viz/index.html"):
             with ChromeSession() as browser:
-                verify_entry(browser, origin + entry)
+                verify_entry(browser, lab_url(origin, "/" if entry == "/index.html" else "/transformer_viz/"))
             print(f"{entry} generation bytes, Stop, replay: PASS")
     finally:
         server.shutdown()

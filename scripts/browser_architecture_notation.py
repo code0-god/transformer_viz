@@ -33,6 +33,7 @@ from browser_architecture_notation_probes import (
 )
 from browser_probes import READY_PROBE
 from browser_session import ChromeSession
+from browser_urls import lab_url
 
 
 def verify_notation(
@@ -153,7 +154,7 @@ def main() -> int:
             for mobile in (False, True):
                 evidence = args.evidence if base == "/" else None
                 with ChromeSession() as browser:
-                    verify_notation(browser, origin + base, mobile, evidence)
+                    verify_notation(browser, lab_url(origin, base), mobile, evidence)
             print(f"{base} Architecture notation desktop/mobile: PASS")
     finally:
         server.shutdown()
