@@ -104,10 +104,10 @@ describe("LearningGuide", () => {
 
     await user.click(targetLink);
 
-    expect(targetLink).toHaveFocus();
-    expect(window.location.hash).toBe(
-      "#fixture-guide-fixture-section-two-title",
-    );
+    expect(
+      screen.getByRole("heading", { name: "SECTION_TWO", level: 4 }),
+    ).toHaveFocus();
+    expect(window.location.hash).toBe("");
     window.history.replaceState(null, "", window.location.pathname);
   });
 

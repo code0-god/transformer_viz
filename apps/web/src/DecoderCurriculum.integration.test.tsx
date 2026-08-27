@@ -123,6 +123,13 @@ function renderGenericCurriculum(
         state: initialArchitectureState,
         replaySequenceLength: null,
         navigate,
+        course: {
+          trackId: "decoder-only-fundamentals",
+          chapterId: "decoder.chapter.0.1",
+          homeHref: "#/",
+          chapterHref: (chapterId) => `#/test/${chapterId}`,
+          navigateChapter: vi.fn(),
+        },
       }}
       profile={decoderOnlyFundamentalsProfile}
       rendererRegistry={rendererRegistry}
@@ -132,20 +139,18 @@ function renderGenericCurriculum(
 }
 
 async function activateCurrentGenericChapter(
-  user: ReturnType<typeof userEvent.setup>,
+  _user: ReturnType<typeof userEvent.setup>,
   rendererRegistry: CurriculumRendererRegistry = fixtureRegistry,
 ): Promise<void> {
   renderGenericCurriculum(rendererRegistry);
-  await user.click(screen.getByRole("button", { name: "목차 열기" }));
-  await user.click(
-    within(screen.getByRole("navigation", { name: "Chapter 목차" })).getByRole(
-      "button",
-      { name: "자연어 처리란?" },
-    ),
-  );
 }
 
 function readyCurriculum() {
+  window.history.replaceState(
+    null,
+    "",
+    "/#/learn/decoder-only-fundamentals/0-1",
+  );
   const worker = new TestWorker();
   render(
     <StrictMode>
@@ -160,24 +165,23 @@ function readyCurriculum() {
 }
 
 describe("Decoder curriculum production integration", () => {
-  test("navigates in place without URL or Worker traffic and focuses the Chapter heading", async () => {
+  test("updates the Chapter URL without Worker traffic and focuses the heading", async () => {
     // Given: the real app is ready at the first Chapter.
     const worker = readyCurriculum();
     const user = userEvent.setup();
     const postsBefore = worker.posted.length;
-    const locationBefore = window.location.href;
 
     // When: the learner opens ToC and chooses Chapter 0.2.
     await user.click(screen.getByRole("button", { name: "목차 열기" }));
     const toc = screen.getByRole("navigation", { name: "Chapter 목차" });
-    await user.click(within(toc).getByRole("button", { name: /Token이란\?/ }));
+    await user.click(within(toc).getByRole("link", { name: /Token이란\?/ }));
 
     // Then: Chapter state changes in place and focus follows once.
     expect(
       screen.getByRole("heading", { name: "Token이란?", level: 1 }),
     ).toHaveFocus();
     expect(screen.getByText("현재 Chapter 2 / 14")).toBeInTheDocument();
-    expect(window.location.href).toBe(locationBefore);
+    expect(window.location.hash).toBe("#/learn/decoder-only-fundamentals/0-2");
     expect(worker.posted).toHaveLength(postsBefore);
   });
 
@@ -197,7 +201,7 @@ describe("Decoder curriculum production integration", () => {
       await user.click(
         within(
           screen.getByRole("navigation", { name: "Chapter 목차" }),
-        ).getByRole("button", { name: /Transformer Block/ }),
+        ).getByRole("link", { name: /Transformer Block/ }),
       );
 
       // Then: subscription precedes transition and matching registration focuses once.
@@ -213,93 +217,79 @@ describe("Decoder curriculum production integration", () => {
         document.querySelector("[data-guide-section-id='block-overview']"),
       ).toHaveFocus();
       expect(screen.queryByText("Focus target unavailable.")).toBeNull();
+      expect(window.location.hash).toBe(
+        "#/learn/decoder-only-fundamentals/4-1",
+      );
       expect(worker.posted).toHaveLength(postsBefore);
     } finally {
       window.removeEventListener("curriculum-focus", record);
     }
   });
 
-  test("keeps a complete generic registry inactive on initial render", () => {
-    // Given/When: a complete generic registry mounts at Chapter 0.1.
-    renderGenericCurriculum();
+  test("renders the Chapter route curriculum immediately with one visible H1", () => {
+    // Given/When: the real app boots on the curriculum Chapter route.
+    readyCurriculum();
 
-    // Then: only the incumbent architecture is visible before explicit selection.
-    expect(screen.getByTestId("architecture-root")).toBeInTheDocument();
+    // Then: the Chapter title is present once and the guide title does not duplicate it.
     expect(
-      document.querySelector("svg[aria-label='Generic fixture Diagram']"),
-    ).toBeNull();
-    expect(screen.queryByText("Fixture introduction")).toBeNull();
-  });
-
-  test("opening the ToC alone preserves the inactive legacy surface", async () => {
-    // Given: the inactive generic curriculum, stable URL/history, and focused opener.
-    const navigate = renderGenericCurriculum();
-    const user = userEvent.setup();
-    const opener = screen.getByRole("button", { name: "목차 열기" });
-    const locationBefore = window.location.href;
-    const historyBefore = window.history.length;
-    opener.focus();
-
-    // When: only the disclosure opener is activated.
-    await user.click(opener);
-
-    // Then: disclosure state changes without curriculum, focus, route, or progress mutation.
-    expect(screen.getByTestId("architecture-root")).toBeInTheDocument();
+      screen.queryByRole("heading", { name: "자연어 처리란?", level: 1 }),
+    ).not.toBeNull();
     expect(
-      screen.queryByRole("img", { name: "Generic fixture Diagram" }),
-    ).toBeNull();
-    expect(screen.queryByText("Fixture introduction")).toBeNull();
-    expect(document.activeElement).toBe(opener);
-    expect(window.location.href).toBe(locationBefore);
-    expect(window.history.length).toBe(historyBefore);
-    expect(navigate).not.toHaveBeenCalled();
-    expect(
-      within(
-        screen.getByRole("navigation", { name: "Chapter 목차" }),
-      ).getAllByRole("button", { current: "page" }),
+      screen.queryAllByRole("heading", { name: "자연어 처리란?", level: 1 }),
     ).toHaveLength(1);
-    expect(screen.getByText("현재 Chapter 1 / 14")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "자연어 처리란?", level: 3 }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("heading", {
+        name: "언어로 해결할 수 있는 문제",
+        level: 2,
+      }),
+    ).not.toBeNull();
   });
 
-  test("activates the already-current Chapter 0.1 explicitly and focuses once", async () => {
-    // Given: an inactive complete registry and observable Chapter heading focus.
+  test("marks the current ToC link without requiring a second activation step", async () => {
+    // Given: the curriculum navigation is opened from the header.
     const user = userEvent.setup();
-    renderGenericCurriculum();
-    const heading = screen.getByRole("heading", {
+    readyCurriculum();
+
+    // When: the learner opens the Chapter list.
+    await user.click(screen.getByRole("button", { name: "목차 열기" }));
+    const toc = screen.getByRole("navigation", { name: "Chapter 목차" });
+
+    // Then: the current Chapter remains a link and is already active.
+    const current = within(toc).getByRole("link", {
       name: "자연어 처리란?",
-      level: 1,
     });
-    const focus = vi.spyOn(heading, "focus");
-    const locationBefore = window.location.href;
-    const historyBefore = window.history.length;
-
-    // When: the learner explicitly selects the already-current ToC item.
-    await user.click(screen.getByRole("button", { name: "목차 열기" }));
-    await user.click(
-      within(
-        screen.getByRole("navigation", { name: "Chapter 목차" }),
-      ).getByRole("button", { name: "자연어 처리란?" }),
-    );
-
-    // Then: generic content replaces legacy atomically and focus moves once.
-    expect(screen.queryByTestId("architecture-root")).toBeNull();
+    expect(current).toHaveAttribute("aria-current", "page");
     expect(
-      screen.getByRole("img", { name: "Generic fixture Diagram" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Fixture introduction")).toBeInTheDocument();
-    expect(heading).toHaveFocus();
-    expect(focus).toHaveBeenCalledTimes(1);
-    expect(window.location.href).toBe(locationBefore);
-    expect(window.history.length).toBe(historyBefore);
-    expect(screen.getByText("현재 Chapter 1 / 14")).toBeInTheDocument();
-
-    // And: reopening the disclosure still exposes exactly one current item.
-    await user.click(screen.getByRole("button", { name: "목차 열기" }));
-    expect(
-      within(
-        screen.getByRole("navigation", { name: "Chapter 목차" }),
-      ).getAllByRole("button", { current: "page" }),
+      screen.getAllByRole("heading", {
+        name: "자연어 처리란?",
+        level: 1,
+      }),
     ).toHaveLength(1);
+  });
+
+  test("keeps the chapter title hierarchy at one H1 and one subordinate guide title", () => {
+    // Given/When: the curriculum boots.
+    readyCurriculum();
+
+    // Then: the chapter title appears once and the guide content stays below it.
+    expect(
+      screen.queryByRole("heading", { name: "자연어 처리란?", level: 1 }),
+    ).not.toBeNull();
+    expect(
+      screen.queryAllByRole("heading", { name: "자연어 처리란?", level: 1 }),
+    ).toHaveLength(1);
+    expect(
+      screen.queryByRole("heading", { name: "자연어 처리란?", level: 3 }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("heading", {
+        name: "언어로 해결할 수 있는 문제",
+        level: 2,
+      }),
+    ).not.toBeNull();
   });
 
   test("moves focus from the Diagram button to the Guide introduction", async () => {
@@ -353,59 +343,26 @@ describe("Decoder curriculum production integration", () => {
     },
   );
 
-  test("keeps the production registry inactive until current 0.1 is selected", async () => {
-    // Given: the production app begins on the incumbent architecture.
-    const worker = readyCurriculum();
-    const user = userEvent.setup();
-    const postsBefore = worker.posted.length;
-    const hrefBefore = window.location.href;
-    const historyBefore = window.history.length;
-    const opener = screen.getByRole("button", { name: "목차 열기" });
-    opener.focus();
-    expect(screen.getByTestId("architecture-root")).toBeInTheDocument();
+  test("renders the production Chapter route curriculum immediately with a single visible H1", () => {
+    // Given/When: the real curriculum app boots.
+    readyCurriculum();
+
+    // Then: the chapter title is already rendered once, and the guide does not duplicate it.
     expect(
-      document.querySelector(
-        "[data-guide-page-id='decoder.curriculum.guide.0.1']",
-      ),
-    ).toBeNull();
-
-    // When: only the ToC disclosure is opened.
-    await user.click(opener);
-
-    // Then: the opener is inert with one current item and unchanged side effects.
-    const toc = screen.getByRole("navigation", { name: "Chapter 목차" });
-    expect(screen.getByTestId("architecture-root")).toBeInTheDocument();
-    expect(document.activeElement).toBe(opener);
-    expect(within(toc).getAllByRole("button")).toHaveLength(14);
-    expect(
-      within(toc).getAllByRole("button", { current: "page" }),
-    ).toHaveLength(1);
-    expect(screen.getByText("현재 Chapter 1 / 14")).toBeInTheDocument();
-    expect(window.location.href).toBe(hrefBefore);
-    expect(window.history.length).toBe(historyBefore);
-    expect(worker.posted).toHaveLength(postsBefore);
-
-    // When: the already-current Chapter is explicitly selected.
-    await user.click(
-      within(toc).getByRole("button", { name: "자연어 처리란?" }),
-    );
-
-    // Then: production Part 0 replaces legacy and owns heading focus once.
-    expect(screen.queryByTestId("architecture-root")).toBeNull();
-    expect(
-      document.querySelector(
-        "[data-guide-page-id='decoder.curriculum.guide.0.1']",
-      ),
+      screen.queryByRole("heading", { name: "자연어 처리란?", level: 1 }),
     ).not.toBeNull();
     expect(
-      screen.getByRole("img", { name: "자연어 처리 추론 경로" }),
-    ).toBeInTheDocument();
+      screen.queryAllByRole("heading", { name: "자연어 처리란?", level: 1 }),
+    ).toHaveLength(1);
     expect(
-      screen.getByRole("heading", { name: "자연어 처리란?", level: 1 }),
-    ).toHaveFocus();
-    expect(window.location.href).toBe(hrefBefore);
-    expect(window.history.length).toBe(historyBefore);
-    expect(worker.posted).toHaveLength(postsBefore);
+      screen.queryByRole("heading", { name: "자연어 처리란?", level: 3 }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("heading", {
+        name: "언어로 해결할 수 있는 문제",
+        level: 2,
+      }),
+    ).not.toBeNull();
   });
 
   test.each(PART0_PRODUCTION_CHAPTERS)(
@@ -415,15 +372,13 @@ describe("Decoder curriculum production integration", () => {
       const worker = readyCurriculum();
       const user = userEvent.setup();
       const postsBefore = worker.posted.length;
-      const hrefBefore = window.location.href;
-      const historyBefore = window.history.length;
       await user.click(screen.getByRole("button", { name: "목차 열기" }));
 
       // When: the requested Part 0 Chapter is explicitly selected.
       await user.click(
         within(
           screen.getByRole("navigation", { name: "Chapter 목차" }),
-        ).getByRole("button", {
+        ).getByRole("link", {
           name: new RegExp(chapterTitle.replace("?", "\\?")),
         }),
       );
@@ -433,30 +388,36 @@ describe("Decoder curriculum production integration", () => {
         document.querySelector(`[data-guide-page-id='${pageId}']`),
       ).not.toBeNull();
       expect(screen.getByRole("img", { name: imageName })).toBeInTheDocument();
-      expect(
-        screen.getByRole("heading", { name: chapterTitle, level: 1 }),
-      ).toHaveFocus();
       const ordinal = PART0_PRODUCTION_CHAPTERS.findIndex(
         ([title]) => title === chapterTitle,
       );
+      const heading = screen.getByRole("heading", {
+        name: chapterTitle,
+        level: 1,
+      });
+      if (ordinal === 0) expect(heading).toBeInTheDocument();
+      else expect(heading).toHaveFocus();
       expect(
         screen.getByText(`현재 Chapter ${ordinal + 1} / 14`),
       ).toBeInTheDocument();
       expect(screen.queryByText(/Visualization/)).toBeNull();
       expect(screen.queryByRole("slider")).toBeNull();
       expect(screen.queryByRole("switch")).toBeNull();
-      expect(window.location.href).toBe(hrefBefore);
-      expect(window.history.length).toBe(historyBefore);
+      expect(window.location.hash).toBe(
+        `#/learn/decoder-only-fundamentals/${pageId
+          .replace("decoder.curriculum.guide.", "")
+          .replaceAll(".", "-")}`,
+      );
       expect(worker.posted).toHaveLength(postsBefore);
 
       // And: reopening the ToC preserves exactly one matching current item.
       await user.click(screen.getByRole("button", { name: "목차 열기" }));
       const toc = screen.getByRole("navigation", { name: "Chapter 목차" });
       expect(
-        within(toc).getAllByRole("button", { current: "page" }),
+        within(toc).getAllByRole("link", { current: "page" }),
       ).toHaveLength(1);
       expect(
-        within(toc).getByRole("button", {
+        within(toc).getByRole("link", {
           name: new RegExp(chapterTitle.replace("?", "\\?")),
         }),
       ).toHaveAttribute("aria-current", "page");
@@ -464,21 +425,19 @@ describe("Decoder curriculum production integration", () => {
   );
 
   test.each(PART1_PRODUCTION_CHAPTERS)(
-    "activates production %s without URL, history, or Worker mutation",
+    "routes production %s without Worker mutation",
     async (chapterTitle, pageId, imageName) => {
       // Given: a fresh inactive app with side-effect counters.
       const worker = readyCurriculum();
       const user = userEvent.setup();
       const postsBefore = worker.posted.length;
-      const hrefBefore = window.location.href;
-      const historyBefore = window.history.length;
       await user.click(screen.getByRole("button", { name: "목차 열기" }));
 
       // When: the Part 1 Chapter is explicitly selected.
       await user.click(
         within(
           screen.getByRole("navigation", { name: "Chapter 목차" }),
-        ).getByRole("button", { name: chapterTitle }),
+        ).getByRole("link", { name: chapterTitle }),
       );
 
       // Then: the exact content pair replaces legacy atomically.
@@ -493,8 +452,11 @@ describe("Decoder curriculum production integration", () => {
       expect(screen.queryByText(/Visualization/)).toBeNull();
       expect(screen.queryByRole("slider")).toBeNull();
       expect(screen.queryByRole("switch")).toBeNull();
-      expect(window.location.href).toBe(hrefBefore);
-      expect(window.history.length).toBe(historyBefore);
+      expect(window.location.hash).toBe(
+        `#/learn/decoder-only-fundamentals/${pageId
+          .replace("decoder.curriculum.guide.", "")
+          .replaceAll(".", "-")}`,
+      );
       expect(worker.posted).toHaveLength(postsBefore);
     },
   );
@@ -506,15 +468,13 @@ describe("Decoder curriculum production integration", () => {
       const worker = readyCurriculum();
       const user = userEvent.setup();
       const postsBefore = worker.posted.length;
-      const hrefBefore = window.location.href;
-      const historyBefore = window.history.length;
       await user.click(screen.getByRole("button", { name: "목차 열기" }));
 
       // When: the Part 2 Chapter is explicitly selected.
       await user.click(
         within(
           screen.getByRole("navigation", { name: "Chapter 목차" }),
-        ).getByRole("button", { name: chapterTitle }),
+        ).getByRole("link", { name: chapterTitle }),
       );
 
       // Then: the exact content pair and current facts replace legacy atomically.
@@ -532,8 +492,11 @@ describe("Decoder curriculum production integration", () => {
       expect(screen.queryByText(/Visualization/)).toBeNull();
       expect(screen.queryByRole("slider")).toBeNull();
       expect(screen.queryByRole("switch")).toBeNull();
-      expect(window.location.href).toBe(hrefBefore);
-      expect(window.history.length).toBe(historyBefore);
+      expect(window.location.hash).toBe(
+        `#/learn/decoder-only-fundamentals/${pageId
+          .replace("decoder.curriculum.guide.", "")
+          .replaceAll(".", "-")}`,
+      );
       expect(worker.posted).toHaveLength(postsBefore);
     },
   );

@@ -22,6 +22,14 @@
   min-inline-size: 0;
 }
 
+.curriculum-workspace__eyebrow {
+  color: var(--accent);
+  font-size: .72rem;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
 .curriculum-workspace__chapter-copy h1 {
   max-inline-size: 24ch;
   font-size: clamp(1.45rem, 2.4vw, 2rem);
@@ -76,7 +84,9 @@
 
 .curriculum-navigation__opener,
 .curriculum-navigation__adjacent button,
-.curriculum-toc button {
+.curriculum-navigation__adjacent a,
+.curriculum-toc button,
+.curriculum-toc a {
   min-block-size: 44px;
 }
 
@@ -123,20 +133,29 @@
   list-style: none;
 }
 
-.curriculum-toc button {
+.curriculum-toc button,
+.curriculum-toc a {
+  display: flex;
+  align-items: center;
   inline-size: 100%;
+  padding: var(--s2) var(--s3);
   border-color: transparent;
+  border-radius: var(--radius);
   background: transparent;
   color: var(--ink);
+  font-weight: 750;
   text-align: start;
+  text-decoration: none;
   word-break: keep-all;
 }
 
-.curriculum-toc button:hover {
+.curriculum-toc button:hover,
+.curriculum-toc a:hover {
   background: var(--surface-strong);
 }
 
-.curriculum-toc button[aria-current="page"] {
+.curriculum-toc button[aria-current="page"],
+.curriculum-toc a[aria-current="page"] {
   border-color: var(--accent);
   background: var(--accent-soft);
   color: var(--accent);
@@ -148,11 +167,20 @@
   justify-content: flex-end;
 }
 
-.curriculum-navigation__adjacent button {
+.curriculum-navigation__adjacent button,
+.curriculum-navigation__adjacent a {
+  display: inline-flex;
+  align-items: center;
   max-inline-size: 24ch;
+  min-block-size: 44px;
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
   border-color: var(--hairline);
   background: var(--surface);
   color: var(--accent);
+  font-weight: 800;
+  text-decoration: none;
   overflow-wrap: anywhere;
 }
 
@@ -565,13 +593,47 @@
 }
 
 @media (min-width: 80rem) {
-  .curriculum-workspace .learning-workspace__body {
-    grid-template-columns: minmax(0, 48fr) minmax(0, 52fr);
+  .curriculum-workspace {
+    grid-template-rows: auto minmax(0, 1fr);
+    block-size: 100%;
+    min-block-size: 0;
+    overflow: hidden;
   }
 
-  .curriculum-workspace
-    .learning-workspace__pane--diagram:has(.architecture-node__hit-target) {
+  .curriculum-workspace .learning-workspace {
+    grid-template-rows: minmax(0, 1fr);
+    block-size: 100%;
+    min-block-size: 0;
+    overflow: hidden;
+  }
+
+  .curriculum-workspace .learning-workspace__body {
+    grid-template-columns: minmax(0, 48fr) minmax(0, 52fr);
+    align-items: stretch;
+    block-size: 100%;
+    min-block-size: 0;
+    overflow: hidden;
+  }
+
+  .curriculum-workspace .learning-workspace__pane {
+    min-block-size: 0;
+  }
+
+  .curriculum-workspace .learning-workspace__pane--diagram {
     position: static;
+    overflow: auto;
+  }
+
+  .curriculum-workspace .learning-workspace__diagram-scroll {
+    max-block-size: 100%;
+    overflow: auto;
+  }
+
+  .curriculum-workspace .learning-workspace__pane--guide {
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
   }
 }
 
@@ -587,10 +649,19 @@
 
   .curriculum-workspace .learning-workspace__body {
     grid-template-columns: minmax(0, 1fr);
+    block-size: auto;
+    overflow: visible;
   }
 
   .curriculum-workspace .learning-workspace__pane--diagram {
     position: static;
+  }
+
+  .curriculum-workspace,
+  .curriculum-workspace .learning-workspace,
+  .curriculum-workspace .learning-workspace__pane--guide {
+    block-size: auto;
+    overflow: visible;
   }
 }
 
@@ -663,7 +734,8 @@
     flex-direction: column;
   }
 
-  .curriculum-navigation__adjacent button {
+  .curriculum-navigation__adjacent button,
+  .curriculum-navigation__adjacent a {
     inline-size: 100%;
     max-inline-size: none;
   }

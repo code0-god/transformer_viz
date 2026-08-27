@@ -61,6 +61,29 @@ export interface LearningProfileArchitecture {
   >;
 }
 
+export interface LearningCourseChapter {
+  readonly id: string;
+  readonly slug: string;
+  readonly title: string;
+}
+
+export interface LearningCourseOverview {
+  readonly title: string;
+  readonly modelLabel: string;
+  readonly summary: string;
+  readonly journey: readonly string[];
+  readonly initialChapterId: string;
+  readonly chapters: readonly LearningCourseChapter[];
+}
+
+export interface LearningCourseLocation {
+  readonly trackId: LearningTrackId;
+  readonly chapterId: string;
+  readonly homeHref: string;
+  readonly chapterHref: (chapterId: string) => string;
+  readonly navigateChapter: (chapterId: string) => void;
+}
+
 export interface LearningTrackProfile {
   readonly id: LearningTrackId;
   readonly title: string;
@@ -80,6 +103,7 @@ export interface ArchitectureRenderContext {
   readonly state: ArchitectureState;
   readonly replaySequenceLength: number | null;
   readonly navigate: (action: ArchitectureAction) => void;
+  readonly course?: LearningCourseLocation;
 }
 
 export interface LearningTrackAdapter {
@@ -94,6 +118,7 @@ export interface LearningTrackAdapter {
 
 export interface LearningTrackRegistration {
   readonly profile: LearningTrackProfile;
+  readonly course?: LearningCourseOverview;
   createAdapter(): LearningTrackAdapter;
 }
 

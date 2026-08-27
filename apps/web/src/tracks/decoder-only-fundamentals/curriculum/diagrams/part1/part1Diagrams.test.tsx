@@ -14,6 +14,11 @@ const CHAPTERS = [
 ] as const;
 
 function readyCurriculum(): TestWorker {
+  window.history.replaceState(
+    null,
+    "",
+    "/#/learn/decoder-only-fundamentals/0-1",
+  );
   const worker = new TestWorker();
   render(
     <StrictMode>
@@ -41,7 +46,7 @@ describe("Part 1 curriculum Diagrams", () => {
       await user.click(
         within(
           screen.getByRole("navigation", { name: "Chapter 목차" }),
-        ).getByRole("button", { name: chapterTitle }),
+        ).getByRole("link", { name: chapterTitle }),
       );
 
       // Then: the Diagram is semantic, non-interactive, and Worker-inert.

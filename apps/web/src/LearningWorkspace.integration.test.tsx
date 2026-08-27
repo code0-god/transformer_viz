@@ -7,6 +7,7 @@ import { App } from "./App";
 import { model, TestWorker } from "./test/workerFixtures";
 
 async function readyWorkspace() {
+  window.history.replaceState(null, "", "/#/lab");
   const worker = new TestWorker();
   render(
     <StrictMode>

@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StrictMode } from "react";
 import { App } from "./App";
+import { registerAppRouteTests } from "./app/testLocation";
 import {
   generationConfig,
   generationStep,
@@ -24,11 +25,15 @@ function renderApp() {
   return { worker, rendered };
 }
 
+function readyWorker(worker: TestWorker): void {
+  act(() => {
+    worker.emit({ type: "ready", model });
+  });
+}
+
 async function readyApp() {
   const result = renderApp();
-  act(() => {
-    result.worker.emit({ type: "ready", model });
-  });
+  readyWorker(result.worker);
   expect(document.getElementById("status")).toHaveAttribute(
     "data-status",
     "ready",
@@ -61,7 +66,13 @@ async function startGeneration(
   return user;
 }
 
+registerAppRouteTests({ renderApp, readyWorker });
+
 describe("production React Worker integration", () => {
+  beforeEach(() => {
+    window.history.replaceState(null, "", "/#/lab");
+  });
+
   test("owns one initialized Worker under StrictMode and terminates on final cleanup", async () => {
     const { worker, rendered } = renderApp();
     expect(screen.getByRole("textbox", { name: "Prompt" })).toHaveValue(

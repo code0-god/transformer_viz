@@ -5,15 +5,16 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
-  useState,
 } from "react";
 
+import type { ArchitectureAction } from "../../../architecture";
 import type { FormulaDefinition } from "../../../math/formulaCatalog";
 import { LearningGuide } from "../../LearningGuide";
 import { LearningWorkspace } from "../../LearningWorkspace";
 import type {
   ArchitectureRenderContext,
   GlossaryEntry,
+  LearningCourseLocation,
   LearningGuidePage,
   LearningTrackProfile,
   RuntimeFactsPresentation,
@@ -22,17 +23,16 @@ import { DecoderLearningWorkspace } from "../DecoderLearningWorkspace";
 import { decoderRoute, decoderRouteId } from "../routes";
 import { CurriculumNavigation } from "./CurriculumNavigation";
 import { decoderCurriculum } from "./catalog";
+import { navigateCourseArchitecture } from "./courseArchitectureNavigation";
 import {
-  beginCurriculumNavigation,
   type CurriculumFocusEvent,
   createCurriculumFocusHandoff,
-  initialCurriculumState,
-  selectCurriculumChapter,
 } from "./curriculumState";
 import {
   chapterNavigation,
   destinationForChapter,
   incumbentGuideDestination,
+  isChapterId,
   transitionToCurriculumRoute,
   useGeneratedTokenFocus,
 } from "./navigation";
@@ -77,16 +77,51 @@ export function DecoderTrackWorkspace({
   profile,
   rendererRegistry,
 }: DecoderTrackWorkspaceProps): ReactElement {
-  const [curriculumState, setCurriculumState] = useState(
-    initialCurriculumState,
+  const course = context.course;
+  if (
+    course === undefined ||
+    course.trackId !== profile.id ||
+    !isChapterId(course.chapterId)
+  ) {
+    return <DecoderLearningWorkspace context={context} profile={profile} />;
+  }
+  return (
+    <DecoderCurriculumWorkspace
+      context={context}
+      profile={profile}
+      course={course}
+      chapterId={course.chapterId}
+      {...(rendererRegistry === undefined ? {} : { rendererRegistry })}
+    />
   );
-  const { chapterId, isActive } = curriculumState;
+}
+
+type DecoderCurriculumWorkspaceProps = DecoderTrackWorkspaceProps & {
+  readonly course: LearningCourseLocation;
+  readonly chapterId: ChapterId;
+};
+
+function DecoderCurriculumWorkspace({
+  context,
+  profile,
+  course,
+  chapterId,
+  rendererRegistry,
+}: DecoderCurriculumWorkspaceProps): ReactElement {
   const headingRef = useRef<HTMLHeadingElement | null>(null);
   const diagramFocusRef = useRef<HTMLButtonElement | null>(null);
   const workspaceRef = useRef<HTMLElement | null>(null);
-  const focusInPlaceRef = useRef(false);
+  const previousChapterRef = useRef<ChapterId | null>(null);
   useGeneratedTokenFocus(workspaceRef, context.state.selectedNodeId);
   const routeId = decoderRouteId(decoderRoute(context.state));
+  const navigateArchitecture = (action: ArchitectureAction): void => {
+    navigateCourseArchitecture(
+      action,
+      course.navigateChapter,
+      context.navigate,
+    );
+  };
+  const learningContext = { ...context, navigate: navigateArchitecture };
   const navigation = chapterNavigation(chapterId);
   const chapter = navigation?.current;
   const concept = chapter?.concepts[0];
@@ -114,13 +149,29 @@ export function DecoderTrackWorkspace({
   useLayoutEffect(() => {
     const heading = headingRef.current;
     if (heading === null) return;
-    if (isActive && focusInPlaceRef.current) {
-      focusInPlaceRef.current = false;
-      heading.focus({ preventScroll: true });
+    const changed = previousChapterRef.current !== chapterId;
+    if (changed) {
+      previousChapterRef.current = chapterId;
     }
     const destination = destinationForChapter(chapterId);
-    if (destination.routeId !== routeId) return;
     const incumbent = incumbentGuideDestination(chapterId);
+    if (changed && destination.routeId !== routeId) {
+      handoff.navigate(destination, () => {
+        transitionToCurriculumRoute(
+          destination.routeId,
+          context.navigate,
+          context.model.config.n_layer,
+          context.model.config.n_head,
+        );
+      });
+      return;
+    }
+    if (destination.routeId !== routeId) return;
+    if (changed && incumbent !== undefined) {
+      handoff.navigate(destination, () => {});
+    } else if (changed) {
+      heading.focus({ preventScroll: true });
+    }
     const registeredElement =
       incumbent === undefined
         ? heading
@@ -129,50 +180,11 @@ export function DecoderTrackWorkspace({
           );
     if (!(registeredElement instanceof HTMLElement)) return;
     handoff.register({ ...destination, element: registeredElement });
-    setCurriculumState((current) => {
-      const pending = current.pending;
-      if (
-        pending === null ||
-        pending.routeId !== destination.routeId ||
-        pending.sectionId !== destination.sectionId ||
-        pending.nodeId !== destination.nodeId
-      ) {
-        return current;
-      }
-      return { ...current, pending: null };
-    });
-  }, [chapterId, handoff, isActive, routeId]);
-
-  const navigateChapter = (nextChapterId: ChapterId): void => {
-    const destination = destinationForChapter(nextChapterId);
-    const incumbent = incumbentGuideDestination(nextChapterId);
-    if (destination.routeId === routeId && incumbent === undefined) {
-      focusInPlaceRef.current = true;
-      setCurriculumState((current) =>
-        selectCurriculumChapter(current, nextChapterId),
-      );
-      return;
-    }
-    handoff.navigate(destination, () => {
-      setCurriculumState((current) =>
-        beginCurriculumNavigation(current, nextChapterId, destination),
-      );
-      if (destination.routeId === routeId) return;
-      transitionToCurriculumRoute(
-        destination.routeId,
-        context.navigate,
-        context.model.config.n_layer,
-        context.model.config.n_head,
-      );
-    });
-  };
+  }, [chapterId, context, handoff, routeId]);
 
   const content =
-    !isActive ||
-    page === undefined ||
-    Diagram === undefined ||
-    registry === undefined ? (
-      <DecoderLearningWorkspace context={context} profile={profile} />
+    page === undefined || Diagram === undefined || registry === undefined ? (
+      <DecoderLearningWorkspace context={learningContext} profile={profile} />
     ) : (
       <LearningWorkspace
         route={{
@@ -181,6 +193,7 @@ export function DecoderTrackWorkspace({
           subtitle: chapter?.title ?? page.title,
         }}
         status={{ availability: "available" }}
+        presentation="chapter"
         diagram={{
           label: `${chapter?.title ?? page.title} Diagram`,
           content: (
@@ -202,6 +215,8 @@ export function DecoderTrackWorkspace({
           content: (
             <LearningGuide
               page={page}
+              presentation="chapter"
+              labelledBy="curriculum-chapter-title"
               glossary={registry.glossary}
               formulas={registry.formulas}
               runtimeFacts={registry.runtimeFacts}
@@ -223,14 +238,19 @@ export function DecoderTrackWorkspace({
     >
       <header className="curriculum-workspace__header">
         <div className="curriculum-workspace__chapter-copy">
-          <h1 ref={headingRef} tabIndex={-1}>
+          <p className="curriculum-workspace__eyebrow">
+            Part {part?.order ?? 0} · {(navigation?.index ?? 0) + 1} / 14
+          </p>
+          <h1 id="curriculum-chapter-title" ref={headingRef} tabIndex={-1}>
             {chapter?.title ?? "Curriculum"}
           </h1>
-          <p>{chapter?.concepts[0]?.title ?? "Decoder-only fundamentals"}</p>
+          <p>{page?.learningGoal ?? "Decoder-only fundamentals"}</p>
         </div>
         <CurriculumNavigation
           currentChapterId={chapterId}
-          onNavigate={navigateChapter}
+          onNavigate={course.navigateChapter}
+          homeHref={course.homeHref}
+          chapterHref={(nextChapterId) => course.chapterHref(nextChapterId)}
         />
       </header>
       {content}

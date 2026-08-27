@@ -45,6 +45,7 @@ type ChapterSpec = {
   readonly conceptId: ConceptId;
   readonly conceptTitle: string;
   readonly pageId?: GuidePageId;
+  readonly guideSectionIds?: readonly string[];
   readonly incumbentSectionId?: string;
   readonly diagramId: DiagramId;
   readonly nodeId: string;
@@ -61,6 +62,14 @@ const CHAPTER_SPECS = [
     conceptId: "decoder.intro.nlp",
     conceptTitle: "자연어 처리",
     pageId: GUIDE_PAGE_IDS[0],
+    guideSectionIds: [
+      "everyday-question",
+      "nlp-definition",
+      "why-numbers",
+      "tasks",
+      "training-vs-inference",
+      "roadmap",
+    ],
     diagramId: "decoder.diagram.intro.nlp",
     nodeId: "decoder.root.input-context",
     references: [
@@ -245,11 +254,12 @@ function chapterFromSpec(spec: ChapterSpec): LearningChapter {
     chapterId: spec.id,
     title: spec.conceptTitle,
     guideSectionIds:
-      spec.pageId === undefined
+      spec.guideSectionIds ??
+      (spec.pageId === undefined
         ? spec.incumbentSectionId === undefined
           ? []
           : [spec.incumbentSectionId]
-        : [`${spec.pageId}.section`],
+        : [`${spec.pageId}.section`]),
     relatedNodeIds: [spec.nodeId],
     diagramId: spec.diagramId,
     visualizationCtaCount: 0,

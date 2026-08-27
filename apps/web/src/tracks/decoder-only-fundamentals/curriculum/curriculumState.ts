@@ -1,15 +1,7 @@
-import type { ChapterId } from "./types";
-
 export type CurriculumDestination = {
   readonly routeId: "decoder.root" | "decoder.block" | "decoder.self-attention";
   readonly sectionId: string;
   readonly nodeId: string;
-};
-
-export type CurriculumState = {
-  readonly chapterId: ChapterId;
-  readonly isActive: boolean;
-  readonly pending: CurriculumDestination | null;
 };
 
 export type DestinationRegistration = CurriculumDestination & {
@@ -32,12 +24,6 @@ export type CurriculumFocusHandoff = {
   readonly pending: () => CurriculumDestination | null;
 };
 
-export const initialCurriculumState: CurriculumState = {
-  chapterId: "decoder.chapter.0.1",
-  isActive: false,
-  pending: null,
-};
-
 function matchesDestination(
   destination: CurriculumDestination,
   registration: DestinationRegistration,
@@ -47,38 +33,6 @@ function matchesDestination(
     destination.sectionId === registration.sectionId &&
     destination.nodeId === registration.nodeId
   );
-}
-
-export function selectCurriculumChapter(
-  state: CurriculumState,
-  chapterId: ChapterId,
-): CurriculumState {
-  return { ...state, chapterId, isActive: true };
-}
-
-export function beginCurriculumNavigation(
-  state: CurriculumState,
-  chapterId: ChapterId,
-  destination: CurriculumDestination,
-): CurriculumState {
-  return {
-    ...selectCurriculumChapter(state, chapterId),
-    pending: destination,
-  };
-}
-
-export function consumeDestinationRegistration(
-  state: CurriculumState,
-  registration: DestinationRegistration,
-): CurriculumState {
-  if (
-    state.pending === null ||
-    !matchesDestination(state.pending, registration)
-  ) {
-    return state;
-  }
-  registration.element.focus({ preventScroll: true });
-  return { ...state, pending: null };
 }
 
 export function createCurriculumFocusHandoff(

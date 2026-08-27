@@ -12,6 +12,12 @@ export const part0Glossary = [
     definition: "사람이 일상에서 뜻을 주고받기 위해 사용하는 언어입니다.",
   },
   {
+    id: "training",
+    term: "학습(training)",
+    definition:
+      "많은 예시를 바탕으로 모델 내부의 숫자인 가중치를 조정하는 과정입니다.",
+  },
+  {
     id: "inference",
     term: "추론",
     definition: "학습이 끝난 가중치로 입력에 대한 출력을 계산하는 과정입니다.",

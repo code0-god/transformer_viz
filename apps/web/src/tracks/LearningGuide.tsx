@@ -29,6 +29,8 @@ interface LearningGuideProps<Id extends string> {
     element: HTMLElement | null,
   ) => void;
   readonly onNavigate?: (nextStep: LearningGuideNextStep) => void;
+  readonly presentation?: "route" | "chapter";
+  readonly labelledBy?: string;
 }
 
 const EMPTY_RUNTIME_FACTS: Readonly<Record<string, RuntimeFactsPresentation>> =
@@ -53,6 +55,8 @@ export function LearningGuide<Id extends string>({
   onSectionFocus,
   onSectionRef,
   onNavigate,
+  presentation = "route",
+  labelledBy,
 }: LearningGuideProps<Id>): ReactElement {
   const outlineSections = (page.outlineSectionIds ?? []).flatMap(
     (sectionId) => {
@@ -68,20 +72,23 @@ export function LearningGuide<Id extends string>({
     (value) => value !== undefined,
   );
   const nextStep = page.nextStep;
+  const SectionHeading = presentation === "chapter" ? "h2" : "h4";
 
   return (
     <article
       className={classes.join(" ")}
       data-guide-page-id={page.id}
-      aria-labelledby={`${page.id}-title`}
+      aria-labelledby={labelledBy ?? `${page.id}-title`}
     >
-      <header className="learning-guide-header">
-        <h3 id={`${page.id}-title`}>{page.title}</h3>
-        <p className="learning-guide-goal" data-testid="learning-goal">
-          <strong>학습 목표</strong>
-          <span>{page.learningGoal}</span>
-        </p>
-      </header>
+      {presentation === "route" ? (
+        <header className="learning-guide-header">
+          <h3 id={`${page.id}-title`}>{page.title}</h3>
+          <p className="learning-guide-goal" data-testid="learning-goal">
+            <strong>학습 목표</strong>
+            <span>{page.learningGoal}</span>
+          </p>
+        </header>
+      ) : null}
 
       {outlineSections.length === 0 ? null : (
         <nav className="learning-guide-outline" aria-label="학습 목차">
@@ -90,6 +97,18 @@ export function LearningGuide<Id extends string>({
               <li key={section.id}>
                 <a
                   href={`#${sectionHeadingId(page.id, section.id)}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    const heading = document.getElementById(
+                      sectionHeadingId(page.id, section.id),
+                    );
+                    if (!(heading instanceof HTMLElement)) return;
+                    heading.tabIndex = -1;
+                    heading.focus({ preventScroll: true });
+                    if (typeof heading.scrollIntoView === "function") {
+                      heading.scrollIntoView({ block: "start" });
+                    }
+                  }}
                   aria-current={
                     section.id === activeSectionId ? "location" : undefined
                   }
@@ -146,9 +165,9 @@ export function LearningGuide<Id extends string>({
             >
               {section.title === "" ? null : (
                 <div className="learning-guide-section-heading">
-                  <h4 id={sectionHeadingId(page.id, section.id)}>
+                  <SectionHeading id={sectionHeadingId(page.id, section.id)}>
                     {section.title}
-                  </h4>
+                  </SectionHeading>
                   {section.primaryNodeId === undefined ||
                   onSectionFocus === undefined ? null : (
                     <button
@@ -186,7 +205,7 @@ export function LearningGuide<Id extends string>({
           data-testid="key-takeaway"
           aria-label="핵심 정리"
         >
-          <h4>핵심 정리</h4>
+          <SectionHeading>핵심 정리</SectionHeading>
           {page.keyTakeaway.map((block) => (
             <GuideBlockView
               key={block.id}
@@ -207,7 +226,7 @@ export function LearningGuide<Id extends string>({
           className="learning-guide-glossary"
           data-testid="guide-glossary"
         >
-          <h4>용어 정리</h4>
+          <SectionHeading>용어 정리</SectionHeading>
           <dl>
             {glossaryEntries.map((entry) => (
               <div key={entry.id} id={`${page.id}-glossary-${entry.id}`}>

@@ -3,6 +3,7 @@ import type { WorkerStatus } from "../app/workerState";
 export type HeaderProps = Readonly<{
   status: WorkerStatus;
   subtitle: string;
+  activeView: "learn" | "lab";
 }>;
 
 function statusCopy(
@@ -22,15 +23,28 @@ function statusCopy(
   }
 }
 
-export function Header({ status, subtitle }: HeaderProps) {
+export function Header({ status, subtitle, activeView }: HeaderProps) {
   const copy = statusCopy(status);
   const isError = status.type === "error";
   return (
     <header className="architecture-header">
       <div className="brand-lockup">
-        <h1>Transformer Viz</h1>
+        <a className="brand-lockup__title" href="#/">
+          Transformer Viz
+        </a>
         <p>{subtitle}</p>
       </div>
+      <nav className="app-navigation" aria-label="주요 탐색">
+        <a href="#/" aria-current={activeView === "learn" ? "page" : undefined}>
+          학습
+        </a>
+        <a
+          href="#/lab"
+          aria-current={activeView === "lab" ? "page" : undefined}
+        >
+          모델 실험실
+        </a>
+      </nav>
       <div
         className={isError ? "lifecycle lifecycle-error" : "lifecycle"}
         role={isError ? "alert" : "status"}

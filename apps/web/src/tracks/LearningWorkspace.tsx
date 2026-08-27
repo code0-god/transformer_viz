@@ -28,6 +28,7 @@ export type LearningWorkspaceProps = {
   readonly status: LearningFocusStatus;
   readonly headerControls?: ReactNode;
   readonly onRouteTitleRef?: (element: HTMLHeadingElement | null) => void;
+  readonly presentation?: "route" | "chapter";
 };
 
 export function LearningRouteHeader({
@@ -66,28 +67,35 @@ export function LearningWorkspace({
   status,
   headerControls,
   onRouteTitleRef,
+  presentation = "route",
 }: LearningWorkspaceProps): ReactElement {
   return (
-    <section className="learning-workspace" data-learning-route-id={route.id}>
-      <LearningRouteHeader
-        route={route}
-        controls={headerControls}
-        {...(onRouteTitleRef === undefined
-          ? {}
-          : { onTitleRef: onRouteTitleRef })}
-      />
+    <section
+      className="learning-workspace"
+      data-learning-route-id={route.id}
+      data-learning-presentation={presentation}
+    >
+      {presentation === "route" ? (
+        <LearningRouteHeader
+          route={route}
+          controls={headerControls}
+          {...(onRouteTitleRef === undefined
+            ? {}
+            : { onTitleRef: onRouteTitleRef })}
+        />
+      ) : null}
       <div className="learning-workspace__body">
         <section
           id="learning-diagram-pane"
           className="learning-workspace__pane learning-workspace__pane--diagram"
           aria-labelledby="learning-diagram-pane-title"
         >
-          <h3
+          <span
             id="learning-diagram-pane-title"
             className="learning-visually-hidden"
           >
             {diagram.label}
-          </h3>
+          </span>
           <div className="learning-workspace__diagram-scroll">
             {diagram.content}
           </div>
@@ -97,12 +105,12 @@ export function LearningWorkspace({
           className="learning-workspace__pane learning-workspace__pane--guide"
           aria-labelledby="learning-guide-pane-title"
         >
-          <h3
+          <span
             id="learning-guide-pane-title"
             className="learning-visually-hidden"
           >
             {guide.label}
-          </h3>
+          </span>
           {guide.content}
         </section>
       </div>

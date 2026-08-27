@@ -7,11 +7,15 @@ import type { ChapterId } from "./types";
 type CurriculumNavigationProps = {
   readonly currentChapterId: ChapterId;
   readonly onNavigate: (chapterId: ChapterId) => void;
+  readonly homeHref?: string;
+  readonly chapterHref?: (chapterId: ChapterId) => string;
 };
 
 export function CurriculumNavigation({
   currentChapterId,
   onNavigate,
+  homeHref,
+  chapterHref,
 }: CurriculumNavigationProps): ReactElement {
   const [open, setOpen] = useState(false);
   const navigation = chapterNavigation(currentChapterId);
@@ -63,16 +67,29 @@ export function CurriculumNavigation({
               <ol>
                 {part.chapters.map((chapter) => (
                   <li key={chapter.id}>
-                    <button
-                      type="button"
-                      aria-label={chapter.title}
-                      aria-current={
-                        chapter.id === currentChapterId ? "page" : undefined
-                      }
-                      onClick={() => navigate(chapter.id)}
-                    >
-                      {chapter.title}
-                    </button>
+                    {chapterHref === undefined ? (
+                      <button
+                        type="button"
+                        aria-label={chapter.title}
+                        aria-current={
+                          chapter.id === currentChapterId ? "page" : undefined
+                        }
+                        onClick={() => navigate(chapter.id)}
+                      >
+                        {chapter.title}
+                      </button>
+                    ) : (
+                      <a
+                        href={chapterHref(chapter.id)}
+                        aria-label={chapter.title}
+                        aria-current={
+                          chapter.id === currentChapterId ? "page" : undefined
+                        }
+                        onClick={() => setOpen(false)}
+                      >
+                        {chapter.title}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ol>
@@ -85,7 +102,11 @@ export function CurriculumNavigation({
         className="curriculum-navigation__adjacent"
         aria-label="인접 Chapter"
       >
-        {navigation?.previous === undefined ? null : (
+        {navigation?.previous === undefined ? (
+          homeHref === undefined ? null : (
+            <a href={homeHref}>이전: 학습 과정 홈</a>
+          )
+        ) : chapterHref === undefined ? (
           <button
             type="button"
             onClick={() =>
@@ -94,14 +115,22 @@ export function CurriculumNavigation({
           >
             이전: {navigation.previous.title}
           </button>
+        ) : (
+          <a href={chapterHref(navigation.previous.id)}>
+            이전: {navigation.previous.title}
+          </a>
         )}
-        {navigation?.next === undefined ? null : (
+        {navigation?.next === undefined ? null : chapterHref === undefined ? (
           <button
             type="button"
             onClick={() => navigate(navigation.next?.id ?? currentChapterId)}
           >
             다음: {navigation.next.title}
           </button>
+        ) : (
+          <a href={chapterHref(navigation.next.id)}>
+            다음: {navigation.next.title}
+          </a>
         )}
       </nav>
     </section>

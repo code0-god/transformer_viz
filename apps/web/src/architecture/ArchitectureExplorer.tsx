@@ -1,5 +1,9 @@
 import type { ModelMetadata } from "../generated/schema";
-import { resolveLearningTrack } from "../tracks/registry";
+import {
+  resolveLearningTrack,
+  resolveLearningTrackById,
+} from "../tracks/registry";
+import type { LearningCourseLocation } from "../tracks/types";
 import { UnsupportedLearningProfile } from "../tracks/UnsupportedLearningProfile";
 import type { ArchitectureAction, ArchitectureState } from "./state";
 
@@ -8,6 +12,7 @@ export interface ArchitectureExplorerProps {
   readonly state: ArchitectureState;
   readonly replaySequenceLength: number | null;
   readonly navigate: (action: ArchitectureAction) => void;
+  readonly course?: LearningCourseLocation;
 }
 
 export function ArchitectureExplorer({
@@ -15,6 +20,7 @@ export function ArchitectureExplorer({
   state,
   replaySequenceLength,
   navigate,
+  course,
 }: ArchitectureExplorerProps) {
   if (model === null) {
     return (
@@ -27,22 +33,25 @@ export function ArchitectureExplorer({
       </section>
     );
   }
-  const resolution = resolveLearningTrack(model);
+  const resolution =
+    course === undefined
+      ? resolveLearningTrack(model)
+      : resolveLearningTrackById(course.trackId, model);
   if (resolution.status === "unsupported") {
     return <UnsupportedLearningProfile resolution={resolution} />;
   }
+
+  const context =
+    course === undefined
+      ? { model, state, replaySequenceLength, navigate }
+      : { model, state, replaySequenceLength, navigate, course };
 
   return (
     <section
       className="architecture-shell"
       data-learning-track-id={resolution.adapter.profile.id}
     >
-      {resolution.adapter.renderArchitecture({
-        model,
-        state,
-        replaySequenceLength,
-        navigate,
-      })}
+      {resolution.adapter.renderArchitecture(context)}
     </section>
   );
 }

@@ -14,17 +14,19 @@ root hosting and a GitHub Pages project subpath.
 
 ## Users
 
-Primary users are Korean-speaking learners who understand basic programming or machine-learning
-terms but cannot yet connect autoregressive text generation to one concrete Transformer forward
-pass. They use the app to generate a continuation, select any generated token, and follow that
-token's context through architecture, math, tensors, sampling, and source code.
+Primary users are Korean-speaking beginners who need a clear path from ordinary text to
+Transformer concepts. They may know basic programming, but the course never assumes prior
+knowledge of tokenization, language modeling, GPT, Transformer Blocks, or Self-Attention.
+Advanced learners can use the model Lab to connect generated tokens to architecture, math,
+tensors, sampling, and source code.
 
 ## Product Purpose
 
-Transformer Viz shows a tiny nanoGPT-compatible Transformer generating text one token at a time,
-then makes the exact forward pass that produced any selected token inspectable. Success means a
-learner can explain how context, architecture, attention, language-model logits, and sampling
-combined to select that token and why it enters the next step's context.
+Transformer Viz teaches a staged decoder-only Transformer course, then provides a model Lab for
+testing those ideas against a real tiny nanoGPT-compatible runtime. Success begins when a first-time
+learner immediately knows where to start and can explain why language must become numeric
+representations before a neural model can calculate with it. Later success means connecting one
+generated token to context, architecture, attention, logits, and sampling.
 
 ## Positioning
 
@@ -37,11 +39,11 @@ assistant answer.
 
 ## Operating Context
 
-Users open one static URL, wait for Worker and model readiness, enter a prompt, choose generation
-settings, and watch tokens stream into the continuation. Selecting a generated token replays that
-step's stored context without sampling again. Generate and Architecture remain linked inside one
-React state. The default educational prompt is `the cat`; the legacy
-`the cat sat on the` phrase remains only as the full-forward golden/parity fixture.
+Users open one static URL at Course Home, start Chapter 0.1 with one action, and move through
+URL-addressable Chapters. Learn hides model-generation controls. Lab preserves Prompt, Generate,
+Stop, Continuation, Replay, sampling settings, trace, and Architecture inside the existing React
+and Worker state. The default Lab prompt is `the cat`; the legacy `the cat sat on the` phrase
+remains only as the full-forward golden/parity fixture.
 
 ## Capabilities and Constraints
 
@@ -93,6 +95,9 @@ available and none may be fabricated.
    Transformer Block operations.
 7. Show that a generated token enters attention only on the following generation step.
 8. Make the append-and-repeat loop visible; never imply hidden KV-cache reuse.
+9. Start with course wayfinding, not an inference console or Architecture fallback.
+10. Give each Chapter one H1 and one explicit scroll owner per responsive layout.
+11. Store Home, Chapter, and Lab location in a static-host-safe hash route.
 
 ## Accessibility & Inclusion
 

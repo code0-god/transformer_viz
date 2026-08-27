@@ -36,6 +36,34 @@ const PART0_CHAPTERS = [
   },
 ] as const;
 
+const BEGINNER_FLOW_STAGES = [
+  "everyday-question",
+  "nlp-definition",
+  "why-numbers",
+  "tasks",
+  "training-vs-inference",
+  "roadmap",
+  "current-model.nanogpt",
+] as const;
+
+const FORBIDDEN_CONCEPT_TOKENS = [
+  "logit",
+  "temperature",
+  "top-k",
+  "sampling",
+  "softmax",
+  "bpe",
+  "utf-8 fallback",
+  "embedding dimension",
+  "hidden state",
+  "attention head",
+  "exporter",
+  "fixture",
+  "digest",
+  "schema",
+  "runtime metadata",
+] as const;
+
 function part0GuidePage(index: number) {
   const page = decoderCurriculum.guidePages[index];
   if (page === undefined) throw new Error(`Missing Part 0 guide page ${index}`);
@@ -65,18 +93,56 @@ describe("Part 0 curriculum content", () => {
       expect(
         blocks.filter(({ kind }) => kind === "paragraph").length,
       ).toBeGreaterThanOrEqual(6);
-      expect(
-        blocks.filter(
-          ({ id, kind }) =>
-            kind === "callout" && id.startsWith("misconception."),
-        ).length,
-      ).toBeGreaterThanOrEqual(2);
+      const misconceptionCount = blocks.filter(
+        ({ id, kind }) => kind === "callout" && id.startsWith("misconception."),
+      ).length;
+      expect(misconceptionCount).toBeGreaterThanOrEqual(index === 0 ? 1 : 2);
       expect(
         blocks.filter(({ kind }) => kind === "term").length,
       ).toBeGreaterThanOrEqual(3);
       expect(blocks.some(({ kind }) => kind === "formula")).toBe(false);
     }
     expect(decoderCurriculumRegistries.termIds.size).toBeGreaterThanOrEqual(15);
+  });
+
+  test("keeps Chapter 0.1 on the A-G beginner flow and away from later details", () => {
+    // Given: the first Part 0 guide page.
+    const page = part0GuidePage(0);
+    const blocks = page.sections.flatMap(
+      ({ blocks: sectionBlocks }) => sectionBlocks,
+    );
+
+    // When: the machine-readable flow contract is inspected.
+    const structuralTokens = [
+      page.id,
+      ...page.sections.map(({ id }) => id),
+      ...blocks.map(({ id }) => id),
+      ...blocks.flatMap((block) =>
+        block.kind === "term" ? [block.termId] : [],
+      ),
+      ...blocks.flatMap((block) =>
+        block.kind === "steps" ? block.items.map(({ id }) => id) : [],
+      ),
+      ...blocks.flatMap((block) =>
+        block.kind === "callout" ? [block.id] : [],
+      ),
+    ];
+
+    // Then: Chapter 0.1 stays beginner-shaped and omits later-token concepts.
+    expect(page.introduction).toHaveLength(1);
+    expect(page.keyTakeaway).toHaveLength(1);
+    expect(page.sections.map(({ id }) => id)).toEqual(
+      BEGINNER_FLOW_STAGES.slice(0, 6),
+    );
+    expect(page.keyTakeaway.map(({ id }) => id)).toEqual(["remember"]);
+    expect(blocks.some(({ id }) => id === "current-model.nanogpt")).toBe(true);
+    expect(
+      structuralTokens.some((token) =>
+        FORBIDDEN_CONCEPT_TOKENS.some((forbidden) =>
+          token.toLowerCase().includes(forbidden),
+        ),
+      ),
+    ).toBe(false);
   });
 
   test("exposes typed independent-authorship provenance for Part 0", () => {

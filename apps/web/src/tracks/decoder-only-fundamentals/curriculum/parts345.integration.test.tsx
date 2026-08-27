@@ -37,6 +37,11 @@ const ARCHITECTURE_CHAPTERS = [
 ] as const;
 
 function readyCurriculum(): TestWorker {
+  window.history.replaceState(
+    null,
+    "",
+    "/#/learn/decoder-only-fundamentals/0-1",
+  );
   const worker = new TestWorker();
   render(
     <StrictMode>
@@ -55,7 +60,7 @@ async function selectChapter(title: string): Promise<void> {
   await user.click(screen.getByRole("button", { name: "목차 열기" }));
   await user.click(
     within(screen.getByRole("navigation", { name: "Chapter 목차" })).getByRole(
-      "button",
+      "link",
       { name: title },
     ),
   );
@@ -132,7 +137,7 @@ describe("Parts 3 through 5 incumbent route integration", () => {
 
     try {
       // When: the exact adjacent next control is activated.
-      await user.click(screen.getByRole("button", { name: "다음: GPT" }));
+      await user.click(screen.getByRole("link", { name: "다음: GPT" }));
 
       // Then: the root Guide registers before reveal/focus and Part 4 is not skipped to.
       expect(trace).toEqual([
@@ -169,7 +174,7 @@ describe("Parts 3 through 5 incumbent route integration", () => {
 
     // When/Then: adjacent controls follow the exact bidirectional spine.
     await user.click(
-      screen.getByRole("button", { name: "다음: Transformer Block" }),
+      screen.getByRole("link", { name: "다음: Transformer Block" }),
     );
     expect(
       document.querySelector(
@@ -177,21 +182,19 @@ describe("Parts 3 through 5 incumbent route integration", () => {
       ),
     ).not.toBeNull();
     await user.click(
-      screen.getByRole("button", { name: "다음: Self-Attention" }),
+      screen.getByRole("link", { name: "다음: Self-Attention" }),
     );
     expect(
       document.querySelector(
         "[data-curriculum-chapter-id='decoder.chapter.5.1']",
       ),
     ).not.toBeNull();
-    expect(screen.queryByRole("button", { name: /^다음:/ })).toBeNull();
+    expect(screen.queryByRole("link", { name: /^다음:/ })).toBeNull();
     await user.click(
-      screen.getByRole("button", { name: "이전: Transformer Block" }),
+      screen.getByRole("link", { name: "이전: Transformer Block" }),
     );
-    await user.click(screen.getByRole("button", { name: "이전: GPT" }));
-    await user.click(
-      screen.getByRole("button", { name: "이전: Hidden State" }),
-    );
+    await user.click(screen.getByRole("link", { name: "이전: GPT" }));
+    await user.click(screen.getByRole("link", { name: "이전: Hidden State" }));
     expect(
       document.querySelector(
         "[data-curriculum-chapter-id='decoder.chapter.2.3']",
@@ -208,6 +211,7 @@ describe("Parts 3 through 5 incumbent route integration", () => {
     const worker = readyCurriculum();
     const user = userEvent.setup();
     const postsBefore = worker.posted.length;
+    await selectChapter("GPT");
     const generatedToken = screen.getByRole("button", {
       name: /생성된 token.*선택 가능/,
     });
@@ -315,10 +319,10 @@ describe("Parts 3 through 5 incumbent route integration", () => {
 
     // When: curriculum navigation leaves Attention and later returns.
     await user.click(
-      screen.getByRole("button", { name: "이전: Transformer Block" }),
+      screen.getByRole("link", { name: "이전: Transformer Block" }),
     );
     await user.click(
-      screen.getByRole("button", { name: "다음: Self-Attention" }),
+      screen.getByRole("link", { name: "다음: Self-Attention" }),
     );
 
     // Then: route transition changes only view; architecture selections remain owned upstream.

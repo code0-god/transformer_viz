@@ -1,4 +1,5 @@
 import { createDecoderOnlyFundamentalsAdapter } from "./adapter";
+import { decoderOnlyFundamentalsCourse } from "./course";
 import { decoderOnlyFundamentalsProfile } from "./profile";
 
 export {
@@ -10,6 +11,7 @@ export { decoderOnlyFundamentalsProfile } from "./profile";
 
 export const decoderOnlyFundamentalsRegistration = {
   profile: decoderOnlyFundamentalsProfile,
+  course: decoderOnlyFundamentalsCourse,
   createAdapter: () =>
     createDecoderOnlyFundamentalsAdapter(decoderOnlyFundamentalsProfile),
 };

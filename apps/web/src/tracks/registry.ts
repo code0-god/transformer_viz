@@ -102,3 +102,54 @@ export function resolveLearningTrack(
         supportedTracks,
       };
 }
+
+export function resolveLearningTrackById(
+  trackId: LearningTrackId,
+  model: Readonly<ModelMetadata>,
+  registry = learningTrackRegistry,
+): LearningTrackResolution {
+  const registration = registry.byTrackId.get(trackId);
+  const supportedTracks = registry.registrations.map(
+    ({ profile }) => profile.title,
+  );
+  if (registration === undefined) {
+    return {
+      status: "unsupported",
+      reason: "unknown-architecture",
+      model,
+      supportedTracks,
+    };
+  }
+  if (
+    !registration.profile.compatibleArchitectureIds.includes(
+      model.architecture.architecture_id,
+    )
+  ) {
+    return {
+      status: "unsupported",
+      reason: "incompatible-architecture",
+      model,
+      supportedTracks,
+    };
+  }
+  if (
+    registration.profile.compatibleModelIds !== undefined &&
+    !registration.profile.compatibleModelIds.includes(model.model_id)
+  ) {
+    return {
+      status: "unsupported",
+      reason: "incompatible-model",
+      model,
+      supportedTracks,
+    };
+  }
+  const adapter = registration.createAdapter();
+  return adapter.supportsModel(model)
+    ? { status: "supported", adapter }
+    : {
+        status: "unsupported",
+        reason: "incompatible-architecture",
+        model,
+        supportedTracks,
+      };
+}

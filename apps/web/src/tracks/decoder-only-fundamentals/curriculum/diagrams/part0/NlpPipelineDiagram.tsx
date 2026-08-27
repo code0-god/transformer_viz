@@ -6,13 +6,10 @@ type NlpPipelineDiagramProps = {
 };
 
 const STAGES = [
-  ["Natural Language", "Text"],
-  ["Tokenizer", "경계 결정"],
-  ["Token IDs", "숫자 주소"],
-  ["Neural Model", "가중치 계산"],
-  ["Logits", "후보 점수"],
-  ["Softmax / Sampling", "선택 규칙"],
-  ["Task Output", "사람이 쓰는 결과"],
+  ["사람이 쓰는 텍스트", "질문 · 문장 · 글"],
+  ["숫자로 표현하기", "계산할 수 있는 형태"],
+  ["모델의 계산", "학습된 숫자로 계산"],
+  ["사람이 사용하는 결과", "분류 · 검색 · 생성"],
 ] as const;
 
 export function NlpPipelineDiagram({
@@ -22,15 +19,15 @@ export function NlpPipelineDiagram({
   return (
     <figure className="part0-diagram part0-diagram--pipeline">
       <svg
-        viewBox="0 0 760 470"
+        viewBox="0 0 520 640"
         role="img"
         aria-label="자연어 처리 추론 경로"
         aria-describedby="nlp-pipeline-desc"
       >
         <title id="nlp-pipeline-title">자연어 처리 추론 경로</title>
         <desc id="nlp-pipeline-desc">
-          the cat 텍스트가 tokenizer, token IDs, neural model, logits, softmax와
-          sampling을 지나 task output으로 이어지는 상징적 경로
+          사람이 쓰는 텍스트를 숫자로 표현하고, 모델이 계산한 뒤, 사람이
+          사용하는 결과로 이어지는 네 단계의 큰 흐름
         </desc>
         <defs>
           <marker
@@ -48,66 +45,38 @@ export function NlpPipelineDiagram({
         <path
           className="part0-diagram__path"
           markerEnd="url(#nlp-arrow)"
-          d="M160 105H276"
+          d="M260 150V205"
         />
         <path
           className="part0-diagram__path"
           markerEnd="url(#nlp-arrow)"
-          d="M456 105H572"
+          d="M260 295V350"
         />
         <path
           className="part0-diagram__path"
           markerEnd="url(#nlp-arrow)"
-          d="M662 155V226"
-        />
-        <path
-          className="part0-diagram__path"
-          markerEnd="url(#nlp-arrow)"
-          d="M572 285H456"
-        />
-        <path
-          className="part0-diagram__path"
-          markerEnd="url(#nlp-arrow)"
-          d="M276 285H160"
-        />
-        <path
-          className="part0-diagram__path"
-          markerEnd="url(#nlp-arrow)"
-          d="M70 335V386H286"
+          d="M260 440V495"
         />
         {STAGES.map(([label, note], index) => {
           const positions = [
-            [20, 55],
-            [286, 55],
-            [572, 55],
-            [572, 235],
-            [286, 235],
-            [20, 235],
-            [286, 376],
+            [80, 60],
+            [80, 205],
+            [80, 350],
+            [80, 495],
           ] as const;
           const position = positions[index];
           if (position === undefined) return null;
           const [x, y] = position;
           return (
             <g key={label} className="part0-diagram__stage" data-stage={label}>
-              <rect
-                x={x}
-                y={y}
-                width={index === 6 ? 188 : 180}
-                height={100}
-                rx="14"
-              />
-              <text
-                x={x + (index === 6 ? 94 : 90)}
-                y={y + 42}
-                textAnchor="middle"
-              >
+              <rect x={x} y={y} width="360" height="90" rx="16" />
+              <text x={x + 180} y={y + 38} textAnchor="middle">
                 {label}
               </text>
               <text
                 className="part0-diagram__note"
-                x={x + (index === 6 ? 94 : 90)}
-                y={y + 69}
+                x={x + 180}
+                y={y + 65}
                 textAnchor="middle"
               >
                 {note}
@@ -117,11 +86,11 @@ export function NlpPipelineDiagram({
         })}
         <text
           className="part0-diagram__example"
-          x="110"
-          y="34"
+          x="260"
+          y="30"
           textAnchor="middle"
         >
-          “the cat”
+          언어에서 계산으로, 계산에서 활용으로
         </text>
       </svg>
       <figcaption className="part0-diagram__fallback">
@@ -139,7 +108,7 @@ export function NlpPipelineDiagram({
         className="part0-diagram__focus"
         onClick={onFocusGuide}
       >
-        개념 설명에 초점
+        개념 설명으로 이동
       </button>
     </figure>
   );

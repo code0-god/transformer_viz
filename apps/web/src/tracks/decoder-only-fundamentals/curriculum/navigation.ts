@@ -6,10 +6,15 @@ import type {
 } from "../../../architecture";
 import { decoderCurriculum } from "./catalog";
 import type { CurriculumDestination } from "./curriculumState";
+import { CHAPTER_IDS } from "./ids";
 import type { ChapterId, LearningChapter } from "./types";
 
 export const curriculumChapters: readonly LearningChapter[] =
   decoderCurriculum.parts.flatMap(({ chapters }) => chapters);
+
+export function isChapterId(value: string): value is ChapterId {
+  return CHAPTER_IDS.some((chapterId) => chapterId === value);
+}
 
 export type ChapterNavigation = {
   readonly current: LearningChapter;
