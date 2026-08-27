@@ -50,7 +50,7 @@ export function RootArchitecture({
       <figure className="architecture-figure">
         <section
           className="architecture-svg-scroll"
-          aria-label="Scrollable Transformer architecture diagram"
+          aria-label="Transformer architecture diagram"
         >
           <svg
             className="architecture-diagram"

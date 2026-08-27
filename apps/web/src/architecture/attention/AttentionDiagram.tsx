@@ -50,7 +50,7 @@ export function AttentionDiagram({
     <figure className="architecture-figure architecture-detail-figure architecture-attention-figure">
       <section
         className="architecture-svg-scroll architecture-attention-scroll"
-        aria-label="Scrollable Self-Attention architecture diagram"
+        aria-label="Self-Attention architecture diagram"
       >
         <svg
           className="architecture-diagram architecture-attention-diagram"

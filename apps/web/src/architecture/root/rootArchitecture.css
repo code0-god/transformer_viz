@@ -50,8 +50,7 @@
 .architecture-root-screen .architecture-figure { display: grid; gap: var(--s2, 0.5rem); min-inline-size: 0; }
 .architecture-root-screen .architecture-svg-scroll {
   inline-size: 100%;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
+  overflow-x: clip;
   border-block-start: 1px solid color-mix(in srgb, var(--hairline, #d8cdb9) 70%, transparent);
   background: var(--surface, #fffaf0);
 }
@@ -135,11 +134,9 @@
   .architecture-root-screen .architecture-visual-grid { grid-template-columns: minmax(0, 1fr); }
   .architecture-root-screen .architecture-annotation { grid-template-columns: auto 1fr; align-items: start; }
   .architecture-root-screen .architecture-annotation ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .architecture-root-screen .architecture-diagram{ min-inline-size: 50rem; }
 }
 
 @media (max-width: 44rem) {
   .architecture-root-screen .architecture-annotation,
   .architecture-root-screen .architecture-annotation ul { grid-template-columns: minmax(0, 1fr); }
-  .architecture-root-screen .architecture-diagram{ min-inline-size: 36rem; }
 }

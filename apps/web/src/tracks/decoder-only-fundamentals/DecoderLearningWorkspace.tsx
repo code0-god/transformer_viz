@@ -127,6 +127,15 @@ export function DecoderLearningWorkspace({
   );
 
   const navigateTo = (view: ArchitectureView): void => {
+    if (view === "self-attention") {
+      context.navigate({
+        type: "activate-node",
+        nodeId: "self-attention",
+        layerCount: context.model.config.n_layer,
+        headCount: context.model.config.n_head,
+      });
+      return;
+    }
     context.navigate({
       type: "navigate-breadcrumb",
       view,

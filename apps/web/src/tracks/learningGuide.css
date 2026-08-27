@@ -115,6 +115,10 @@
   margin-block-start: var(--s2, 0.5rem);
 }
 
+.learning-guide-outline li + li {
+  margin-block-start: 0;
+}
+
 .learning-guide li strong,
 .learning-guide li > span {
   display: block;

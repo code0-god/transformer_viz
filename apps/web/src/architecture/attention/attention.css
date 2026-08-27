@@ -28,8 +28,8 @@
 .architecture-attention-screen .architecture-visual-grid { display: grid; }
 .architecture-attention-screen .architecture-attention-grid{ grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start; }
 .architecture-attention-screen .architecture-figure { display: grid; gap: .5rem; min-width: 0; margin: 0; }
-.architecture-attention-screen .architecture-svg-scroll { width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; border-top: 1px solid var(--attention-hairline); background: var(--attention-surface); }
-.architecture-attention-screen .architecture-attention-diagram{ display: block; width: 100%; min-width: 50rem; max-width: 56rem; height: auto; margin-inline: auto; }
+.architecture-attention-screen .architecture-svg-scroll { width: 100%; overflow-x: clip; border-top: 1px solid var(--attention-hairline); background: var(--attention-surface); }
+.architecture-attention-screen .architecture-attention-diagram{ display: block; width: 100%; min-width: 0; max-width: 56rem; height: auto; margin-inline: auto; }
 .architecture-attention-screen .architecture-attention-diagram text{ fill: var(--attention-ink); font: 750 16px system-ui, sans-serif; pointer-events: none; }
 .architecture-attention-screen .architecture-attention-state rect{ fill: var(--attention-surface); stroke: var(--attention-hairline); stroke-width: 1.5; }
 .architecture-attention-screen .architecture-attention-operation rect,

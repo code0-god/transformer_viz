@@ -140,7 +140,7 @@
 
 .architecture-block-screen .architecture-svg-scroll {
   inline-size: 100%;
-  overflow-x: auto;
+  overflow-x: clip;
   background: var(--surface, #fff);
 }
 
@@ -148,7 +148,7 @@
   display: block;
   inline-size: 100%;
   max-inline-size: 48rem;
-  min-inline-size: 42rem;
+  min-inline-size: 0;
   block-size: auto;
   margin-inline: auto;
 }

@@ -40,7 +40,7 @@ export function BlockDiagram({
     <figure className="architecture-figure architecture-detail-figure">
       <section
         className="architecture-svg-scroll architecture-detail-scroll"
-        aria-label="Scrollable Transformer Block detail diagram"
+        aria-label="Transformer Block detail diagram"
       >
         <svg
           className="architecture-diagram architecture-detail-diagram"

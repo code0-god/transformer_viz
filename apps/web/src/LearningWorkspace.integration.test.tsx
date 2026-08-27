@@ -25,6 +25,27 @@ async function readyWorkspace() {
 }
 
 describe("Learning Workspace production integration", () => {
+  test("opens Self-Attention from the Block Guide next step", async () => {
+    const worker = await readyWorkspace();
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole("button", { name: /반복 Transformer Blocks/ }),
+    );
+
+    await user.click(
+      screen.getByText("Self-Attention", {
+        selector: ".learning-guide-next-step button",
+      }),
+    );
+
+    expect(screen.getByTestId("attention-detail")).toBeInTheDocument();
+    expect(document.querySelector("[data-learning-route-id]")).toHaveAttribute(
+      "data-learning-route-id",
+      "decoder.self-attention",
+    );
+    expect(worker.posted).toHaveLength(1);
+  });
+
   test("preserves layer, head, operation, and Worker traffic across routes", async () => {
     // Given: the learner opens Block, layer 2, Attention, head 2, and Softmax.
     const worker = await readyWorkspace();

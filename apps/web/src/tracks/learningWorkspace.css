@@ -111,9 +111,8 @@
 
 .learning-workspace__diagram-scroll {
   max-inline-size: 100%;
-  overflow-x: auto;
+  overflow-x: clip;
   overflow-y: hidden;
-  overscroll-behavior-inline: contain;
 }
 
 .learning-visually-hidden {

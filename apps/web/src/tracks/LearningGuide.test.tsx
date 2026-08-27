@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
@@ -11,6 +13,20 @@ import {
 } from "./LearningGuide.fixture";
 
 describe("LearningGuide", () => {
+  test("aligns every outline link on the same block-start edge", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "src/tracks/learningGuide.css"),
+      "utf8",
+    );
+
+    expect(css).toMatch(
+      /\.learning-guide-outline li \+ li\s*{[^}]*margin-block-start:\s*0/s,
+    );
+    expect(css.indexOf(".learning-guide-outline li + li")).toBeGreaterThan(
+      css.indexOf(".learning-guide li + li"),
+    );
+  });
+
   test("renders every page surface and block variant from generic models", () => {
     const { container } = render(
       <LearningGuide

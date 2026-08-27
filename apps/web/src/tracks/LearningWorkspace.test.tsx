@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useMemo, useState } from "react";
@@ -68,6 +70,41 @@ function WorkspaceFixture({
 }
 
 describe("LearningWorkspace", () => {
+  test("fits every route diagram to pane width without horizontal scrolling", () => {
+    const workspaceCss = readFileSync(
+      resolve(process.cwd(), "src/tracks/learningWorkspace.css"),
+      "utf8",
+    );
+    const blockCss = readFileSync(
+      resolve(process.cwd(), "src/architecture/block/block.css"),
+      "utf8",
+    );
+    const rootCss = readFileSync(
+      resolve(process.cwd(), "src/architecture/root/rootArchitecture.css"),
+      "utf8",
+    );
+    const attentionCss = readFileSync(
+      resolve(process.cwd(), "src/architecture/attention/attention.css"),
+      "utf8",
+    );
+
+    expect(workspaceCss).toMatch(
+      /\.learning-workspace__diagram-scroll\s*{[^}]*overflow-x:\s*clip;[^}]*overflow-y:\s*hidden/s,
+    );
+    expect(blockCss).toMatch(
+      /\.architecture-block-screen \.architecture-detail-diagram\s*{[^}]*min-inline-size:\s*0/s,
+    );
+    expect(rootCss).not.toMatch(/min-inline-size:\s*(?:36|50)rem/);
+    expect(attentionCss).toMatch(
+      /\.architecture-attention-screen \.architecture-attention-diagram\s*{[^}]*min-width:\s*0/s,
+    );
+    for (const css of [blockCss, rootCss, attentionCss]) {
+      expect(css).toMatch(
+        /\.architecture-svg-scroll\s*{[^}]*overflow-x:\s*clip/s,
+      );
+    }
+  });
+
   test("renders a full-width route header and stable labeled panes", () => {
     // Given / When
     const { container } = render(
