@@ -10,7 +10,9 @@ import { ArchitectureExplorer } from "./architecture/ArchitectureExplorer";
 import { ContinuationPanel } from "./components/ContinuationPanel";
 import { CourseHome } from "./components/CourseHome";
 import { Header } from "./components/Header";
+import { LabInspectionPanel } from "./components/LabInspectionPanel";
 import { PromptPanel } from "./components/PromptPanel";
+import { FocusedViewerProvider } from "./overlays/FocusedViewerContext";
 import { createInferenceWorker } from "./worker/createWorker";
 import type { WorkerTransport } from "./worker/WorkerClient";
 import type { CleanupScheduler } from "./worker/workerLifecycle";
@@ -76,15 +78,7 @@ function AppSurface(): ReactElement {
                 generation={state.generation}
                 onSelectStep={commands.replayStep}
               />
-              <ArchitectureExplorer
-                model={state.worker.model}
-                state={state.architecture}
-                replaySequenceLength={replaySequenceLength}
-                replaySummary={state.generation.replaySummary}
-                scoreMatrix={state.scoreMatrix}
-                inspectScoreMatrix={commands.inspectScoreMatrix}
-                navigate={commands.navigateArchitecture}
-              />
+              <LabInspectionPanel />
             </>
           ) : null}
           {route.view === "chapter" ? (
@@ -127,7 +121,9 @@ export function App({
         ? {}
         : { scheduler: cleanupScheduler })}
     >
-      <AppSurface />
+      <FocusedViewerProvider>
+        <AppSurface />
+      </FocusedViewerProvider>
     </AppProvider>
   );
 }

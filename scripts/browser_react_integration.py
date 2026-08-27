@@ -38,14 +38,18 @@ READY = r"""(() => new Promise((resolve, reject) => {
   const finish = () => {
     const status = document.querySelector('#status');
     const value = status?.dataset.status;
+    const trigger = document.querySelector('[data-testid="lab-open-architecture-root"]');
     const root = document.querySelector('[data-testid="architecture-root"]');
-    if (value === 'ready' && root) {
+    if (value === 'ready' && trigger && !root) {
       observer.disconnect();
       clearTimeout(timeout);
       requestAnimationFrame(() => requestAnimationFrame(() => {
         const stableStatus = document.querySelector('#status')?.dataset.status;
+        const stableTrigger = document.querySelector(
+          '[data-testid="lab-open-architecture-root"]',
+        );
         const stableRoot = document.querySelector('[data-testid="architecture-root"]');
-        stableStatus === 'ready' && stableRoot
+        stableStatus === 'ready' && stableTrigger && !stableRoot
           ? resolve(stableStatus)
           : reject(new Error('react-ready state did not remain mounted'));
       }));
@@ -121,19 +125,28 @@ NAVIGATE = r"""(async () => {
       reject(new Error(`selector timeout: ${selector}`));
     }, 10000);
   });
+  const trigger = document.querySelector('[data-testid="lab-open-architecture-root"]');
+  if (!(trigger instanceof HTMLButtonElement)) {
+    throw new Error('architecture viewer trigger missing');
+  }
+  trigger.click();
+  const dialog = await waitForSelector('[role="dialog"]');
+  const root = await waitForSelector(
+    '[role="dialog"] [data-testid="architecture-root"]',
+  );
   const clickNode = (id) => {
-    const node = document.querySelector(`[data-node-id="${id}"]`);
+    const node = dialog.querySelector(`[data-node-id="${id}"]`);
     if (!(node instanceof Element)) return false;
     node.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     return true;
   };
-  const root = document.querySelector('[data-testid="architecture-root"]');
   const openedBlock = clickNode('transformer-block');
   const block = await waitForSelector('[data-testid="architecture-detail"]');
   const openedAttention = clickNode('self-attention');
   const attention = await waitForSelector('[data-testid="attention-detail"]');
   return {
     root: Boolean(root),
+    dialog: Boolean(dialog),
     block: Boolean(block),
     attention: Boolean(attention),
     openedBlock,
@@ -213,6 +226,7 @@ def verify(root: Path, entry: str) -> None:
             if (
                 generation["steps"] < 1
                 or not state["root"]
+                or not state["dialog"]
                 or not state["block"]
                 or not state["attention"]
                 or not state["openedBlock"]

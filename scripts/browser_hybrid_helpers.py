@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import json
-from typing import cast
+from typing import TypeAlias
 
 from browser_cdp import CdpError
 from browser_learning_workspace_probes import VISUAL_SETTLED
 from browser_session import ChromeSession
+
+JsonValue: TypeAlias = object  # noqa: OBJECT_OK — untyped CDP JSON boundary
+JsonObject: TypeAlias = dict[str, JsonValue]
 
 
 class HybridBrowserError(RuntimeError):
@@ -17,7 +20,7 @@ class HybridBrowserError(RuntimeError):
 def evaluate_dict(
     browser: ChromeSession,
     expression: str,
-) -> dict[str, object]:
+) -> JsonObject:
     result = browser.require_cdp().evaluate(
         browser.page_session,
         expression,
@@ -25,7 +28,7 @@ def evaluate_dict(
     )
     if not isinstance(result, dict):
         raise HybridBrowserError(f"expected object result: {result!r}")
-    return cast(dict[str, object], result)
+    return result
 
 
 def evaluate_int(browser: ChromeSession, expression: str) -> int:
@@ -39,7 +42,7 @@ def evaluate_int(browser: ChromeSession, expression: str) -> int:
     return result
 
 
-def _number_field(data: dict[str, object], key: str) -> float:
+def _number_field(data: JsonObject, key: str) -> float:
     value = data.get(key)
     if not isinstance(value, int | float):
         raise HybridBrowserError(f"expected numeric {key}: {value!r}")
@@ -122,6 +125,33 @@ def settle(browser: ChromeSession) -> None:
         browser.page_session,
         VISUAL_SETTLED,
         True,
+    )
+
+
+def settle_animations(
+    browser: ChromeSession,
+    selector: str,
+    label: str,
+) -> None:
+    target = json.dumps(selector)
+    wait_for(
+        browser,
+        (
+            f"document.querySelector({target})"
+            "?.dataset.browserAnimationsSettled === 'true'"
+        ),
+        label,
+        f"""(() => {{
+          const target = document.querySelector({target});
+          if (!target) throw new Error('animation target missing');
+          Promise.all(
+            target.getAnimations({{ subtree: true }}).map(
+              animation => animation.finished,
+            ),
+          ).then(() => {{
+            target.dataset.browserAnimationsSettled = 'true';
+          }});
+        }})();""",
     )
 
 

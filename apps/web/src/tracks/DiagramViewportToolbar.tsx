@@ -1,18 +1,18 @@
-import type { ReactElement, ReactNode } from "react";
+import type { KeyboardEvent, ReactElement } from "react";
 
 type DiagramViewportToolbarProps = Readonly<{
-  scale: number;
+  zoomRatio: number;
   isFit: boolean;
-  extraControls?: ReactNode;
+  onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
   onZoomOut: () => void;
   onZoomIn: () => void;
   onFit: () => void;
 }>;
 
 export function DiagramViewportToolbar({
-  scale,
+  zoomRatio,
   isFit,
-  extraControls,
+  onKeyDown,
   onZoomOut,
   onZoomIn,
   onFit,
@@ -22,10 +22,8 @@ export function DiagramViewportToolbar({
       className="diagram-viewport__toolbar"
       role="toolbar"
       aria-label="다이어그램 보기 도구"
+      onKeyDown={onKeyDown}
     >
-      {extraControls === undefined ? null : (
-        <div className="diagram-viewport__extra-controls">{extraControls}</div>
-      )}
       <div className="diagram-viewport__zoom-controls">
         <button
           type="button"
@@ -35,7 +33,9 @@ export function DiagramViewportToolbar({
         >
           −
         </button>
-        <output aria-label="현재 확대 비율">{Math.round(scale * 100)}%</output>
+        <output aria-label="현재 확대 비율">
+          {Math.round(zoomRatio * 100)}%
+        </output>
         <button type="button" aria-label="확대" onClick={onZoomIn}>
           +
         </button>

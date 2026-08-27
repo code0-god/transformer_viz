@@ -2,10 +2,16 @@
   display: grid;
   gap: var(--s4, 1rem);
   align-self: start;
-  padding: var(--s5, 1.25rem);
-  border: 1px solid #d8b477;
-  border-radius: 12px;
-  background: var(--surface, #fff);
+  padding: var(--s4, 1rem);
+  border: 0;
+  border-block-start: 1px solid
+    color-mix(in srgb, var(--mesh-amber, #d2a34a) 48%, var(--hairline));
+  border-radius: 0;
+  background: color-mix(
+    in srgb,
+    var(--surface, #fff) 42%,
+    transparent
+  );
 }
 
 .architecture-block-screen .architecture-detail-annotation ol {

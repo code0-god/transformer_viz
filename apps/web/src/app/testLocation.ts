@@ -1,7 +1,7 @@
 import type { RenderResult } from "@testing-library/react";
-import { act, screen } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import type { TestWorker } from "../test/workerFixtures";
 
 const BASE_PATH = window.location.pathname;
@@ -93,7 +93,7 @@ export function registerAppRouteTests({
       expect(worker.posted).toHaveLength(1);
     });
 
-    test("renders Lab from #/lab with Prompt, Generate, Continuation, Architecture, and one Worker initialize", () => {
+    test("renders Lab from #/lab with experiment controls and on-demand inspection", () => {
       const { worker } = renderRouteApp(renderApp, "#/lab");
       readyWorker(worker);
 
@@ -106,7 +106,10 @@ export function registerAppRouteTests({
       expect(
         screen.getByText("Decoded continuation", { selector: "h2" }),
       ).toBeInTheDocument();
-      expect(screen.getByTestId("architecture-root")).toBeInTheDocument();
+      expect(screen.queryByTestId("architecture-root")).toBeNull();
+      expect(
+        screen.getByTestId("lab-open-architecture-root"),
+      ).toBeInTheDocument();
       expect(worker.posted).toEqual([
         {
           type: "initialize",
@@ -138,6 +141,168 @@ export function registerAppRouteTests({
       readyWorker(worker);
 
       assertChapter0_1();
+    });
+
+    test("renders Learn as an article and opens its diagram in one focused viewer", async () => {
+      // Given
+      const { worker } = renderRouteApp(
+        renderApp,
+        "#/learn/decoder-only-fundamentals/0-2",
+      );
+      readyWorker(worker);
+      const user = userEvent.setup();
+      const trigger = screen.getByTestId("open-diagram-viewer");
+
+      // When
+      await user.click(trigger);
+
+      // Then
+      expect(
+        document.querySelector('[data-learning-layout="article"]'),
+      ).not.toBeNull();
+      expect(document.getElementById("learning-diagram-pane")).toBeNull();
+      expect(screen.queryByRole("tablist", { name: "학습 보기" })).toBeNull();
+      expect(screen.getByRole("dialog")).toBeVisible();
+      expect(screen.getByRole("dialog")).toHaveAttribute(
+        "aria-labelledby",
+        "focused-viewer-title",
+      );
+      expect(document.querySelector(".architecture-app")).toHaveAttribute(
+        "inert",
+      );
+      expect(document.body.style.position).toBe("fixed");
+
+      await user.keyboard("{Escape}");
+
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(trigger).toHaveFocus();
+      expect(document.querySelector(".architecture-app")).not.toHaveAttribute(
+        "inert",
+      );
+      expect(document.body.style.position).toBe("");
+      expect(worker.posted).toHaveLength(1);
+    });
+
+    test("keeps Lab architecture out of the base flow and opens it in the shared viewer", async () => {
+      // Given
+      const { worker } = renderRouteApp(renderApp, "#/lab");
+      readyWorker(worker);
+      const user = userEvent.setup();
+      expect(screen.getByRole("textbox", { name: "Prompt" })).toBeVisible();
+      expect(screen.getByTestId("generate")).toBeVisible();
+
+      // When
+      const trigger = screen.getByTestId("lab-open-architecture-root");
+      await user.click(trigger);
+
+      // Then
+      expect(screen.getByRole("dialog")).toBeVisible();
+      expect(screen.getByTestId("architecture-root")).toBeVisible();
+
+      await user.keyboard("{Escape}");
+
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(screen.queryByTestId("architecture-root")).toBeNull();
+      expect(trigger).toHaveFocus();
+      expect(worker.posted).toHaveLength(1);
+    });
+
+    test("traps focus, rejects drag-dismiss, and restores page scroll on close", async () => {
+      // Given
+      const { worker } = renderRouteApp(
+        renderApp,
+        "#/learn/decoder-only-fundamentals/0-2",
+      );
+      readyWorker(worker);
+      const user = userEvent.setup();
+      const trigger = screen.getByTestId("open-diagram-viewer");
+      const scrollTo = vi
+        .spyOn(window, "scrollTo")
+        .mockImplementation(() => undefined);
+      Object.defineProperty(window, "scrollY", {
+        configurable: true,
+        value: 180,
+      });
+
+      try {
+        // When
+        await user.click(trigger);
+        const dialog = screen.getByRole("dialog");
+        const dialogButtons = within(dialog)
+          .getAllByRole<HTMLButtonElement>("button")
+          .filter((button) => !button.disabled);
+        const firstButton = dialogButtons[0];
+        const lastButton = dialogButtons.at(-1);
+
+        // Then
+        expect(document.body.style.top).toBe("-180px");
+        expect(firstButton).toHaveFocus();
+        if (lastButton === undefined)
+          throw new Error("Viewer controls missing");
+        await user.keyboard("{Shift>}{Tab}{/Shift}");
+        expect(lastButton).toHaveFocus();
+        await user.keyboard("{Tab}");
+        expect(firstButton).toHaveFocus();
+
+        const backdrop = document.querySelector<HTMLElement>(
+          "[data-viewer-backdrop]",
+        );
+        if (backdrop === null) throw new Error("Viewer backdrop missing");
+        fireEvent.pointerDown(dialog, { pointerId: 7 });
+        fireEvent.pointerUp(backdrop, { pointerId: 7 });
+        expect(screen.getByRole("dialog")).toBeVisible();
+
+        fireEvent.pointerDown(backdrop, { pointerId: 8 });
+        fireEvent.pointerUp(backdrop, { pointerId: 8 });
+        expect(screen.queryByRole("dialog")).toBeNull();
+        expect(trigger).toHaveFocus();
+        expect(scrollTo).toHaveBeenCalledWith(0, 180);
+      } finally {
+        scrollTo.mockRestore();
+        Object.defineProperty(window, "scrollY", {
+          configurable: true,
+          value: 0,
+        });
+      }
+    });
+
+    test("drills through architecture levels inside one viewer", async () => {
+      // Given
+      const { worker } = renderRouteApp(renderApp, "#/lab");
+      readyWorker(worker);
+      const user = userEvent.setup();
+      await user.click(screen.getByTestId("lab-open-architecture-root"));
+      const viewer = screen.getByRole("dialog");
+
+      // When
+      expect(screen.getAllByRole("dialog")).toHaveLength(1);
+      expect(
+        screen.queryByRole("navigation", { name: "Architecture navigation" }),
+      ).toBeNull();
+      await user.click(
+        within(viewer).getByRole("button", {
+          name: /반복 Transformer Blocks, 자세히 보기 가능/,
+        }),
+      );
+
+      // Then
+      expect(screen.getAllByRole("dialog")).toHaveLength(1);
+      expect(screen.getByTestId("architecture-detail")).toBeVisible();
+      expect(
+        screen.getByRole("navigation", { name: "Architecture navigation" }),
+      ).toBeVisible();
+
+      // When
+      await user.click(
+        within(viewer).getByRole("button", {
+          name: /Causal Multi-Head Self-Attention, 자세히 보기 가능/,
+        }),
+      );
+
+      // Then
+      expect(screen.getAllByRole("dialog")).toHaveLength(1);
+      expect(screen.getByTestId("attention-detail")).toBeVisible();
+      expect(worker.posted).toHaveLength(1);
     });
 
     test("falls back to Course Home for an invalid hash", () => {

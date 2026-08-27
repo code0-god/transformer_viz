@@ -75,7 +75,7 @@
   block-size: 100%;
   overflow: visible;
   color: var(--architecture-node-formula-color, currentColor);
-  font-size: 10.5px;
+  font-size: 13px;
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
@@ -104,7 +104,7 @@
 .architecture-node__drill-down text {
   fill: var(--architecture-node-hint-color, currentColor);
   font-family: ui-sans-serif, system-ui, sans-serif;
-  font-size: 9.5px;
+  font-size: 12px;
   font-weight: 600;
 }
 

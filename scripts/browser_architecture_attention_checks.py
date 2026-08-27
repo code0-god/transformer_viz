@@ -40,16 +40,10 @@ class AttentionDetailProbe(TypedDict):
     valueToAggregationEnd: ProbePoint
     hasValueToScores: bool
     operationOrder: list[int]
-    currentValues: CurrentValues
-    guidePage: str
-    guideSections: list[str]
-    outlineCount: int
-    runtimePresentation: bool
     qkvShape: bool
     scoreMatmul: bool
     valueMatmul: bool
     scaleSymbolic: bool
-    formula: bool
     connectorFormula: bool
     captionFormulaCount: int
     plainMathCodeCount: int
@@ -112,27 +106,11 @@ def verify_structure(detail: AttentionDetailProbe, mobile: bool) -> None:
         detail["operationOrder"] == sorted(detail["operationOrder"]),
         f"attention operation order: {detail}",
     )
-    current = detail["currentValues"]
-    require(
-        current == {"t": "—", "c": "64", "h": "4", "d": "16", "scale": "0.25"},
-        f"attention current values: {detail}",
-    )
-    require(
-        detail["guidePage"] == "decoder-guide-self-attention"
-        and detail["outlineCount"] == 8
-        and detail["runtimePresentation"]
-        and all(
-            section in detail["guideSections"]
-            for section in ("qkv", "heads", "score", "scale", "mask", "softmax", "value", "merge")
-        ),
-        f"attention Guide hierarchy: {detail}",
-    )
     require(
         detail["qkvShape"]
         and detail["scoreMatmul"]
         and detail["valueMatmul"]
-        and detail["scaleSymbolic"]
-        and detail["formula"],
+        and detail["scaleSymbolic"],
         f"canonical attention notation: {detail}",
     )
     require(

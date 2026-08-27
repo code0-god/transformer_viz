@@ -55,14 +55,6 @@ BLOCK_NOTATION_PROBE = r"""
     `.architecture-detail-diagram [data-formula-id="${id}"] ` +
       'annotation[encoding="application/x-tex"]',
   ).textContent.trim();
-  const panelFormulas = [
-    ...document.querySelectorAll(
-      '.learning-guide annotation[encoding="application/x-tex"]',
-    ),
-  ].map(element => element.textContent.trim());
-  const formulaHeights = [
-    ...document.querySelectorAll('.learning-guide [role="math"]'),
-  ].map(element => element.getBoundingClientRect().height);
   const captionFormulas = [
     ...document.querySelectorAll(
       '.architecture-detail-figure figcaption ' +
@@ -79,23 +71,10 @@ BLOCK_NOTATION_PROBE = r"""
     output: svgText.includes('Block Output') &&
       formula('residual-2') ===
         String.raw`X_{\mathrm{out}} = X_{\mathrm{res1}} + Y_{\mathrm{MLP}}`,
-    formulas: [
-      String.raw`X_{\mathrm{LN1}} = \operatorname{LN1}(X_{\mathrm{in}})`,
-      String.raw`Y_{\mathrm{attn}} = \operatorname{Attention}(X_{\mathrm{LN1}})`,
-      String.raw`X_{\mathrm{res1}} = X_{\mathrm{in}} + Y_{\mathrm{attn}}`,
-      String.raw`X_{\mathrm{LN2}} = \operatorname{LN2}(X_{\mathrm{res1}})`,
-      String.raw`Y_{\mathrm{MLP}} = \operatorname{MLP}(X_{\mathrm{LN2}})`,
-      String.raw`X_{\mathrm{out}} = X_{\mathrm{res1}} + Y_{\mathrm{MLP}}`,
-    ].every(value => panelFormulas.includes(value)),
-    layerCount: required(
-      '[data-runtime-presentation-id="decoder.runtime.block-facts"] ' +
-        '[data-guide-fact-id="decoder.fact.blocks"] [data-fact-status="ready"]',
-    ).textContent.trim() === '2',
     captionFormulas: [
       String.raw`X_{\mathrm{res1}} = X_{\mathrm{in}} + Y_{\mathrm{attn}}`,
       String.raw`X_{\mathrm{out}} = X_{\mathrm{res1}} + Y_{\mathrm{MLP}}`,
     ].every(value => captionFormulas.includes(value)),
-    formulaMaxHeight: Math.max(0, ...formulaHeights),
     firstResidual: required('[data-connector="input-to-residual1"]').getAttribute('d'),
     secondResidual: required('[data-connector="x-prime-to-residual2"]').getAttribute('d'),
     legacyNotation: ['Block Input x', 'x′', 'Block Output y', 'Attention(LN1(x))']
@@ -108,6 +87,46 @@ BLOCK_NOTATION_PROBE = r"""
       0,
       document.documentElement.scrollWidth - document.documentElement.clientWidth,
     ),
+  };
+})()
+"""
+
+LEARN_BLOCK_GUIDE_PROBE = r"""
+(() => {
+  const required = selector => {
+    const element = document.querySelector(selector);
+    if (!element) throw new Error(`missing ${selector}`);
+    return element;
+  };
+  const panelFormulas = [
+    ...document.querySelectorAll(
+      '.learning-guide annotation[encoding="application/x-tex"]',
+    ),
+  ].map(element => element.textContent.trim());
+  const formulaHeights = [
+    ...document.querySelectorAll('.learning-guide [role="math"]'),
+  ].map(element => element.getBoundingClientRect().height);
+  return {
+    formulas: [
+      String.raw`X_{\mathrm{LN1}} = \operatorname{LN1}(X_{\mathrm{in}})`,
+      String.raw`Y_{\mathrm{attn}} = \operatorname{Attention}(X_{\mathrm{LN1}})`,
+      String.raw`X_{\mathrm{res1}} = X_{\mathrm{in}} + Y_{\mathrm{attn}}`,
+      String.raw`X_{\mathrm{LN2}} = \operatorname{LN2}(X_{\mathrm{res1}})`,
+      String.raw`Y_{\mathrm{MLP}} = \operatorname{MLP}(X_{\mathrm{LN2}})`,
+      String.raw`X_{\mathrm{out}} = X_{\mathrm{res1}} + Y_{\mathrm{MLP}}`,
+    ].every(value => panelFormulas.includes(value)),
+    layerCount: required(
+      '[data-runtime-presentation-id="decoder.runtime.block-facts"] ' +
+        '[data-guide-fact-id="decoder.fact.blocks"] [data-fact-status="ready"]',
+    ).textContent.trim() === '2',
+    formulaMaxHeight: Math.max(0, ...formulaHeights),
+    articleLayout: required('[data-learning-layout]').dataset.learningLayout,
+    architectureMounted: Boolean(document.querySelector(
+      '[data-testid="architecture-detail"]',
+    )),
+    viewerTrigger: Boolean(document.querySelector(
+      '[data-testid="open-diagram-viewer"]',
+    )),
   };
 })()
 """

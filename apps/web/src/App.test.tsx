@@ -38,9 +38,8 @@ async function readyApp() {
     "data-status",
     "ready",
   );
-  expect(
-    screen.getByTestId("architecture-root").closest("[data-learning-track-id]"),
-  ).toHaveAttribute("data-learning-track-id", "decoder-only-fundamentals");
+  expect(screen.getByTestId("lab-open-architecture-root")).toBeEnabled();
+  expect(screen.queryByTestId("architecture-root")).toBeNull();
   return result;
 }
 
@@ -160,7 +159,7 @@ describe("production React Worker integration", () => {
     );
   });
 
-  test("replays a selected generated step and exposes trace-only attention T", async () => {
+  test("replays a selected step and opens attention inspection on demand", async () => {
     const { worker } = await readyApp();
     const user = await startGeneration(worker);
     const step = generationStep(0, "!");
@@ -189,18 +188,20 @@ describe("production React Worker integration", () => {
         summary: runSummary(20, 5),
       });
     });
+    const requestCount = worker.posted.length;
     await user.click(
-      screen.getByRole("button", { name: /반복 Transformer Blocks/ }),
+      screen.getByRole("button", { name: "Self-Attention 보기" }),
     );
-    await user.click(
-      screen.getByRole("button", { name: /Causal Multi-Head Self-Attention/ }),
+    expect(screen.getByRole("dialog")).toBeVisible();
+    expect(screen.getByTestId("attention-detail")).toHaveAttribute(
+      "data-selected-layer",
+      "0",
     );
-    expect(
-      screen.getByText("5", {
-        selector:
-          '[data-runtime-presentation-id="decoder.runtime.attention-facts"] [data-guide-fact-id="decoder.fact.sequence-length"] [data-fact-status="ready"]',
-      }),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("attention-detail")).toHaveAttribute(
+      "data-selected-head",
+      "0",
+    );
+    expect(worker.posted).toHaveLength(requestCount);
   });
 
   test("surfaces guard rejection and never renders prompt text through KaTeX", async () => {
@@ -234,8 +235,9 @@ describe("production React Worker integration", () => {
     );
   });
 
-  test("renders a controlled error for an unsupported learning profile", () => {
+  test("renders a controlled viewer error for an unsupported learning profile", async () => {
     const { worker } = renderApp();
+    const user = userEvent.setup();
     act(() => {
       worker.emit({
         type: "ready",
@@ -249,6 +251,8 @@ describe("production React Worker integration", () => {
         },
       });
     });
+
+    await user.click(screen.getByTestId("lab-open-architecture-root"));
 
     expect(screen.getByRole("alert")).toHaveTextContent("unknown-model");
     expect(screen.getByRole("alert")).toHaveTextContent("unknown-architecture");

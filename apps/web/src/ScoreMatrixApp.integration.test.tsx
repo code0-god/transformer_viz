@@ -77,11 +77,16 @@ describe("Score Matrix production App integration", () => {
       }),
     ).toBeVisible();
 
-    const headOne = document.querySelector('button[data-head-index="1"]');
+    await user.click(screen.getByTestId("open-diagram-viewer"));
+    const viewer = screen.getByRole("dialog");
+    const headOne = viewer.querySelector('button[data-head-index="1"]');
     if (!(headOne instanceof HTMLButtonElement))
       throw new Error("Head 2 control missing");
     await user.click(headOne);
-    await user.click(screen.getByRole("tab", { name: "시각화" }));
+    await user.keyboard("{Escape}");
+    await user.click(
+      screen.getByRole("button", { name: "실제 Score Matrix 확인하기" }),
+    );
     await user.click(
       await screen.findByRole("button", {
         name: "Layer 1, Head 2 Score 불러오기",

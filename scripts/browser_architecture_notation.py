@@ -20,6 +20,7 @@ from browser_architecture_navigation import (
     QuietHandler,
     capture,
     dispatch_click,
+    open_architecture_viewer,
     require,
     settle,
 )
@@ -29,6 +30,7 @@ from browser_architecture_navigation_probes import (
 )
 from browser_architecture_notation_probes import (
     BLOCK_NOTATION_PROBE,
+    LEARN_BLOCK_GUIDE_PROBE,
     ROOT_NOTATION_PROBE,
 )
 from browser_probes import READY_PROBE
@@ -60,6 +62,7 @@ def verify_notation(
     cdp.evaluate(session, READY_PROBE, True)
     cdp.evaluate(session, SET_PROMPT, True)
     settle(browser)
+    open_architecture_viewer(browser)
 
     root = cdp.evaluate(session, ROOT_NOTATION_PROBE, True)
     require(
@@ -82,8 +85,6 @@ def verify_notation(
         block["input"]
         and block["residual1"]
         and block["output"]
-        and block["formulas"]
-        and block["layerCount"]
         and block["captionFormulas"],
         f"block notation: {block}",
     )
@@ -94,7 +95,6 @@ def verify_notation(
     )
     require(not block["legacyNotation"], f"block legacy notation: {block}")
     require(not block["mixedShape"], f"block mixed shape: {block}")
-    require(block["formulaMaxHeight"] < 48, f"fragmented block formula: {block}")
     require(block["documentOverflow"] == 0, f"block overflow: {block}")
     if evidence is not None:
         capture(browser, evidence / f"block-detail-notation{suffix}.png")
@@ -109,12 +109,10 @@ def verify_notation(
     score = cdp.evaluate(session, ATTENTION_DETAIL_PROBE, True)
     require(
         score["selectedNode"] == "attention-scores"
-        and "Score MatMul" in score["operationCopy"]
-        and score["operationFormulaTex"] == r"S_h = Q_h K_h^{\mathsf T}"
-        and "Symbolic shape" in score["operationCopy"]
-        and "Current shape" in score["operationCopy"]
-        and "실행 후 표시" in score["operationCopy"],
-        f"Score MatMul operation panel: {score}",
+        and score["scoreMatmul"]
+        and score["operationCopy"] is None
+        and score["operationFormulaTex"] is None,
+        f"Score MatMul node notation: {score}",
     )
     cdp.evaluate(
         session,
@@ -125,9 +123,10 @@ def verify_notation(
     value = cdp.evaluate(session, ATTENTION_DETAIL_PROBE, True)
     require(
         value["selectedNode"] == "attention-value-aggregation"
-        and "Value MatMul" in value["operationCopy"]
-        and value["operationFormulaTex"] == r"Y_h = A_h V_h",
-        f"Value MatMul operation panel: {value}",
+        and value["valueMatmul"]
+        and value["operationCopy"] is None
+        and value["operationFormulaTex"] is None,
+        f"Value MatMul node notation: {value}",
     )
 
     for state in (root, block, attention, score, value):
@@ -137,6 +136,33 @@ def verify_notation(
             and state["workerPosts"] == root["workerPosts"],
             f"notation navigation changed runtime state: {state}",
         )
+
+    dispatch_click(browser, '[aria-label="집중 보기 닫기"]')
+    require(
+        cdp.evaluate(
+            session,
+            "document.querySelector('[role=\"dialog\"]') === null",
+            True,
+        ),
+        "notation viewer did not close before Learn navigation",
+    )
+    browser.navigate(
+        url.replace("#/lab", "#/learn/decoder-only-fundamentals/4-1"),
+    )
+    cdp.evaluate(session, READY_PROBE, True)
+    guide = cdp.evaluate(session, LEARN_BLOCK_GUIDE_PROBE, True)
+    require(
+        guide["formulas"]
+        and guide["layerCount"]
+        and guide["formulaMaxHeight"] < 48,
+        f"block Guide notation: {guide}",
+    )
+    require(
+        guide["articleLayout"] == "article"
+        and not guide["architectureMounted"]
+        and guide["viewerTrigger"],
+        f"Block Learn must keep architecture on demand: {guide}",
+    )
 
 
 def main() -> int:

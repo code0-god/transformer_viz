@@ -91,34 +91,37 @@ export function LearningGuide<Id extends string>({
       ) : null}
 
       {outlineSections.length === 0 ? null : (
-        <nav className="learning-guide-outline" aria-label="학습 목차">
-          <ol>
-            {outlineSections.map((section) => (
-              <li key={section.id}>
-                <a
-                  href={`#${sectionHeadingId(page.id, section.id)}`}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    const heading = document.getElementById(
-                      sectionHeadingId(page.id, section.id),
-                    );
-                    if (!(heading instanceof HTMLElement)) return;
-                    heading.tabIndex = -1;
-                    heading.focus({ preventScroll: true });
-                    if (typeof heading.scrollIntoView === "function") {
-                      heading.scrollIntoView({ block: "start" });
+        <details className="learning-guide-outline">
+          <summary>이 글의 흐름</summary>
+          <nav aria-label="학습 목차">
+            <ol>
+              {outlineSections.map((section) => (
+                <li key={section.id}>
+                  <a
+                    href={`#${sectionHeadingId(page.id, section.id)}`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      const heading = document.getElementById(
+                        sectionHeadingId(page.id, section.id),
+                      );
+                      if (!(heading instanceof HTMLElement)) return;
+                      heading.tabIndex = -1;
+                      heading.focus({ preventScroll: true });
+                      if (typeof heading.scrollIntoView === "function") {
+                        heading.scrollIntoView({ block: "start" });
+                      }
+                    }}
+                    aria-current={
+                      section.id === activeSectionId ? "location" : undefined
                     }
-                  }}
-                  aria-current={
-                    section.id === activeSectionId ? "location" : undefined
-                  }
-                >
-                  {section.title}
-                </a>
-              </li>
-            ))}
-          </ol>
-        </nav>
+                  >
+                    {section.title}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        </details>
       )}
 
       {page.introduction.length === 0 ? null : (
@@ -174,10 +177,10 @@ export function LearningGuide<Id extends string>({
                       type="button"
                       className="learning-guide-section-control"
                       aria-label={section.title}
-                      aria-controls="learning-diagram-pane"
+                      aria-controls="focused-viewer"
                       onClick={() => onSectionFocus(section)}
                     >
-                      도식에서 보기
+                      이 단계 도식 크게 보기
                     </button>
                   )}
                 </div>

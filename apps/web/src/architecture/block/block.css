@@ -73,14 +73,13 @@
 
 .architecture-block-screen .architecture-detail-toolbar {
   align-items: end;
-  padding: var(--s4, 1rem);
-  border: 1px solid var(--hairline, #d8d3ca);
-  border-radius: 12px;
-  background: var(--block-soft, #e5edf7);
+  padding: var(--s3, 0.75rem) 0;
+  border-block-end: 1px solid var(--hairline, #d8d3ca);
+  background: transparent;
 }
 
 .architecture-block-screen .architecture-detail-kicker {
-  color: #315d99;
+  color: var(--accent, #a8432d);
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   font-size: 0.72rem;
   font-weight: 850;
@@ -118,10 +117,10 @@
 }
 
 .architecture-block-screen .architecture-layer-selector button.selected {
-  border-color: #7096c7;
-  background: var(--block-soft, #e5edf7);
-  color: #315d99;
-  box-shadow: inset 0 0 0 1px #7096c7;
+  border-color: var(--accent, #a8432d);
+  background: var(--accent-soft, #f1d4c8);
+  color: var(--accent, #a8432d);
+  box-shadow: none;
 }
 
 .architecture-block-screen .architecture-visual-grid {
@@ -141,7 +140,7 @@
 .architecture-block-screen .architecture-svg-scroll {
   inline-size: 100%;
   overflow-x: clip;
-  background: var(--surface, #fff);
+  background: transparent;
 }
 
 .architecture-block-screen .architecture-detail-diagram {
@@ -155,7 +154,7 @@
 
 .architecture-block-screen .architecture-detail-diagram text {
   fill: var(--ink, #292722);
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-family: "Avenir Next", "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
   font-size: 16px;
   font-weight: 750;
   pointer-events: none;
@@ -173,13 +172,17 @@
 
 .architecture-block-screen .architecture-block-normalization rect{
   fill: var(--normalization-soft, #fff4d6);
-  stroke: #d6a94b;
+  stroke: var(--normalization-border, #b8892e);
 }
 
-.architecture-block-screen .architecture-block-attention rect,
+.architecture-block-screen .architecture-block-attention rect{
+  fill: var(--attention-soft, #e5edf7);
+  stroke: var(--attention-border, #647f89);
+}
+
 .architecture-block-screen .architecture-block-mlp rect{
-  fill: #e5edf7;
-  stroke: #7096c7;
+  fill: var(--mlp-soft, #fae2dc);
+  stroke: var(--mlp-border, #a7523d);
 }
 
 .architecture-block-screen .architecture-residual-add {

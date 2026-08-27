@@ -3,8 +3,8 @@ import { resolve } from "node:path";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useMemo, useState } from "react";
-import { vi } from "vitest";
 
+import { FocusedViewerProvider } from "../overlays/FocusedViewerContext";
 import { LearningWorkspace } from "./LearningWorkspace";
 import {
   createLearningFocusRegistry,
@@ -17,9 +17,20 @@ const route = {
   subtitle: "Route subtitle",
 } as const;
 
-function WorkspaceFixture({
-  selectArchitecture,
-}: Readonly<{ selectArchitecture: () => void }>) {
+const diagram = {
+  label: "Diagram viewer",
+  actionLabel: "Open diagram",
+  request: {
+    id: "decoder.root:diagram",
+    kind: "architecture",
+    source: "learn",
+    title: "Diagram viewer",
+    view: "root",
+    highlightedNodeIds: [],
+  },
+} as const;
+
+function WorkspaceFixture() {
   const [status, setStatus] = useState<LearningFocusStatus>({
     availability: "available",
   });
@@ -33,39 +44,34 @@ function WorkspaceFixture({
   );
 
   return (
-    <LearningWorkspace
-      route={route}
-      status={status}
-      headerControls={<button type="button">Header action</button>}
-      diagram={{
-        label: "Diagram pane",
-        content: (
-          <button type="button" onClick={selectArchitecture}>
-            Select architecture
-          </button>
-        ),
-      }}
-      guide={{
-        label: "Guide pane",
-        content: (
-          <button
-            type="button"
-            onClick={() =>
-              registry.reveal(
-                {
-                  kind: "node",
-                  routeId: route.id,
-                  nodeId: "decoder.root.token-embedding",
-                },
-                { focus: true },
-              )
-            }
-          >
-            Focus missing node
-          </button>
-        ),
-      }}
-    />
+    <FocusedViewerProvider>
+      <LearningWorkspace
+        route={route}
+        status={status}
+        headerControls={<button type="button">Header action</button>}
+        diagram={diagram}
+        guide={{
+          label: "Guide article",
+          content: (
+            <button
+              type="button"
+              onClick={() =>
+                registry.reveal(
+                  {
+                    kind: "node",
+                    routeId: route.id,
+                    nodeId: "decoder.root.token-embedding",
+                  },
+                  { focus: true },
+                )
+              }
+            >
+              Focus missing node
+            </button>
+          ),
+        }}
+      />
+    </FocusedViewerProvider>
   );
 }
 
@@ -103,11 +109,9 @@ describe("LearningWorkspace", () => {
     }
   });
 
-  test("renders a full-width route header and stable labeled panes", () => {
+  test("renders a full-width route header and one labeled article", () => {
     // Given / When
-    const { container } = render(
-      <WorkspaceFixture selectArchitecture={() => undefined} />,
-    );
+    const { container } = render(<WorkspaceFixture />);
 
     // Then
     const workspace = container.querySelector(".learning-workspace");
@@ -116,122 +120,63 @@ describe("LearningWorkspace", () => {
       "id",
       "learning-route-title",
     );
+    expect(screen.queryByRole("region", { name: "Diagram viewer" })).toBeNull();
     expect(
-      screen.getByRole("region", { name: "Diagram pane" }),
-    ).toHaveAttribute("id", "learning-diagram-pane");
-    expect(screen.getByRole("region", { name: "Guide pane" })).toHaveAttribute(
-      "id",
-      "learning-guide-pane",
-    );
+      screen.getByRole("region", { name: "Guide article" }),
+    ).toHaveAttribute("id", "learning-guide-pane");
+    expect(workspace).toHaveAttribute("data-learning-layout", "article");
     expect(
       container.querySelectorAll("[data-focus-availability]"),
     ).toHaveLength(1);
     expect(screen.getByRole("button", { name: "Header action" })).toBeVisible();
+    expect(screen.getByTestId("open-diagram-viewer")).toBeVisible();
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
   });
 
-  test("shows understated tabs only when visualization exists", async () => {
-    const user = userEvent.setup();
-    const onPaneModeChange = vi.fn();
-    const workspaceProps = {
-      route,
-      status: { availability: "available" } as const,
-      onPaneModeChange,
-      diagram: { label: "Diagram pane", content: <span>Diagram content</span> },
-      guide: { label: "Guide pane", content: <span>Guide content</span> },
-      visualization: {
-        label: "Visualization pane",
-        content: <button type="button">Layer 2 / Head 3</button>,
-      },
-    };
-    const { rerender } = render(
-      <LearningWorkspace {...workspaceProps} paneMode="explanation" />,
-    );
-
-    expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-    expect(screen.getByRole("tabpanel", { name: "설명" })).toBeVisible();
-    expect(
-      document.getElementById("learning-visualization-panel"),
-    ).toHaveAttribute("hidden");
-
-    await user.click(screen.getByRole("tab", { name: "시각화" }));
-    expect(onPaneModeChange).toHaveBeenCalledWith("visualization");
-    rerender(
-      <LearningWorkspace {...workspaceProps} paneMode="visualization" />,
-    );
-    expect(
-      screen.getByRole("button", { name: "Layer 2 / Head 3" }),
-    ).toBeVisible();
-    rerender(<LearningWorkspace {...workspaceProps} paneMode="explanation" />);
-    rerender(
-      <LearningWorkspace {...workspaceProps} paneMode="visualization" />,
-    );
-
-    expect(
-      screen.getByRole("button", { name: "Layer 2 / Head 3" }),
-    ).toBeVisible();
-  });
-
-  test("forwards a chapter reset key to DiagramViewport", () => {
+  test("keeps visualization on demand without persistent tabs", () => {
     render(
-      <LearningWorkspace
-        route={route}
-        status={{ availability: "available" }}
-        diagram={{
-          label: "Diagram pane",
-          resetKey: "decoder.chapter.1.2",
-          content: <span>Diagram content</span>,
-        }}
-        guide={{ label: "Guide pane", content: <span>Guide content</span> }}
-      />,
+      <FocusedViewerProvider>
+        <LearningWorkspace
+          route={route}
+          status={{ availability: "available" }}
+          diagram={diagram}
+          guide={{
+            label: "Guide article",
+            content: <span>Guide content</span>,
+          }}
+          visualization={{
+            label: "Visualization viewer",
+            actionLabel: "Open visualization",
+            request: {
+              id: "decoder.root:visualization",
+              kind: "visualization",
+              source: "learn",
+              title: "Visualization viewer",
+              visualizationId:
+                "decoder.visualization.attention.score-matrix-3d",
+            },
+          }}
+        />
+      </FocusedViewerProvider>,
     );
 
-    expect(
-      document.querySelector(".diagram-viewport__content"),
-    ).toHaveAttribute("data-reset-key", "decoder.chapter.1.2");
+    expect(screen.getByTestId("open-diagram-viewer")).toBeVisible();
+    expect(screen.getByTestId("open-visualization-viewer")).toBeVisible();
+    expect(screen.queryByRole("tablist")).toBeNull();
+    expect(document.querySelector("canvas")).toBeNull();
   });
 
-  test("supports roving keyboard navigation across learning tabs", async () => {
-    const user = userEvent.setup();
-    const onPaneModeChange = vi.fn();
-    const props = {
-      route,
-      status: { availability: "available" } as const,
-      onPaneModeChange,
-      diagram: { label: "Diagram pane", content: <span>Diagram content</span> },
-      guide: { label: "Guide pane", content: <span>Guide content</span> },
-      visualization: {
-        label: "Visualization pane",
-        content: <span>Visualization content</span>,
-      },
-    };
-    const { rerender } = render(
-      <LearningWorkspace {...props} paneMode="explanation" />,
-    );
-    const explanation = screen.getByRole("tab", { name: "설명" });
-    const visualization = screen.getByRole("tab", { name: "시각화" });
+  test("does not mount diagram content before its viewer opens", () => {
+    render(<WorkspaceFixture />);
 
-    expect(explanation).toHaveAttribute("tabindex", "0");
-    expect(visualization).toHaveAttribute("tabindex", "-1");
-    explanation.focus();
-    await user.keyboard("{ArrowRight}");
-    expect(visualization).toHaveFocus();
-    expect(onPaneModeChange).toHaveBeenLastCalledWith("visualization");
-
-    rerender(<LearningWorkspace {...props} paneMode="visualization" />);
-    await user.keyboard("{Home}");
-    expect(explanation).toHaveFocus();
-    expect(onPaneModeChange).toHaveBeenLastCalledWith("explanation");
+    expect(document.querySelector(".diagram-viewport")).toBeNull();
+    expect(document.getElementById("learning-diagram-pane")).toBeNull();
   });
 
-  test("reports a stale Guide target without selecting architecture", async () => {
+  test("reports a stale Guide target", async () => {
     // Given
     const user = userEvent.setup();
-    const selectArchitecture = vi.fn();
-    render(<WorkspaceFixture selectArchitecture={selectArchitecture} />);
+    render(<WorkspaceFixture />);
 
     // When
     await user.click(
@@ -239,7 +184,6 @@ describe("LearningWorkspace", () => {
     );
 
     // Then
-    expect(selectArchitecture).not.toHaveBeenCalled();
     expect(
       document.querySelector('[data-focus-availability="unavailable"]'),
     ).not.toBeNull();

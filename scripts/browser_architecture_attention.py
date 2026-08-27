@@ -17,6 +17,7 @@ from typing import Any
 from browser_architecture_attention_probes import (
     ATTENTION_DETAIL_PROBE,
     BLOCK_ATTENTION_PROBE,
+    LEARN_ATTENTION_GUIDE_PROBE,
 )
 from browser_architecture_attention_checks import verify_structure
 from browser_architecture_navigation import (
@@ -24,6 +25,7 @@ from browser_architecture_navigation import (
     capture,
     dispatch_click,
     focus_by_tab,
+    open_architecture_viewer,
     require,
     settle,
 )
@@ -77,7 +79,8 @@ def verify_attention_state_preservation(browser: ChromeSession, initial: dict[st
     selected = cdp.evaluate(session, ATTENTION_DETAIL_PROBE, True)
     require(
         selected["selectedLayer"] == 1 and selected["selectedHead"] == 3
-        and selected["selectedNode"] == "attention-causal-mask" and "Causal Mask" in selected["operationCopy"],
+        and selected["selectedNode"] == "attention-causal-mask"
+        and selected["operationCopy"] is None,
         f"attention selection state: {selected}",
     )
     require(selected["workerPosts"] == initial["workerPosts"], f"selection called Worker: {selected}")
@@ -125,6 +128,7 @@ def verify_attention(
     cdp.evaluate(session, READY_PROBE, True)
     cdp.evaluate(session, SET_PROMPT, True)
     settle(browser)
+    open_architecture_viewer(browser)
     initial = cdp.evaluate(session, ROOT_PROBE, True)
 
     dispatch_click(browser, '[data-node-id="transformer-block"]')
@@ -166,6 +170,44 @@ def verify_attention(
     verify_attention_state_preservation(browser, initial)
 
 
+def verify_learn_attention_guide(browser: ChromeSession, url: str) -> None:
+    browser.navigate(url)
+    cdp, session = browser.require_cdp(), browser.page_session
+    cdp.evaluate(session, READY_PROBE, True)
+    guide = cdp.evaluate(session, LEARN_ATTENTION_GUIDE_PROBE, True)
+    require(
+        guide["guidePage"] == "decoder-guide-self-attention"
+        and guide["outlineCount"] == 8
+        and guide["runtimePresentation"]
+        and all(
+            section in guide["guideSections"]
+            for section in (
+                "qkv",
+                "heads",
+                "score",
+                "scale",
+                "mask",
+                "softmax",
+                "value",
+                "merge",
+            )
+        ),
+        f"attention Guide hierarchy: {guide}",
+    )
+    require(
+        guide["currentValues"]
+        == {"t": "—", "c": "64", "h": "4", "d": "16", "scale": "0.25"},
+        f"attention current values: {guide}",
+    )
+    require(
+        guide["articleLayout"] == "article"
+        and not guide["architectureMounted"]
+        and guide["viewerTrigger"]
+        and guide["summaryFormula"],
+        f"Learn must keep architecture on demand: {guide}",
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, required=True)
@@ -182,6 +224,10 @@ def main() -> int:
                 evidence = args.evidence if base == "/" else None
                 with ChromeSession() as browser:
                     verify_attention(browser, lab_url(origin, base), mobile, evidence)
+                    verify_learn_attention_guide(
+                        browser,
+                        f"{origin}{base}#/learn/decoder-only-fundamentals/5-1",
+                    )
             print(f"{base} Self-Attention architecture desktop/mobile: PASS")
     finally:
         server.shutdown()

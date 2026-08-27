@@ -47,9 +47,10 @@ describe("Part 2 curriculum Diagrams", () => {
           screen.getByRole("navigation", { name: "Chapter 목차" }),
         ).getByRole("link", { name: chapterTitle }),
       );
+      await user.click(screen.getByTestId("open-diagram-viewer"));
 
       // Then: one symbolic image, equivalent fallback, and native focus remain Worker-inert.
-      const pane = document.querySelector("#learning-diagram-pane");
+      const pane = document.querySelector("#focused-viewer .diagram-viewport");
       expect(pane).toBeInstanceOf(HTMLElement);
       expect(pane?.querySelectorAll("svg[role='img']")).toHaveLength(1);
       expect(

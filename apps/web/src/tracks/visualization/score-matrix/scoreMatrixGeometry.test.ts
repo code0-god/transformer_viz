@@ -102,6 +102,9 @@ describe("Score Matrix cell geometry", () => {
     expect(geometry.cells[0]?.semanticTone).toBe("negative");
     expect(geometry.cells[1]?.semanticTone).toBe("neutral");
     expect(geometry.cells[2]?.semanticTone).toBe("positive");
+    expect(geometry.legend.map(({ color }) => color)).toEqual([
+      0x526f78, 0x756d61, 0xa8432d,
+    ]);
     expect(geometry.cells[2]?.scaleXZ).toBeGreaterThan(
       geometry.cells[0]?.scaleXZ ?? 1,
     );

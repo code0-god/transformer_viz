@@ -48,9 +48,10 @@ describe("Part 1 curriculum Diagrams", () => {
           screen.getByRole("navigation", { name: "Chapter 목차" }),
         ).getByRole("link", { name: chapterTitle }),
       );
+      await user.click(screen.getByTestId("open-diagram-viewer"));
 
       // Then: the Diagram is semantic, non-interactive, and Worker-inert.
-      const pane = document.querySelector("#learning-diagram-pane");
+      const pane = document.querySelector("#focused-viewer .diagram-viewport");
       expect(pane).toBeInstanceOf(HTMLElement);
       expect(pane?.querySelectorAll("svg[role='img']")).toHaveLength(1);
       expect(
@@ -77,9 +78,10 @@ describe("Part 1 curriculum Diagrams", () => {
         screen.getByRole("navigation", { name: "Chapter 목차" }),
       ).getByRole("link", { name: "다음 Token 예측" }),
     );
+    await user.click(screen.getByTestId("open-diagram-viewer"));
 
     const stages = Array.from(
-      document.querySelectorAll("#learning-diagram-pane [data-stage] > rect"),
+      document.querySelectorAll("#focused-viewer [data-stage] > rect"),
     );
     const xCoordinates = stages.map((stage) => stage.getAttribute("x"));
     const yCoordinates = stages.map((stage) => Number(stage.getAttribute("y")));

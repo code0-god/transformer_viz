@@ -1,13 +1,13 @@
 .learning-guide {
   display: grid;
-  gap: var(--s5, 1.5rem);
+  gap: clamp(var(--s5, 1.5rem), 5vw, var(--s7, 3rem));
   min-inline-size: 0;
-  max-inline-size: 42rem;
+  max-inline-size: 56rem;
   margin-inline: auto;
   padding: 0 var(--s5, 1.5rem) var(--s5, 1.5rem);
   color: var(--ink, #24231f);
-  font-size: 0.94rem;
-  line-height: 1.7;
+  font-size: 1.0625rem;
+  line-height: 1.75;
 }
 
 .learning-guide-header {
@@ -16,11 +16,14 @@
 }
 
 .learning-guide-header h3,
+.learning-guide-section h2,
 .learning-guide-section h4,
 .learning-guide-takeaway h4,
 .learning-guide-glossary h4 {
   color: var(--ink, #24231f);
   line-height: 1.3;
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 
 .learning-guide-goal {
@@ -47,9 +50,21 @@
 }
 
 .learning-guide-outline {
-  padding: var(--s3, 0.75rem) var(--s4, 1rem);
-  border-radius: 12px;
-  background: var(--surface-strong, #ece7db);
+  padding: var(--s3, 0.75rem) 0;
+  border-block: 1px solid var(--hairline, #d3ccbd);
+  border-radius: 0;
+  background: transparent;
+}
+
+.learning-guide-outline summary {
+  color: var(--ink-muted, #68645c);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 780;
+}
+
+.learning-guide-outline nav {
+  margin-block-start: var(--s3, 0.75rem);
 }
 
 .learning-guide-outline ol {
@@ -82,8 +97,18 @@
   border-block-start: 1px solid var(--hairline, #d3ccbd);
 }
 
+.learning-guide-section:focus-visible {
+  outline: 1px solid
+    color-mix(in srgb, var(--accent, #a53d23) 42%, transparent);
+  outline-offset: 4px;
+}
+
 .learning-guide-section[data-active="true"] {
-  background: linear-gradient(90deg, var(--accent-soft, #f1d4c8), transparent 42%);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent-soft, #f1d4c8) 62%, transparent),
+    transparent 34%
+  );
 }
 
 .learning-guide-section[data-active="true"]::before {
@@ -104,8 +129,12 @@
 
 .learning-guide-section-control {
   flex: none;
-  border-color: var(--hairline, #d3ccbd);
-  background: var(--surface, #fbfaf6);
+  padding: var(--s2, 0.5rem) 0;
+  border: 0;
+  border-block-end: 1px solid currentColor;
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent, #a53d23);
 }
 
 .learning-guide ul,
@@ -162,19 +191,39 @@
 .learning-guide-example {
   min-inline-size: 0;
   margin: 0;
-  padding: var(--s4, 1rem);
-  border: 1px solid var(--hairline, #d3ccbd);
-  border-radius: 12px;
-  background: var(--surface, #fbfaf6);
+  padding: var(--s3, 0.75rem) var(--s4, 1rem);
+  border: 0;
+  border-block-start: 1px solid var(--hairline, #d3ccbd);
+  border-radius: 0;
+  background: color-mix(
+    in srgb,
+    var(--surface, #fbfaf6) 42%,
+    transparent
+  );
+}
+
+.learning-guide-runtime summary {
+  color: var(--ink-muted, #68645c);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 760;
+}
+
+.learning-guide-runtime[open] summary {
+  margin-block-end: var(--s3, 0.75rem);
 }
 
 .learning-guide-callout[data-guide-tone="important"],
 .learning-guide-operation {
-  border-color: color-mix(in srgb, var(--accent, #a53d23) 48%, var(--hairline, #d3ccbd));
+  border-block-start-color: color-mix(
+    in srgb,
+    var(--accent, #a53d23) 58%,
+    var(--hairline, #d3ccbd)
+  );
 }
 
 .learning-guide-callout[data-guide-tone="warning"] {
-  border-color: var(--error, #a73c31);
+  border-block-start-color: var(--error, #a73c31);
 }
 
 .learning-guide-callout[data-guide-tone="analogy"] {
@@ -252,9 +301,11 @@
 }
 
 .learning-guide-takeaway {
-  padding: var(--s4, 1rem);
-  border-radius: 12px;
-  background: var(--ready-soft, #e1eee6);
+  padding: var(--s4, 1rem) 0;
+  border-block: 1px solid
+    color-mix(in srgb, var(--accent, #a53d23) 32%, var(--hairline, #d3ccbd));
+  border-radius: 0;
+  background: transparent;
 }
 
 .learning-guide-next-step {

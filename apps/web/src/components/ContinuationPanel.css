@@ -3,9 +3,10 @@
   min-inline-size: 0;
   gap: var(--s3);
   padding: var(--s3);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  background: var(--surface);
+  border: 0;
+  border-block: 1px solid var(--hairline);
+  border-radius: 0;
+  background: transparent;
 }
 
 .continuation-panel > h2 {
@@ -119,6 +120,11 @@
 }
 
 @media (max-width: 767px) {
+  .continuation-panel {
+    border-block-start: 1px solid var(--hairline);
+    border-inline-start: 0;
+  }
+
   .continuation-panel .decoded-text > div {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s1);

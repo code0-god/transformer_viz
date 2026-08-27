@@ -3,11 +3,15 @@ import type {
   ArchitectureRenderContext,
   ArchitectureRouteDefinition,
   BreadcrumbItem,
+  FocusedArchitectureOptions,
   LearningGuidePage,
   LearningTrackAdapter,
   LearningTrackProfile,
 } from "../types";
+import { decoderCurriculum } from "./curriculum/catalog";
 import { DecoderTrackWorkspace } from "./curriculum/DecoderTrackWorkspace";
+import { isDiagramId } from "./curriculum/types";
+import { createDecoderArchitecturePresentation } from "./DecoderArchitectureViewer";
 import { decoderGuidePage } from "./guide";
 import { decoderRoute, decoderRouteId } from "./routes";
 
@@ -70,5 +74,15 @@ export function createDecoderOnlyFundamentalsAdapter(
     renderArchitecture: (context) => (
       <DecoderTrackWorkspace context={context} profile={profile} />
     ),
+    renderFocusedArchitecture: (
+      context: ArchitectureRenderContext,
+      options: FocusedArchitectureOptions,
+    ) => createDecoderArchitecturePresentation({ context, options }),
+    renderFocusedDiagram: (diagramId) => {
+      if (!isDiagramId(diagramId)) return null;
+      const Diagram =
+        decoderCurriculum.rendererRegistry?.resolveDiagram(diagramId);
+      return Diagram === undefined ? null : <Diagram />;
+    },
   };
 }

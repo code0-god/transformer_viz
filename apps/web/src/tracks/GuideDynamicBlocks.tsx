@@ -27,19 +27,17 @@ export function RuntimeFacts({
   presentation: RuntimeFactsPresentation;
 }>): ReactElement {
   return (
-    <aside
+    <details
       className="learning-guide-runtime"
       data-runtime-presentation-id={presentation.id}
     >
-      {presentation.title === undefined ? null : (
-        <strong>{presentation.title}</strong>
-      )}
+      <summary>{presentation.title ?? "구현 노트"}</summary>
       <dl>
         {presentation.facts.map((fact) => (
           <Fact key={fact.id} fact={fact} />
         ))}
       </dl>
-    </aside>
+    </details>
   );
 }
 

@@ -1,5 +1,6 @@
 import {
   type ReactElement,
+  type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
   type PointerEvent as ReactPointerEvent,
   useCallback,
@@ -31,6 +32,7 @@ const SCALE_EPSILON = 0.000_001;
 export type DiagramViewportProps = {
   readonly label: string;
   readonly resetKey: string | number;
+  readonly description?: ReactNode;
   readonly extraControls?: ReactNode;
   readonly children: ReactNode;
 };
@@ -38,6 +40,7 @@ export type DiagramViewportProps = {
 export function DiagramViewport({
   label,
   resetKey,
+  description,
   extraControls,
   children,
 }: DiagramViewportProps): ReactElement {
@@ -53,14 +56,7 @@ export function DiagramViewport({
   const refit = useCallback((): void => {
     const viewportElement = viewportRef.current;
     const contentElement = contentRef.current;
-    const firstChild = contentElement?.firstElementChild;
-    if (
-      viewportElement === null ||
-      contentElement === null ||
-      firstChild === null ||
-      firstChild === undefined
-    )
-      return;
+    if (viewportElement === null || contentElement === null) return;
 
     const viewportRect = viewportElement.getBoundingClientRect();
     let contentWidth = contentElement.scrollWidth;
@@ -84,18 +80,6 @@ export function DiagramViewport({
       ) {
         contentWidth = width;
         contentHeight = height;
-        const caption = firstChild.querySelector(":scope > figcaption");
-        if (caption instanceof HTMLElement) {
-          const rowGap = Number.parseFloat(
-            window.getComputedStyle(firstChild).rowGap,
-          );
-          const captionHeight =
-            caption.offsetHeight > 0
-              ? caption.offsetHeight
-              : caption.getBoundingClientRect().height;
-          contentHeight +=
-            captionHeight + (Number.isFinite(rowGap) ? rowGap : 0);
-        }
       }
     }
     if (
@@ -107,8 +91,14 @@ export function DiagramViewport({
       return;
 
     const viewportSize = {
-      width: viewportRect.width,
-      height: viewportRect.height,
+      width:
+        viewportElement.clientWidth > 0
+          ? viewportElement.clientWidth
+          : viewportRect.width,
+      height:
+        viewportElement.clientHeight > 0
+          ? viewportElement.clientHeight
+          : viewportRect.height,
     };
     const contentSize = { width: contentWidth, height: contentHeight };
     const nextGeometry = {
@@ -176,6 +166,11 @@ export function DiagramViewport({
     if (viewportElement === null || transform === null) return;
     const handleWheel = (event: WheelEvent): void => {
       if (!event.ctrlKey) return;
+      if (
+        event.target instanceof Element &&
+        event.target.closest(".diagram-viewport__toolbar") !== null
+      )
+        return;
       event.preventDefault();
       const rect = viewportElement.getBoundingClientRect();
       applyZoom(
@@ -190,6 +185,8 @@ export function DiagramViewport({
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>): void {
     const currentGeometry = geometryRef.current;
     if (
+      (event.target instanceof Element &&
+        event.target.closest(".diagram-viewport__toolbar") !== null) ||
       transform === null ||
       currentGeometry === null ||
       transform.scale <= currentGeometry.fit.scale + SCALE_EPSILON
@@ -240,17 +237,45 @@ export function DiagramViewport({
   const fitScale = geometry?.fit.scale ?? 1;
   const currentTransform = transform ?? { scale: fitScale, x: 0, y: 0 };
   const isFit = currentTransform.scale <= fitScale + SCALE_EPSILON;
+  const zoomRatio =
+    fitScale <= SCALE_EPSILON ? 1 : currentTransform.scale / fitScale;
+  const hasMetadata = description !== undefined || extraControls !== undefined;
+
+  function handleKeyDown(event: ReactKeyboardEvent<HTMLDivElement>): void {
+    switch (event.key) {
+      case "+":
+      case "=":
+        event.preventDefault();
+        applyZoom(currentTransform.scale * ZOOM_STEP);
+        break;
+      case "-":
+      case "_":
+        event.preventDefault();
+        applyZoom(currentTransform.scale / ZOOM_STEP);
+        break;
+      case "f":
+      case "F":
+      case "0":
+        event.preventDefault();
+        refit();
+        break;
+    }
+  }
 
   return (
     <section className="diagram-viewport" aria-label={label}>
-      <DiagramViewportToolbar
-        scale={currentTransform.scale}
-        isFit={isFit}
-        extraControls={extraControls}
-        onZoomOut={() => applyZoom(currentTransform.scale / ZOOM_STEP)}
-        onZoomIn={() => applyZoom(currentTransform.scale * ZOOM_STEP)}
-        onFit={refit}
-      />
+      {hasMetadata ? (
+        <div className="diagram-viewport__meta">
+          {extraControls === undefined ? null : (
+            <div className="diagram-viewport__extra-controls">
+              {extraControls}
+            </div>
+          )}
+          {description === undefined ? null : (
+            <div className="diagram-viewport__description">{description}</div>
+          )}
+        </div>
+      ) : null}
       <div
         ref={viewportRef}
         className="diagram-viewport__surface"
@@ -263,11 +288,20 @@ export function DiagramViewport({
         data-pan-y={currentTransform.y}
         data-content-width={geometry?.content.width ?? 0}
         data-content-height={geometry?.content.height ?? 0}
+        data-zoom-ratio={zoomRatio}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={finishDrag}
         onPointerCancel={finishDrag}
       >
+        <DiagramViewportToolbar
+          zoomRatio={zoomRatio}
+          isFit={isFit}
+          onKeyDown={handleKeyDown}
+          onZoomOut={() => applyZoom(currentTransform.scale / ZOOM_STEP)}
+          onZoomIn={() => applyZoom(currentTransform.scale * ZOOM_STEP)}
+          onFit={refit}
+        />
         <div
           ref={contentRef}
           className="diagram-viewport__content"

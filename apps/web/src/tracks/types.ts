@@ -111,6 +111,16 @@ export interface ArchitectureRenderContext {
   readonly course?: LearningCourseLocation;
 }
 
+export type FocusedArchitectureOptions = Readonly<{
+  highlightedNodeIds: readonly ArchitectureNodeId[];
+  onArticleTargetChange?: (articleTargetId: string) => void;
+}>;
+
+export type FocusedArchitecturePresentation = Readonly<{
+  content: ReactNode;
+  controls?: ReactNode;
+}>;
+
 export interface LearningTrackAdapter {
   readonly profile: LearningTrackProfile;
   supportsModel(metadata: Readonly<ModelMetadata>): boolean;
@@ -119,6 +129,11 @@ export interface LearningTrackAdapter {
   getGuidePage(context: ArchitectureRenderContext): LearningGuidePage;
   getAvailableRoutes(): readonly ArchitectureRouteDefinition[];
   renderArchitecture(context: ArchitectureRenderContext): ReactNode;
+  renderFocusedArchitecture(
+    context: ArchitectureRenderContext,
+    options: FocusedArchitectureOptions,
+  ): FocusedArchitecturePresentation;
+  renderFocusedDiagram(diagramId: string): ReactNode | null;
 }
 
 export interface LearningTrackRegistration {

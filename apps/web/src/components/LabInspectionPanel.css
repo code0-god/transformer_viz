@@ -1,0 +1,52 @@
+.lab-inspection {
+  display: grid;
+  gap: var(--s3);
+  padding-block: var(--s4);
+  border-block: 1px solid var(--hairline);
+}
+
+.lab-inspection header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+
+.lab-inspection header > div {
+  display: grid;
+  gap: var(--s1);
+}
+
+.lab-inspection header p {
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lab-inspection__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.lab-inspection__actions button {
+  min-block-size: 44px;
+  padding: var(--s2) 0;
+  border: 0;
+  border-block-end: 1px solid currentColor;
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+}
+
+@media (max-width: 40rem) {
+  .lab-inspection__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .lab-inspection__actions button {
+    inline-size: 100%;
+    text-align: start;
+  }
+}

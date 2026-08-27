@@ -47,6 +47,7 @@ function renderViewport(resetKey = "chapter-1") {
     <DiagramViewport
       label="학습 다이어그램"
       resetKey={resetKey}
+      description={<p>Diagram description</p>}
       extraControls={<button type="button">노드 찾기</button>}
     >
       {diagram()}
@@ -87,32 +88,33 @@ describe("DiagramViewport", () => {
     expect(viewport).toHaveAttribute("data-pan-y", "125");
     expect(viewport).toHaveAttribute("data-content-width", "1000");
     expect(viewport).toHaveAttribute("data-content-height", "500");
+    expect(screen.getByLabelText("현재 확대 비율")).toHaveTextContent("100%");
   });
 
-  test("includes a visible figure caption in Fit geometry", () => {
+  test("keeps description outside transformed Fit geometry", () => {
     render(
-      <DiagramViewport label="학습 다이어그램" resetKey="captioned">
-        <figure>
-          <svg
-            role="img"
-            aria-label="Captioned diagram"
-            viewBox="0 0 1000 500"
-          />
-          <figcaption>Diagram metadata</figcaption>
-        </figure>
+      <DiagramViewport
+        label="학습 다이어그램"
+        resetKey="described"
+        description={<p>Diagram metadata</p>}
+      >
+        <svg role="img" aria-label="Captioned diagram" viewBox="0 0 1000 500" />
       </DiagramViewport>,
     );
     const viewport = screen.getByTestId("diagram-viewport-surface");
-    const caption = screen.getByText("Diagram metadata");
+    const description = screen.getByText("Diagram metadata");
+    const transformedContent = viewport.querySelector(
+      ".diagram-viewport__content",
+    );
     viewport.getBoundingClientRect = () => new DOMRect(0, 0, 500, 500);
-    caption.getBoundingClientRect = () => new DOMRect(0, 0, 1000, 80);
 
     act(() => observers.at(-1)?.trigger());
 
     expect(viewport).toHaveAttribute("data-content-width", "1000");
-    expect(viewport).toHaveAttribute("data-content-height", "580");
+    expect(viewport).toHaveAttribute("data-content-height", "500");
     expect(viewport).toHaveAttribute("data-fit-scale", "0.5");
-    expect(viewport).toHaveAttribute("data-pan-y", "105");
+    expect(viewport).toHaveAttribute("data-pan-y", "125");
+    expect(transformedContent).not.toContainElement(description);
   });
 
   test("zooms with plus and minus without going below Fit", async () => {
@@ -128,6 +130,9 @@ describe("DiagramViewport", () => {
 
     // Then
     expect(viewport).toHaveAttribute("data-scale", "0.6");
+    expect(within(toolbar).getByLabelText("현재 확대 비율")).toHaveTextContent(
+      "120%",
+    );
     expect(within(toolbar).getByRole("button", { name: "축소" })).toBeEnabled();
 
     // When
@@ -135,9 +140,46 @@ describe("DiagramViewport", () => {
 
     // Then
     expect(viewport).toHaveAttribute("data-scale", "0.5");
+    expect(within(toolbar).getByLabelText("현재 확대 비율")).toHaveTextContent(
+      "100%",
+    );
     expect(
       within(toolbar).getByRole("button", { name: "축소" }),
     ).toBeDisabled();
+  });
+
+  test("supports local plus, minus, F, and 0 keyboard controls", () => {
+    // Given
+    const { viewport } = renderViewport();
+    const toolbar = screen.getByRole("toolbar", {
+      name: "다이어그램 보기 도구",
+    });
+    const keyboardTarget = within(toolbar).getByRole("button", {
+      name: "확대",
+    });
+    keyboardTarget.focus();
+
+    // When
+    fireEvent.keyDown(keyboardTarget, { key: "+" });
+
+    // Then
+    expect(keyboardTarget).toHaveFocus();
+    expect(viewport).toHaveAttribute("data-scale", "0.6");
+
+    // When
+    fireEvent.keyDown(keyboardTarget, { key: "-" });
+    fireEvent.keyDown(keyboardTarget, { key: "+" });
+    fireEvent.keyDown(keyboardTarget, { key: "f" });
+
+    // Then
+    expect(viewport).toHaveAttribute("data-scale", "0.5");
+
+    // When
+    fireEvent.keyDown(keyboardTarget, { key: "+" });
+    fireEvent.keyDown(keyboardTarget, { key: "0" });
+
+    // Then
+    expect(viewport).toHaveAttribute("data-scale", "0.5");
   });
 
   test("uses Ctrl+wheel only and zooms around the pointer", () => {
@@ -270,6 +312,21 @@ describe("DiagramViewport", () => {
     expect(transformValues(viewport)).toEqual({ scale: 0.25, x: 0, y: 137.5 });
   });
 
+  test("fits a tall diagram completely on both axes at semantic 100 percent", () => {
+    render(
+      <DiagramViewport label="세로 다이어그램" resetKey="tall">
+        <svg role="img" aria-label="Tall diagram" viewBox="0 0 200 1000" />
+      </DiagramViewport>,
+    );
+    const viewport = screen.getByTestId("diagram-viewport-surface");
+    viewport.getBoundingClientRect = () => new DOMRect(0, 0, 500, 400);
+
+    act(() => observers.at(-1)?.trigger());
+
+    expect(transformValues(viewport)).toEqual({ scale: 0.4, x: 210, y: 0 });
+    expect(screen.getByLabelText("현재 확대 비율")).toHaveTextContent("100%");
+  });
+
   test("resetKey changes refit the current chapter diagram", async () => {
     // Given
     const user = userEvent.setup();
@@ -307,13 +364,14 @@ describe("DiagramViewport", () => {
 
   test("exposes an accessible region, toolbar, controls, and extra actions", () => {
     // Given / When
-    renderViewport();
+    const { viewport } = renderViewport();
 
     // Then
     const region = screen.getByRole("region", { name: "학습 다이어그램" });
     const toolbar = within(region).getByRole("toolbar", {
       name: "다이어그램 보기 도구",
     });
+    expect(viewport).toContainElement(toolbar);
     expect(
       within(toolbar).getByRole("button", { name: "축소" }),
     ).toHaveAttribute("type", "button");
@@ -321,9 +379,11 @@ describe("DiagramViewport", () => {
     expect(
       within(toolbar).getByRole("button", { name: "전체 보기" }),
     ).toBeDisabled();
-    expect(
-      within(toolbar).getByRole("button", { name: "노드 찾기" }),
-    ).toBeVisible();
+    const extraAction = within(region).getByRole("button", {
+      name: "노드 찾기",
+    });
+    expect(extraAction).toBeVisible();
+    expect(toolbar).not.toContainElement(extraAction);
     expect(screen.getByRole("img", { name: "Test diagram" })).toBeVisible();
   });
 });

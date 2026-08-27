@@ -1,13 +1,13 @@
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StrictMode } from "react";
-import { vi } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import { App } from "./App";
 import { model, TestWorker } from "./test/workerFixtures";
 
-async function readyWorkspace() {
-  window.history.replaceState(null, "", "/#/lab");
+function readyWorkspace(hash: string): TestWorker {
+  window.history.replaceState(null, "", `/${hash}`);
   const worker = new TestWorker();
   render(
     <StrictMode>
@@ -20,60 +20,81 @@ async function readyWorkspace() {
   act(() => {
     worker.emit({ type: "ready", model });
   });
-  expect(screen.getByTestId("architecture-root")).toBeInTheDocument();
   return worker;
 }
 
+function focusedViewer(): HTMLElement {
+  const viewer = document.querySelector<HTMLElement>('[role="dialog"]');
+  if (viewer === null) throw new Error("Focused viewer is missing");
+  return viewer;
+}
+
+function viewerElement<T extends Element>(
+  viewer: HTMLElement,
+  selector: string,
+): T {
+  const element = viewer.querySelector<T>(selector);
+  if (element === null)
+    throw new Error(`Viewer element is missing: ${selector}`);
+  return element;
+}
+
+async function openLabArchitecture(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<HTMLElement> {
+  await user.click(screen.getByTestId("lab-open-architecture-root"));
+  return focusedViewer();
+}
+
 describe("Learning Workspace production integration", () => {
-  test("opens Self-Attention from the Block Guide next step", async () => {
-    const worker = await readyWorkspace();
+  test("drills from Root through Attention inside one Lab viewer", async () => {
+    const worker = readyWorkspace("#/lab");
     const user = userEvent.setup();
-    await user.click(
-      screen.getByRole("button", { name: /반복 Transformer Blocks/ }),
-    );
+    const viewer = await openLabArchitecture(user);
 
     await user.click(
-      screen.getByText("Self-Attention", {
-        selector: ".learning-guide-next-step button",
-      }),
+      viewerElement<SVGGElement>(viewer, '[data-node-id="transformer-block"]'),
+    );
+    await user.click(
+      viewerElement<SVGGElement>(viewer, '[data-node-id="self-attention"]'),
     );
 
-    expect(screen.getByTestId("attention-detail")).toBeInTheDocument();
-    expect(document.querySelector("[data-learning-route-id]")).toHaveAttribute(
-      "data-learning-route-id",
-      "decoder.self-attention",
-    );
+    expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(1);
+    expect(screen.getByTestId("attention-detail")).toBeVisible();
     expect(worker.posted).toHaveLength(1);
   });
 
-  test("preserves layer, head, operation, and Worker traffic across routes", async () => {
-    // Given: the learner opens Block, layer 2, Attention, head 2, and Softmax.
-    const worker = await readyWorkspace();
+  test("preserves layer, head, and operation across viewer drill-down", async () => {
+    const worker = readyWorkspace("#/lab");
     const user = userEvent.setup();
-    await user.click(
-      screen.getByRole("button", { name: /반복 Transformer Blocks/ }),
-    );
-    await user.click(screen.getByRole("button", { name: "Layer 3" }));
-    await user.click(
-      screen.getByRole("button", {
-        name: /Causal Multi-Head Self-Attention/,
-      }),
-    );
-    await user.click(screen.getByRole("button", { name: "Head 3" }));
-    await user.click(screen.getByLabelText(/Softmax.*선택 가능/));
+    const viewer = await openLabArchitecture(user);
 
-    // When: the learner returns to Root and drills down again.
-    await user.click(screen.getByTestId("architecture-breadcrumb-gpt"));
     await user.click(
-      screen.getByRole("button", { name: /반복 Transformer Blocks/ }),
+      viewerElement<SVGGElement>(viewer, '[data-node-id="transformer-block"]'),
     );
     await user.click(
-      screen.getByRole("button", {
-        name: /Causal Multi-Head Self-Attention/,
-      }),
+      viewerElement<HTMLButtonElement>(viewer, '[data-layer-index="2"]'),
+    );
+    await user.click(
+      viewerElement<SVGGElement>(viewer, '[data-node-id="self-attention"]'),
+    );
+    await user.click(
+      viewerElement<HTMLButtonElement>(viewer, '[data-head-index="2"]'),
+    );
+    await user.click(
+      viewerElement<SVGGElement>(viewer, '[data-node-id="attention-softmax"]'),
     );
 
-    // Then: architecture state survives and no navigation posts to the Worker.
+    await user.click(
+      viewerElement(viewer, '[data-testid="architecture-breadcrumb-gpt"]'),
+    );
+    await user.click(
+      viewerElement<SVGGElement>(viewer, '[data-node-id="transformer-block"]'),
+    );
+    await user.click(
+      viewerElement<SVGGElement>(viewer, '[data-node-id="self-attention"]'),
+    );
+
     expect(screen.getByTestId("attention-detail")).toHaveAttribute(
       "data-selected-layer",
       "2",
@@ -82,101 +103,67 @@ describe("Learning Workspace production integration", () => {
       "data-selected-head",
       "2",
     );
-    expect(screen.getByLabelText(/Softmax.*선택 가능/)).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    expect(
+      viewerElement<SVGGElement>(viewer, '[data-node-id="attention-softmax"]'),
+    ).toHaveAttribute("aria-pressed", "true");
     expect(worker.posted).toHaveLength(1);
   });
 
-  test("synchronizes diagram activation with the route Guide", async () => {
-    // Given: the Root learning workspace is ready without generation traffic.
-    const worker = await readyWorkspace();
+  test("returns a viewer selection to its matching Learn section", async () => {
+    const worker = readyWorkspace("#/learn/decoder-only-fundamentals/3-1");
     const user = userEvent.setup();
 
-    // When: the learner activates Token Embedding in the real diagram.
-    const embedding = screen.getByRole("button", {
-      name: /Token embedding lookup/,
-    });
-    await user.click(embedding);
+    expect(screen.queryByTestId("architecture-root")).toBeNull();
+    await user.click(screen.getByTestId("open-diagram-viewer"));
+    const viewer = focusedViewer();
+    await user.click(
+      viewerElement<SVGGElement>(viewer, '[data-node-id="token-embedding"]'),
+    );
+    await user.click(
+      within(viewer).getByRole("button", { name: "설명에서 보기" }),
+    );
 
-    // Then: architecture selection and the matching Guide advance together.
-    expect(embedding).toHaveAttribute("aria-pressed", "true");
     expect(
-      screen.getByRole("region", {
+      screen.getByRole("heading", {
         name: "Token과 위치를 숫자 표현으로 바꾸기",
       }),
-    ).toHaveAttribute("data-active", "true");
-    expect(document.activeElement).toHaveAttribute(
-      "data-guide-section-id",
-      "root-embeddings",
-    );
+    ).toHaveFocus();
     expect(worker.posted).toHaveLength(1);
   });
 
-  test("keeps Guide focus independent while routing through the shared header", async () => {
-    // Given: LN1 is selected in the Block workspace.
-    const worker = await readyWorkspace();
+  test("opens a section viewer with the matching node highlighted", async () => {
+    const worker = readyWorkspace("#/learn/decoder-only-fundamentals/4-1");
     const user = userEvent.setup();
+    const section = screen.getByRole("region", { name: "Self-Attention" });
+
     await user.click(
-      screen.getByRole("button", { name: /반복 Transformer Blocks/ }),
+      within(section).getByRole("button", { name: "Self-Attention" }),
     );
-    await user.click(screen.getByLabelText(/LayerNorm 1.*선택 가능/));
-    const postsBeforeGuide = worker.posted.length;
-
-    // When: the Guide asks to reveal Self-Attention.
-    const guideSection = screen.getByRole("region", {
-      name: "Self-Attention",
-    });
-    await user.click(
-      within(guideSection).getByRole("button", { name: "Self-Attention" }),
-    );
-
-    // Then: only learning focus changes.
-    expect(screen.getByLabelText(/LayerNorm 1.*선택 가능/)).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    const attention = screen.getByLabelText(
-      /Causal Multi-Head Self-Attention.*자세히 보기 가능/,
-    );
-    expect(attention).toHaveAttribute("data-learning-highlighted", "true");
-    expect(worker.posted).toHaveLength(postsBeforeGuide);
-
-    // When: the highlighted node is activated.
-    await user.click(attention);
-
-    // Then: the shared heading owns the route reset and focus exactly once.
-    expect(screen.getByTestId("attention-detail")).toBeInTheDocument();
+    const viewer = focusedViewer();
     expect(
-      screen
-        .getAllByRole("region")
-        .filter((region) => region.getAttribute("data-active") === "true"),
-    ).toHaveLength(0);
-    expect(document.activeElement).toHaveAttribute(
-      "id",
-      "learning-route-title",
-    );
-    expect(worker.posted).toHaveLength(postsBeforeGuide);
+      viewerElement<SVGGElement>(viewer, '[data-node-id="self-attention"]'),
+    ).toHaveAttribute("data-learning-highlighted", "true");
+    expect(worker.posted).toHaveLength(1);
   });
 
-  test("preserves Attention Guide focus across layer and head changes", async () => {
-    // Given: Softmax is active in the Attention workspace.
-    const worker = await readyWorkspace();
+  test("preserves Attention operation across layer and head changes", async () => {
+    const worker = readyWorkspace("#/learn/decoder-only-fundamentals/5-1");
     const user = userEvent.setup();
+    await user.click(screen.getByTestId("open-diagram-viewer"));
+    const viewer = focusedViewer();
+    const softmax = viewerElement<SVGGElement>(
+      viewer,
+      '[data-node-id="attention-softmax"]',
+    );
+
+    await user.click(softmax);
     await user.click(
-      screen.getByRole("button", { name: /반복 Transformer Blocks/ }),
+      viewerElement<HTMLButtonElement>(viewer, '[data-layer-index="1"]'),
     );
     await user.click(
-      screen.getByRole("button", { name: /Causal Multi-Head Self-Attention/ }),
+      viewerElement<HTMLButtonElement>(viewer, '[data-head-index="2"]'),
     );
-    await user.click(screen.getByLabelText(/Softmax.*선택 가능/));
 
-    // When: route-local layer and head controls change.
-    await user.click(screen.getByRole("button", { name: "Layer 2" }));
-    await user.click(screen.getByRole("button", { name: "Head 3" }));
-
-    // Then: page, focus, selection, and Worker traffic are preserved.
     expect(screen.getByTestId("attention-detail")).toHaveAttribute(
       "data-selected-layer",
       "1",
@@ -185,33 +172,29 @@ describe("Learning Workspace production integration", () => {
       "data-selected-head",
       "2",
     );
-    expect(
-      screen.getByRole("region", { name: "Score를 Weight로 바꾸기" }),
-    ).toHaveAttribute("data-active", "true");
-    expect(screen.getByLabelText(/Softmax.*선택 가능/)).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    expect(softmax).toHaveAttribute("aria-pressed", "true");
     expect(worker.posted).toHaveLength(1);
   });
 
-  test("reveals the Guide again when the same diagram node is activated", async () => {
-    // Given: the matching Guide section can observe each direct reveal.
-    const worker = await readyWorkspace();
+  test("returns repeated viewer activations to the same article heading", async () => {
+    const worker = readyWorkspace("#/learn/decoder-only-fundamentals/3-1");
     const user = userEvent.setup();
-    const section = screen.getByRole("region", {
+    const heading = screen.getByRole("heading", {
       name: "Token과 위치를 숫자 표현으로 바꾸기",
     });
-    const focus = vi.spyOn(section, "focus");
-    const embedding = screen.getByRole("button", {
-      name: /Token embedding lookup/,
-    });
+    const focus = vi.spyOn(heading, "focus");
 
-    // When: the already-selected diagram node is activated again.
-    await user.click(embedding);
-    await user.click(embedding);
+    for (let activation = 0; activation < 2; activation += 1) {
+      await user.click(screen.getByTestId("open-diagram-viewer"));
+      const viewer = focusedViewer();
+      await user.click(
+        viewerElement<SVGGElement>(viewer, '[data-node-id="token-embedding"]'),
+      );
+      await user.click(
+        within(viewer).getByRole("button", { name: "설명에서 보기" }),
+      );
+    }
 
-    // Then: both real activations invoke the target reveal, not just selection.
     expect(focus).toHaveBeenCalledTimes(2);
     expect(worker.posted).toHaveLength(1);
   });

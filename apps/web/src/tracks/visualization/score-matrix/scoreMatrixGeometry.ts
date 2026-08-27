@@ -36,9 +36,9 @@ export type ScoreMatrixGeometry = Readonly<{
 }>;
 
 const SCORE_COLORS = {
-  negative: 0x6f4c78,
-  neutral: 0x8b8374,
-  positive: 0xa53d23,
+  negative: 0x526f78,
+  neutral: 0x756d61,
+  positive: 0xa8432d,
 } as const;
 
 const CELL_SPACING = 1.08;

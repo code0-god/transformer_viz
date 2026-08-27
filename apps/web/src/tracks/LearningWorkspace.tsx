@@ -1,11 +1,7 @@
-import type {
-  ReactElement,
-  KeyboardEvent as ReactKeyboardEvent,
-  ReactNode,
-} from "react";
+import type { ReactElement, ReactNode } from "react";
 
-import { DiagramViewport } from "./DiagramViewport";
-import type { LearningPaneMode } from "./decoder-only-fundamentals/curriculum/paneMode";
+import { useFocusedViewer } from "../overlays/focusedViewerStore";
+import type { FocusedViewerRequest } from "../overlays/focusedViewerTypes";
 import type { LearningFocusStatus } from "./learningFocus";
 import type { LearningRouteId } from "./workspaceTypes";
 import "./learningWorkspace.css";
@@ -19,7 +15,12 @@ export type LearningWorkspaceRoute = {
 export type LearningWorkspacePane = {
   readonly label: string;
   readonly content: ReactNode;
-  readonly resetKey?: string;
+};
+
+export type LearningWorkspaceViewer = {
+  readonly label: string;
+  readonly actionLabel: string;
+  readonly request: FocusedViewerRequest;
 };
 
 export type LearningRouteHeaderProps = {
@@ -30,29 +31,16 @@ export type LearningRouteHeaderProps = {
 
 type LearningWorkspaceBaseProps = {
   readonly route: LearningWorkspaceRoute;
-  readonly diagram: LearningWorkspacePane;
+  readonly diagram: LearningWorkspaceViewer;
   readonly guide: LearningWorkspacePane;
   readonly status: LearningFocusStatus;
   readonly headerControls?: ReactNode;
-  readonly diagramControls?: ReactNode;
   readonly onRouteTitleRef?: (element: HTMLHeadingElement | null) => void;
   readonly presentation?: "route" | "chapter";
+  readonly visualization?: LearningWorkspaceViewer;
 };
 
-type LearningWorkspaceVisualizationProps =
-  | {
-      readonly visualization?: undefined;
-      readonly paneMode?: never;
-      readonly onPaneModeChange?: never;
-    }
-  | {
-      readonly visualization: LearningWorkspacePane;
-      readonly paneMode: LearningPaneMode;
-      readonly onPaneModeChange: (mode: LearningPaneMode) => void;
-    };
-
-export type LearningWorkspaceProps = LearningWorkspaceBaseProps &
-  LearningWorkspaceVisualizationProps;
+export type LearningWorkspaceProps = LearningWorkspaceBaseProps;
 
 export function LearningRouteHeader({
   route,
@@ -83,65 +71,23 @@ function focusStatusMessage(status: LearningFocusStatus): string {
   }
 }
 
-function handlePaneTabKey(
-  event: ReactKeyboardEvent<HTMLDivElement>,
-  onPaneModeChange: (mode: LearningPaneMode) => void,
-): void {
-  if (!(event.target instanceof HTMLButtonElement)) return;
-  const tabs = Array.from(
-    event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]'),
-  );
-  const currentIndex = tabs.indexOf(event.target);
-  if (currentIndex < 0) return;
-  let nextIndex: number;
-  switch (event.key) {
-    case "ArrowLeft":
-      nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
-      break;
-    case "ArrowRight":
-      nextIndex = (currentIndex + 1) % tabs.length;
-      break;
-    case "Home":
-      nextIndex = 0;
-      break;
-    case "End":
-      nextIndex = tabs.length - 1;
-      break;
-    default:
-      return;
-  }
-  const nextTab = tabs[nextIndex];
-  const nextMode = nextTab?.getAttribute("data-pane-mode");
-  if (
-    nextTab === undefined ||
-    (nextMode !== "explanation" && nextMode !== "visualization")
-  )
-    return;
-  event.preventDefault();
-  nextTab.focus();
-  onPaneModeChange(nextMode);
-}
-
 export function LearningWorkspace({
   route,
   diagram,
   guide,
   status,
   headerControls,
-  diagramControls,
   onRouteTitleRef,
   presentation = "route",
   visualization,
-  paneMode,
-  onPaneModeChange,
 }: LearningWorkspaceProps): ReactElement {
-  const hasVisualization = visualization !== undefined;
+  const { openViewer } = useFocusedViewer();
   return (
     <section
       className="learning-workspace"
       data-learning-route-id={route.id}
       data-learning-presentation={presentation}
-      data-pane-mode={hasVisualization ? paneMode : "explanation"}
+      data-learning-layout="article"
     >
       {presentation === "route" ? (
         <LearningRouteHeader
@@ -152,31 +98,30 @@ export function LearningWorkspace({
             : { onTitleRef: onRouteTitleRef })}
         />
       ) : null}
-      <div className="learning-workspace__body">
-        <section
-          id="learning-diagram-pane"
-          className="learning-workspace__pane learning-workspace__pane--diagram"
-          aria-labelledby="learning-diagram-pane-title"
-        >
-          <span
-            id="learning-diagram-pane-title"
-            className="learning-visually-hidden"
+      <div className="learning-workspace__article">
+        <fieldset className="learning-workspace__viewer-actions">
+          <legend className="learning-visually-hidden">학습 시각 자료</legend>
+          <button
+            type="button"
+            data-testid="open-diagram-viewer"
+            onClick={() => openViewer(diagram.request)}
           >
-            {diagram.label}
-          </span>
-          <DiagramViewport
-            label={`${diagram.label} 보기`}
-            resetKey={diagram.resetKey ?? route.id}
-            extraControls={diagramControls}
-          >
-            {diagram.content}
-          </DiagramViewport>
-        </section>
+            {diagram.actionLabel}
+          </button>
+          {visualization === undefined ? null : (
+            <button
+              type="button"
+              data-testid="open-visualization-viewer"
+              onClick={() => openViewer(visualization.request)}
+            >
+              {visualization.actionLabel}
+            </button>
+          )}
+        </fieldset>
         <section
           id="learning-guide-pane"
-          className="learning-workspace__pane learning-workspace__pane--guide"
+          className="learning-workspace__guide"
           aria-labelledby="learning-guide-pane-title"
-          data-has-visualization={hasVisualization}
         >
           <span
             id="learning-guide-pane-title"
@@ -184,61 +129,7 @@ export function LearningWorkspace({
           >
             {guide.label}
           </span>
-          {hasVisualization ? (
-            <>
-              <div
-                className="learning-workspace__view-tabs"
-                role="tablist"
-                aria-label="학습 보기"
-                onKeyDown={(event) => handlePaneTabKey(event, onPaneModeChange)}
-              >
-                <button
-                  id="learning-explanation-tab"
-                  type="button"
-                  role="tab"
-                  aria-controls="learning-explanation-panel"
-                  aria-selected={paneMode === "explanation"}
-                  data-pane-mode="explanation"
-                  tabIndex={paneMode === "explanation" ? 0 : -1}
-                  onClick={() => onPaneModeChange("explanation")}
-                >
-                  설명
-                </button>
-                <button
-                  id="learning-visualization-tab"
-                  type="button"
-                  role="tab"
-                  aria-controls="learning-visualization-panel"
-                  aria-selected={paneMode === "visualization"}
-                  data-pane-mode="visualization"
-                  tabIndex={paneMode === "visualization" ? 0 : -1}
-                  onClick={() => onPaneModeChange("visualization")}
-                >
-                  시각화
-                </button>
-              </div>
-              <div
-                id="learning-explanation-panel"
-                className="learning-workspace__view-panel"
-                role="tabpanel"
-                aria-labelledby="learning-explanation-tab"
-                hidden={paneMode !== "explanation"}
-              >
-                {guide.content}
-              </div>
-              <div
-                id="learning-visualization-panel"
-                className="learning-workspace__view-panel"
-                role="tabpanel"
-                aria-labelledby="learning-visualization-tab"
-                hidden={paneMode !== "visualization"}
-              >
-                {visualization.content}
-              </div>
-            </>
-          ) : (
-            guide.content
-          )}
+          {guide.content}
         </section>
       </div>
       <p

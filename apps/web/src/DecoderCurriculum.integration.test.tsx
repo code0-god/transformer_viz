@@ -5,6 +5,7 @@ import { type ReactElement, StrictMode } from "react";
 import { describe, expect, test, vi } from "vitest";
 import { App } from "./App";
 import { initialArchitectureState } from "./architecture/state";
+import { FocusedViewerProvider } from "./overlays/FocusedViewerContext";
 import { model, TestWorker } from "./test/workerFixtures";
 import type {
   CurriculumDiagramRendererProps,
@@ -111,23 +112,25 @@ function renderGenericCurriculum(
 ) {
   const navigate = vi.fn();
   render(
-    <DecoderTrackWorkspace
-      context={{
-        model,
-        state: initialArchitectureState,
-        replaySequenceLength: null,
-        navigate,
-        course: {
-          trackId: "decoder-only-fundamentals",
-          chapterId: "decoder.chapter.0.1",
-          homeHref: "#/",
-          chapterHref: (chapterId) => `#/test/${chapterId}`,
-          navigateChapter: vi.fn(),
-        },
-      }}
-      profile={decoderOnlyFundamentalsProfile}
-      rendererRegistry={rendererRegistry}
-    />,
+    <FocusedViewerProvider>
+      <DecoderTrackWorkspace
+        context={{
+          model,
+          state: initialArchitectureState,
+          replaySequenceLength: null,
+          navigate,
+          course: {
+            trackId: "decoder-only-fundamentals",
+            chapterId: "decoder.chapter.0.1",
+            homeHref: "#/",
+            chapterHref: (chapterId) => `#/test/${chapterId}`,
+            navigateChapter: vi.fn(),
+          },
+        }}
+        profile={decoderOnlyFundamentalsProfile}
+        rendererRegistry={rendererRegistry}
+      />
+    </FocusedViewerProvider>,
   );
   return navigate;
 }
@@ -206,7 +209,7 @@ describe("Decoder curriculum production integration", () => {
         "reveal",
         "focus",
       ]);
-      expect(screen.getByTestId("architecture-detail")).toBeInTheDocument();
+      expect(screen.queryByTestId("architecture-detail")).toBeNull();
       expect(
         document.querySelector("[data-guide-section-id='block-overview']"),
       ).toHaveFocus();
@@ -286,7 +289,7 @@ describe("Decoder curriculum production integration", () => {
     ).not.toBeNull();
   });
 
-  test("omits redundant cross-pane focus controls", async () => {
+  test("replaces cross-pane controls with focused viewer actions", async () => {
     const user = userEvent.setup();
     await activateCurrentGenericChapter(user);
 
@@ -294,8 +297,9 @@ describe("Decoder curriculum production integration", () => {
       screen.queryByRole("button", { name: "Focus fixture Guide" }),
     ).toBeNull();
     expect(
-      screen.queryByRole("button", { name: "Fixture section" }),
-    ).toBeNull();
+      screen.getByRole("button", { name: "Fixture section" }),
+    ).toBeVisible();
+    expect(screen.queryByRole("tab")).toBeNull();
   });
 
   test.each([
@@ -309,7 +313,8 @@ describe("Decoder curriculum production integration", () => {
       await activateCurrentGenericChapter(user, registry);
 
       // When/Then: activation resolves atomically to the incumbent architecture.
-      expect(screen.getByTestId("architecture-root")).toBeInTheDocument();
+      expect(screen.queryByTestId("architecture-root")).toBeNull();
+      expect(screen.getByTestId("open-diagram-viewer")).toBeVisible();
       expect(
         screen.queryByRole("img", { name: "Generic fixture Diagram" }),
       ).toBeNull();
@@ -365,7 +370,6 @@ describe("Decoder curriculum production integration", () => {
       expect(
         document.querySelector(`[data-guide-page-id='${pageId}']`),
       ).not.toBeNull();
-      expect(screen.getByRole("img", { name: imageName })).toBeInTheDocument();
       const ordinal = PART0_PRODUCTION_CHAPTERS.findIndex(
         ([title]) => title === chapterTitle,
       );
@@ -375,6 +379,12 @@ describe("Decoder curriculum production integration", () => {
       });
       if (ordinal === 0) expect(heading).toBeInTheDocument();
       else expect(heading).toHaveFocus();
+      const diagramTrigger = screen.getByTestId("open-diagram-viewer");
+      expect(screen.queryByRole("img", { name: imageName })).toBeNull();
+      await user.click(diagramTrigger);
+      expect(screen.getByRole("img", { name: imageName })).toBeInTheDocument();
+      await user.keyboard("{Escape}");
+      expect(diagramTrigger).toHaveFocus();
       expect(
         screen.getByText(`현재 Chapter ${ordinal + 1} / 14`),
       ).toBeInTheDocument();
@@ -422,10 +432,17 @@ describe("Decoder curriculum production integration", () => {
       expect(
         document.querySelector(`[data-guide-page-id='${pageId}']`),
       ).not.toBeNull();
+      const heading = screen.getByRole("heading", {
+        name: chapterTitle,
+        level: 1,
+      });
+      expect(heading).toHaveFocus();
+      const diagramTrigger = screen.getByTestId("open-diagram-viewer");
+      expect(screen.queryByRole("img", { name: imageName })).toBeNull();
+      await user.click(diagramTrigger);
       expect(screen.getByRole("img", { name: imageName })).toBeInTheDocument();
-      expect(
-        screen.getByRole("heading", { name: chapterTitle, level: 1 }),
-      ).toHaveFocus();
+      await user.keyboard("{Escape}");
+      expect(diagramTrigger).toHaveFocus();
       expect(screen.queryByTestId("architecture-root")).toBeNull();
       expect(screen.queryByText(/Visualization/)).toBeNull();
       expect(screen.queryByRole("slider")).toBeNull();
@@ -459,10 +476,17 @@ describe("Decoder curriculum production integration", () => {
       expect(
         document.querySelector(`[data-guide-page-id='${pageId}']`),
       ).not.toBeNull();
+      const heading = screen.getByRole("heading", {
+        name: chapterTitle,
+        level: 1,
+      });
+      expect(heading).toHaveFocus();
+      const diagramTrigger = screen.getByTestId("open-diagram-viewer");
+      expect(screen.queryByRole("img", { name: imageName })).toBeNull();
+      await user.click(diagramTrigger);
       expect(screen.getByRole("img", { name: imageName })).toBeInTheDocument();
-      expect(
-        screen.getByRole("heading", { name: chapterTitle, level: 1 }),
-      ).toHaveFocus();
+      await user.keyboard("{Escape}");
+      expect(diagramTrigger).toHaveFocus();
       expect(
         document.querySelectorAll("[data-runtime-presentation-id]").length,
       ).toBeGreaterThanOrEqual(1);
@@ -479,12 +503,13 @@ describe("Decoder curriculum production integration", () => {
     },
   );
 
-  test("keeps one conceptual image and separate native controls", () => {
+  test("keeps conceptual images unmounted beside native article controls", () => {
     // Given/When: the root curriculum surface is rendered.
     readyCurriculum();
 
     // Then: the diagram remains one named image while controls stay buttons.
-    expect(screen.getAllByRole("img")).toHaveLength(1);
+    expect(screen.queryAllByRole("img")).toHaveLength(0);
+    expect(screen.getByTestId("open-diagram-viewer")).toBeVisible();
     expect(
       screen.getByRole("button", { name: "목차 열기" }),
     ).toBeInTheDocument();

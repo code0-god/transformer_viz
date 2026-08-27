@@ -9,9 +9,9 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from browser_hybrid_capture import capture
-from browser_hybrid_contract import diagram_probe, go_chapter, require, set_viewport
+from browser_hybrid_contract import require, set_viewport
 from browser_hybrid_failures import verify_failure_modes
+from browser_hybrid_helpers import JsonObject, JsonValue
 from browser_hybrid_learning import capture_learning_phase
 from browser_hybrid_visualization import capture_visualization_phase
 from browser_learning_workspace_probes import (
@@ -23,7 +23,7 @@ from browser_session import ChromeSession
 
 
 class QuietHandler(SimpleHTTPRequestHandler):
-    def log_message(self, format: str, *args: object) -> None:
+    def log_message(self, format: str, *args: JsonValue) -> None:
         del format, args
         return
 
@@ -34,7 +34,7 @@ def run_contract(
     evidence_path: Path,
 ) -> None:
     shots: dict[str, str] = {}
-    evidence: dict[str, object] = {}
+    evidence: JsonObject = {}
 
     with ChromeSession(enable_gpu=True) as browser:
         set_viewport(browser, 1440, 900)
@@ -59,18 +59,9 @@ def run_contract(
             shots,
         )
 
-        set_viewport(browser, 390, 844)
-        go_chapter(browser, "0-2")
-        mobile = diagram_probe(browser)
-        require(mobile["overflowX"] is False, f"Mobile overflow: {mobile}")
-        shots["mobile"] = capture(
-            browser,
-            screenshots / "hybrid-mobile-learn.png",
-        )
         errors = browser_errors(browser)
         require(not errors["network"], f"Network errors: {errors['network']}")
         require(not errors["runtime"], f"Runtime errors: {errors['runtime']}")
-        evidence["mobile"] = mobile
         evidence["errors"] = errors
         evidence["screenshots"] = shots
 

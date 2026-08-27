@@ -1,4 +1,8 @@
 import type { ArchitectureAction } from "../../../architecture";
+import type {
+  ArchitectureRenderContext,
+  LearningCourseLocation,
+} from "../../types";
 import { CHAPTER_IDS } from "./ids";
 import type { ChapterId } from "./types";
 
@@ -29,4 +33,19 @@ export function navigateCourseArchitecture(
   const chapterId = chapterForArchitectureAction(action);
   if (chapterId === undefined) navigateArchitecture(action);
   else navigateChapter(chapterId);
+}
+
+export function createCourseArchitectureContext(
+  context: ArchitectureRenderContext,
+  course: LearningCourseLocation,
+): ArchitectureRenderContext {
+  return {
+    ...context,
+    navigate: (action) =>
+      navigateCourseArchitecture(
+        action,
+        course.navigateChapter,
+        context.navigate,
+      ),
+  };
 }

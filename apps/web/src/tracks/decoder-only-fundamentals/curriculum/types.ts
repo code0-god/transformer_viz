@@ -12,6 +12,15 @@ export type DiagramId =
   | "root"
   | "transformer-block"
   | "self-attention";
+
+export function isDiagramId(value: string): value is DiagramId {
+  return (
+    value === "root" ||
+    value === "transformer-block" ||
+    value === "self-attention" ||
+    value.startsWith("decoder.diagram.")
+  );
+}
 export type VisualizationId = `decoder.visualization.${string}`;
 export type ReferenceId = `ref.${string}`;
 export type ReferenceRole =

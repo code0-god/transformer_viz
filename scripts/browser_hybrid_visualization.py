@@ -1,6 +1,8 @@
-"""Actual-trace R3F visualization browser QA phase."""
+"""Actual-trace R3F focused-viewer browser QA phase."""
 
 from __future__ import annotations
+
+# noqa: SIZE_OK — one ordered WebGL E2E scenario owns live renderer state
 
 from pathlib import Path
 
@@ -8,16 +10,20 @@ from browser_hybrid_capture import capture, request_urls, screenshot_hash
 from browser_hybrid_contract import (
     button_with_text,
     canvas_metrics,
-    go_chapter,
     lose_context,
     number,
     require,
+    set_viewport,
 )
 from browser_hybrid_helpers import (
+    JsonObject,
+    JsonValue,
     evaluate_dict,
     evaluate_int,
     navigate_hash,
     pointer_click,
+    settle,
+    settle_animations,
     wait_for,
 )
 from browser_hybrid_input import drag_canvas, select_canvas_cell
@@ -25,50 +31,179 @@ from browser_learning_workspace_runtime import prepare_runtime_evidence
 from browser_session import ChromeSession
 
 
-def capture_visualization_phase(
-    browser: ChromeSession,
-    screenshots: Path,
-    evidence: dict[str, object],
-    shots: dict[str, str],
-) -> None:
-    navigate_hash(
-        browser,
-        "#/lab",
-        "document.querySelector('.generation-bar') !== null",
-        "Lab",
-    )
-    evidence["runtime"] = prepare_runtime_evidence(browser)
-    shots["lab"] = capture(browser, screenshots / "hybrid-lab.png")
-
-    go_chapter(browser, "5-1")
+def _close_viewer(browser: ChromeSession) -> None:
     pointer_click(
         browser,
-        "document.querySelector('button[data-head-index=\"1\"]')",
+        "document.querySelector('[aria-label=\"집중 보기 닫기\"]')",
+        condition="document.querySelector('#focused-viewer') === null",
+        label="focused viewer close",
+    )
+
+
+def _open_score_viewer(browser: ChromeSession) -> None:
+    pointer_click(
+        browser,
+        button_with_text("실제 Score Matrix 확인하기"),
         condition=(
-            "document.querySelector('button[data-head-index=\"1\"]')"
-            "?.getAttribute('aria-pressed') === 'true'"
+            "document.querySelector('#focused-viewer"
+            "[data-viewer-kind=\"visualization\"]') !== null"
+        ),
+        label="Score Matrix viewer",
+    )
+    settle_animations(
+        browser,
+        "[data-viewer-backdrop]",
+        "Score Matrix viewer animation",
+    )
+
+
+def _assert_lab_base(browser: ChromeSession) -> JsonObject:
+    lab = evaluate_dict(
+        browser,
+        """(() => {
+          const main = document.querySelector('.architecture-main');
+          const style = main ? getComputedStyle(main) : null;
+          return {
+            prompt: document.querySelector('textarea') !== null,
+            generate: document.querySelector('[data-testid="generate"]') !== null,
+            continuation:
+              document.querySelector('.continuation-panel') !== null,
+            inspectionActions: document.querySelectorAll(
+              '.lab-inspection__actions button',
+            ).length,
+            architectureMounted:
+              document.querySelector('[data-testid="architecture-root"]')
+              !== null,
+            canvasMounted: document.querySelector('canvas') !== null,
+            dialogMounted:
+              document.querySelector('[role="dialog"]') !== null,
+            columns: style?.gridTemplateColumns ?? null,
+            mainWidth: main?.getBoundingClientRect().width ?? 0,
+            overflowX: document.documentElement.scrollWidth > innerWidth,
+          };
+        })()""",
+    )
+    require(
+        lab["prompt"] is True
+        and lab["generate"] is True
+        and lab["continuation"] is True
+        and lab["inspectionActions"] == 4,
+        f"Lab experiment flow missing: {lab}",
+    )
+    require(
+        lab["architectureMounted"] is False
+        and lab["canvasMounted"] is False
+        and lab["dialogMounted"] is False
+        and lab["overflowX"] is False,
+        f"Lab mounted permanent inspection UI: {lab}",
+    )
+    require(
+        isinstance(lab["columns"], str)
+        and " " not in lab["columns"].strip()
+        and number(lab["mainWidth"], "Lab width") <= 1200,
+        f"Lab fixed split remains: {lab}",
+    )
+    return lab
+
+
+def _open_lab_architecture(browser: ChromeSession) -> JsonObject:
+    pointer_click(
+        browser,
+        "document.querySelector('[data-testid=\"lab-open-architecture-root\"]')",
+        condition=(
+            "document.querySelector('#focused-viewer "
+            "[data-testid=\"architecture-root\"]') !== null"
+        ),
+        label="Lab Architecture viewer",
+    )
+    settle_animations(
+        browser,
+        "[data-viewer-backdrop]",
+        "Lab Architecture viewer animation",
+    )
+    overlay = evaluate_dict(
+        browser,
+        """(() => {
+          const viewer = document.querySelector('#focused-viewer');
+          const rect = viewer?.getBoundingClientRect();
+          return {
+            dialogCount: document.querySelectorAll('[role="dialog"]').length,
+            kind: viewer?.dataset.viewerKind ?? null,
+            source: viewer?.dataset.viewerSource ?? null,
+            widthRatio: (rect?.width ?? 0) / innerWidth,
+            heightRatio: (rect?.height ?? 0) / innerHeight,
+            pageInert:
+              document.querySelector('.architecture-app')?.hasAttribute(
+                'inert',
+              ) ?? false,
+          };
+        })()""",
+    )
+    require(
+        overlay["dialogCount"] == 1
+        and overlay["kind"] == "architecture"
+        and overlay["source"] == "lab"
+        and overlay["pageInert"] is True,
+        f"Lab Architecture overlay contract failed: {overlay}",
+    )
+    require(
+        number(overlay["widthRatio"], "Architecture viewer width") >= 0.8
+        and number(overlay["heightRatio"], "Architecture viewer height") >= 0.78,
+        f"Lab Architecture viewer too small: {overlay}",
+    )
+    return overlay
+
+
+def _select_attention_head_two(browser: ChromeSession) -> None:
+    pointer_click(
+        browser,
+        "document.querySelector('#focused-viewer "
+        "[data-node-id=\"transformer-block\"]')",
+        condition=(
+            "document.querySelector('#focused-viewer "
+            "[data-testid=\"architecture-detail\"]') !== null"
+        ),
+        label="Architecture Block drill-down",
+    )
+    pointer_click(
+        browser,
+        "document.querySelector('#focused-viewer "
+        "[data-node-id=\"self-attention\"]')",
+        condition=(
+            "document.querySelector('#focused-viewer "
+            "[data-testid=\"attention-detail\"]') !== null"
+        ),
+        label="Architecture Attention drill-down",
+    )
+    pointer_click(
+        browser,
+        "document.querySelector('#focused-viewer "
+        "button[data-head-index=\"1\"]')",
+        condition=(
+            "document.querySelector('#focused-viewer "
+            "button[data-head-index=\"1\"]')?.getAttribute('aria-pressed')"
+            " === 'true'"
         ),
         label="Head 2 selection",
     )
-    pointer_click(
-        browser,
-        "document.querySelector('[role=\"tab\"]"
-        "[aria-controls=\"learning-visualization-panel\"]')",
-        condition=(
-            "document.querySelector('#learning-visualization-panel')"
-            "?.hidden === false"
-        ),
-        label="Visualization tab",
-    )
+
+
+def _mount_score_matrix(browser: ChromeSession) -> JsonObject:
     require(
-        not any(
-            "ScoreMatrixScene" in url for url in request_urls(browser)
-        ),
-        "Visualization chunk loaded before trace activation",
+        not any("ScoreMatrixScene" in url for url in request_urls(browser)),
+        "Visualization chunk loaded before focused viewer activation",
+    )
+    _open_score_viewer(browser)
+    require(
+        not any("ScoreMatrixScene" in url for url in request_urls(browser)),
+        "Visualization chunk loaded before trace request",
     )
     pointer_click(
         browser,
-        button_with_text("Layer 1, Head 2 Score 불러오기"),
+        button_with_text(
+            "Layer 1, Head 2 Score 불러오기",
+            "document.querySelector('#focused-viewer')",
+        ),
         condition=(
             "window.__learningWorkerResponses.some("
             "item => item?.type === 'attention_head_trace')"
@@ -92,16 +227,91 @@ def capture_visualization_phase(
         """(() => ({
           canvas: document.querySelector(
             '.score-matrix-canvas canvas',
-          )?.dataset.renderState === 'ready',
+          ) !== null,
           unavailable: document.querySelector(
             '[data-visualization-state="unavailable"]',
           ) !== null,
-          rendererError: document.querySelector(
+          error: document.querySelector(
             '[data-visualization-state="error"]',
-          )?.textContent ?? null,
+          ) !== null,
         }))()""",
     )
     require(renderer["canvas"] is True, f"Score renderer: {renderer}")
+    require(
+        any("ScoreMatrixScene" in url for url in request_urls(browser)),
+        "Visualization chunk never requested",
+    )
+    return renderer
+
+
+def _verify_reopen_teardown(
+    browser: ChromeSession,
+    inspect_requests: JsonValue,
+) -> JsonObject:
+    for iteration in range(20):
+        _open_score_viewer(browser)
+        wait_for(
+            browser,
+            "document.querySelector('.score-matrix-canvas canvas') !== null",
+            f"Score Matrix reopen {iteration + 1}",
+        )
+        _close_viewer(browser)
+        require(
+            evaluate_int(
+                browser,
+                "document.querySelectorAll('.score-matrix-canvas canvas').length",
+            )
+            == 0,
+            f"Canvas remained after reopen {iteration + 1}",
+        )
+    final = evaluate_dict(
+        browser,
+        """(() => ({
+          canvasCount: document.querySelectorAll('canvas').length,
+          dialogCount: document.querySelectorAll('[role="dialog"]').length,
+          inspectRequests: window.__learningWorkerRequests.filter(
+            item => item?.type === 'inspect_attention_head',
+          ).length,
+        }))()""",
+    )
+    require(
+        final["canvasCount"] == 0
+        and final["dialogCount"] == 0
+        and final["inspectRequests"] == inspect_requests,
+        f"Visualization teardown leaked state: {final}",
+    )
+    return {**final, "reopenCount": 20}
+
+
+def capture_visualization_phase(
+    browser: ChromeSession,
+    screenshots: Path,
+    evidence: JsonObject,
+    shots: dict[str, str],
+) -> None:
+    set_viewport(browser, 1440, 900)
+    navigate_hash(
+        browser,
+        "#/lab",
+        "document.querySelector('[data-app-view=\"lab\"]') !== null",
+        "Lab",
+    )
+    settle(browser)
+    evidence["runtime"] = prepare_runtime_evidence(browser)
+    lab = _assert_lab_base(browser)
+    evidence["lab"] = lab
+    shots["labBase"] = capture(
+        browser, screenshots / "lab-base-1440x900.png"
+    )
+
+    evidence["labArchitectureViewer"] = _open_lab_architecture(browser)
+    shots["labArchitectureViewer"] = capture(
+        browser, screenshots / "lab-architecture-viewer-1440x900.png"
+    )
+    _select_attention_head_two(browser)
+    _close_viewer(browser)
+
+    evidence["scoreRenderer"] = _mount_score_matrix(browser)
     matrix = canvas_metrics(browser)
     _require_matrix_contract(matrix)
     cell_interaction = select_canvas_cell(browser)
@@ -110,13 +320,8 @@ def capture_visualization_phase(
         f"Canvas hover produced no visual response: {cell_interaction}",
     )
     evidence["cellInteraction"] = cell_interaction
-    shots["visualization"] = capture(
-        browser,
-        screenshots / "hybrid-self-attention-visualization.png",
-    )
-    require(
-        any("ScoreMatrixScene" in url for url in request_urls(browser)),
-        "Visualization chunk never requested",
+    shots["scoreMatrixViewer"] = capture(
+        browser, screenshots / "viewer-score-matrix-3d-1440x900.png"
     )
     evidence["camera"] = _exercise_camera(browser)
     context = lose_context(browser)
@@ -127,8 +332,6 @@ def capture_visualization_phase(
     )
     evidence["accessibility"] = _accessibility_summary(browser)
     _restore_context(browser)
-    pointer_click(browser, button_with_text("설명"))
-    pointer_click(browser, button_with_text("시각화"))
     stable = canvas_metrics(browser)
     require(stable["canvasCount"] == 1, f"Canvas leak: {stable}")
     require(
@@ -137,15 +340,20 @@ def capture_visualization_phase(
     )
     idle_frames = _idle_animation_frames(browser)
     require(idle_frames <= 2, f"Continuous idle frames: {idle_frames}")
+    _close_viewer(browser)
     evidence["visualization"] = {
         **matrix,
         "contextLoss": context,
         "idleAnimationFrames": idle_frames,
         "lazyChunkRequested": True,
+        "teardown": _verify_reopen_teardown(
+            browser,
+            matrix["inspectRequests"],
+        ),
     }
 
 
-def _require_matrix_contract(matrix: dict[str, object]) -> None:
+def _require_matrix_contract(matrix: JsonObject) -> None:
     require(matrix["canvasCount"] == 1, f"Canvas duplication: {matrix}")
     require(
         number(matrix["dpr"], "DPR") <= 2.01,
@@ -222,7 +430,7 @@ def _idle_animation_frames(browser: ChromeSession) -> int:
     )
 
 
-def _accessibility_summary(browser: ChromeSession) -> dict[str, object]:
+def _accessibility_summary(browser: ChromeSession) -> JsonObject:
     result = browser.require_cdp().send(
         "Accessibility.getFullAXTree",
         session_id=browser.page_session,

@@ -1,0 +1,142 @@
+.focused-viewer-backdrop {
+  position: fixed;
+  z-index: var(--z-focused-viewer-backdrop, 40);
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 2.5vw, 2rem);
+  background: var(--overlay-backdrop, rgb(55 47 40 / 0.28));
+  animation: focused-viewer-backdrop-in 160ms ease-out both;
+}
+
+.focused-viewer {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  inline-size: min(90vw, 86rem);
+  block-size: min(86dvh, 56rem);
+  overflow: hidden;
+  border: 1px solid var(--overlay-border, var(--hairline));
+  border-radius: var(--overlay-radius, 10px);
+  background: var(--overlay-surface, #f8f1e8);
+  box-shadow: var(--overlay-shadow, 0 24px 70px rgb(64 48 36 / 0.2));
+  animation: focused-viewer-surface-in 180ms ease-out both;
+}
+
+.focused-viewer__header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: var(--s3) var(--s4);
+  border-block-end: 1px solid var(--hairline);
+}
+
+.focused-viewer__header > div:first-child {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--s1);
+}
+
+.focused-viewer__header h2 {
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  letter-spacing: -0.03em;
+}
+
+.focused-viewer__header p {
+  max-inline-size: 68ch;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+}
+
+.focused-viewer__header-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.focused-viewer__close {
+  display: grid;
+  inline-size: 2.75rem;
+  min-inline-size: 2.75rem;
+  padding: 0;
+  place-items: center;
+}
+
+.focused-viewer__close svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.5;
+}
+
+.focused-viewer__body {
+  min-block-size: 0;
+  overflow: auto;
+}
+
+.focused-viewer__body > .diagram-viewport {
+  block-size: 100%;
+  min-block-size: 0;
+}
+
+.focused-viewer__body .diagram-viewport__surface {
+  min-block-size: 0;
+  block-size: 100%;
+}
+
+.focused-viewer__body .score-matrix-visualization {
+  min-block-size: 100%;
+}
+
+.focused-viewer[data-viewer-kind="visualization"]
+  .score-matrix-visualization {
+  align-content: start;
+  min-block-size: 100%;
+}
+
+.focused-viewer[data-viewer-kind="visualization"] .score-matrix-canvas {
+  block-size: clamp(26rem, 60dvb, 38rem);
+}
+
+@keyframes focused-viewer-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes focused-viewer-surface-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+
+@media (max-width: 40rem) {
+  .focused-viewer-backdrop {
+    padding: 0.35rem;
+  }
+
+  .focused-viewer {
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: 7px;
+  }
+
+  .focused-viewer__header {
+    padding: var(--s2) var(--s3);
+  }
+
+  .focused-viewer[data-viewer-kind="visualization"] .score-matrix-canvas {
+    block-size: max(24rem, 62dvb);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focused-viewer-backdrop,
+  .focused-viewer {
+    animation: none;
+  }
+}

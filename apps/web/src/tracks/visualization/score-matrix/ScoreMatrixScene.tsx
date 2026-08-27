@@ -171,12 +171,12 @@ export default function ScoreMatrixScene({
             powerPreference: "high-performance",
           }}
         >
-          <color attach="background" args={[0xfbfaf6]} />
+          <color attach="background" args={[0xf1e7dc]} />
           <ambientLight intensity={1.2} />
           <directionalLight position={[5, 8, 5]} intensity={2.2} />
           <RenderReadySignal />
           <gridHelper
-            args={[gridSize, gridSize, 0x8b8374, 0xd3ccbd]}
+            args={[gridSize, gridSize, 0x5f554a, 0x9f8d79]}
             position={[0, 0, 0]}
           />
           <ScoreGrid
@@ -194,6 +194,9 @@ export default function ScoreMatrixScene({
           />
         </Canvas>
       </section>
+      <p className="score-matrix-orientation">
+        가로축 Key · 세로축 Query · 높이 |score|
+      </p>
       <ul className="score-matrix-legend" aria-label="점수 범례">
         {geometry.legend.map((entry) => (
           <li key={entry.tone}>

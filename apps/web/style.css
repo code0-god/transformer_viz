@@ -1,24 +1,75 @@
 :root {
   color-scheme: light;
-  --paper: #f4f1e9;
-  --surface: #fbfaf6;
-  --surface-strong: #ece7db;
-  --ink: #24231f;
-  --ink-muted: #68645c;
-  --hairline: #d3ccbd;
-  --line: #8b8374;
-  --accent: #a53d23;
-  --accent-soft: #f1d4c8;
+  --paper: #f6f0e8;
+  --surface: rgb(255 253 249 / 0.64);
+  --surface-strong: rgb(235 227 215 / 0.48);
+  --ink: #211f1c;
+  --ink-muted: #65605a;
+  --hairline: rgb(143 125 104 / 0.38);
+  --line: #756d61;
+  --accent: #a8432d;
+  --accent-soft: rgb(199 91 63 / 0.15);
+  --mesh-terracotta: #c75b3f;
+  --mesh-amber: #d2a34a;
+  --mesh-sage: #78907e;
+  --mesh-sky: #748c95;
+  --mesh-clay-wash: rgb(199 91 63 / 0.16);
+  --mesh-amber-wash: rgb(210 163 74 / 0.18);
+  --mesh-sage-wash: rgb(120 144 126 / 0.2);
+  --mesh-slate-wash: rgb(116 140 149 / 0.18);
+  --mesh-surface: rgb(255 253 249 / 0.48);
+  --overlay-backdrop: rgb(55 47 40 / 0.3);
+  --overlay-surface: #f8f1e8;
+  --overlay-border: #bfb3a3;
+  --overlay-radius: 8px;
+  --overlay-shadow: 0 16px 48px rgb(64 48 36 / 0.16);
+  --z-toc: 20;
+  --z-focused-viewer-backdrop: 40;
+  --z-focused-viewer: 50;
+  --z-tooltip: 60;
+  --page-mesh:
+    radial-gradient(
+      ellipse 56% 48% at -3% -4%,
+      rgb(199 91 63 / 0.44) 0,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 48% 44% at 102% 3%,
+      rgb(210 163 74 / 0.34) 0,
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 58% 54% at 94% 102%,
+      rgb(120 144 126 / 0.38) 0,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 46% 46% at -2% 100%,
+      rgb(116 140 149 / 0.28) 0,
+      transparent 68%
+    ),
+    linear-gradient(145deg, #fbf2ea 0%, #f3e6d4 48%, #e8eee8 100%);
+  --route-mesh: var(--page-mesh);
+  --shadow: 0 16px 42px rgb(80 57 39 / 0.07);
+  --shadow-soft: 0 6px 18px rgb(80 57 39 / 0.08);
   --ready: #2f6f55;
   --ready-soft: #e1eee6;
   --error: #a73c31;
   --error-soft: #f4e5e0;
-  --embedding-soft: #e8f0e6;
-  --block-soft: #edf2f7;
-  --normalization-soft: #fbf2d8;
-  --projection-soft: #eee8f5;
-  --sampling-soft: #faecd8;
-  --token-soft: #fae2dc;
+  --embedding-soft: rgb(120 144 126 / 0.3);
+  --embedding-border: #66806e;
+  --block-soft: rgb(116 140 149 / 0.24);
+  --block-border: #6b858f;
+  --attention-soft: rgb(116 140 149 / 0.3);
+  --attention-border: #647f89;
+  --mlp-soft: rgb(199 91 63 / 0.27);
+  --mlp-border: #a7523d;
+  --normalization-soft: rgb(210 163 74 / 0.31);
+  --normalization-border: #b8892e;
+  --projection-soft: rgb(116 140 149 / 0.24);
+  --sampling-soft: rgb(210 163 74 / 0.28);
+  --token-soft: rgb(199 91 63 / 0.27);
+  --residual: #70685d;
   --radius: 12px;
   --s1: .25rem;
   --s2: .5rem;
@@ -27,14 +78,94 @@
   --s5: 1.5rem;
   --s6: 2rem;
   --s7: 3rem;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Avenir Next", "Noto Sans KR", "Apple SD Gothic Neo", ui-sans-serif, system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
 
 * { box-sizing: border-box; }
 html { min-inline-size: 320px; background: var(--paper); }
-body { min-block-size: 100dvb; margin: 0; background: var(--paper); color: var(--ink); }
+body {
+  min-block-size: 100dvb;
+  margin: 0;
+  background-color: var(--paper);
+  background-image: var(--route-mesh);
+  background-attachment: fixed;
+  color: var(--ink);
+}
+body:has(.architecture-app[data-app-view="home"]) {
+  --route-mesh:
+    radial-gradient(
+      ellipse 58% 54% at -2% 4%,
+      rgb(199 91 63 / 0.45),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 48% 52% at 92% 20%,
+      rgb(210 163 74 / 0.3),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 62% 68% at 94% 88%,
+      rgb(120 144 126 / 0.4),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 46% 54% at -2% 100%,
+      rgb(116 140 149 / 0.27),
+      transparent 70%
+    ),
+    linear-gradient(145deg, #fbf2ea 0%, #f3e6d4 48%, #e8eee8 100%);
+}
+body:has(.architecture-app[data-app-view="learn"]) {
+  --route-mesh:
+    radial-gradient(
+      ellipse 58% 78% at 4% 76%,
+      rgb(116 140 149 / 0.3),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 46% 64% at 42% 38%,
+      rgb(120 144 126 / 0.22),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 56% 72% at 98% 18%,
+      rgb(210 163 74 / 0.24),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 48% 64% at 82% 96%,
+      rgb(199 91 63 / 0.17),
+      transparent 72%
+    ),
+    linear-gradient(145deg, #f8efe7 0%, #f2e8d7 50%, #e7eeea 100%);
+}
+body:has(.architecture-app[data-app-view="lab"]) {
+  --route-mesh:
+    radial-gradient(
+      ellipse 54% 58% at 8% 24%,
+      rgb(199 91 63 / 0.24),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 48% 52% at 56% 8%,
+      rgb(210 163 74 / 0.22),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 56% 68% at 96% 46%,
+      rgb(120 144 126 / 0.29),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 58% 64% at 18% 96%,
+      rgb(116 140 149 / 0.27),
+      transparent 72%
+    ),
+    linear-gradient(145deg, #faefe7 0%, #f2e5d2 48%, #e5eee8 100%);
+}
+::selection { background: var(--accent-soft); color: var(--ink); }
 button, input, textarea, select { color: inherit; font: inherit; }
 button, summary, select { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .48; }
@@ -42,9 +173,9 @@ body [hidden] { display: none; }
 h1, h2, h3, p, dl, dd, figure { margin: 0; }
 button, input, textarea, select, summary { min-block-size: 44px; }
 button, input, textarea, select {
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--line) 62%, transparent);
   border-radius: 8px;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 76%, transparent);
 }
 button { padding: var(--s2) var(--s4); font-weight: 700; }
 button.primary {
@@ -59,7 +190,7 @@ button.primary {
 }
 .skip-link {
   position: fixed;
-  z-index: 50;
+  z-index: var(--z-tooltip);
   inset-block-start: var(--s3);
   inset-inline-start: var(--s3);
   translate: 0 -180%;
@@ -112,13 +243,15 @@ button.primary {
 .startup-shell__surface,
 .startup-shell__path {
   padding: clamp(var(--s5), 4vw, var(--s7));
-  border: 1px solid var(--hairline);
-  background: var(--surface);
+  border-block: 1px solid var(--hairline);
+  background: transparent;
 }
 .startup-shell__surface {
-  border-radius: var(--radius) 0 0 var(--radius);
+  border-inline-end: 1px solid var(--hairline);
 }
-.startup-shell__path { background: var(--surface-strong); }
+.startup-shell__path {
+  background: color-mix(in srgb, var(--mesh-sage) 7%, transparent);
+}
 .startup-shell__surface h1 { margin-block: var(--s2); font-size: clamp(1.5rem, 3vw, 2.35rem); }
 .startup-shell__surface h1 { word-break: keep-all; }
 .startup-shell__surface > p { max-inline-size: 64ch; color: var(--ink-muted); }
@@ -236,13 +369,18 @@ button.primary {
 }
 .architecture-main {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(19rem, .9fr);
-  gap: var(--s2);
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(var(--s5), 5vw, var(--s7));
   padding-block-start: var(--s2);
 }
 
 .architecture-app[data-app-view="home"] .architecture-main {
   display: block;
+}
+
+.architecture-app[data-app-view="lab"] .architecture-main {
+  max-inline-size: 72rem;
+  margin-inline: auto;
 }
 
 .course-home {
@@ -285,7 +423,7 @@ button.primary {
   gap: var(--s5) clamp(var(--s5), 5vw, var(--s7));
   align-items: start;
   padding-block: clamp(var(--s5), 5vw, var(--s7));
-  border-block: 1px solid var(--line);
+  border-block: 1px solid var(--hairline);
 }
 .course-home__course-copy {
   display: grid;
@@ -363,7 +501,7 @@ button.primary {
   text-decoration: none;
 }
 .course-home__lab {
-  border: 1px solid var(--line);
+  border: 1px solid var(--hairline);
   background: transparent;
   color: var(--ink);
   text-decoration: none;
@@ -382,7 +520,7 @@ button.primary {
 .course-home__start:hover { background: color-mix(in srgb, var(--accent) 88%, black); }
 .course-home__lab:hover {
   border-color: var(--accent);
-  background: var(--surface);
+  background: var(--accent-soft);
   color: var(--accent);
 }
 .course-home__contents:hover,
@@ -405,9 +543,9 @@ button.primary {
 /* Compact generation */
 .generation-bar,
 .architecture-shell {
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  background: var(--surface);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .architecture-app[data-app-view="learn"] .architecture-shell {
@@ -421,6 +559,7 @@ button.primary {
   gap: var(--s1);
   align-self: start;
   padding: var(--s1) var(--s3);
+  border-block: 1px solid var(--hairline);
 }
 .generation-primary {
   display: grid;
@@ -480,6 +619,7 @@ button.primary {
   grid-column: 1 / -1;
   gap: var(--s2);
   padding: var(--s4);
+  border-block-start: 1px solid var(--hairline);
 }
 .architecture-loading,
 .architecture-error {
@@ -532,8 +672,9 @@ button.primary {
     min-block-size: 4.75rem;
   }
   .startup-shell__main { grid-template-columns: minmax(0, 1fr); align-self: start; }
-  .startup-shell__surface { border-radius: var(--radius) var(--radius) 0 0; }
-  .startup-shell__path { border-radius: 0 0 var(--radius) var(--radius); }
+  .startup-shell__surface {
+    border-inline-end: 0;
+  }
   .startup-shell__ledger { grid-template-columns: minmax(0, 1fr); }
   .brand-lockup { grid-column: 1; grid-row: 1; align-self: center; }
   .lifecycle { grid-column: 2; grid-row: 1; align-self: center; }
@@ -553,23 +694,6 @@ button.primary {
   .generation-primary-action button { inline-size: 100%; }
   .generation-settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .architecture-shell { padding: var(--s3); }
-}
-
-@media (min-width: 80rem) {
-  .architecture-app[data-app-view="learn"] {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    block-size: 100dvb;
-    min-block-size: 0;
-    padding-block-end: var(--s3);
-    overflow: hidden;
-  }
-  .architecture-app[data-app-view="learn"] .architecture-main,
-  .architecture-app[data-app-view="learn"] .architecture-shell {
-    min-block-size: 0;
-    block-size: 100%;
-    overflow: hidden;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -149,7 +149,7 @@ describe("LearningGuide", () => {
     for (const sectionTitle of ["SECTION_ONE", "SECTION_TWO"] as const) {
       expect(
         screen.getByRole("button", { name: sectionTitle }),
-      ).toHaveAttribute("aria-controls", "learning-diagram-pane");
+      ).toHaveAttribute("aria-controls", "focused-viewer");
     }
     expect(onSectionFocus).toHaveBeenCalledWith(page.sections[0]);
     expect(onSectionRef).toHaveBeenCalledWith(

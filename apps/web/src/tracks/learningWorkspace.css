@@ -89,7 +89,7 @@
   min-block-size: 44px;
   border: 1px solid var(--hairline);
   border-radius: var(--radius);
-  background: var(--paper);
+  background: transparent;
   color: var(--ink-muted);
 }
 
@@ -99,13 +99,45 @@
   color: var(--accent);
 }
 
-.learning-workspace__body {
+.learning-workspace__article {
   display: grid;
-  gap: var(--s4);
+  gap: clamp(var(--s5), 5vw, var(--s7));
+  inline-size: 100%;
+  max-inline-size: 56rem;
   min-inline-size: 0;
+  margin-inline: auto;
 }
 
-.learning-workspace__pane {
+.learning-workspace__viewer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  align-items: center;
+  min-inline-size: 0;
+  margin-inline: 0;
+  padding-inline: 0;
+  padding-block: var(--s3);
+  border-inline: 0;
+  border-block: 1px solid var(--hairline);
+}
+
+.learning-workspace__viewer-actions button {
+  min-block-size: 44px;
+  padding: var(--s2) 0;
+  border: 0;
+  border-block-end: 1px solid currentColor;
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.learning-workspace__viewer-actions button:hover {
+  color: var(--accent-strong);
+}
+
+.learning-workspace__guide {
   min-inline-size: 0;
 }
 
@@ -119,53 +151,6 @@
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
-}
-
-.learning-workspace__view-tabs {
-  position: relative;
-  display: flex;
-  min-block-size: 44px;
-  border-block-end: 1px solid var(--hairline);
-}
-
-.learning-workspace__view-tabs button {
-  position: relative;
-  min-inline-size: 5rem;
-  min-block-size: 44px;
-  padding-inline: var(--s3);
-  border: 0;
-  background: transparent;
-  color: var(--ink-muted);
-  font-weight: 720;
-  cursor: pointer;
-}
-
-.learning-workspace__view-tabs button[aria-selected="true"] {
-  color: var(--ink);
-}
-
-.learning-workspace__view-tabs button[aria-selected="true"]::after {
-  position: absolute;
-  inset-inline: var(--s3);
-  inset-block-end: -1px;
-  block-size: 2px;
-  background: var(--accent);
-  content: "";
-}
-
-.learning-workspace__view-panel {
-  min-block-size: 0;
-}
-
-.learning-workspace__view-panel[hidden] {
-  display: none;
-}
-
-@media (min-width: 80rem) {
-  .learning-workspace__body {
-    grid-template-columns: minmax(34rem, 48fr) minmax(38rem, 52fr);
-    align-items: stretch;
-  }
 }
 
 @media (max-width: 79.999rem) {
@@ -183,5 +168,15 @@
   .learning-route-header__controls button,
   .learning-route-header__controls a {
     inline-size: 100%;
+  }
+
+  .learning-workspace__viewer-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .learning-workspace__viewer-actions button {
+    inline-size: 100%;
+    text-align: start;
   }
 }

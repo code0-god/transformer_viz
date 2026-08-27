@@ -55,8 +55,9 @@
 
 .three-visualization-surface [data-visualization-state] {
   padding: var(--s3);
-  border-inline-start: 3px solid var(--accent);
-  background: var(--accent-soft);
+  border-block-start: 1px solid
+    color-mix(in srgb, var(--accent) 52%, var(--hairline));
+  background: color-mix(in srgb, var(--accent-soft) 56%, transparent);
 }
 
 .three-visualization-surface__fallback {

@@ -9,8 +9,8 @@
   block-size: clamp(18rem, 38dvb, 26rem);
   overflow: hidden;
   border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  background: var(--surface);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--mesh-surface) 74%, transparent);
 }
 
 .score-matrix-legend {
@@ -22,6 +22,12 @@
   color: var(--ink-muted);
   font-size: 0.78rem;
   list-style: none;
+}
+
+.score-matrix-orientation {
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  font-weight: 720;
 }
 
 .score-matrix-legend li {
@@ -38,7 +44,7 @@
 }
 
 .score-matrix-legend-swatch[data-tone="negative"] {
-  background: #6f4c78;
+  background: #526f78;
 }
 
 .score-matrix-legend-swatch[data-tone="neutral"] {
@@ -46,7 +52,7 @@
 }
 
 .score-matrix-legend-swatch[data-tone="positive"] {
-  background: var(--accent);
+  background: #a8432d;
 }
 
 .score-matrix-table-scroll {

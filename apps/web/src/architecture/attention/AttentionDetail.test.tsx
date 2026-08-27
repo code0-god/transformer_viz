@@ -207,8 +207,8 @@ describe("AttentionDetail", () => {
     await user.click(screen.getByTestId("architecture-breadcrumb-gpt"));
     await user.click(screen.getByTestId("architecture-breadcrumb-block"));
     await user.click(screen.getByTestId("architecture-back-block"));
-    await user.click(screen.getByRole("button", { name: "Layer 1" }));
-    await user.click(screen.getByRole("button", { name: "Head 2" }));
+    await user.click(screen.getByRole("button", { name: "Layer 2" }));
+    await user.click(screen.getByRole("button", { name: "Head 3" }));
     expect(props.onNavigateRoot).toHaveBeenCalledOnce();
     expect(props.onBack).toHaveBeenCalledTimes(2);
     expect(props.onSelectLayer).toHaveBeenCalledWith(1);

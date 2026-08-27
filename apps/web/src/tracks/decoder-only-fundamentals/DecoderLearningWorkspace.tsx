@@ -7,12 +7,8 @@ import {
   useState,
 } from "react";
 
-import { ArchitectureLearningProvider } from "../../architecture/ArchitectureLearningContext";
-import {
-  type ArchitectureNodeId,
-  architectureNodeCatalog,
-} from "../../architecture/catalog";
 import type { ArchitectureView } from "../../architecture/state";
+import { useFocusedViewer } from "../../overlays/focusedViewerStore";
 import { LearningWorkspace } from "../LearningWorkspace";
 import {
   activateLearningFocus,
@@ -26,16 +22,8 @@ import type {
   LearningGuideSection,
   LearningTrackProfile,
 } from "../types";
-import { ScoreMatrixVisualizationPane } from "../visualization/ScoreMatrixVisualizationPane";
-import { createScoreMatrixInspectionState } from "../visualization/scoreMatrixState";
-import type { LearningPaneMode } from "./curriculum/paneMode";
-import { DecoderDiagram } from "./DecoderDiagram";
 import { DecoderGuide } from "./DecoderGuide";
-import { DecoderRouteControls } from "./DecoderRouteControls";
-import {
-  guideSectionForNode,
-  guideSectionHighlights,
-} from "./decoderWorkspaceSections";
+import { guideSectionHighlights } from "./decoderWorkspaceSections";
 import { decoderGuidePage } from "./guide";
 import { decoderLearningNodeByArchitecture } from "./nodes";
 import { decoderRoute, decoderRouteId } from "./routes";
@@ -68,10 +56,9 @@ export function DecoderLearningWorkspace({
   const [status, setStatus] = useState<LearningFocusStatus>({
     availability: "available",
   });
-  const [paneMode, setPaneMode] = useState<LearningPaneMode>("explanation");
+  const { openViewer } = useFocusedViewer();
   const titleRef = useRef<HTMLHeadingElement | null>(null);
   const previousRouteRef = useRef(routeId);
-  const nodeCleanups = useRef(new Map<ArchitectureNodeId, () => void>());
   const sectionCleanups = useRef(new Map<string, () => void>());
   const registry = useMemo(
     () =>
@@ -89,33 +76,8 @@ export function DecoderLearningWorkspace({
     previousRouteRef.current = routeId;
     setFocus(createLearningFocusState(routeId));
     setStatus({ availability: "available" });
-    setPaneMode("explanation");
     titleRef.current?.focus();
   }, [routeId]);
-
-  const registerNode = useCallback(
-    (nodeId: ArchitectureNodeId, element: SVGGElement | null) => {
-      nodeCleanups.current.get(nodeId)?.();
-      nodeCleanups.current.delete(nodeId);
-      const learningNodeId = decoderLearningNodeByArchitecture[nodeId];
-      const container = element?.ownerSVGElement?.parentElement;
-      if (
-        learningNodeId === undefined ||
-        element === null ||
-        !(container instanceof HTMLElement)
-      )
-        return;
-      nodeCleanups.current.set(
-        nodeId,
-        registry.register(
-          { kind: "node", routeId, nodeId: learningNodeId },
-          element,
-          container,
-        ),
-      );
-    },
-    [registry, routeId],
-  );
 
   const registerSection = useCallback(
     (sectionId: string, element: HTMLElement | null) => {
@@ -151,59 +113,33 @@ export function DecoderLearningWorkspace({
       layerCount: context.model.config.n_layer,
     });
   };
-  const selectLayer = (layer: number): void => {
-    context.navigate({
-      type: "select-layer",
-      layer,
-      layerCount: context.model.config.n_layer,
-    });
-  };
-  const selectHead = (head: number): void => {
-    context.navigate({
-      type: "select-head",
-      head,
-      headCount: context.model.config.n_head,
-    });
-  };
-  const activateDiagram = (nodeId: ArchitectureNodeId): void => {
-    context.navigate({
-      type: "activate-node",
-      nodeId,
-      layerCount: context.model.config.n_layer,
-      headCount: context.model.config.n_head,
-    });
-    if (architectureNodeCatalog[nodeId].capability === "drill-down") return;
-    const learningNodeId = decoderLearningNodeByArchitecture[nodeId];
-    if (learningNodeId === undefined) return;
-    const section = guideSectionForNode(page, learningNodeId);
-    if (section === undefined) return;
-    setFocus((previous) =>
-      activateLearningFocus(synchronizeLearningRoute(previous, routeId), {
-        origin: "diagram",
-        routeId,
-        sectionId: section.id,
-        highlightedNodeIds: [],
-      }),
-    );
-    registry.reveal(
-      { kind: "section", routeId, sectionId: section.id },
-      { focus: true },
-    );
-  };
+
   const focusDiagram = (section: LearningGuideSection): void => {
     if (section.primaryNodeId === undefined) return;
+    const sectionHighlights = guideSectionHighlights(section);
     setFocus((previous) =>
       activateLearningFocus(synchronizeLearningRoute(previous, routeId), {
         origin: "guide",
         routeId,
         sectionId: section.id,
-        highlightedNodeIds: guideSectionHighlights(section),
+        highlightedNodeIds: sectionHighlights,
       }),
     );
-    registry.reveal(
-      { kind: "node", routeId, nodeId: section.primaryNodeId },
-      { focus: true },
-    );
+    setStatus({ availability: "available" });
+    openViewer({
+      id: `${routeId}:architecture:${section.id}`,
+      kind: "architecture",
+      source: "learn",
+      title: `${route.title} 전체 구조`,
+      description: section.title,
+      view: context.state.view,
+      conceptId: section.id,
+      articleTargetId: `${page.id}-${section.id}-title`,
+      highlightedNodeIds: sectionHighlights.flatMap((learningNodeId) => {
+        const nodeId = profile.architecture.nodeMap[learningNodeId];
+        return nodeId === undefined ? [] : [nodeId];
+      }),
+    });
   };
 
   const highlightedNodeIds = currentFocus.highlightedNodeIds.flatMap(
@@ -224,29 +160,23 @@ export function DecoderLearningWorkspace({
       onRouteTitleRef={(element) => {
         titleRef.current = element;
       }}
-      diagramControls={
-        <DecoderRouteControls
-          context={context}
-          navigateRoot={() => navigateTo("root")}
-          navigateBlock={() => navigateTo("transformer-block")}
-          selectLayer={selectLayer}
-          selectHead={selectHead}
-        />
-      }
       diagram={{
         label: `${route.title} Diagram`,
-        content: (
-          <ArchitectureLearningProvider registerNode={registerNode}>
-            <DecoderDiagram
-              context={context}
-              highlightedNodeIds={highlightedNodeIds}
-              activateNode={activateDiagram}
-              navigateTo={navigateTo}
-              selectLayer={selectLayer}
-              selectHead={selectHead}
-            />
-          </ArchitectureLearningProvider>
-        ),
+        actionLabel:
+          context.state.view === "root"
+            ? "GPT 전체 구조 보기"
+            : context.state.view === "transformer-block"
+              ? "Transformer Block 내부 보기"
+              : "Self-Attention 계산 흐름 보기",
+        request: {
+          id: `${routeId}:architecture`,
+          kind: "architecture",
+          source: "learn",
+          title: `${route.title} 전체 구조`,
+          description: route.subtitle,
+          view: context.state.view,
+          highlightedNodeIds,
+        },
       }}
       guide={{
         label: `${route.title} Guide`,
@@ -268,24 +198,19 @@ export function DecoderLearningWorkspace({
         : {
             visualization: {
               label: `${route.title} Visualization`,
-              content: (
-                <ScoreMatrixVisualizationPane
-                  visualizationId={visualizationId}
-                  state={
-                    context.scoreMatrix ?? createScoreMatrixInspectionState()
-                  }
-                  replayAvailable={
-                    context.replaySummary !== undefined &&
-                    context.replaySummary !== null
-                  }
-                  selectedLayer={context.state.selectedLayer}
-                  selectedHead={context.state.selectedHead}
-                  onInspect={context.inspectScoreMatrix ?? (() => undefined)}
-                />
-              ),
+              actionLabel: "실제 Score Matrix 확인하기",
+              request: {
+                id: `${routeId}:visualization:${visualizationId}`,
+                kind: "visualization",
+                source: "learn",
+                title: "Attention Score Matrix",
+                description:
+                  "선택한 generation step의 실제 Query·Key 내적 점수입니다.",
+                visualizationId,
+                layer: context.state.selectedLayer,
+                head: context.state.selectedHead,
+              },
             },
-            paneMode,
-            onPaneModeChange: setPaneMode,
           })}
     />
   );

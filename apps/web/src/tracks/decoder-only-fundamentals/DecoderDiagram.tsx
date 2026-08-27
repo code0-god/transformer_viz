@@ -14,6 +14,7 @@ type DecoderDiagramProps = {
   readonly navigateTo: (view: ArchitectureView) => void;
   readonly selectLayer: (layer: number) => void;
   readonly selectHead: (head: number) => void;
+  readonly showRouteControls?: boolean;
 };
 
 export function DecoderDiagram({
@@ -23,6 +24,7 @@ export function DecoderDiagram({
   navigateTo,
   selectLayer,
   selectHead,
+  showRouteControls = false,
 }: DecoderDiagramProps): ReactElement {
   switch (context.state.view) {
     case "root":
@@ -43,7 +45,7 @@ export function DecoderDiagram({
           selectedLayer={context.state.selectedLayer}
           selectedNodeId={context.state.selectedNodeId}
           highlightedNodeIds={highlightedNodeIds}
-          showRouteControls={false}
+          showRouteControls={showRouteControls}
           onActivateNode={activateNode}
           onNavigate={navigateTo}
           onSelectLayer={selectLayer}
@@ -60,7 +62,7 @@ export function DecoderDiagram({
           selectedHead={context.state.selectedHead}
           selectedNodeId={context.state.selectedNodeId}
           highlightedNodeIds={highlightedNodeIds}
-          showRouteControls={false}
+          showRouteControls={showRouteControls}
           onNavigateRoot={() => navigateTo("root")}
           onBack={() => navigateTo("transformer-block")}
           onSelectLayer={selectLayer}

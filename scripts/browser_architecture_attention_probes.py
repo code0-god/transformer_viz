@@ -60,9 +60,6 @@ ATTENTION_DETAIL_PROBE = r"""
   const nodeFormula = id => required(
     `[data-node-id="${id}"] annotation[encoding="application/x-tex"]`,
   ).textContent.trim();
-  const factValue = factId => document.querySelector(
-    `[data-guide-fact-id="${factId}"] [data-fact-status]`,
-  )?.textContent.trim() ?? null;
   const qkvStarts = ['qkv-to-query', 'qkv-to-key', 'qkv-to-value'].map(name => point(name));
   const text = detail.textContent;
   const diagramText = required('.architecture-attention-diagram').textContent;
@@ -109,20 +106,6 @@ ATTENTION_DETAIL_PROBE = r"""
       '[data-node-id="attention-qkv-projection"]',
     ).length,
     splitHeadNodes: document.querySelectorAll('.architecture-attention-split').length,
-    currentValues: {
-      t: factValue('decoder.fact.sequence-length'),
-      c: factValue('decoder.fact.model-width'),
-      h: factValue('decoder.fact.heads'),
-      d: factValue('decoder.fact.head-dimension'),
-      scale: factValue('decoder.fact.scale-factor'),
-    },
-    guidePage: required('[data-guide-page-id]').dataset.guidePageId,
-    guideSections: [...document.querySelectorAll('[data-guide-section-id]')]
-      .map(element => element.dataset.guideSectionId),
-    outlineCount: document.querySelectorAll('.learning-guide-outline a').length,
-    runtimePresentation: Boolean(document.querySelector(
-      '[data-runtime-presentation-id="decoder.runtime.attention-facts"]',
-    )),
     qkvShape: nodeFormula('attention-qkv-projection') ===
       String.raw`Z_{\mathrm{qkv}} = \operatorname{Linear}_{\mathrm{qkv}}(X)`,
     scoreMatmul: nodeText('attention-scores').includes('Score MatMul') &&
@@ -131,9 +114,6 @@ ATTENTION_DETAIL_PROBE = r"""
       nodeFormula('attention-value-aggregation') === String.raw`Y_h = A_h V_h`,
     scaleSymbolic: nodeFormula('attention-scale') ===
       String.raw`S_h^{\mathrm{scaled}} = \frac{S_h}{\sqrt D}`,
-    formula: Boolean(document.querySelector(
-      '[role="math"][aria-label="Self-Attention summary"] .katex-mathml math',
-    )),
     connectorFormula: required(
       '[data-formula-id="attention-value-edge"] ' +
         'annotation[encoding="application/x-tex"]',
@@ -164,6 +144,45 @@ ATTENTION_DETAIL_PROBE = r"""
       document.documentElement.scrollWidth - document.documentElement.clientWidth,
     ),
     localOverflow: Math.max(0, scroll.scrollWidth - scroll.clientWidth),
+  };
+})()
+"""
+
+LEARN_ATTENTION_GUIDE_PROBE = r"""
+(() => {
+  const required = selector => {
+    const element = document.querySelector(selector);
+    if (!element) throw new Error(`missing ${selector}`);
+    return element;
+  };
+  const factValue = factId => required(
+    `[data-guide-fact-id="${factId}"] [data-fact-status]`,
+  ).textContent.trim();
+  return {
+    guidePage: required('[data-guide-page-id]').dataset.guidePageId,
+    guideSections: [...document.querySelectorAll('[data-guide-section-id]')]
+      .map(element => element.dataset.guideSectionId),
+    outlineCount: document.querySelectorAll('.learning-guide-outline a').length,
+    runtimePresentation: Boolean(document.querySelector(
+      '[data-runtime-presentation-id="decoder.runtime.attention-facts"]',
+    )),
+    currentValues: {
+      t: factValue('decoder.fact.sequence-length'),
+      c: factValue('decoder.fact.model-width'),
+      h: factValue('decoder.fact.heads'),
+      d: factValue('decoder.fact.head-dimension'),
+      scale: factValue('decoder.fact.scale-factor'),
+    },
+    articleLayout: required('[data-learning-layout]').dataset.learningLayout,
+    architectureMounted: Boolean(document.querySelector(
+      '[data-testid="architecture-root"]',
+    )),
+    viewerTrigger: Boolean(document.querySelector(
+      '[data-testid="open-diagram-viewer"]',
+    )),
+    summaryFormula: Boolean(document.querySelector(
+      '[role="math"][aria-label="Self-Attention summary"] .katex-mathml math',
+    )),
   };
 })()
 """

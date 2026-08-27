@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from browser_hybrid_capture import request_urls
-from browser_hybrid_contract import button_with_text, go_chapter, require
+from browser_hybrid_contract import button_with_text, require
 from browser_hybrid_helpers import (
+    JsonObject,
     evaluate_dict,
     pointer_click,
+    settle_animations,
     wait_for,
 )
 from browser_learning_workspace_probes import INSTRUMENT_LEARNING_WORKSPACE
@@ -14,8 +16,27 @@ from browser_learning_workspace_runtime import prepare_runtime_evidence
 from browser_probes import READY_PROBE
 from browser_session import ChromeSession
 
+DISABLE_WEBGL = r"""
+(() => {
+  Object.defineProperty(window, 'WebGLRenderingContext', {
+    configurable: true,
+    value: undefined,
+  });
+  Object.defineProperty(window, 'WebGL2RenderingContext', {
+    configurable: true,
+    value: undefined,
+  });
+  const nativeGetContext = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function (kind, ...args) {
+    return String(kind).startsWith('webgl')
+      ? null
+      : nativeGetContext.call(this, kind, ...args);
+  };
+})();
+"""
 
-def verify_failure_modes(url: str) -> dict[str, object]:
+
+def verify_failure_modes(url: str) -> JsonObject:
     unavailable = _verify_unavailable(url)
     renderer_error = _verify_renderer_error(url)
     return {
@@ -34,29 +55,57 @@ def _prepare_score_request(browser: ChromeSession, url: str) -> None:
     browser.navigate(f"{url}#/lab")
     cdp.evaluate(browser.page_session, READY_PROBE, True)
     prepare_runtime_evidence(browser)
-    go_chapter(browser, "5-1")
     pointer_click(
         browser,
-        "document.querySelector('button[data-head-index=\"1\"]')",
+        button_with_text("Self-Attention 보기"),
         condition=(
-            "document.querySelector('button[data-head-index=\"1\"]')"
+            "document.querySelector('#focused-viewer "
+            "[data-testid=\"attention-detail\"]') !== null"
+        ),
+        label="Failure-mode Attention viewer",
+    )
+    settle_animations(
+        browser,
+        "[data-viewer-backdrop]",
+        "Failure-mode Attention viewer animation",
+    )
+    pointer_click(
+        browser,
+        "document.querySelector('#focused-viewer "
+        "button[data-head-index=\"1\"]')",
+        condition=(
+            "document.querySelector('#focused-viewer "
+            "button[data-head-index=\"1\"]')"
             "?.getAttribute('aria-pressed') === 'true'"
         ),
         label="Failure-mode Head 2 selection",
     )
     pointer_click(
         browser,
-        "document.querySelector('[role=\"tab\"]"
-        "[aria-controls=\"learning-visualization-panel\"]')",
-        condition=(
-            "document.querySelector('#learning-visualization-panel')"
-            "?.hidden === false"
-        ),
-        label="Failure-mode Visualization tab",
+        "document.querySelector('[aria-label=\"집중 보기 닫기\"]')",
+        condition="document.querySelector('#focused-viewer') === null",
+        label="Failure-mode Architecture close",
     )
     pointer_click(
         browser,
-        button_with_text("Layer 1, Head 2 Score 불러오기"),
+        button_with_text("실제 Score Matrix 확인하기"),
+        condition=(
+            "document.querySelector('#focused-viewer"
+            "[data-viewer-kind=\"visualization\"]') !== null"
+        ),
+        label="Failure-mode Score Matrix viewer",
+    )
+    settle_animations(
+        browser,
+        "[data-viewer-backdrop]",
+        "Failure-mode Score Matrix viewer animation",
+    )
+    pointer_click(
+        browser,
+        button_with_text(
+            "Layer 1, Head 2 Score 불러오기",
+            "document.querySelector('#focused-viewer')",
+        ),
         condition=(
             "window.__learningWorkerResponses.some("
             "item => item?.type === 'attention_head_trace')"
@@ -65,7 +114,7 @@ def _prepare_score_request(browser: ChromeSession, url: str) -> None:
     )
 
 
-def _fallback_probe(browser: ChromeSession) -> dict[str, object]:
+def _fallback_probe(browser: ChromeSession) -> JsonObject:
     return evaluate_dict(
         browser,
         """(() => {
@@ -78,7 +127,8 @@ def _fallback_probe(browser: ChromeSession) -> dict[str, object]:
               fallback instanceof HTMLDetailsElement && fallback.open,
             tableVisible: table instanceof HTMLElement
               && table.getBoundingClientRect().height > 0,
-            guidePresent: document.querySelector('.learning-guide') !== null,
+            viewerPresent:
+              document.querySelector('#focused-viewer') !== null,
             canvasCount: document.querySelectorAll(
               '.score-matrix-canvas canvas',
             ).length,
@@ -87,8 +137,13 @@ def _fallback_probe(browser: ChromeSession) -> dict[str, object]:
     )
 
 
-def _verify_unavailable(url: str) -> dict[str, object]:
+def _verify_unavailable(url: str) -> JsonObject:
     with ChromeSession(enable_gpu=False) as browser:
+        browser.require_cdp().send(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {"source": DISABLE_WEBGL},
+            browser.page_session,
+        )
         _prepare_score_request(browser, url)
         wait_for(
             browser,
@@ -99,7 +154,7 @@ def _verify_unavailable(url: str) -> dict[str, object]:
         require(
             probe["fallbackOpen"] is True
             and probe["tableVisible"] is True
-            and probe["guidePresent"] is True
+            and probe["viewerPresent"] is True
             and probe["canvasCount"] == 0,
             f"WebGL unavailable boundary failed: {probe}",
         )
@@ -113,7 +168,7 @@ def _verify_unavailable(url: str) -> dict[str, object]:
         return probe
 
 
-def _verify_renderer_error(url: str) -> dict[str, object]:
+def _verify_renderer_error(url: str) -> JsonObject:
     with ChromeSession(enable_gpu=True) as browser:
         browser.require_cdp().send(
             "Network.setBlockedURLs",
@@ -130,7 +185,7 @@ def _verify_renderer_error(url: str) -> dict[str, object]:
         require(
             probe["fallbackOpen"] is True
             and probe["tableVisible"] is True
-            and probe["guidePresent"] is True
+            and probe["viewerPresent"] is True
             and probe["canvasCount"] == 0,
             f"Renderer error boundary failed: {probe}",
         )

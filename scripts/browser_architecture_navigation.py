@@ -3,7 +3,7 @@
 # requires-python = ">=3.12"
 # dependencies = []
 # ///
-"""Verify architecture node affordance and Worker-free Block Detail navigation."""
+"""Verify focused architecture affordance and Worker-free Block Detail navigation."""
 
 from __future__ import annotations
 
@@ -114,6 +114,48 @@ def require(condition: bool, message: str) -> None:
         raise NavigationContractError(message)
 
 
+def open_architecture_viewer(browser: ChromeSession) -> None:
+    cdp = browser.require_cdp()
+    session = browser.page_session
+    base = cdp.evaluate(
+        session,
+        """(() => ({
+          root: Boolean(document.querySelector('[data-testid="architecture-root"]')),
+          dialog: Boolean(document.querySelector('[role="dialog"]')),
+          trigger: Boolean(document.querySelector(
+            '[data-testid="lab-open-architecture-root"]',
+          )),
+        }))()""",
+        True,
+    )
+    require(
+        base == {"root": False, "dialog": False, "trigger": True},
+        f"Lab base must keep architecture on demand: {base}",
+    )
+    dispatch_click(browser, '[data-testid="lab-open-architecture-root"]')
+    cdp.evaluate(
+        session,
+        """(() => new Promise((resolve, reject) => {
+          const finish = () => {
+            const root = document.querySelector('[data-testid="architecture-root"]');
+            const dialog = document.querySelector('[role="dialog"]');
+            if (!root || !dialog) return;
+            observer.disconnect();
+            clearTimeout(timeout);
+            resolve(true);
+          };
+          const observer = new MutationObserver(finish);
+          observer.observe(document.body, { childList: true, subtree: true });
+          const timeout = setTimeout(() => {
+            observer.disconnect();
+            reject(new Error('architecture viewer open timeout'));
+          }, 10000);
+          finish();
+        }))()""",
+        True,
+    )
+
+
 def verify_detail_contract(detail: dict[str, Any], initial: dict[str, Any]) -> None:
     require(not detail["root"] and bool(detail["detail"]), f"detail route: {detail}")
     require(detail["selectedLayer"] == 0 and detail["layerButtons"] == 2, f"layer config: {detail}")
@@ -154,6 +196,7 @@ def verify_navigation(
     cdp.evaluate(session, READY_PROBE, True)
     cdp.evaluate(session, SET_PROMPT, True)
     settle(browser)
+    open_architecture_viewer(browser)
     initial = cdp.evaluate(session, ROOT_PROBE, True)
     require(initial["root"] and not initial["detail"], f"initial route: {initial}")
     require(initial["capability"] == "drill-down", f"block capability: {initial}")

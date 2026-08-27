@@ -66,6 +66,12 @@ async function selectChapter(title: string): Promise<void> {
   );
 }
 
+function focusedViewer(): HTMLElement {
+  const viewer = document.querySelector<HTMLElement>('[role="dialog"]');
+  if (viewer === null) throw new Error("Focused viewer is missing");
+  return viewer;
+}
+
 // allow: SIZE_OK — fixed Parts 3–5 route and focus integration matrix
 
 describe("Parts 3 through 5 incumbent route integration", () => {
@@ -206,30 +212,46 @@ describe("Parts 3 through 5 incumbent route integration", () => {
     ).toHaveFocus();
   });
 
-  test("focuses generated-token bidirectionally between the Root Diagram and Guide", async () => {
-    // Given: the incumbent Root workspace and its exact generated-token node.
+  test("moves between generated-token viewer focus and its article section", async () => {
+    // Given: the GPT article opens its on-demand Root viewer.
     const worker = readyCurriculum();
     const user = userEvent.setup();
     const postsBefore = worker.posted.length;
     await selectChapter("GPT");
-    const generatedToken = screen.getByRole("button", {
+    await user.click(screen.getByTestId("open-diagram-viewer"));
+    const viewer = focusedViewer();
+    const generatedToken = within(viewer).getByRole("button", {
       name: /생성된 token.*선택 가능/,
     });
 
-    // When: Diagram focus moves to the Guide and then returns from its section control.
+    // When: viewer selection chooses the matching article destination.
     await user.click(generatedToken);
+    await user.click(
+      within(viewer).getByRole("button", { name: "설명에서 보기" }),
+    );
     const guideSection = screen.getByRole("region", {
       name: "붙이고 다시 계산하기",
     });
-    expect(guideSection).toHaveFocus();
+    expect(
+      within(guideSection).getByRole("heading", {
+        name: "붙이고 다시 계산하기",
+      }),
+    ).toHaveFocus();
+
+    // When: the article asks for that stage again.
     await user.click(
       within(guideSection).getByRole("button", {
         name: "붙이고 다시 계산하기",
       }),
     );
 
-    // Then: the exact generated-token Diagram target owns focus with no Worker post.
-    expect(generatedToken).toHaveFocus();
+    // Then: one viewer reopens with the exact node highlighted and no Worker post.
+    const reopenedViewer = focusedViewer();
+    expect(
+      within(reopenedViewer).getByRole("button", {
+        name: /생성된 token.*선택 가능/,
+      }),
+    ).toHaveAttribute("data-learning-highlighted", "true");
     expect(worker.posted).toHaveLength(postsBefore);
   });
 
@@ -306,8 +328,10 @@ describe("Parts 3 through 5 incumbent route integration", () => {
     readyCurriculum();
     const user = userEvent.setup();
     await selectChapter("Self-Attention");
-    await user.click(screen.getByRole("button", { name: "Layer 3" }));
-    await user.click(screen.getByRole("button", { name: "Head 4" }));
+    await user.click(screen.getByTestId("open-diagram-viewer"));
+    const viewer = focusedViewer();
+    await user.click(within(viewer).getByRole("button", { name: "Layer 3" }));
+    await user.click(within(viewer).getByRole("button", { name: "Head 4" }));
     expect(screen.getByTestId("attention-detail")).toHaveAttribute(
       "data-selected-layer",
       "2",
@@ -315,6 +339,11 @@ describe("Parts 3 through 5 incumbent route integration", () => {
     expect(screen.getByTestId("attention-detail")).toHaveAttribute(
       "data-selected-head",
       "3",
+    );
+    await user.keyboard("{Escape}");
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.querySelector(".architecture-app")).not.toHaveAttribute(
+      "aria-hidden",
     );
 
     // When: curriculum navigation leaves Attention and later returns.
@@ -324,6 +353,7 @@ describe("Parts 3 through 5 incumbent route integration", () => {
     await user.click(
       screen.getByRole("link", { name: "다음: Self-Attention" }),
     );
+    await user.click(screen.getByTestId("open-diagram-viewer"));
 
     // Then: route transition changes only view; architecture selections remain owned upstream.
     expect(screen.getByTestId("attention-detail")).toHaveAttribute(

@@ -6,48 +6,96 @@
   min-inline-size: 0;
 }
 
+.diagram-viewport__meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s3);
+  min-inline-size: 0;
+  padding: var(--s2) 0 var(--s3);
+  border: 0;
+  border-block-end: 1px solid var(--hairline);
+  border-radius: 0;
+  background: transparent;
+}
+
+.diagram-viewport__description {
+  min-inline-size: 0;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.diagram-viewport__meta:has(.diagram-viewport__extra-controls)
+  .diagram-viewport__description {
+  padding-block-start: var(--s2);
+  border-block-start: 1px solid
+    color-mix(in srgb, var(--hairline) 68%, transparent);
+}
+
 .diagram-viewport__toolbar {
+  position: absolute;
+  z-index: 2;
+  inset-block-start: var(--s2);
+  inset-inline-end: var(--s2);
+  display: flex;
+  align-items: center;
+  padding: var(--s1);
+  border: 1px solid color-mix(in srgb, var(--hairline) 72%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--surface) 68%, transparent);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(10px) saturate(1.08);
+}
+
+.diagram-viewport__extra-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--s2);
-  min-block-size: 44px;
+  justify-content: flex-end;
+  min-inline-size: 0;
 }
 
-.diagram-viewport__extra-controls,
 .diagram-viewport__zoom-controls {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--s1);
-}
-
-.diagram-viewport__zoom-controls {
-  margin-inline-start: auto;
+  gap: 0;
 }
 
 .diagram-viewport__toolbar button {
-  min-inline-size: 44px;
-  min-block-size: 44px;
-  padding-inline: var(--s2);
+  min-inline-size: 34px;
+  min-block-size: 34px;
+  padding: 0 var(--s2);
+  border: 0;
+  background: transparent;
+  font-size: 0.78rem;
+}
+
+.diagram-viewport__toolbar button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent-soft) 68%, transparent);
 }
 
 .diagram-viewport__toolbar output {
-  min-inline-size: 3.5rem;
+  min-inline-size: 2.9rem;
   color: var(--ink-muted);
+  font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
   text-align: center;
+  user-select: none;
 }
 
 .diagram-viewport__surface {
   position: relative;
+  isolation: isolate;
+  grid-row: 2;
   min-block-size: 28rem;
   min-inline-size: 0;
   overflow: clip;
-  border: 1px solid var(--hairline);
-  border-radius: 8px;
-  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--hairline) 68%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--mesh-surface) 74%, transparent);
   cursor: default;
   overscroll-behavior: contain;
 }
@@ -63,16 +111,35 @@
 
 .diagram-viewport__content {
   position: absolute;
+  z-index: 1;
   inset-block-start: 0;
   inset-inline-start: 0;
   transform-origin: 0 0;
   user-select: none;
 }
 
-.diagram-viewport__content > svg {
+.diagram-viewport__content svg[viewBox] {
+  position: absolute;
+  inset: 0;
   display: block;
   inline-size: 100%;
   block-size: 100%;
   max-inline-size: none;
   max-block-size: none;
+}
+
+.diagram-viewport__surface .diagram-viewport__content figcaption,
+.diagram-viewport__surface
+  .diagram-viewport__content
+  .architecture-metadata,
+.diagram-viewport__surface
+  .diagram-viewport__content
+  .architecture-detail-toolbar {
+  display: none;
+}
+
+@media (max-width: 40rem) {
+  .diagram-viewport__extra-controls {
+    justify-content: flex-start;
+  }
 }

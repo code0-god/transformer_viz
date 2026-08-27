@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 
 import { App } from "../../../../../App";
 import { model, TestWorker } from "../../../../../test/workerFixtures";
+import { TokenComparisonDiagram } from "./TokenComparisonDiagram";
 
 const CHAPTERS = [
   ["자연어 처리란?", "자연어 처리 추론 경로"],
@@ -48,6 +49,36 @@ function readyCurriculum(): TestWorker {
 }
 
 describe("Part 0 curriculum Diagrams", () => {
+  test("uses a portrait Token comparison layout at the mobile breakpoint", () => {
+    const originalMatchMedia = window.matchMedia;
+    const mobileQuery = {
+      matches: true,
+      media: "(max-width: 40rem)",
+      onchange: null,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      dispatchEvent: () => true,
+    } satisfies MediaQueryList;
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: () => mobileQuery,
+    });
+
+    try {
+      render(<TokenComparisonDiagram />);
+      expect(
+        screen.getByRole("img", { name: "Token 경계 비교" }),
+      ).toHaveAttribute("viewBox", "0 0 420 1030");
+    } finally {
+      Object.defineProperty(window, "matchMedia", {
+        configurable: true,
+        value: originalMatchMedia,
+      });
+    }
+  });
+
   test.each(CHAPTERS)(
     "renders %s as one named SVG with fallback and native focus control",
     async (chapterTitle, imageName) => {
@@ -65,9 +96,10 @@ describe("Part 0 curriculum Diagrams", () => {
           name: new RegExp(chapterTitle.replace("?", "\\?")),
         }),
       );
+      await user.click(screen.getByTestId("open-diagram-viewer"));
 
       // Then: semantic Diagram structure is complete without Worker traffic.
-      const pane = document.querySelector("#learning-diagram-pane");
+      const pane = document.querySelector("#focused-viewer .diagram-viewport");
       expect(pane).not.toBeNull();
       if (!(pane instanceof HTMLElement))
         throw new Error("Missing Diagram pane");
@@ -104,9 +136,10 @@ describe("Part 0 curriculum Diagrams", () => {
         name: /자연어 처리란\?/,
       }),
     );
+    await user.click(screen.getByTestId("open-diagram-viewer"));
 
     // Then: the SVG and fallback stay present without a redundant focus control.
-    const pane = document.querySelector("#learning-diagram-pane");
+    const pane = document.querySelector("#focused-viewer .diagram-viewport");
     expect(pane).not.toBeNull();
     if (!(pane instanceof HTMLElement)) throw new Error("Missing Diagram pane");
     const stageLabels = Array.from(pane.querySelectorAll("[data-stage]")).map(
@@ -146,6 +179,7 @@ describe("Part 0 curriculum Diagrams", () => {
         screen.getByRole("navigation", { name: "Chapter 목차" }),
       ).getByRole("link", { name: /Tokenization 방식/ }),
     );
+    await user.click(screen.getByTestId("open-diagram-viewer"));
 
     // Then: exactly the runtime byte row owns the machine badge.
     const badges = document.querySelectorAll("[data-current-runtime='true']");

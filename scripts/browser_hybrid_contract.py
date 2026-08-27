@@ -6,6 +6,8 @@ import json
 
 from browser_hybrid_helpers import (
     HybridBrowserError,
+    JsonObject,
+    JsonValue,
     evaluate_dict,
     navigate_hash,
     wait_for,
@@ -15,6 +17,7 @@ from browser_session import ChromeSession
 CHAPTER_IDS = {
     "0-1": "decoder.chapter.0.1",
     "0-2": "decoder.chapter.0.2",
+    "1-1": "decoder.chapter.1.1",
     "1-2": "decoder.chapter.1.2",
     "3-1": "decoder.chapter.3.1",
     "4-1": "decoder.chapter.4.1",
@@ -27,7 +30,7 @@ def require(condition: bool, message: str) -> None:
         raise HybridBrowserError(message)
 
 
-def number(value: object, label: str) -> float:
+def number(value: JsonValue, label: str) -> float:
     if not isinstance(value, int | float):
         raise HybridBrowserError(f"{label} is not numeric: {value!r}")
     return float(value)
@@ -62,25 +65,36 @@ def go_chapter(browser: ChromeSession, slug: str) -> None:
     )
 
 
-def diagram_probe(browser: ChromeSession) -> dict[str, object]:
+def diagram_probe(browser: ChromeSession) -> JsonObject:
     return evaluate_dict(
         browser,
         """(() => {
-          const surface = document.querySelector('.diagram-viewport__surface');
-          const content = document.querySelector('.diagram-viewport__content');
-          const left = document.querySelector('.learning-workspace__pane--diagram');
-          const right = document.querySelector('.learning-workspace__pane--guide');
-          if (!surface || !content || !left || !right)
-            throw new Error('learning panes missing');
+          const viewer = document.querySelector('#focused-viewer');
+          const surface = viewer?.querySelector('.diagram-viewport__surface');
+          const content = viewer?.querySelector('.diagram-viewport__content');
+          const description = viewer?.querySelector(
+            '#focused-viewer-description',
+          );
+          const toolbar = viewer?.querySelector('.diagram-viewport__toolbar');
+          if (!viewer || !surface || !content || !toolbar)
+            throw new Error('focused Diagram viewer missing');
+          const body = viewer.querySelector('.focused-viewer__body');
+          const v = viewer.getBoundingClientRect();
+          const b = body?.getBoundingClientRect();
           const s = surface.getBoundingClientRect();
           const c = content.getBoundingClientRect();
+          const t = toolbar.getBoundingClientRect();
           const svg = content.querySelector('svg[viewBox]');
           const caption = content.querySelector('figcaption');
-          const visualRects = [svg, caption]
+          const embeddedDescriptions = [
+            caption,
+            content.querySelector('.architecture-metadata'),
+            content.querySelector('.architecture-detail-toolbar'),
+          ].filter(element => element instanceof Element);
+          const visualRects = [svg]
             .filter(element => element instanceof Element)
             .map(element => element.getBoundingClientRect());
-          const l = left.getBoundingClientRect();
-          const r = right.getBoundingClientRect();
+          const d = description?.getBoundingClientRect();
           return {
             mode: surface.dataset.viewportMode,
             fitScale: Number(surface.dataset.fitScale),
@@ -105,12 +119,46 @@ def diagram_probe(browser: ChromeSession) -> dict[str, object]:
                 rect.left >= s.left - 1 && rect.top >= s.top - 1
                 && rect.right <= s.right + 1 && rect.bottom <= s.bottom + 1
               ),
-            split: l.width / (l.width + r.width),
+            viewerWidthRatio: v.width / innerWidth,
+            viewerHeightRatio: v.height / innerHeight,
+            bodyRect: {
+              left: b?.left ?? 0,
+              top: b?.top ?? 0,
+              right: b?.right ?? 0,
+              bottom: b?.bottom ?? 0,
+            },
+            contentRect: {
+              left: c.left, top: c.top, right: c.right, bottom: c.bottom,
+            },
+            toolbarRect: {
+              left: t.left, top: t.top, right: t.right, bottom: t.bottom,
+            },
+            styles: {
+              viewerOpacity: getComputedStyle(viewer).opacity,
+              bodyDisplay: body ? getComputedStyle(body).display : null,
+              bodyOpacity: body ? getComputedStyle(body).opacity : null,
+              paneOpacity:
+                getComputedStyle(surface.closest('.diagram-viewport')).opacity,
+              paneVisibility:
+                getComputedStyle(surface.closest('.diagram-viewport')).visibility,
+              surfaceDisplay: getComputedStyle(surface).display,
+              surfaceOpacity: getComputedStyle(surface).opacity,
+              contentOpacity: getComputedStyle(content).opacity,
+              contentTransform: getComputedStyle(content).transform,
+              svgDisplay: svg ? getComputedStyle(svg).display : null,
+              svgOpacity: svg ? getComputedStyle(svg).opacity : null,
+            },
             overflowX: document.documentElement.scrollWidth > innerWidth,
-            captionCount: content.querySelectorAll('figcaption').length,
-            captionOffsetHeight: caption?.offsetHeight ?? null,
-            captionRectHeight: caption?.getBoundingClientRect().height ?? null,
-            rowGap: getComputedStyle(content.firstElementChild).rowGap,
+            descriptionVisible:
+              d === undefined ? false : d.width > 0 && d.height > 0,
+            descriptionOutsideTransform:
+              description === null || !content.contains(description),
+            embeddedDescriptionVisible: embeddedDescriptions.some(element => {
+              const rect = element.getBoundingClientRect();
+              return rect.width > 0 && rect.height > 0;
+            }),
+            toolbarInsideSurface: surface.contains(toolbar),
+            zoomPercent: toolbar.querySelector('output')?.textContent?.trim(),
           };
         })()""",
     )
@@ -124,7 +172,7 @@ def button_with_text(label: str, scope: str = "document") -> str:
     )
 
 
-def canvas_metrics(browser: ChromeSession) -> dict[str, object]:
+def canvas_metrics(browser: ChromeSession) -> JsonObject:
     return evaluate_dict(
         browser,
         """(() => {
@@ -161,7 +209,7 @@ def canvas_metrics(browser: ChromeSession) -> dict[str, object]:
     )
 
 
-def lose_context(browser: ChromeSession) -> dict[str, object]:
+def lose_context(browser: ChromeSession) -> JsonObject:
     wait_for(
         browser,
         "document.querySelector('[data-visualization-state=\"context-lost\"]') !== null",

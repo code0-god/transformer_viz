@@ -1,5 +1,21 @@
-import type { ReactElement } from "react";
+import { type ReactElement, useSyncExternalStore } from "react";
 import { curriculumTokenExamples } from "../../generated/tokenExamples";
+
+const MOBILE_LAYOUT_QUERY = "(max-width: 40rem)";
+
+function subscribeToMobileLayout(onStoreChange: () => void): () => void {
+  if (typeof window.matchMedia !== "function") return () => undefined;
+  const query = window.matchMedia(MOBILE_LAYOUT_QUERY);
+  query.addEventListener("change", onStoreChange);
+  return () => query.removeEventListener("change", onStoreChange);
+}
+
+function mobileLayoutSnapshot(): boolean {
+  return (
+    typeof window.matchMedia === "function" &&
+    window.matchMedia(MOBILE_LAYOUT_QUERY).matches
+  );
+}
 
 const example = curriculumTokenExamples.find(({ id }) => id === "the-cats");
 if (example === undefined)
@@ -22,10 +38,15 @@ const lenses = [
 ] as const;
 
 export function TokenComparisonDiagram(): ReactElement {
+  const portrait = useSyncExternalStore(
+    subscribeToMobileLayout,
+    mobileLayoutSnapshot,
+    () => false,
+  );
   return (
     <figure className="part0-diagram part0-diagram--token">
       <svg
-        viewBox="0 0 760 570"
+        viewBox={portrait ? "0 0 420 1030" : "0 0 760 570"}
         role="img"
         aria-label="Token 경계 비교"
         aria-describedby="token-comparison-desc"
@@ -33,19 +54,21 @@ export function TokenComparisonDiagram(): ReactElement {
         <title id="token-comparison-title">Token 경계 비교</title>
         <desc id="token-comparison-desc">
           the cats를 word, character, conceptual subword, 현재 Rust UTF-8 byte
-          관점의 2행 2열 렌즈로 비교
+          관점의 네 가지 렌즈로 비교
         </desc>
-        <text
-          className="part0-diagram__example"
-          x="380"
-          y="38"
-          textAnchor="middle"
-        >
-          같은 입력 “the cats”, 다른 경계
-        </text>
+        {portrait ? null : (
+          <text
+            className="part0-diagram__example"
+            x="380"
+            y="38"
+            textAnchor="middle"
+          >
+            같은 입력 “the cats”, 다른 경계
+          </text>
+        )}
         {lenses.map((lens, index) => {
-          const x = index % 2 === 0 ? 24 : 392;
-          const y = index < 2 ? 66 : 310;
+          const x = portrait ? 38 : index % 2 === 0 ? 24 : 392;
+          const y = portrait ? 70 + index * 236 : index < 2 ? 66 : 310;
           return (
             <g
               key={lens.id}
