@@ -6,6 +6,7 @@ services:
       context: .
     environment:
       CHROME: /usr/local/bin/chromium-docker
+      CI: "true"
     healthcheck:
       test:
         - CMD-SHELL
