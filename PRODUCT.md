@@ -43,10 +43,13 @@ assistant answer.
 
 Users open one static URL at Course Home, start Chapter 0.1 with one primary action, optionally
 open Lab through its outlined route, and move through URL-addressable Chapters. Learn hides
-model-generation controls. Lab preserves Prompt, Generate,
-Stop, Continuation, Replay, sampling settings, trace, and Architecture inside the existing React
-and Worker state. The default Lab prompt is `the cat`; the legacy `the cat sat on the` phrase
-remains only as the full-forward golden/parity fixture.
+model-generation controls and uses a centered explanation-first article. Large SVG and R3F
+visuals are absent from the reading surface until a concept-specific action opens the shared
+focused viewer. Lab preserves Prompt, Generate, Stop, Continuation, Replay, sampling settings,
+trace, and Architecture inside the existing React and Worker state, but presents them as one
+experiment-first flow with on-demand inspection viewers instead of a permanent architecture
+pane. The default Lab prompt is `the cat`; the legacy `the cat sat on the` phrase remains only as
+the full-forward golden/parity fixture.
 
 ## Capabilities and Constraints
 
