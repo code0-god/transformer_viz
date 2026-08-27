@@ -145,11 +145,45 @@ def _activate_route(browser: ChromeSession, route: str) -> list[ActionRecord]:
     if route == "root":
         record_click(browser, records, "visual.root.embedding", NODE_SELECTORS["embedding"], ExpectedState("decoder.root", "token-embedding", "root-embeddings", "root-embeddings"))
         return records
-    record_click(browser, records, "visual.root.block", NODE_SELECTORS["block"], ExpectedState("decoder.block", None, None, "learning-route-title", heading_focus_delta=1))
+    record_click(
+        browser,
+        records,
+        "visual.root.block",
+        NODE_SELECTORS["block"],
+        ExpectedState(
+            "decoder.block",
+            None,
+            None,
+            "learning-route-title",
+            heading_focus_delta=1,
+        ),
+    )
+    browser.require_cdp().evaluate(
+        browser.page_session,
+        VISUAL_SETTLED,
+        True,
+    )
     if route == "block":
         record_click(browser, records, "visual.block.ln1", NODE_SELECTORS["ln1"], ExpectedState("decoder.block", "layer-norm-1", "block-layer-norm-1", "block-layer-norm-1"))
         return records
-    record_click(browser, records, "visual.block.attention", NODE_SELECTORS["attention"], ExpectedState("decoder.self-attention", None, None, "learning-route-title", heading_focus_delta=1))
+    record_click(
+        browser,
+        records,
+        "visual.block.attention",
+        NODE_SELECTORS["attention"],
+        ExpectedState(
+            "decoder.self-attention",
+            None,
+            None,
+            "learning-route-title",
+            heading_focus_delta=1,
+        ),
+    )
+    browser.require_cdp().evaluate(
+        browser.page_session,
+        VISUAL_SETTLED,
+        True,
+    )
     record_click(browser, records, "visual.attention.softmax", NODE_SELECTORS["softmax"], ExpectedState("decoder.self-attention", "attention-softmax", "softmax", "softmax"))
     return records
 

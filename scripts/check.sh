@@ -134,6 +134,22 @@ for entry in index.html transformer_viz/index.html; do
     --evidence "${CHECK_DIST_DIR}/learning-${entry_label}"
 done
 
+printf '%s\n' '==> hybrid SVG/WebGL browser contract'
+for entry in index.html transformer_viz/index.html; do
+  entry_label="${entry//\//-}"
+  if [[ "${entry}" == "index.html" ]]; then
+    public_base="/"
+  else
+    public_base="/transformer_viz/"
+  fi
+  PYTHONPATH="${ROOT_DIR}/scripts" \
+    python3 "${ROOT_DIR}/scripts/browser_hybrid_foundation.py" \
+    --root "${CHECK_DIST_DIR}/browser-root" \
+    --base "${public_base}" \
+    --screenshots "${CHECK_DIST_DIR}/hybrid-${entry_label}/screenshots" \
+    --evidence "${CHECK_DIST_DIR}/hybrid-${entry_label}/evidence.json"
+done
+
 printf '%s\n' '==> Architecture notation browser contract'
 PYTHONPATH="${ROOT_DIR}/scripts" \
   python3 "${ROOT_DIR}/scripts/browser_architecture_notation.py" \

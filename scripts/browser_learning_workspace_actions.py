@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import Final, Literal, TypedDict
 
+from browser_cdp import CdpError
 from browser_input import dispatch_key
 from browser_learning_workspace_probes import STATE_PROBE
 from browser_session import ChromeSession
@@ -242,7 +243,12 @@ def record_click(
     before = state(browser)
     arm_wait(browser, expected, before)
     click(browser, locator)
-    await_wait(browser)
+    try:
+        await_wait(browser)
+    except CdpError as error:
+        raise WorkspaceContractError(
+            f"{name} wait failed after click: {state(browser)}",
+        ) from error
     after = state(browser)
     verify(after, expected, before)
     _append_record(records, name, before, after, geometry)

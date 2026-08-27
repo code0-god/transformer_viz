@@ -37,10 +37,16 @@ _ENDPOINT = re.compile(r"DevTools listening on (ws://\S+)")
 class ChromeSession:
     """Own one Chrome process, profile, CDP socket, page, and attached Workers."""
 
-    def __init__(self, timeout: float = 30.0) -> None:
+    def __init__(
+        self,
+        timeout: float = 30.0,
+        *,
+        enable_gpu: bool = False,
+    ) -> None:
         if not CHROME.exists():
             raise CdpError(f"Chrome not found at {CHROME}")
         self.timeout = timeout
+        self.enable_gpu = enable_gpu
         self.profile = Path(tempfile.mkdtemp(prefix="transformer-viz-phase9-chrome-"))
         self.process: subprocess.Popen[str] | None = None
         self.cdp: Cdp | None = None
@@ -54,11 +60,12 @@ class ChromeSession:
     def __enter__(self) -> Self:
         opened = False
         try:
+            gpu_flags = [] if self.enable_gpu else ["--disable-gpu"]
             self.process = subprocess.Popen(
                 [
                     str(CHROME),
                     "--headless=new",
-                    "--disable-gpu",
+                    *gpu_flags,
                     "--no-first-run",
                     "--no-default-browser-check",
                     "--remote-debugging-port=0",
