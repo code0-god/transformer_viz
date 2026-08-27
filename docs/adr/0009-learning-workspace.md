@@ -153,6 +153,10 @@ No generic component contains GPT, Pre-LN, causal-attention, GELU, or nanoGPT te
 
 ### Responsive composition and evidence
 
+> **Superseded for Course Learn by ADR 0010.** The sticky/local-overflow decision below describes
+> the standalone Learning Workspace at ADR 0009 acceptance. Course Learn now uses a bounded 48:52
+> split, static Diagram, and active right-pane-only scroll ownership.
+
 At viewport widths of at least 80rem (1280px), the workspace uses
 `minmax(34rem, 48fr) minmax(38rem, 52fr)`: Diagram and Guide have near-equal weight, with the Guide
 slightly wider. The Diagram pane is sticky and wide diagrams retain local horizontal scrolling.
@@ -210,10 +214,10 @@ executable.
 
 ## Track B and future work
 
-Track B is not implemented. The current UI shows symbolic notation and derived shape strings, not
-actual tensors. Actual Tensor/Q/K/V values, matrices, attention heatmaps, a source inspector, and a
-KV-cache visualization are absent. Encoder-Decoder, Cross-Attention, a second profile/model, and a
-model selector are also absent.
+Track B remains unimplemented. ADR 0010 supersedes the blanket matrix absence with one bounded
+exception: an actual-trace Attention Score Matrix PoC. General Tensor/Q/K/V values, attention
+heatmaps, a source inspector, and a KV-cache visualization remain absent. Encoder-Decoder,
+Cross-Attention, a second profile/model, and a model selector are also absent.
 
 Adding any of those evidence surfaces requires separate content and rendering contracts, runtime
 DTOs, retention/correlation rules, Worker requests and calculations, Rust implementation, and

@@ -21,13 +21,17 @@ retained trace evidence.
 ## Visual hierarchy
 
 - Header exposes product identity, `학습`, `모델 실험실`, and one live Worker status.
-- Course Home gives the registered decoder-only course the only primary CTA.
+- Course Home gives the registered decoder-only course the only primary CTA,
+  an outlined Lab route, and a text-level in-page contents action.
 - Learn shows one Chapter H1, one subtitle, progress, and ToC before the Learning Workspace.
+- Learn keeps Diagram on the left. Its right pane shows a book-like Explanation by default and
+  exposes an understated Visualization tab only when the selected concept registers a renderer.
 - Prompt and generation controls exist only in Lab.
 - Architecture diagrams own the primary canvas; annotations support rather than compete with flow.
 - Drill-down nodes communicate capability through label, shape, focus, and indicator, not color
   alone.
-- Symbolic shapes stay in diagrams. Current model/trace values stay in annotation panels.
+- Symbolic shapes stay in diagrams. Current model/trace values stay in annotation panels or the
+  optional data-visualization pane.
 - Generated prompt/continuation text is literal text, never mathematical markup.
 
 Root, Block, and Attention geometry is deterministic and covered by browser probes. Connectors may
@@ -36,15 +40,37 @@ not cross unrelated operation nodes, and residual paths retain explicit `+` junc
 ## Responsive behavior
 
 - Desktop Learn is a bounded `scroll-body-shell`: Chapter header remains visible, the 48:52
-  Workspace body clips page overflow, Diagram is static, and Guide alone owns vertical scrolling.
+  Workspace body clips page overflow, Diagram is static, and the active right pane alone owns
+  vertical scrolling.
+- Layout mechanics combine StyleGallery's `split-screen` and `scroll-body-shell` contracts:
+  <https://github.com/changeroa/StyleGallery/blob/main/patterns/split-sidebar/split-screen.md> and
+  <https://github.com/changeroa/StyleGallery/blob/main/patterns/viewport-shell/scroll-body-shell.md>.
+  The right pane is the named desktop scroll owner; mobile returns to document flow.
 - Desktop never uses `position: sticky` for a Learning Diagram.
-- Tablet and mobile reflow Diagram before Guide into normal document flow, allowing local Diagram
-  scrolling only when required.
+- Tablet and mobile reflow Diagram before Explanation or Visualization into normal document flow,
+  allowing local Diagram scrolling only when required.
 - Mobile uses document vertical flow and local inline scrolling for wide diagrams; controls,
   Korean copy, formulas, and status detail may not clip.
 - Startup shell and ready/error surfaces remain usable at 390x844.
 
 No breakpoint changes model state or Worker ownership.
+
+## Hybrid visualization
+
+- Semantic SVG/DOM/KaTeX explains architecture, operation order, labels, connectors, curriculum,
+  and formulas.
+- Three.js and React Three Fiber render only validated numerical tensors. They never replace
+  Course Home, GPT, Block, Self-Attention, or curriculum architecture diagrams.
+- Every Diagram is wrapped by the generic `DiagramViewport`, starts fitted, and provides 44px
+  zoom-out, zoom-in, and Fit controls. Ctrl+wheel zoom stays pointer-centered; normal wheel remains
+  page/right-pane scrolling; drag pan activates only above Fit.
+- This milestone registers one renderer: the actual-trace Attention Score Matrix. It uses signed
+  height, a semantic negative/neutral/positive legend, hover, persistent selection, and bounded
+  camera controls.
+- Three.js and Fiber load through a literal dynamic import only after Visualization activation.
+  Canvas uses `frameloop="demand"` and a 1–2 DPR clamp.
+- WebGL capability failure, lazy-load failure, renderer failure, and context loss stay inside the
+  visualization boundary. An exact HTML matrix table remains available throughout.
 
 ## Math rendering
 
@@ -68,7 +94,8 @@ copy, and arbitrary runtime strings never enter KaTeX.
 - Selected state and drill-down capability have non-color cues.
 - Math exposes MathML plus an accessible label.
 - Reduced-motion preferences disable nonessential transitions.
-- Learn focus order follows global navigation, Chapter navigation, Diagram, then Guide.
+- Learn focus order follows global navigation, Chapter navigation, Diagram viewport controls and
+  semantic nodes, right-pane tabs when present, then Explanation or Visualization content.
 - Lab focus order follows Prompt, generation, Root, Block, and Attention content.
 
 ## Runtime evidence

@@ -8,9 +8,9 @@ web
 
 ## Stack
 
-React 19, strict TypeScript, Vite 8, KaTeX 0.18, Rust 1.94.0, WebAssembly, a Rust module Web
-Worker, Candle CPU f32 inference, SVG, HTML, and CSS. Deployment is static-only and supports both
-root hosting and a GitHub Pages project subpath.
+React 19, strict TypeScript, Vite 8, KaTeX 0.18, Three.js 0.185, React Three Fiber 9.7,
+Rust 1.94.0, WebAssembly, a Rust module Web Worker, Candle CPU f32 inference, SVG, HTML, and CSS.
+Deployment is static-only and supports both root hosting and a GitHub Pages project subpath.
 
 ## Users
 
@@ -18,7 +18,9 @@ Primary users are Korean-speaking beginners who need a clear path from ordinary 
 Transformer concepts. They may know basic programming, but the course never assumes prior
 knowledge of tokenization, language modeling, GPT, Transformer Blocks, or Self-Attention.
 Advanced learners can use the model Lab to connect generated tokens to architecture, math,
-tensors, sampling, and source code.
+tensors, sampling, and source code. A capable Learn concept may expose one optional data
+visualization beside its explanation; architecture and formulas remain semantic SVG, DOM, and
+KaTeX.
 
 ## Product Purpose
 
@@ -39,8 +41,9 @@ assistant answer.
 
 ## Operating Context
 
-Users open one static URL at Course Home, start Chapter 0.1 with one action, and move through
-URL-addressable Chapters. Learn hides model-generation controls. Lab preserves Prompt, Generate,
+Users open one static URL at Course Home, start Chapter 0.1 with one primary action, optionally
+open Lab through its outlined route, and move through URL-addressable Chapters. Learn hides
+model-generation controls. Lab preserves Prompt, Generate,
 Stop, Continuation, Replay, sampling settings, trace, and Architecture inside the existing React
 and Worker state. The default Lab prompt is `the cat`; the legacy `the cat sat on the` phrase
 remains only as the full-forward golden/parity fixture.
@@ -63,6 +66,10 @@ remains only as the full-forward golden/parity fixture.
   thread-based inference is introduced.
 - D3, Canvas-only information, mock traces, arbitrary JSON replay, and TypeScript numerical
   inference are outside product scope.
+- WebGL is an optional, lazy numerical-evidence layer. This milestone implements only the actual
+  attention Score Matrix; decorative scenes and three-dimensional architecture are outside scope.
+- The Score Matrix Canvas uses demand-driven rendering and bounded controls. Its exact Worker
+  values remain available in an accessible HTML table when WebGL is unavailable or interrupted.
 - The model is nanoGPT-compatible, not GPT-2 124M and not a general-purpose language model.
 
 ## Brand Commitments
@@ -98,10 +105,14 @@ available and none may be fabricated.
 9. Start with course wayfinding, not an inference console or Architecture fallback.
 10. Give each Chapter one H1 and one explicit scroll owner per responsive layout.
 11. Store Home, Chapter, and Lab location in a static-host-safe hash route.
+12. Let SVG explain where computation happens; use Three.js only when real tensor values benefit
+    from a spatial encoding.
 
 ## Accessibility & Inclusion
 
 Target WCAG 2.2 AA. All controls require keyboard access and visible focus. Query, key, selected,
 completed, future, and masked states must remain distinguishable without color alone. SVG
-visualizations need text alternatives and equivalent HTML values. Motion is user-controlled,
-supports reduced-motion preferences, and never carries exclusive meaning.
+visualizations need text alternatives and equivalent HTML values. WebGL visualizations must keep
+an exact HTML fallback mounted and isolate loading, capability, renderer, and context-loss
+failures. Motion is user-controlled, supports reduced-motion preferences, and never carries
+exclusive meaning.
