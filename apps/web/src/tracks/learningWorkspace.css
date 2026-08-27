@@ -109,12 +109,6 @@
   min-inline-size: 0;
 }
 
-.learning-workspace__diagram-scroll {
-  max-inline-size: 100%;
-  overflow-x: clip;
-  overflow-y: hidden;
-}
-
 .learning-visually-hidden {
   position: absolute;
   inline-size: 1px;
@@ -127,16 +121,50 @@
   border: 0;
 }
 
+.learning-workspace__view-tabs {
+  position: relative;
+  display: flex;
+  min-block-size: 44px;
+  border-block-end: 1px solid var(--hairline);
+}
+
+.learning-workspace__view-tabs button {
+  position: relative;
+  min-inline-size: 5rem;
+  min-block-size: 44px;
+  padding-inline: var(--s3);
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font-weight: 720;
+  cursor: pointer;
+}
+
+.learning-workspace__view-tabs button[aria-selected="true"] {
+  color: var(--ink);
+}
+
+.learning-workspace__view-tabs button[aria-selected="true"]::after {
+  position: absolute;
+  inset-inline: var(--s3);
+  inset-block-end: -1px;
+  block-size: 2px;
+  background: var(--accent);
+  content: "";
+}
+
+.learning-workspace__view-panel {
+  min-block-size: 0;
+}
+
+.learning-workspace__view-panel[hidden] {
+  display: none;
+}
+
 @media (min-width: 80rem) {
   .learning-workspace__body {
     grid-template-columns: minmax(34rem, 48fr) minmax(38rem, 52fr);
-    align-items: start;
-  }
-
-  .learning-workspace__pane--diagram {
-    position: sticky;
-    inset-block-start: var(--s4);
-    align-self: start;
+    align-items: stretch;
   }
 }
 

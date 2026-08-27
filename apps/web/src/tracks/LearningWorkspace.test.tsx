@@ -88,9 +88,7 @@ describe("LearningWorkspace", () => {
       "utf8",
     );
 
-    expect(workspaceCss).toMatch(
-      /\.learning-workspace__diagram-scroll\s*{[^}]*overflow-x:\s*clip;[^}]*overflow-y:\s*hidden/s,
-    );
+    expect(workspaceCss).not.toMatch(/position:\s*sticky/);
     expect(blockCss).toMatch(
       /\.architecture-block-screen \.architecture-detail-diagram\s*{[^}]*min-inline-size:\s*0/s,
     );
@@ -125,8 +123,108 @@ describe("LearningWorkspace", () => {
       "id",
       "learning-guide-pane",
     );
-    expect(screen.getAllByRole("status")).toHaveLength(1);
+    expect(
+      container.querySelectorAll("[data-focus-availability]"),
+    ).toHaveLength(1);
     expect(screen.getByRole("button", { name: "Header action" })).toBeVisible();
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+  });
+
+  test("shows understated tabs only when visualization exists", async () => {
+    const user = userEvent.setup();
+    const onPaneModeChange = vi.fn();
+    const workspaceProps = {
+      route,
+      status: { availability: "available" } as const,
+      onPaneModeChange,
+      diagram: { label: "Diagram pane", content: <span>Diagram content</span> },
+      guide: { label: "Guide pane", content: <span>Guide content</span> },
+      visualization: {
+        label: "Visualization pane",
+        content: <button type="button">Layer 2 / Head 3</button>,
+      },
+    };
+    const { rerender } = render(
+      <LearningWorkspace {...workspaceProps} paneMode="explanation" />,
+    );
+
+    expect(screen.getByRole("tab", { name: "설명" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByRole("tabpanel", { name: "설명" })).toBeVisible();
+    expect(
+      document.getElementById("learning-visualization-panel"),
+    ).toHaveAttribute("hidden");
+
+    await user.click(screen.getByRole("tab", { name: "시각화" }));
+    expect(onPaneModeChange).toHaveBeenCalledWith("visualization");
+    rerender(
+      <LearningWorkspace {...workspaceProps} paneMode="visualization" />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Layer 2 / Head 3" }),
+    ).toBeVisible();
+    rerender(<LearningWorkspace {...workspaceProps} paneMode="explanation" />);
+    rerender(
+      <LearningWorkspace {...workspaceProps} paneMode="visualization" />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Layer 2 / Head 3" }),
+    ).toBeVisible();
+  });
+
+  test("forwards a chapter reset key to DiagramViewport", () => {
+    render(
+      <LearningWorkspace
+        route={route}
+        status={{ availability: "available" }}
+        diagram={{
+          label: "Diagram pane",
+          resetKey: "decoder.chapter.1.2",
+          content: <span>Diagram content</span>,
+        }}
+        guide={{ label: "Guide pane", content: <span>Guide content</span> }}
+      />,
+    );
+
+    expect(
+      document.querySelector(".diagram-viewport__content"),
+    ).toHaveAttribute("data-reset-key", "decoder.chapter.1.2");
+  });
+
+  test("supports roving keyboard navigation across learning tabs", async () => {
+    const user = userEvent.setup();
+    const onPaneModeChange = vi.fn();
+    const props = {
+      route,
+      status: { availability: "available" } as const,
+      onPaneModeChange,
+      diagram: { label: "Diagram pane", content: <span>Diagram content</span> },
+      guide: { label: "Guide pane", content: <span>Guide content</span> },
+      visualization: {
+        label: "Visualization pane",
+        content: <span>Visualization content</span>,
+      },
+    };
+    const { rerender } = render(
+      <LearningWorkspace {...props} paneMode="explanation" />,
+    );
+    const explanation = screen.getByRole("tab", { name: "설명" });
+    const visualization = screen.getByRole("tab", { name: "시각화" });
+
+    expect(explanation).toHaveAttribute("tabindex", "0");
+    expect(visualization).toHaveAttribute("tabindex", "-1");
+    explanation.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(visualization).toHaveFocus();
+    expect(onPaneModeChange).toHaveBeenLastCalledWith("visualization");
+
+    rerender(<LearningWorkspace {...props} paneMode="visualization" />);
+    await user.keyboard("{Home}");
+    expect(explanation).toHaveFocus();
+    expect(onPaneModeChange).toHaveBeenLastCalledWith("explanation");
   });
 
   test("reports a stale Guide target without selecting architecture", async () => {
@@ -142,9 +240,8 @@ describe("LearningWorkspace", () => {
 
     // Then
     expect(selectArchitecture).not.toHaveBeenCalled();
-    expect(screen.getByRole("status")).toHaveAttribute(
-      "data-focus-availability",
-      "unavailable",
-    );
+    expect(
+      document.querySelector('[data-focus-availability="unavailable"]'),
+    ).not.toBeNull();
   });
 });

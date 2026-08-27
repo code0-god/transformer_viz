@@ -26,6 +26,9 @@ import type {
   LearningGuideSection,
   LearningTrackProfile,
 } from "../types";
+import { ScoreMatrixVisualizationPane } from "../visualization/ScoreMatrixVisualizationPane";
+import { createScoreMatrixInspectionState } from "../visualization/scoreMatrixState";
+import type { LearningPaneMode } from "./curriculum/paneMode";
 import { DecoderDiagram } from "./DecoderDiagram";
 import { DecoderGuide } from "./DecoderGuide";
 import { DecoderRouteControls } from "./DecoderRouteControls";
@@ -40,6 +43,8 @@ import { decoderRoute, decoderRouteId } from "./routes";
 type DecoderLearningWorkspaceProps = {
   readonly context: ArchitectureRenderContext;
   readonly profile: LearningTrackProfile;
+  readonly presentation?: "route" | "chapter";
+  readonly visualizationId?: string;
 };
 
 class DecoderWorkspaceError extends Error {
@@ -52,6 +57,8 @@ class DecoderWorkspaceError extends Error {
 export function DecoderLearningWorkspace({
   context,
   profile,
+  presentation = "route",
+  visualizationId,
 }: DecoderLearningWorkspaceProps): ReactElement {
   const routeId = decoderRouteId(decoderRoute(context.state));
   const route = profile.routes.definitions.find(({ id }) => id === routeId);
@@ -61,6 +68,7 @@ export function DecoderLearningWorkspace({
   const [status, setStatus] = useState<LearningFocusStatus>({
     availability: "available",
   });
+  const [paneMode, setPaneMode] = useState<LearningPaneMode>("explanation");
   const titleRef = useRef<HTMLHeadingElement | null>(null);
   const previousRouteRef = useRef(routeId);
   const nodeCleanups = useRef(new Map<ArchitectureNodeId, () => void>());
@@ -81,6 +89,7 @@ export function DecoderLearningWorkspace({
     previousRouteRef.current = routeId;
     setFocus(createLearningFocusState(routeId));
     setStatus({ availability: "available" });
+    setPaneMode("explanation");
     titleRef.current?.focus();
   }, [routeId]);
 
@@ -211,10 +220,11 @@ export function DecoderLearningWorkspace({
     <LearningWorkspace
       route={route}
       status={status}
+      presentation={presentation}
       onRouteTitleRef={(element) => {
         titleRef.current = element;
       }}
-      headerControls={
+      diagramControls={
         <DecoderRouteControls
           context={context}
           navigateRoot={() => navigateTo("root")}
@@ -253,6 +263,30 @@ export function DecoderLearningWorkspace({
           />
         ),
       }}
+      {...(visualizationId === undefined
+        ? {}
+        : {
+            visualization: {
+              label: `${route.title} Visualization`,
+              content: (
+                <ScoreMatrixVisualizationPane
+                  visualizationId={visualizationId}
+                  state={
+                    context.scoreMatrix ?? createScoreMatrixInspectionState()
+                  }
+                  replayAvailable={
+                    context.replaySummary !== undefined &&
+                    context.replaySummary !== null
+                  }
+                  selectedLayer={context.state.selectedLayer}
+                  selectedHead={context.state.selectedHead}
+                  onInspect={context.inspectScoreMatrix ?? (() => undefined)}
+                />
+              ),
+            },
+            paneMode,
+            onPaneModeChange: setPaneMode,
+          })}
     />
   );
 }

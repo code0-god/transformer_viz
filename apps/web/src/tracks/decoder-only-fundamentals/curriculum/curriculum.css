@@ -18,7 +18,7 @@
 
 .curriculum-workspace__chapter-copy {
   display: grid;
-  gap: var(--s1);
+  gap: var(--s2);
   min-inline-size: 0;
 }
 
@@ -189,11 +189,7 @@
   gap: var(--s4);
   min-inline-size: 0;
   margin: 0;
-  padding: var(--s4);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  padding: 0;
 }
 
 .part0-diagram svg {
@@ -345,24 +341,12 @@
   margin-block-start: var(--s2);
 }
 
-.part0-diagram__focus {
-  min-block-size: 44px;
-  justify-self: start;
-  border-color: var(--accent);
-  background: var(--paper);
-  color: var(--accent);
-}
-
 .part1-diagram {
   display: grid;
   gap: var(--s4);
   min-inline-size: 0;
   margin: 0;
-  padding: var(--s4);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  padding: 0;
 }
 
 .part1-diagram svg {
@@ -460,24 +444,12 @@
   overflow-wrap: anywhere;
 }
 
-.part1-diagram__focus {
-  min-block-size: 44px;
-  justify-self: start;
-  border-color: var(--accent);
-  background: var(--paper);
-  color: var(--accent);
-}
-
 .part2-diagram {
   display: grid;
   gap: var(--s4);
   min-inline-size: 0;
   margin: 0;
-  padding: var(--s4);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  padding: 0;
 }
 
 .part2-diagram svg {
@@ -584,14 +556,6 @@
   overflow-wrap: anywhere;
 }
 
-.part2-diagram__focus {
-  min-block-size: 44px;
-  justify-self: start;
-  border-color: var(--accent);
-  background: var(--paper);
-  color: var(--accent);
-}
-
 @media (min-width: 80rem) {
   .curriculum-workspace {
     grid-template-rows: auto minmax(0, 1fr);
@@ -609,6 +573,7 @@
 
   .curriculum-workspace .learning-workspace__body {
     grid-template-columns: minmax(0, 48fr) minmax(0, 52fr);
+    gap: 0;
     align-items: stretch;
     block-size: 100%;
     min-block-size: 0;
@@ -621,16 +586,35 @@
 
   .curriculum-workspace .learning-workspace__pane--diagram {
     position: static;
-    overflow: auto;
+    overflow: hidden;
   }
 
-  .curriculum-workspace .learning-workspace__diagram-scroll {
-    max-block-size: 100%;
-    overflow: auto;
+  .curriculum-workspace .diagram-viewport {
+    block-size: 100%;
+  }
+
+  .curriculum-workspace .diagram-viewport__surface {
+    min-block-size: 0;
   }
 
   .curriculum-workspace .learning-workspace__pane--guide {
     min-block-size: 0;
+    border-inline-start: 1px solid var(--hairline);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .curriculum-workspace
+    .learning-workspace__pane--guide[data-has-visualization="true"] {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  .curriculum-workspace
+    .learning-workspace__pane--guide[data-has-visualization="true"]
+    .learning-workspace__view-panel:not([hidden]) {
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
@@ -659,7 +643,8 @@
 
   .curriculum-workspace,
   .curriculum-workspace .learning-workspace,
-  .curriculum-workspace .learning-workspace__pane--guide {
+  .curriculum-workspace .learning-workspace__pane--guide,
+  .curriculum-workspace .learning-workspace__view-panel {
     block-size: auto;
     overflow: visible;
   }
@@ -710,12 +695,6 @@
 
   .part0-diagram__fallback tr + tr {
     margin-block-start: var(--s2);
-  }
-
-  .part0-diagram__focus,
-  .part1-diagram__focus,
-  .part2-diagram__focus {
-    inline-size: 100%;
   }
 
   .curriculum-toc {

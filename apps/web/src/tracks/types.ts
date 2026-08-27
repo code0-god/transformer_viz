@@ -8,9 +8,11 @@ import type { NotationEntry } from "../domain/notationTypes";
 import type {
   ModelArchitectureMetadata,
   ModelMetadata,
+  RunSummary,
 } from "../generated/schema";
 import type { FormulaDefinition, FormulaId } from "../math/formulaCatalog";
 import type { LearningGuideCatalog, LearningGuidePage } from "./guideTypes";
+import type { ScoreMatrixInspectionState } from "./visualization/scoreMatrixState";
 import type {
   ArchitectureRouteCatalog,
   ArchitectureRouteDefinition,
@@ -102,6 +104,9 @@ export interface ArchitectureRenderContext {
   readonly model: Readonly<ModelMetadata>;
   readonly state: ArchitectureState;
   readonly replaySequenceLength: number | null;
+  readonly replaySummary?: Readonly<RunSummary> | null;
+  readonly scoreMatrix?: ScoreMatrixInspectionState;
+  readonly inspectScoreMatrix?: () => void;
   readonly navigate: (action: ArchitectureAction) => void;
   readonly course?: LearningCourseLocation;
 }

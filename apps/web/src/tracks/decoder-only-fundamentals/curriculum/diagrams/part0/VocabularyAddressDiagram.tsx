@@ -1,10 +1,5 @@
-import type { ReactElement, Ref } from "react";
+import type { ReactElement } from "react";
 import { curriculumTokenExamples } from "../../generated/tokenExamples";
-
-type VocabularyAddressDiagramProps = {
-  readonly focusButtonRef: Ref<HTMLButtonElement>;
-  readonly onFocusGuide: () => void;
-};
 
 const example = curriculumTokenExamples.find(({ id }) => id === "the-cat");
 if (example === undefined)
@@ -12,10 +7,7 @@ if (example === undefined)
 const displayTokens = example.displayEncoding;
 const generationTokens = example.generationPrefix;
 
-export function VocabularyAddressDiagram({
-  focusButtonRef,
-  onFocusGuide,
-}: VocabularyAddressDiagramProps): ReactElement {
+export function VocabularyAddressDiagram(): ReactElement {
   return (
     <figure className="part0-diagram part0-diagram--vocabulary">
       <svg
@@ -137,14 +129,6 @@ export function VocabularyAddressDiagram({
           <p>Reserved UNK는 주소이며 embedding 의미와 분리됩니다.</p>
         </fieldset>
       </figcaption>
-      <button
-        ref={focusButtonRef}
-        type="button"
-        className="part0-diagram__focus"
-        onClick={onFocusGuide}
-      >
-        개념 설명에 초점
-      </button>
     </figure>
   );
 }

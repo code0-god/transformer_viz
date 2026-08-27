@@ -1,9 +1,4 @@
-import type { ReactElement, Ref } from "react";
-
-type NlpPipelineDiagramProps = {
-  readonly focusButtonRef: Ref<HTMLButtonElement>;
-  readonly onFocusGuide: () => void;
-};
+import type { ReactElement } from "react";
 
 const STAGES = [
   ["사람이 쓰는 텍스트", "질문 · 문장 · 글"],
@@ -12,10 +7,7 @@ const STAGES = [
   ["사람이 사용하는 결과", "분류 · 검색 · 생성"],
 ] as const;
 
-export function NlpPipelineDiagram({
-  focusButtonRef,
-  onFocusGuide,
-}: NlpPipelineDiagramProps): ReactElement {
+export function NlpPipelineDiagram(): ReactElement {
   return (
     <figure className="part0-diagram part0-diagram--pipeline">
       <svg
@@ -102,14 +94,6 @@ export function NlpPipelineDiagram({
           </ol>
         </fieldset>
       </figcaption>
-      <button
-        ref={focusButtonRef}
-        type="button"
-        className="part0-diagram__focus"
-        onClick={onFocusGuide}
-      >
-        개념 설명으로 이동
-      </button>
     </figure>
   );
 }

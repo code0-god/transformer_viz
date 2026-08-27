@@ -1,4 +1,5 @@
 import { FORMULA_IDS, formulaCatalog } from "../../../math/formulaCatalog";
+import { SCORE_MATRIX_VISUALIZATION_ID } from "../../visualization/visualizationRegistry";
 import { decoderNodeMap } from "../nodes";
 import { part0Glossary } from "./content/part0/glossary";
 import { part1Glossary } from "./content/part1/glossary";
@@ -6,7 +7,7 @@ import { part2Glossary } from "./content/part2/glossary";
 import type {
   CurriculumRendererRegistry,
   RenderableCurriculum,
-} from "./DecoderTrackWorkspace";
+} from "./curriculumRendererRegistry";
 import {
   curriculumDiagramComponent,
   curriculumDiagramIds,
@@ -25,6 +26,7 @@ import type {
   LearningPart,
   PartId,
   ReferenceId,
+  VisualizationId,
 } from "./types";
 import type { CurriculumRegistries } from "./validation";
 
@@ -48,6 +50,7 @@ type ChapterSpec = {
   readonly guideSectionIds?: readonly string[];
   readonly incumbentSectionId?: string;
   readonly diagramId: DiagramId;
+  readonly visualizationId?: VisualizationId;
   readonly nodeId: string;
   readonly references: readonly ReferenceId[];
 };
@@ -239,6 +242,7 @@ const CHAPTER_SPECS = [
     conceptTitle: "Self-Attention",
     incumbentSectionId: "qkv",
     diagramId: "self-attention",
+    visualizationId: SCORE_MATRIX_VISUALIZATION_ID,
     nodeId: "decoder.block.self-attention",
     references: [
       "ref.repo.layers",
@@ -262,7 +266,12 @@ function chapterFromSpec(spec: ChapterSpec): LearningChapter {
         : [`${spec.pageId}.section`]),
     relatedNodeIds: [spec.nodeId],
     diagramId: spec.diagramId,
-    visualizationCtaCount: 0,
+    ...(spec.visualizationId === undefined
+      ? { visualizationCtaCount: 0 }
+      : {
+          visualizationId: spec.visualizationId,
+          visualizationCtaCount: 1,
+        }),
     referenceIds: spec.references,
   };
   return {

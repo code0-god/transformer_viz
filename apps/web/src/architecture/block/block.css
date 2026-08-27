@@ -75,7 +75,7 @@
   align-items: end;
   padding: var(--s4, 1rem);
   border: 1px solid var(--hairline, #d8d3ca);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--block-soft, #e5edf7);
 }
 

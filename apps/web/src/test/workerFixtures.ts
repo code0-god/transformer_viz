@@ -1,4 +1,5 @@
 import type {
+  AttentionHeadTrace,
   GenerationConfig,
   GenerationStepSummary,
   ModelMetadata,
@@ -159,5 +160,44 @@ export function runSummary(runId: number, sequenceLength = 2): RunSummary {
     },
     final_layer_norm: tensor("final"),
     logits: { logits: tensor("logits"), top_k: [], source },
+  };
+}
+
+export function attentionHeadTrace(
+  layer = 0,
+  head = 0,
+  sequenceLength = 2,
+): AttentionHeadTrace {
+  const matrixSize = sequenceLength * sequenceLength;
+  const values = Array.from(
+    { length: matrixSize },
+    (_, index) => (index - Math.floor(matrixSize / 2)) / 10,
+  );
+  return {
+    layer,
+    head,
+    query: tensor("query"),
+    key: tensor("key"),
+    value: tensor("value"),
+    raw_scores: {
+      id: "raw_scores",
+      label: "Raw attention scores",
+      shape: [1, 1, sequenceLength, sequenceLength],
+      values,
+      stats,
+    },
+    scaled_scores: tensor("scaled_scores"),
+    mask: {
+      rows: sequenceLength,
+      cols: sequenceLength,
+      allowed: Array.from(
+        { length: matrixSize },
+        (_, index) =>
+          index % sequenceLength <= Math.floor(index / sequenceLength),
+      ),
+    },
+    probabilities: tensor("probabilities"),
+    output: tensor("output"),
+    source,
   };
 }

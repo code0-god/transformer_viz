@@ -2,6 +2,9 @@
   display: grid;
   gap: var(--s5, 1.5rem);
   min-inline-size: 0;
+  max-inline-size: 42rem;
+  margin-inline: auto;
+  padding: 0 var(--s5, 1.5rem) var(--s5, 1.5rem);
   color: var(--ink, #24231f);
   font-size: 0.94rem;
   line-height: 1.7;

@@ -1,9 +1,5 @@
-import type { ReactElement, Ref } from "react";
+import type { ReactElement } from "react";
 
-type Props = {
-  readonly focusButtonRef: Ref<HTMLButtonElement>;
-  readonly onFocusGuide: () => void;
-};
 const STAGES = [
   ["Context", "the cat sat on the"],
   ["Transformer", "prefix 계산"],
@@ -15,14 +11,11 @@ const STAGES = [
   ["Selected token", "한 후보"],
 ] as const;
 
-export function NextTokenPredictionDiagram({
-  focusButtonRef,
-  onFocusGuide,
-}: Props): ReactElement {
+export function NextTokenPredictionDiagram(): ReactElement {
   return (
     <figure className="part1-diagram">
       <svg
-        viewBox="0 0 760 500"
+        viewBox="0 0 520 944"
         role="img"
         aria-label="다음 Token 선택 단계"
         aria-describedby="next-token-desc"
@@ -31,7 +24,7 @@ export function NextTokenPredictionDiagram({
         <desc id="next-token-desc">
           Context부터 raw logit, full-vocabulary inspection probability,
           temperature와 Top-K 이후 sampler retained-set probability, selected
-          token까지 구분한 흐름
+          token까지 구분한 위에서 아래 방향의 흐름
         </desc>
         <defs>
           <marker
@@ -47,28 +40,22 @@ export function NextTokenPredictionDiagram({
           </marker>
         </defs>
         {STAGES.map(([title, note], index) => {
-          const column = index % 2;
-          const row = Math.floor(index / 2);
-          const x = 36 + column * 370;
-          const y = 34 + row * 112;
+          const x = 80;
+          const y = 28 + index * 116;
           return (
             <g key={title} className="part1-diagram__stage" data-stage={title}>
-              <rect x={x} y={y} width="318" height="78" rx="12" />
-              <text x={x + 20} y={y + 31}>
+              <rect x={x} y={y} width="360" height="76" rx="12" />
+              <text x={x + 20} y={y + 30}>
                 {title}
               </text>
-              <text className="part1-diagram__note" x={x + 20} y={y + 57}>
+              <text className="part1-diagram__note" x={x + 20} y={y + 56}>
                 {note}
               </text>
               {index < STAGES.length - 1 ? (
                 <path
                   className="part1-diagram__path"
                   markerEnd="url(#next-token-arrow)"
-                  d={
-                    column === 0
-                      ? `M${x + 318} ${y + 39}H${x + 354}`
-                      : `M${x + 159} ${y + 78}V${y + 105}H195`
-                  }
+                  d={`M260 ${y + 76}V${y + 108}`}
                 />
               ) : null}
             </g>
@@ -86,14 +73,6 @@ export function NextTokenPredictionDiagram({
           </ol>
         </fieldset>
       </figcaption>
-      <button
-        ref={focusButtonRef}
-        type="button"
-        className="part1-diagram__focus"
-        onClick={onFocusGuide}
-      >
-        개념 설명에 초점
-      </button>
     </figure>
   );
 }

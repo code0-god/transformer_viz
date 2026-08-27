@@ -1,9 +1,5 @@
-import type { ReactElement, Ref } from "react";
+import type { ReactElement } from "react";
 
-type Props = {
-  readonly focusButtonRef: Ref<HTMLButtonElement>;
-  readonly onFocusGuide: () => void;
-};
 const LOOP = [
   ["Predict", "Model · full prefix forward"],
   ["Select", "Sampler · config 적용"],
@@ -11,10 +7,7 @@ const LOOP = [
   ["Repeat", "종료 전 다음 step"],
 ] as const;
 
-export function AutoregressiveLoopDiagram({
-  focusButtonRef,
-  onFocusGuide,
-}: Props): ReactElement {
+export function AutoregressiveLoopDiagram(): ReactElement {
   return (
     <figure className="part1-diagram">
       <svg
@@ -106,14 +99,6 @@ export function AutoregressiveLoopDiagram({
           </ol>
         </fieldset>
       </figcaption>
-      <button
-        ref={focusButtonRef}
-        type="button"
-        className="part1-diagram__focus"
-        onClick={onFocusGuide}
-      >
-        개념 설명에 초점
-      </button>
     </figure>
   );
 }

@@ -1,29 +1,30 @@
 import {
-  type ComponentType,
   type ReactElement,
-  type Ref,
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 
 import type { ArchitectureAction } from "../../../architecture";
-import type { FormulaDefinition } from "../../../math/formulaCatalog";
 import { LearningGuide } from "../../LearningGuide";
 import { LearningWorkspace } from "../../LearningWorkspace";
 import type {
   ArchitectureRenderContext,
-  GlossaryEntry,
   LearningCourseLocation,
-  LearningGuidePage,
   LearningTrackProfile,
-  RuntimeFactsPresentation,
 } from "../../types";
+import { ScoreMatrixVisualizationPane } from "../../visualization/ScoreMatrixVisualizationPane";
+import { createScoreMatrixInspectionState } from "../../visualization/scoreMatrixState";
 import { DecoderLearningWorkspace } from "../DecoderLearningWorkspace";
 import { decoderRoute, decoderRouteId } from "../routes";
-import { CurriculumNavigation } from "./CurriculumNavigation";
+import { CurriculumChapterHeader } from "./CurriculumChapterHeader";
 import { decoderCurriculum } from "./catalog";
 import { navigateCourseArchitecture } from "./courseArchitectureNavigation";
+import type {
+  CurriculumRendererRegistry,
+  RenderableCurriculum,
+} from "./curriculumRendererRegistry";
 import {
   type CurriculumFocusEvent,
   createCurriculumFocusHandoff,
@@ -36,35 +37,9 @@ import {
   transitionToCurriculumRoute,
   useGeneratedTokenFocus,
 } from "./navigation";
-import { initialLearningPaneState } from "./paneMode";
-import type {
-  ChapterId,
-  DiagramId,
-  GuidePageId,
-  LearningCurriculum,
-} from "./types";
+import { initialLearningPaneState, type LearningPaneMode } from "./paneMode";
+import type { ChapterId } from "./types";
 import "./curriculum.css";
-
-export type CurriculumDiagramRendererProps = {
-  readonly focusButtonRef: Ref<HTMLButtonElement>;
-  readonly onFocusGuide: () => void;
-};
-
-export type CurriculumRendererRegistry = {
-  readonly resolveGuidePage: (
-    pageId: GuidePageId,
-  ) => LearningGuidePage<string> | undefined;
-  readonly resolveDiagram: (
-    diagramId: DiagramId,
-  ) => ComponentType<CurriculumDiagramRendererProps> | undefined;
-  readonly glossary: readonly GlossaryEntry[];
-  readonly formulas: Readonly<Record<string, FormulaDefinition<string>>>;
-  readonly runtimeFacts: Readonly<Record<string, RuntimeFactsPresentation>>;
-};
-
-export type RenderableCurriculum = LearningCurriculum & {
-  readonly rendererRegistry?: CurriculumRendererRegistry;
-};
 
 type DecoderTrackWorkspaceProps = {
   readonly context: ArchitectureRenderContext;
@@ -109,9 +84,11 @@ function DecoderCurriculumWorkspace({
   rendererRegistry,
 }: DecoderCurriculumWorkspaceProps): ReactElement {
   const headingRef = useRef<HTMLHeadingElement | null>(null);
-  const diagramFocusRef = useRef<HTMLButtonElement | null>(null);
   const workspaceRef = useRef<HTMLElement | null>(null);
   const previousChapterRef = useRef<ChapterId | null>(null);
+  const [paneMode, setPaneMode] = useState<LearningPaneMode>(
+    initialLearningPaneState.mode,
+  );
   useGeneratedTokenFocus(workspaceRef, context.state.selectedNodeId);
   const routeId = decoderRouteId(decoderRoute(context.state));
   const navigateArchitecture = (action: ArchitectureAction): void => {
@@ -152,6 +129,7 @@ function DecoderCurriculumWorkspace({
     const changed = previousChapterRef.current !== chapterId;
     if (changed) {
       previousChapterRef.current = chapterId;
+      setPaneMode("explanation");
     }
     const destination = destinationForChapter(chapterId);
     const incumbent = incumbentGuideDestination(chapterId);
@@ -182,9 +160,34 @@ function DecoderCurriculumWorkspace({
     handoff.register({ ...destination, element: registeredElement });
   }, [chapterId, context, handoff, routeId]);
 
+  const visualizationId = concept?.visualizationId;
+  const visualization =
+    visualizationId === undefined
+      ? undefined
+      : {
+          label: `${chapter?.title ?? "Chapter"} Visualization`,
+          content: (
+            <ScoreMatrixVisualizationPane
+              visualizationId={visualizationId}
+              state={context.scoreMatrix ?? createScoreMatrixInspectionState()}
+              replayAvailable={
+                context.replaySummary !== undefined &&
+                context.replaySummary !== null
+              }
+              selectedLayer={context.state.selectedLayer}
+              selectedHead={context.state.selectedHead}
+              onInspect={context.inspectScoreMatrix ?? (() => undefined)}
+            />
+          ),
+        };
   const content =
     page === undefined || Diagram === undefined || registry === undefined ? (
-      <DecoderLearningWorkspace context={learningContext} profile={profile} />
+      <DecoderLearningWorkspace
+        context={learningContext}
+        profile={profile}
+        presentation="chapter"
+        {...(visualizationId === undefined ? {} : { visualizationId })}
+      />
     ) : (
       <LearningWorkspace
         route={{
@@ -196,19 +199,8 @@ function DecoderCurriculumWorkspace({
         presentation="chapter"
         diagram={{
           label: `${chapter?.title ?? page.title} Diagram`,
-          content: (
-            <Diagram
-              focusButtonRef={diagramFocusRef}
-              onFocusGuide={() => {
-                const introduction = workspaceRef.current?.querySelector(
-                  "[data-testid='guide-introduction']",
-                );
-                if (!(introduction instanceof HTMLElement)) return;
-                introduction.tabIndex = -1;
-                introduction.focus({ preventScroll: true });
-              }}
-            />
-          ),
+          resetKey: chapterId,
+          content: <Diagram />,
         }}
         guide={{
           label: `${chapter?.title ?? page.title} Guide`,
@@ -220,12 +212,16 @@ function DecoderCurriculumWorkspace({
               glossary={registry.glossary}
               formulas={registry.formulas}
               runtimeFacts={registry.runtimeFacts}
-              onSectionFocus={() => {
-                diagramFocusRef.current?.focus({ preventScroll: true });
-              }}
             />
           ),
         }}
+        {...(visualization === undefined
+          ? {}
+          : {
+              visualization,
+              paneMode,
+              onPaneModeChange: setPaneMode,
+            })}
       />
     );
 
@@ -234,25 +230,16 @@ function DecoderCurriculumWorkspace({
       ref={workspaceRef}
       className="curriculum-workspace"
       data-curriculum-chapter-id={chapterId}
-      data-pane-mode={initialLearningPaneState.mode}
+      data-pane-mode={paneMode}
     >
-      <header className="curriculum-workspace__header">
-        <div className="curriculum-workspace__chapter-copy">
-          <p className="curriculum-workspace__eyebrow">
-            Part {part?.order ?? 0} · {(navigation?.index ?? 0) + 1} / 14
-          </p>
-          <h1 id="curriculum-chapter-title" ref={headingRef} tabIndex={-1}>
-            {chapter?.title ?? "Curriculum"}
-          </h1>
-          <p>{page?.learningGoal ?? "Decoder-only fundamentals"}</p>
-        </div>
-        <CurriculumNavigation
-          currentChapterId={chapterId}
-          onNavigate={course.navigateChapter}
-          homeHref={course.homeHref}
-          chapterHref={(nextChapterId) => course.chapterHref(nextChapterId)}
-        />
-      </header>
+      <CurriculumChapterHeader
+        eyebrow={`Part ${part?.order ?? 0} · ${(navigation?.index ?? 0) + 1} / 14`}
+        title={chapter?.title ?? "Curriculum"}
+        learningGoal={page?.learningGoal ?? "Decoder-only fundamentals"}
+        chapterId={chapterId}
+        course={course}
+        headingRef={headingRef}
+      />
       {content}
     </section>
   );

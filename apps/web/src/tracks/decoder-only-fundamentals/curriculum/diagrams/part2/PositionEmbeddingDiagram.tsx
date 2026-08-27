@@ -1,18 +1,11 @@
-import type { ReactElement, Ref } from "react";
+import type { ReactElement } from "react";
 
-type Props = {
-  readonly focusButtonRef: Ref<HTMLButtonElement>;
-  readonly onFocusGuide: () => void;
-};
 const ROWS = [
   { token: "the", position: "0", y: 88 },
   { token: "cat", position: "1", y: 238 },
 ] as const;
 
-export function PositionEmbeddingDiagram({
-  focusButtonRef,
-  onFocusGuide,
-}: Props): ReactElement {
+export function PositionEmbeddingDiagram(): ReactElement {
   return (
     <figure className="part2-diagram">
       <svg
@@ -126,14 +119,6 @@ export function PositionEmbeddingDiagram({
           </ol>
         </fieldset>
       </figcaption>
-      <button
-        ref={focusButtonRef}
-        type="button"
-        className="part2-diagram__focus"
-        onClick={onFocusGuide}
-      >
-        개념 설명에 초점
-      </button>
     </figure>
   );
 }

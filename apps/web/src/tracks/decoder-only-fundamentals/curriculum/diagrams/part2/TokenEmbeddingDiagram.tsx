@@ -1,15 +1,8 @@
-import type { ReactElement, Ref } from "react";
+import type { ReactElement } from "react";
 
-type Props = {
-  readonly focusButtonRef: Ref<HTMLButtonElement>;
-  readonly onFocusGuide: () => void;
-};
 const TOKENS = ["the", "cat"] as const;
 
-export function TokenEmbeddingDiagram({
-  focusButtonRef,
-  onFocusGuide,
-}: Props): ReactElement {
+export function TokenEmbeddingDiagram(): ReactElement {
   return (
     <figure className="part2-diagram">
       <svg
@@ -121,14 +114,6 @@ export function TokenEmbeddingDiagram({
           </ol>
         </fieldset>
       </figcaption>
-      <button
-        ref={focusButtonRef}
-        type="button"
-        className="part2-diagram__focus"
-        onClick={onFocusGuide}
-      >
-        개념 설명에 초점
-      </button>
     </figure>
   );
 }

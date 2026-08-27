@@ -33,7 +33,7 @@ function readyCurriculum(): TestWorker {
 
 describe("Part 2 curriculum Diagrams", () => {
   test.each(CHAPTERS)(
-    "renders %s as one named symbolic SVG with fallback and focus control",
+    "renders %s as one named symbolic SVG with fallback",
     async (chapterTitle, imageName) => {
       // Given: a ready app and the real curriculum ToC.
       const worker = readyCurriculum();
@@ -59,10 +59,7 @@ describe("Part 2 curriculum Diagrams", () => {
         pane?.querySelector(`fieldset[aria-label='${chapterTitle} 의미 설명']`),
       ).not.toBeNull();
       const focus = pane?.querySelector("button.part2-diagram__focus");
-      expect(focus).toBeInstanceOf(HTMLButtonElement);
-      if (!(focus instanceof HTMLButtonElement)) return;
-      await user.click(focus);
-      expect(screen.getByTestId("guide-introduction")).toHaveFocus();
+      expect(focus).toBeNull();
       expect(
         pane?.querySelector(
           "[role='slider'],[role='switch'],[role='grid'],[role='heatmap'],select,input",

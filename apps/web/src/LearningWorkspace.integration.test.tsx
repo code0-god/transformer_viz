@@ -53,13 +53,13 @@ describe("Learning Workspace production integration", () => {
     await user.click(
       screen.getByRole("button", { name: /반복 Transformer Blocks/ }),
     );
-    await user.click(screen.getByRole("button", { name: "Layer 2" }));
+    await user.click(screen.getByRole("button", { name: "Layer 3" }));
     await user.click(
       screen.getByRole("button", {
         name: /Causal Multi-Head Self-Attention/,
       }),
     );
-    await user.click(screen.getByRole("button", { name: "Head 2" }));
+    await user.click(screen.getByRole("button", { name: "Head 3" }));
     await user.click(screen.getByLabelText(/Softmax.*선택 가능/));
 
     // When: the learner returns to Root and drills down again.
@@ -173,8 +173,8 @@ describe("Learning Workspace production integration", () => {
     await user.click(screen.getByLabelText(/Softmax.*선택 가능/));
 
     // When: route-local layer and head controls change.
-    await user.click(screen.getByRole("button", { name: "Layer 1" }));
-    await user.click(screen.getByRole("button", { name: "Head 2" }));
+    await user.click(screen.getByRole("button", { name: "Layer 2" }));
+    await user.click(screen.getByRole("button", { name: "Head 3" }));
 
     // Then: page, focus, selection, and Worker traffic are preserved.
     expect(screen.getByTestId("attention-detail")).toHaveAttribute(

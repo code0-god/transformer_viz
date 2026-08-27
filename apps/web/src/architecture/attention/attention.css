@@ -16,7 +16,7 @@
 .architecture-attention-screen .architecture-intro h2, .architecture-attention-screen .architecture-intro p, .architecture-attention-screen .architecture-detail-toolbar p { margin: 0; }
 .architecture-attention-screen .architecture-intro p { margin-top: .35rem; color: var(--attention-muted); overflow-wrap: anywhere; word-break: keep-all; }
 .architecture-attention-screen .architecture-detail { display: grid; gap: 1rem; }
-.architecture-attention-screen .architecture-detail-toolbar { padding: 1rem; border: 1px solid var(--attention-hairline); border-radius: 14px; background: #f2f5fa; }
+.architecture-attention-screen .architecture-detail-toolbar { padding: 1rem; border: 1px solid var(--attention-hairline); border-radius: 12px; background: #f2f5fa; }
 .architecture-attention-screen .architecture-detail-kicker { color: #315d99; font: 800 .72rem ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; }
 .architecture-attention-screen .architecture-detail-toolbar > div > p:last-child { margin-top: .25rem; color: var(--attention-muted); font-size: .8rem; overflow-wrap: anywhere; word-break: keep-all; }
 .architecture-attention-screen .architecture-attention-selectors{ display: flex; align-items: end; gap: 1rem; }

@@ -27,7 +27,7 @@
   align-self: start;
   padding: var(--s5, 1.25rem);
   border: 1px solid color-mix(in srgb, #d89a45 55%, var(--hairline, #d8cdb9));
-  border-radius: 16px;
+  border-radius: 12px;
   background: color-mix(in srgb, var(--surface, #fffaf0) 88%, var(--normalization-soft, #fff0c9));
 }
 

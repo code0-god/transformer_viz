@@ -1,0 +1,124 @@
+.score-matrix-scene {
+  display: grid;
+  gap: var(--s3);
+  min-inline-size: 0;
+}
+
+.score-matrix-canvas {
+  inline-size: 100%;
+  block-size: clamp(18rem, 38dvb, 26rem);
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.score-matrix-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin: 0;
+  padding: 0;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  list-style: none;
+}
+
+.score-matrix-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+}
+
+.score-matrix-legend-swatch {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+
+.score-matrix-legend-swatch[data-tone="negative"] {
+  background: #6f4c78;
+}
+
+.score-matrix-legend-swatch[data-tone="neutral"] {
+  background: var(--line);
+}
+
+.score-matrix-legend-swatch[data-tone="positive"] {
+  background: var(--accent);
+}
+
+.score-matrix-table-scroll {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.score-matrix-table {
+  inline-size: 100%;
+  min-inline-size: max-content;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.score-matrix-table caption {
+  padding-block-end: var(--s2);
+  color: var(--ink-muted);
+  font-weight: 700;
+  text-align: start;
+}
+
+.score-matrix-table th,
+.score-matrix-table td {
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--hairline);
+  text-align: end;
+}
+
+.score-matrix-table th {
+  background: var(--surface-strong);
+  color: var(--ink);
+}
+
+.score-matrix-table td {
+  background: var(--surface);
+}
+
+.score-matrix-table td[data-mask-status="masked"] {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.score-matrix-table td[data-selected="true"] {
+  outline: 3px double var(--accent);
+  outline-offset: -4px;
+  font-weight: 850;
+}
+
+.score-matrix-cell-button {
+  inline-size: 100%;
+  min-block-size: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.score-matrix-selection {
+  min-block-size: 1.5rem;
+  margin-block-start: var(--s2);
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+}
+
+.score-matrix-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

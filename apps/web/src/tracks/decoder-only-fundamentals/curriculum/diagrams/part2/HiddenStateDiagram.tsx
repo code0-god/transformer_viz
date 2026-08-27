@@ -1,15 +1,8 @@
-import type { ReactElement, Ref } from "react";
+import type { ReactElement } from "react";
 
-type Props = {
-  readonly focusButtonRef: Ref<HTMLButtonElement>;
-  readonly onFocusGuide: () => void;
-};
 const STATES = ["X_0", "X_1", "X_N"] as const;
 
-export function HiddenStateDiagram({
-  focusButtonRef,
-  onFocusGuide,
-}: Props): ReactElement {
+export function HiddenStateDiagram(): ReactElement {
   return (
     <figure className="part2-diagram">
       <svg
@@ -139,14 +132,6 @@ export function HiddenStateDiagram({
           </ol>
         </fieldset>
       </figcaption>
-      <button
-        ref={focusButtonRef}
-        type="button"
-        className="part2-diagram__focus"
-        onClick={onFocusGuide}
-      >
-        개념 설명에 초점
-      </button>
     </figure>
   );
 }

@@ -1,10 +1,5 @@
-import type { ReactElement, Ref } from "react";
+import type { ReactElement } from "react";
 import { curriculumTokenExamples } from "../../generated/tokenExamples";
-
-type TokenComparisonDiagramProps = {
-  readonly focusButtonRef: Ref<HTMLButtonElement>;
-  readonly onFocusGuide: () => void;
-};
 
 const example = curriculumTokenExamples.find(({ id }) => id === "the-cats");
 if (example === undefined)
@@ -26,10 +21,7 @@ const lenses = [
   },
 ] as const;
 
-export function TokenComparisonDiagram({
-  focusButtonRef,
-  onFocusGuide,
-}: TokenComparisonDiagramProps): ReactElement {
+export function TokenComparisonDiagram(): ReactElement {
   return (
     <figure className="part0-diagram part0-diagram--token">
       <svg
@@ -107,14 +99,6 @@ export function TokenComparisonDiagram({
           </table>
         </fieldset>
       </figcaption>
-      <button
-        ref={focusButtonRef}
-        type="button"
-        className="part0-diagram__focus"
-        onClick={onFocusGuide}
-      >
-        개념 설명에 초점
-      </button>
     </figure>
   );
 }

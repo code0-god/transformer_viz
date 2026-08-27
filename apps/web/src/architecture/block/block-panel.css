@@ -4,7 +4,7 @@
   align-self: start;
   padding: var(--s5, 1.25rem);
   border: 1px solid #d8b477;
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--surface, #fff);
 }
 

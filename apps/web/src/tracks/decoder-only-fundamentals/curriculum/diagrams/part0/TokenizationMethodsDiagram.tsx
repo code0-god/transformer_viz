@@ -1,10 +1,5 @@
-import type { ReactElement, Ref } from "react";
+import type { ReactElement } from "react";
 import { curriculumTokenExamples } from "../../generated/tokenExamples";
-
-type TokenizationMethodsDiagramProps = {
-  readonly focusButtonRef: Ref<HTMLButtonElement>;
-  readonly onFocusGuide: () => void;
-};
 
 const koreanExample = curriculumTokenExamples.find(
   ({ id }) => id === "korean-han",
@@ -45,10 +40,7 @@ const methods = [
   },
 ] as const;
 
-export function TokenizationMethodsDiagram({
-  focusButtonRef,
-  onFocusGuide,
-}: TokenizationMethodsDiagramProps): ReactElement {
+export function TokenizationMethodsDiagram(): ReactElement {
   return (
     <figure className="part0-diagram part0-diagram--methods">
       <svg
@@ -139,14 +131,6 @@ export function TokenizationMethodsDiagram({
           </table>
         </fieldset>
       </figcaption>
-      <button
-        ref={focusButtonRef}
-        type="button"
-        className="part0-diagram__focus"
-        onClick={onFocusGuide}
-      >
-        개념 설명에 초점
-      </button>
     </figure>
   );
 }

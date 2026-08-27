@@ -10,12 +10,22 @@ import type {
   WorkerResponse,
 } from "../generated/schema";
 import {
+  beginScoreMatrixInspection,
+  createScoreMatrixInspectionState,
+  type ScoreMatrixInspectionState,
+} from "../tracks/visualization/scoreMatrixState";
+import {
   beginGeneration,
   createGenerationState,
   type GenerationState,
   inspectGenerationStep,
   safeId,
 } from "./generationState";
+import {
+  invalidateScoreMatrixForContext,
+  isScoreMatrixRequestError,
+  reduceScoreMatrixWorkerResponse,
+} from "./scoreMatrixAppReducer";
 import {
   createWorkerState,
   reduceWorkerResponse,
@@ -29,6 +39,7 @@ export type AppState = Readonly<{
   worker: WorkerState;
   generation: GenerationState;
   architecture: ArchitectureState;
+  scoreMatrix: ScoreMatrixInspectionState;
 }>;
 
 export type AppAction =
@@ -43,6 +54,14 @@ export type AppAction =
       requestId: number;
       stepIndex: number;
     }>
+  | Readonly<{
+      type: "score-matrix-requested";
+      requestId: number;
+      generationRunId: number;
+      replayRunId: number;
+      layer: number;
+      head: number;
+    }>
   | Readonly<{ type: "worker-response"; response: WorkerResponse }>
   | Readonly<{ type: "worker-payload-rejected" }>
   | Readonly<{ type: "client-error"; message: string }>
@@ -53,6 +72,7 @@ export function createAppState(): AppState {
     worker: createWorkerState(),
     generation: createGenerationState(),
     architecture: initialArchitectureState,
+    scoreMatrix: createScoreMatrixInspectionState(),
   };
 }
 
@@ -181,6 +201,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           action.requestId,
           action.prompt,
         ),
+        scoreMatrix: createScoreMatrixInspectionState(),
       };
     case "replay-requested":
       return {
@@ -191,13 +212,35 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           action.requestId,
           action.stepIndex,
         ),
+        scoreMatrix: createScoreMatrixInspectionState(),
       };
-    case "worker-response":
+    case "score-matrix-requested":
       return {
         ...state,
-        worker: reduceWorkerResponse(state.worker, action.response),
-        generation: reduceGenerationResponse(state.generation, action.response),
+        scoreMatrix: beginScoreMatrixInspection(state.scoreMatrix, action),
       };
+    case "worker-response": {
+      const generation = reduceGenerationResponse(
+        state.generation,
+        action.response,
+      );
+      const replayChanged =
+        generation.replaySummary !== state.generation.replaySummary;
+      return {
+        ...state,
+        worker: isScoreMatrixRequestError(state.scoreMatrix, action.response)
+          ? state.worker
+          : reduceWorkerResponse(state.worker, action.response),
+        generation,
+        scoreMatrix: replayChanged
+          ? createScoreMatrixInspectionState()
+          : reduceScoreMatrixWorkerResponse(
+              state.scoreMatrix,
+              action.response,
+              generation,
+            ),
+      };
+    }
     case "worker-payload-rejected":
       return { ...state, worker: rejectWorkerPayload(state.worker) };
     case "client-error":
@@ -205,10 +248,20 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         worker: rejectWorkerPayload(state.worker, action.message),
       };
-    case "architecture":
+    case "architecture": {
+      const architecture = architectureReducer(
+        state.architecture,
+        action.action,
+      );
       return {
         ...state,
-        architecture: architectureReducer(state.architecture, action.action),
+        architecture,
+        scoreMatrix: invalidateScoreMatrixForContext(
+          state.scoreMatrix,
+          state.generation,
+          architecture,
+        ),
       };
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { SCORE_MATRIX_VISUALIZATION_ID } from "../../visualization/visualizationRegistry";
 import {
   curriculumDiagramIds,
   curriculumVisualizationIds,
@@ -14,7 +15,9 @@ describe("curriculum Diagram registry", () => {
     expect(curriculumDiagramIds.size).toBe(11);
   });
 
-  test("registers no future Visualization", () => {
-    expect(curriculumVisualizationIds.size).toBe(0);
+  test("registers only the shipped Score Matrix visualization", () => {
+    expect([...curriculumVisualizationIds]).toEqual([
+      SCORE_MATRIX_VISUALIZATION_ID,
+    ]);
   });
 });

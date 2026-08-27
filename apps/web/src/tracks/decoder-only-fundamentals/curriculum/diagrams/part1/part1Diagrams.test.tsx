@@ -34,7 +34,7 @@ function readyCurriculum(): TestWorker {
 
 describe("Part 1 curriculum Diagrams", () => {
   test.each(CHAPTERS)(
-    "renders %s as one named SVG with equivalent fallback and focus control",
+    "renders %s as one named SVG with equivalent fallback",
     async (chapterTitle, imageName) => {
       // Given: a ready app and the real curriculum ToC.
       const worker = readyCurriculum();
@@ -60,14 +60,31 @@ describe("Part 1 curriculum Diagrams", () => {
         pane?.querySelector(`fieldset[aria-label='${chapterTitle} 의미 설명']`),
       ).not.toBeNull();
       const focus = pane?.querySelector("button.part1-diagram__focus");
-      expect(focus).toBeInstanceOf(HTMLButtonElement);
-      if (!(focus instanceof HTMLButtonElement)) return;
-      await user.click(focus);
-      expect(screen.getByTestId("guide-introduction")).toHaveFocus();
+      expect(focus).toBeNull();
       expect(
         pane?.querySelector("[role='slider'],[role='switch'],select,input"),
       ).toBeNull();
       expect(worker.posted).toHaveLength(postsBefore);
     },
   );
+
+  test("uses one top-to-bottom flow for next-token prediction", async () => {
+    readyCurriculum();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "목차 열기" }));
+    await user.click(
+      within(
+        screen.getByRole("navigation", { name: "Chapter 목차" }),
+      ).getByRole("link", { name: "다음 Token 예측" }),
+    );
+
+    const stages = Array.from(
+      document.querySelectorAll("#learning-diagram-pane [data-stage] > rect"),
+    );
+    const xCoordinates = stages.map((stage) => stage.getAttribute("x"));
+    const yCoordinates = stages.map((stage) => Number(stage.getAttribute("y")));
+
+    expect(new Set(xCoordinates).size).toBe(1);
+    expect(yCoordinates).toEqual([...yCoordinates].sort((a, b) => a - b));
+  });
 });

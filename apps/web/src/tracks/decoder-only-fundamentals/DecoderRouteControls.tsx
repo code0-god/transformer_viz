@@ -37,13 +37,13 @@ function Selector({
             key={`${label}-${index}`}
             type="button"
             className={index === selected ? "selected" : undefined}
-            aria-label={`${label} ${index}`}
+            aria-label={`${label} ${index + 1}`}
             aria-pressed={index === selected}
             data-layer-index={label === "Layer" ? index : undefined}
             data-head-index={label === "Head" ? index : undefined}
             onClick={() => onSelect(index)}
           >
-            {index}
+            {index + 1}
           </button>
         ))}
       </div>

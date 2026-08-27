@@ -6,11 +6,11 @@ import { describe, expect, test, vi } from "vitest";
 import { App } from "./App";
 import { initialArchitectureState } from "./architecture/state";
 import { model, TestWorker } from "./test/workerFixtures";
-import {
-  type CurriculumDiagramRendererProps,
-  type CurriculumRendererRegistry,
-  DecoderTrackWorkspace,
-} from "./tracks/decoder-only-fundamentals/curriculum/DecoderTrackWorkspace";
+import type {
+  CurriculumDiagramRendererProps,
+  CurriculumRendererRegistry,
+} from "./tracks/decoder-only-fundamentals/curriculum/curriculumRendererRegistry";
+import { DecoderTrackWorkspace } from "./tracks/decoder-only-fundamentals/curriculum/DecoderTrackWorkspace";
 import { decoderOnlyFundamentalsProfile } from "./tracks/decoder-only-fundamentals/profile";
 
 const fixturePage = {
@@ -33,10 +33,7 @@ const fixturePage = {
   glossary: [],
 } as const;
 
-function FixtureDiagram({
-  focusButtonRef,
-  onFocusGuide,
-}: CurriculumDiagramRendererProps): ReactElement {
+function FixtureDiagram(_props: CurriculumDiagramRendererProps): ReactElement {
   return (
     <figure>
       <svg role="img" aria-label="Generic fixture Diagram" viewBox="0 0 10 10">
@@ -45,9 +42,6 @@ function FixtureDiagram({
       <figcaption>
         <fieldset aria-label="Generic fixture fallback" />
       </figcaption>
-      <button ref={focusButtonRef} type="button" onClick={onFocusGuide}>
-        Focus fixture Guide
-      </button>
     </figure>
   );
 }
@@ -292,32 +286,16 @@ describe("Decoder curriculum production integration", () => {
     ).not.toBeNull();
   });
 
-  test("moves focus from the Diagram button to the Guide introduction", async () => {
-    // Given: explicitly activated generic curriculum content.
+  test("omits redundant cross-pane focus controls", async () => {
     const user = userEvent.setup();
     await activateCurrentGenericChapter(user);
 
-    // When: the native Diagram focus button is activated.
-    await user.click(
-      screen.getByRole("button", { name: "Focus fixture Guide" }),
-    );
-
-    // Then: focus enters the Guide introduction.
-    expect(screen.getByTestId("guide-introduction")).toHaveFocus();
-  });
-
-  test("returns focus from the Guide section to the native Diagram button", async () => {
-    // Given: explicitly activated generic curriculum content.
-    const user = userEvent.setup();
-    await activateCurrentGenericChapter(user);
-
-    // When: the Guide asks to reveal its primary Diagram concept.
-    await user.click(screen.getByRole("button", { name: "Fixture section" }));
-
-    // Then: focus returns to the native Diagram control.
     expect(
-      screen.getByRole("button", { name: "Focus fixture Guide" }),
-    ).toHaveFocus();
+      screen.queryByRole("button", { name: "Focus fixture Guide" }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Fixture section" }),
+    ).toBeNull();
   });
 
   test.each([

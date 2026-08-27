@@ -1,0 +1,78 @@
+.diagram-viewport {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--s2);
+  min-block-size: 0;
+  min-inline-size: 0;
+}
+
+.diagram-viewport__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  min-block-size: 44px;
+}
+
+.diagram-viewport__extra-controls,
+.diagram-viewport__zoom-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s1);
+}
+
+.diagram-viewport__zoom-controls {
+  margin-inline-start: auto;
+}
+
+.diagram-viewport__toolbar button {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding-inline: var(--s2);
+}
+
+.diagram-viewport__toolbar output {
+  min-inline-size: 3.5rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.diagram-viewport__surface {
+  position: relative;
+  min-block-size: 28rem;
+  min-inline-size: 0;
+  overflow: clip;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--surface);
+  cursor: default;
+  overscroll-behavior: contain;
+}
+
+.diagram-viewport__surface[data-viewport-mode="zoomed"] {
+  cursor: grab;
+  touch-action: none;
+}
+
+.diagram-viewport__surface[data-dragging="true"] {
+  cursor: grabbing;
+}
+
+.diagram-viewport__content {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  transform-origin: 0 0;
+  user-select: none;
+}
+
+.diagram-viewport__content > svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: none;
+  max-block-size: none;
+}

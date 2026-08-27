@@ -27,11 +27,7 @@ describe("controlled generation UI", () => {
     const onPromptChange = vi.fn();
     render(
       <>
-        <Header
-          status={{ type: "ready" }}
-          subtitle="Test subtitle"
-          activeView="lab"
-        />
+        <Header status={{ type: "ready" }} activeView="lab" />
         <PromptPanel
           prompt="the cat"
           form={form}

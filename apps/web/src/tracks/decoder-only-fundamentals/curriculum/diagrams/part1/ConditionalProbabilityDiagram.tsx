@@ -1,19 +1,12 @@
-import type { ReactElement, Ref } from "react";
+import type { ReactElement } from "react";
 
-type Props = {
-  readonly focusButtonRef: Ref<HTMLButtonElement>;
-  readonly onFocusGuide: () => void;
-};
 const FACTORS = [
   ["A", "P(w₁)"],
   ["B | A", "P(w₂ | w₁)"],
   ["C | A,B", "P(w₃ | w₁,w₂)"],
 ] as const;
 
-export function ConditionalProbabilityDiagram({
-  focusButtonRef,
-  onFocusGuide,
-}: Props): ReactElement {
+export function ConditionalProbabilityDiagram(): ReactElement {
   return (
     <figure className="part1-diagram">
       <svg
@@ -98,14 +91,6 @@ export function ConditionalProbabilityDiagram({
           </ol>
         </fieldset>
       </figcaption>
-      <button
-        ref={focusButtonRef}
-        type="button"
-        className="part1-diagram__focus"
-        onClick={onFocusGuide}
-      >
-        개념 설명에 초점
-      </button>
     </figure>
   );
 }

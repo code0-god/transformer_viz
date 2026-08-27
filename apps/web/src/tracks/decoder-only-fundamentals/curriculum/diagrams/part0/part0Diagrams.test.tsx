@@ -81,14 +81,9 @@ describe("Part 0 curriculum Diagrams", () => {
       expect(
         within(pane).getByRole("group", { name: `${chapterTitle} 의미 설명` }),
       ).toBeInTheDocument();
-      const focusButton = within(pane).getByRole("button", {
-        name:
-          chapterTitle === "자연어 처리란?"
-            ? "개념 설명으로 이동"
-            : "개념 설명에 초점",
-      });
-      await user.click(focusButton);
-      expect(screen.getByTestId("guide-introduction")).toHaveFocus();
+      expect(
+        within(pane).queryByRole("button", { name: /개념 설명/ }),
+      ).toBeNull();
       expect(worker.posted).toHaveLength(postsBefore);
       expect(within(pane).queryByRole("slider")).toBeNull();
       expect(within(pane).queryByRole("switch")).toBeNull();
@@ -110,7 +105,7 @@ describe("Part 0 curriculum Diagrams", () => {
       }),
     );
 
-    // Then: the SVG, fallback, and focus control stay present while the stage flow stays small.
+    // Then: the SVG and fallback stay present without a redundant focus control.
     const pane = document.querySelector("#learning-diagram-pane");
     expect(pane).not.toBeNull();
     if (!(pane instanceof HTMLElement)) throw new Error("Missing Diagram pane");
@@ -134,11 +129,9 @@ describe("Part 0 curriculum Diagrams", () => {
       expect(stageLabels).not.toContain(forbidden);
       expect(pane.textContent).not.toContain(forbidden);
     }
-    const focusButton = within(pane).getByRole("button", {
-      name: "개념 설명으로 이동",
-    });
-    await user.click(focusButton);
-    expect(screen.getByTestId("guide-introduction")).toHaveFocus();
+    expect(
+      within(pane).queryByRole("button", { name: /개념 설명/ }),
+    ).toBeNull();
   });
 
   test("keeps the current-runtime badge on the byte method only", async () => {

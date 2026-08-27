@@ -1,9 +1,5 @@
-import type { ReactElement, Ref } from "react";
+import type { ReactElement } from "react";
 
-type Props = {
-  readonly focusButtonRef: Ref<HTMLButtonElement>;
-  readonly onFocusGuide: () => void;
-};
 const TOKENS = [
   ["context-1", "the"],
   ["context-2", "cat"],
@@ -13,10 +9,7 @@ const TOKENS = [
 ] as const;
 const CANDIDATES = ["후보 A", "후보 B", "후보 C"] as const;
 
-export function LanguageModelDiagram({
-  focusButtonRef,
-  onFocusGuide,
-}: Props): ReactElement {
+export function LanguageModelDiagram(): ReactElement {
   return (
     <figure className="part1-diagram">
       <svg
@@ -90,14 +83,6 @@ export function LanguageModelDiagram({
           </ol>
         </fieldset>
       </figcaption>
-      <button
-        ref={focusButtonRef}
-        type="button"
-        className="part1-diagram__focus"
-        onClick={onFocusGuide}
-      >
-        개념 설명에 초점
-      </button>
     </figure>
   );
 }

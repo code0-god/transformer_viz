@@ -306,8 +306,8 @@ describe("Parts 3 through 5 incumbent route integration", () => {
     readyCurriculum();
     const user = userEvent.setup();
     await selectChapter("Self-Attention");
-    await user.click(screen.getByRole("button", { name: "Layer 2" }));
-    await user.click(screen.getByRole("button", { name: "Head 3" }));
+    await user.click(screen.getByRole("button", { name: "Layer 3" }));
+    await user.click(screen.getByRole("button", { name: "Head 4" }));
     expect(screen.getByTestId("attention-detail")).toHaveAttribute(
       "data-selected-layer",
       "2",

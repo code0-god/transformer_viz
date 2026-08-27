@@ -11,7 +11,6 @@ import { ContinuationPanel } from "./components/ContinuationPanel";
 import { CourseHome } from "./components/CourseHome";
 import { Header } from "./components/Header";
 import { PromptPanel } from "./components/PromptPanel";
-import { resolveLearningTrack } from "./tracks/registry";
 import { createInferenceWorker } from "./worker/createWorker";
 import type { WorkerTransport } from "./worker/WorkerClient";
 import type { CleanupScheduler } from "./worker/workerLifecycle";
@@ -28,16 +27,6 @@ function AppSurface(): ReactElement {
   const [prompt, setPrompt] = useState("the cat");
   const [form, setForm] = useState<GenerationForm>(defaultGenerationForm);
   const config = state.worker.model?.config;
-  const track =
-    state.worker.model === null
-      ? null
-      : resolveLearningTrack(state.worker.model);
-  const headerSubtitle =
-    route.view === "lab"
-      ? "미리 학습된 nanoGPT 모델의 추론 과정을 직접 실행합니다."
-      : track?.status === "supported"
-        ? track.adapter.profile.subtitle
-        : "Transformer의 기본 개념부터 단계적으로 학습합니다.";
   const replaySequenceLength =
     state.generation.replaySummary?.tokens.length ?? null;
 
@@ -56,7 +45,6 @@ function AppSurface(): ReactElement {
       >
         <Header
           status={state.worker.status}
-          subtitle={headerSubtitle}
           activeView={route.view === "lab" ? "lab" : "learn"}
         />
         <main id="architecture-main" className="architecture-main">
@@ -92,6 +80,9 @@ function AppSurface(): ReactElement {
                 model={state.worker.model}
                 state={state.architecture}
                 replaySequenceLength={replaySequenceLength}
+                replaySummary={state.generation.replaySummary}
+                scoreMatrix={state.scoreMatrix}
+                inspectScoreMatrix={commands.inspectScoreMatrix}
                 navigate={commands.navigateArchitecture}
               />
             </>
@@ -101,6 +92,9 @@ function AppSurface(): ReactElement {
               model={state.worker.model}
               state={state.architecture}
               replaySequenceLength={replaySequenceLength}
+              replaySummary={state.generation.replaySummary}
+              scoreMatrix={state.scoreMatrix}
+              inspectScoreMatrix={commands.inspectScoreMatrix}
               navigate={commands.navigateArchitecture}
               course={{
                 trackId: route.trackId,

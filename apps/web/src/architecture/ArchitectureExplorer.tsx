@@ -1,16 +1,21 @@
-import type { ModelMetadata } from "../generated/schema";
+import type { ModelMetadata, RunSummary } from "../generated/schema";
 import {
   resolveLearningTrack,
   resolveLearningTrackById,
 } from "../tracks/registry";
 import type { LearningCourseLocation } from "../tracks/types";
 import { UnsupportedLearningProfile } from "../tracks/UnsupportedLearningProfile";
+import type { ScoreMatrixInspectionState } from "../tracks/visualization/scoreMatrixState";
+import { createScoreMatrixInspectionState } from "../tracks/visualization/scoreMatrixState";
 import type { ArchitectureAction, ArchitectureState } from "./state";
 
 export interface ArchitectureExplorerProps {
   readonly model: Readonly<ModelMetadata> | null;
   readonly state: ArchitectureState;
   readonly replaySequenceLength: number | null;
+  readonly replaySummary?: Readonly<RunSummary> | null;
+  readonly scoreMatrix?: ScoreMatrixInspectionState;
+  readonly inspectScoreMatrix?: () => void;
   readonly navigate: (action: ArchitectureAction) => void;
   readonly course?: LearningCourseLocation;
 }
@@ -19,6 +24,9 @@ export function ArchitectureExplorer({
   model,
   state,
   replaySequenceLength,
+  replaySummary = null,
+  scoreMatrix = createScoreMatrixInspectionState(),
+  inspectScoreMatrix = () => undefined,
   navigate,
   course,
 }: ArchitectureExplorerProps) {
@@ -43,8 +51,25 @@ export function ArchitectureExplorer({
 
   const context =
     course === undefined
-      ? { model, state, replaySequenceLength, navigate }
-      : { model, state, replaySequenceLength, navigate, course };
+      ? {
+          model,
+          state,
+          replaySequenceLength,
+          replaySummary,
+          scoreMatrix,
+          inspectScoreMatrix,
+          navigate,
+        }
+      : {
+          model,
+          state,
+          replaySequenceLength,
+          replaySummary,
+          scoreMatrix,
+          inspectScoreMatrix,
+          navigate,
+          course,
+        };
 
   return (
     <section

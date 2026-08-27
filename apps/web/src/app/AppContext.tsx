@@ -28,6 +28,7 @@ export interface AppCommands {
   readonly generate: (prompt: string, config: GenerationConfig) => void;
   readonly stop: () => void;
   readonly replayStep: (stepIndex: number) => void;
+  readonly inspectScoreMatrix: () => void;
   readonly navigateArchitecture: (action: ArchitectureAction) => void;
 }
 
@@ -166,9 +167,39 @@ export function AppProvider({
     dispatch({ type: "architecture", action });
   }, []);
 
+  const inspectScoreMatrix = useCallback(() => {
+    const current = stateRef.current;
+    const active = current.generation.active;
+    const replay = current.generation.replaySummary;
+    if (active === null || replay === null) return;
+    try {
+      const client = clientRef.current;
+      if (client === null) throw new Error("Model Worker is not ready");
+      const layer = current.architecture.selectedLayer;
+      const head = current.architecture.selectedHead;
+      const requestId = client.inspectAttentionHead(replay.run_id, layer, head);
+      dispatch({
+        type: "score-matrix-requested",
+        requestId,
+        generationRunId: active.runId.value,
+        replayRunId: replay.run_id,
+        layer,
+        head,
+      });
+    } catch (error: unknown) {
+      reportError(error);
+    }
+  }, [reportError]);
+
   const commands = useMemo<AppCommands>(
-    () => ({ generate, stop, replayStep, navigateArchitecture }),
-    [generate, navigateArchitecture, replayStep, stop],
+    () => ({
+      generate,
+      stop,
+      replayStep,
+      inspectScoreMatrix,
+      navigateArchitecture,
+    }),
+    [generate, inspectScoreMatrix, navigateArchitecture, replayStep, stop],
   );
   const value = useMemo(
     () => ({ state, dispatch, commands }),

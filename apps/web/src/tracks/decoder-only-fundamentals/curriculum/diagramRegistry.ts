@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 
-import type { CurriculumDiagramRendererProps } from "./DecoderTrackWorkspace";
+import { visualizationIds } from "../../visualization/visualizationRegistry";
+import type { CurriculumDiagramRendererProps } from "./curriculumRendererRegistry";
 import { NlpPipelineDiagram } from "./diagrams/part0/NlpPipelineDiagram";
 import { TokenComparisonDiagram } from "./diagrams/part0/TokenComparisonDiagram";
 import { TokenizationMethodsDiagram } from "./diagrams/part0/TokenizationMethodsDiagram";
@@ -36,7 +37,7 @@ export const CURRICULUM_DIAGRAM_IDS = [
 export const curriculumDiagramIds: ReadonlySet<string> = new Set(
   CURRICULUM_DIAGRAM_IDS,
 );
-export const curriculumVisualizationIds: ReadonlySet<string> = new Set();
+export const curriculumVisualizationIds: ReadonlySet<string> = visualizationIds;
 
 const curriculumDiagramComponents: Readonly<
   Record<string, ComponentType<CurriculumDiagramRendererProps>>

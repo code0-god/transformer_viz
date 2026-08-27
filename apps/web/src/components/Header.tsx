@@ -2,7 +2,6 @@ import type { WorkerStatus } from "../app/workerState";
 
 export type HeaderProps = Readonly<{
   status: WorkerStatus;
-  subtitle: string;
   activeView: "learn" | "lab";
 }>;
 
@@ -23,7 +22,7 @@ function statusCopy(
   }
 }
 
-export function Header({ status, subtitle, activeView }: HeaderProps) {
+export function Header({ status, activeView }: HeaderProps) {
   const copy = statusCopy(status);
   const isError = status.type === "error";
   return (
@@ -32,7 +31,6 @@ export function Header({ status, subtitle, activeView }: HeaderProps) {
         <a className="brand-lockup__title" href="#/">
           Transformer Viz
         </a>
-        <p>{subtitle}</p>
       </div>
       <nav className="app-navigation" aria-label="주요 탐색">
         <a href="#/" aria-current={activeView === "learn" ? "page" : undefined}>
@@ -49,11 +47,16 @@ export function Header({ status, subtitle, activeView }: HeaderProps) {
         className={isError ? "lifecycle lifecycle-error" : "lifecycle"}
         role={isError ? "alert" : "status"}
         aria-live={isError ? "assertive" : "polite"}
+        aria-describedby={isError ? "lifecycle-error-detail" : undefined}
       >
         <span id="status" className="status-badge" data-status={status.type}>
           {copy.label}
         </span>
-        <span className="lifecycle-detail">{copy.detail}</span>
+        {isError ? (
+          <span id="lifecycle-error-detail" className="lifecycle-detail">
+            {copy.detail}
+          </span>
+        ) : null}
       </div>
     </header>
   );
