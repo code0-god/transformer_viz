@@ -34,6 +34,11 @@ Learn becomes an explanation-first reading surface:
 3. small inline examples where they remain legible;
 4. explicit concept-specific actions that open large visuals only when needed.
 
+Those actions are editorial, not Chapter chrome. A generic viewer toolbar may not appear before
+the introduction. Short Chapters hide the outline; long Chapters may keep one compact collapsed
+outline. Section actions use learner-purpose labels and stay next to the explanation they support.
+Implementation-specific details remain collapsed as footnotes.
+
 Lab becomes an experiment-first instrument:
 
 1. prompt and generation controls;

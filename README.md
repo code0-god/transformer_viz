@@ -63,30 +63,29 @@ requires the current route/node identifier and coverage-mapping seams to be gene
 
 ### Learning Workspace
 
-Root, Transformer Block, and Self-Attention each pair the existing Diagram with a near-equal Guide
-surface. Activating a selectable Diagram node selects the real architecture operation and reveals
-its Guide section; activating a drill-down node changes the real route. A Guide's **도식에서 보기**
-control only changes learning focus, highlight, and reveal. It does not change the selected
-architecture operation, route, layer, or head. Model facts come from the validated profile and
-model metadata. Trace-dependent `T` and derived shapes use only the
-retained, selected generated-step replay and remain pending when matching replay evidence is absent.
-Guide controls do not request Worker work.
+Learn is a centered, article-first reading surface. Each Chapter opens with one compact progress
+label, title, learning promise, and the first explanatory paragraph. Short Part 0 Chapters omit the
+outline; longer GPT, Transformer Block, and Self-Attention guides may expose one compact,
+collapsed outline.
 
-Desktop uses an approximately 48:52 Diagram/Guide grid with a sticky Diagram. Below 1280px the
-workspace stacks Diagram then Guide, retaining local horizontal scrolling for wide diagrams.
+Visual material appears only when the surrounding explanation needs it. Concept-specific text
+actions such as **Token 경계 보기**, **GPT 전체 구조 보기**, and
+**Self-Attention 계산 흐름 보기** open the shared focused viewer. Closing the viewer restores the
+article scroll position and trigger focus. Diagram selection can return to the matching article
+heading without changing Worker state, generation semantics, route ownership, layer, or head.
 
-| Root desktop | Transformer Block desktop | Self-Attention desktop |
-|---|---|---|
-| [![Root Learning Workspace desktop](docs/screenshots/learning-root-desktop.png)](docs/screenshots/learning-root-desktop.png) | [![Transformer Block Learning Workspace desktop](docs/screenshots/learning-block-desktop.png)](docs/screenshots/learning-block-desktop.png) | [![Self-Attention Learning Workspace desktop](docs/screenshots/learning-attention-desktop.png)](docs/screenshots/learning-attention-desktop.png) |
+Part 0 keeps separate editorial responsibilities:
 
-| Root mobile | Self-Attention mobile |
-|---|---|
-| [![Root Learning Workspace mobile](docs/screenshots/learning-root-mobile.png)](docs/screenshots/learning-root-mobile.png) | [![Self-Attention Learning Workspace mobile](docs/screenshots/learning-attention-mobile.png)](docs/screenshots/learning-attention-mobile.png) |
+- 0.2 defines token units, boundaries, and the distinction between a token and token ID.
+- 0.3 connects tokens to vocabulary addresses.
+- 0.4 compares Word, Character, Subword, and Byte tokenization trade-offs.
 
-The workspace does not ship actual tensor values, Q/K/V vectors, matrices, heatmaps, a source
-inspector, or KV-cache visualization. Encoder-Decoder, Cross-Attention, a second profile, and Track
-B are also absent. See [Model and Learning Profiles](docs/MODEL_AND_LEARNING_PROFILES.md) and the
-[Learning Workspace boundary decision](docs/design-decisions/model-learning-profiles.md).
+Architecture and concept diagrams remain semantic SVG with HTML fallbacks. The actual-trace
+Attention Score Matrix remains the only R3F visualization and keeps its exact HTML table fallback.
+The workspace does not ship general tensor, Q/K/V, Scale, Mask, Softmax, KV-cache, Encoder-Decoder,
+or Cross-Attention visualizations. See
+[Model and Learning Profiles](docs/MODEL_AND_LEARNING_PROFILES.md) and
+[ADR 0011](docs/adr/0011-content-first-floating-viewers.md).
 
 ## Development
 

@@ -153,16 +153,16 @@ No generic component contains GPT, Pre-LN, causal-attention, GELU, or nanoGPT te
 
 ### Responsive composition and evidence
 
-> **Superseded for Course Learn by ADR 0010.** The sticky/local-overflow decision below describes
-> the standalone Learning Workspace at ADR 0009 acceptance. Course Learn now uses a bounded 48:52
-> split, static Diagram, and active right-pane-only scroll ownership.
+> **Superseded for Course Learn by ADR 0011.** The sticky/local-overflow decision below records
+> ADR 0009 acceptance history. Current Course Learn uses a centered article, contextual visual
+> actions, and the shared focused viewer. It has no permanent Diagram/Guide split.
 
 At viewport widths of at least 80rem (1280px), the workspace uses
 `minmax(34rem, 48fr) minmax(38rem, 52fr)`: Diagram and Guide have near-equal weight, with the Guide
 slightly wider. The Diagram pane is sticky and wide diagrams retain local horizontal scrolling.
 Below 80rem, Diagram then Guide use document flow; the Guide does not gain an independent vertical
-scrollbar. These rules are implemented in
-[`learningWorkspace.css`](../../apps/web/src/tracks/learningWorkspace.css).
+scrollbar. These historical rules are no longer implemented by Course Learn. Current behavior is
+defined by [ADR 0011](0011-content-first-floating-viewers.md).
 
 Final production captures:
 
@@ -172,13 +172,10 @@ Final production captures:
 | Transformer Block | [1440x900](../screenshots/learning-block-desktop.png) | Not retained as one of the five release screenshots |
 | Self-Attention | [1440x900](../screenshots/learning-attention-desktop.png) | [390x844](../screenshots/learning-attention-mobile.png) |
 
-The production browser contract covers bidirectional focus behavior and zero Worker-post delta for
-Guide actions in both root and project-subpath builds. The visual capture contract checks the
-48:52 desktop split, 1024px and 390px stacking, sticky desktop Diagram, local overflow, image
-identity, and browser health. The durable executable evidence is
-[`browser_learning_workspace.py`](../../scripts/browser_learning_workspace.py) and
-[`browser_learning_workspace_visual.py`](../../scripts/browser_learning_workspace_visual.py); the
-five linked PNGs are the committed release views.
+The current production browser contract covers article-first layout, contextual focused viewers,
+focus restoration, root and project-subpath builds, responsive containment, and browser health.
+Durable executable evidence lives in
+[`browser_hybrid_foundation.py`](../../scripts/browser_hybrid_foundation.py).
 
 ## Rejected alternatives
 

@@ -34,10 +34,17 @@ retained trace evidence.
 - Header exposes product identity, `학습`, `모델 실험실`, and one live Worker status.
 - Course Home gives the registered decoder-only course the only primary CTA,
   an outlined Lab route, and a text-level in-page contents action.
-- Learn shows one Chapter H1, one subtitle, compact progress and ToC, then a centered
-  explanation-first article.
+- Learn shows one Chapter H1, one learning promise, one compact Part/Chapter ordinal, a restrained
+  ToC control, then a centered explanation-first article. It never repeats progress in a second
+  label or bar.
 - Learn never reserves a permanent Diagram pane. One concept-specific action opens a large
   focused Diagram viewer; Self-Attention adds one separate actual Score Matrix action.
+- Visual actions follow the paragraph or section that creates their need. They use specific
+  learning labels and editorial-link styling, never a generic Chapter-top action bar.
+- Part 0 Chapters hide the outline. Long GPT, Block, and Attention guides use the existing compact
+  collapsed outline only when their section count warrants it.
+- This editorial pass rewrites only Part 0. Part 1, Part 2, GPT, Block, and Attention prose keep
+  their current teaching scope until a separate editorial review.
 - Article sections use typography, whitespace, dividers, formulas, examples, and restrained
   callouts rather than nested dashboard cards. Runtime facts collapse under implementation notes.
 - Prompt and generation controls exist only in Lab.
@@ -59,7 +66,7 @@ not cross unrelated operation nodes, and residual paths retain explicit `+` junc
 
 - Desktop, tablet, and mobile share one content-first Learn model. The page owns scrolling;
   Diagram and Guide never become independent scroll panes.
-- The article is centered at a maximum inline size of 56rem. Wide comparison or callout content
+- The article is centered at a maximum inline size of 52rem. Wide comparison or callout content
   may use that full measure, while Korean paragraphs remain comfortably readable.
 - Lab uses one centered instrument column with a maximum inline size of 72rem.
 - `FocusedViewerOverlay` uses one application-level `OverlayHost`. Desktop surfaces occupy about

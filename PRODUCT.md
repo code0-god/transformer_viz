@@ -51,6 +51,11 @@ experiment-first flow with on-demand inspection viewers instead of a permanent a
 pane. The default Lab prompt is `the cat`; the legacy `the cat sat on the` phrase remains only as
 the full-forward golden/parity fixture.
 
+Chapter chrome never precedes the article with a generic viewer toolbar. Visual actions sit beside
+the explanation they support. Part 0 keeps Token definition in 0.2, Token-to-ID mapping in 0.3,
+and Word/Character/Subword/Byte comparison in 0.4. Implementation-language, exporter, fixture, and
+provenance details stay collapsed under implementation notes instead of entering beginner prose.
+
 ## Capabilities and Constraints
 
 - Tiny educational model: 2 blocks, 4 heads, embedding width 64, context length 24, vocabulary 259.
