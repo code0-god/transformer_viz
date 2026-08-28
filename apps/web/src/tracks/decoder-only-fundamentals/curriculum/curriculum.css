@@ -1,7 +1,7 @@
 /* allow: SIZE_OK — shared curriculum presentation contract across Parts */
 .curriculum-workspace {
   display: grid;
-  gap: var(--s5);
+  gap: var(--s4);
   min-inline-size: 0;
   max-inline-size: 100%;
 }
@@ -9,19 +9,19 @@
 .curriculum-workspace__header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--s4);
+  gap: var(--s3);
   align-items: start;
   inline-size: 100%;
-  max-inline-size: 72rem;
+  max-inline-size: 56rem;
   min-inline-size: 0;
   margin-inline: auto;
-  padding-block-end: var(--s4);
+  padding-block-end: var(--s3);
   border-block-end: 1px solid var(--hairline);
 }
 
 .curriculum-workspace__chapter-copy {
   display: grid;
-  gap: var(--s2);
+  gap: var(--s1);
   min-inline-size: 0;
 }
 
@@ -35,7 +35,7 @@
 
 .curriculum-workspace__chapter-copy h1 {
   max-inline-size: 24ch;
-  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  font-size: clamp(1.4rem, 2.1vw, 1.8rem);
   letter-spacing: -.035em;
   overflow-wrap: anywhere;
   word-break: keep-all;
@@ -53,9 +53,10 @@
   text-underline-offset: 0.2em;
 }
 
-.curriculum-workspace__chapter-copy p,
-.curriculum-navigation__progress-copy {
+.curriculum-workspace__chapter-copy p {
   color: var(--ink-muted);
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 
 .curriculum-navigation {
@@ -66,35 +67,8 @@
 
 .curriculum-navigation__header {
   display: flex;
-  gap: var(--s3);
   align-items: center;
   justify-content: flex-end;
-}
-
-.curriculum-navigation__header > div {
-  display: grid;
-  gap: var(--s1);
-  min-inline-size: min(16rem, 100%);
-}
-
-.curriculum-navigation__progress-copy {
-  font-size: .78rem;
-  font-variant-numeric: tabular-nums;
-  text-align: end;
-}
-
-.curriculum-navigation__progress {
-  block-size: var(--s1);
-  overflow: clip;
-  border-radius: var(--radius);
-  background: var(--surface-strong);
-}
-
-.curriculum-navigation__progress span {
-  display: block;
-  block-size: 100%;
-  border-radius: inherit;
-  background: var(--accent);
 }
 
 .curriculum-navigation__opener,
@@ -106,10 +80,15 @@
 }
 
 .curriculum-navigation__opener {
-  min-inline-size: 4rem;
-  border-color: var(--line);
+  min-inline-size: 3.25rem;
+  padding-inline: var(--s3);
+  border-color: transparent;
+  border-block-end-color: currentColor;
+  border-radius: 0;
   background: transparent;
-  color: var(--ink);
+  color: var(--accent);
+  font-size: .82rem;
+  font-weight: 760;
   white-space: nowrap;
 }
 
@@ -282,6 +261,22 @@
 .part0-diagram__axis-headings text,
 .part0-diagram__utf8-note text {
   fill: var(--ink-muted);
+}
+
+.part0-diagram__flow-title {
+  fill: var(--ink);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.part0-diagram__flow-copy,
+.part0-diagram__flow-example {
+  fill: var(--ink-muted);
+  font-size: 13px;
+}
+
+.part0-diagram__flow-example {
+  font-weight: 750;
 }
 
 .part0-diagram__example {

@@ -1,8 +1,8 @@
 .learning-guide {
   display: grid;
-  gap: clamp(var(--s5, 1.5rem), 5vw, var(--s7, 3rem));
+  gap: clamp(var(--s4, 1rem), 3vw, var(--s6, 2rem));
   min-inline-size: 0;
-  max-inline-size: 56rem;
+  max-inline-size: 52rem;
   margin-inline: auto;
   padding: 0 var(--s5, 1.5rem) var(--s5, 1.5rem);
   color: var(--ink, #24231f);
@@ -34,11 +34,17 @@
 }
 
 .learning-guide-goal strong,
-.learning-guide-outline,
-.learning-guide-section-control {
+.learning-guide-outline {
   color: var(--accent, #a53d23);
   font-size: 0.75rem;
   font-weight: 800;
+}
+
+.learning-guide-section-control,
+.learning-guide-visual-actions {
+  color: var(--accent, #a53d23);
+  font-size: 0.86rem;
+  font-weight: 780;
 }
 
 .learning-guide-goal span,
@@ -93,8 +99,11 @@
 
 .learning-guide-section {
   position: relative;
-  padding-block: var(--s5, 1.5rem);
-  border-block-start: 1px solid var(--hairline, #d3ccbd);
+  padding-block: var(--s4, 1rem);
+}
+
+.learning-guide-section + .learning-guide-section {
+  margin-block-start: var(--s4, 1rem);
 }
 
 .learning-guide-section:focus-visible {
@@ -123,18 +132,37 @@
 .learning-guide-section-heading {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--s3, 0.75rem);
 }
 
+.learning-guide-visual-actions,
+.learning-guide-section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3, 0.75rem);
+  align-items: center;
+}
+
+.learning-guide-visual-actions {
+  padding-block: var(--s2, 0.5rem);
+}
+
+.learning-guide-visual-actions button,
 .learning-guide-section-control {
-  flex: none;
+  min-block-size: 44px;
   padding: var(--s2, 0.5rem) 0;
   border: 0;
   border-block-end: 1px solid currentColor;
   border-radius: 0;
   background: transparent;
   color: var(--accent, #a53d23);
+  font-weight: 780;
+  cursor: pointer;
+}
+
+.learning-guide-visual-actions button:hover,
+.learning-guide-section-control:hover {
+  color: var(--accent-strong, #8f2f1b);
 }
 
 .learning-guide ul,
@@ -187,6 +215,7 @@
 
 .learning-guide-callout,
 .learning-guide-runtime,
+.learning-guide-implementation-note,
 .learning-guide-operation,
 .learning-guide-example {
   min-inline-size: 0;
@@ -207,6 +236,19 @@
   cursor: pointer;
   font-size: 0.82rem;
   font-weight: 760;
+}
+
+.learning-guide-implementation-note summary {
+  color: var(--ink-muted, #68645c);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 760;
+}
+
+.learning-guide-implementation-note ul {
+  margin-block-start: var(--s3, 0.75rem);
+  color: var(--ink-muted, #68645c);
+  font-size: 0.92rem;
 }
 
 .learning-guide-runtime[open] summary {
@@ -321,15 +363,6 @@
 }
 
 @media (max-width: 44rem) {
-  .learning-guide-section-heading {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .learning-guide-section-control {
-    inline-size: 100%;
-  }
-
   .learning-guide-runtime dl > div,
   .learning-guide-operation dl > div,
   .learning-guide-glossary dl > div {

@@ -49,7 +49,7 @@ function FixtureDiagram(_props: CurriculumDiagramRendererProps): ReactElement {
 
 const PART0_PRODUCTION_CHAPTERS = [
   ["자연어 처리란?", "decoder.curriculum.guide.0.1", "자연어 처리 추론 경로"],
-  ["Token이란?", "decoder.curriculum.guide.0.2", "Token 경계 비교"],
+  ["Token이란?", "decoder.curriculum.guide.0.2", "Token 개념 흐름"],
   [
     "Vocabulary와 Token ID",
     "decoder.curriculum.guide.0.3",
@@ -58,7 +58,7 @@ const PART0_PRODUCTION_CHAPTERS = [
   [
     "Tokenization 방식",
     "decoder.curriculum.guide.0.4",
-    "Tokenization 방식의 정성 비교",
+    "Tokenization 방식 비교",
   ],
 ] as const;
 
@@ -177,7 +177,8 @@ describe("Decoder curriculum production integration", () => {
     expect(
       screen.getByRole("heading", { name: "Token이란?", level: 1 }),
     ).toHaveFocus();
-    expect(screen.getByText("현재 Chapter 2 / 14")).toBeInTheDocument();
+    expect(screen.getByText("Part 0 · 2 / 14")).toBeInTheDocument();
+    expect(screen.queryByText("현재 Chapter 2 / 14")).toBeNull();
     expect(window.location.hash).toBe("#/learn/decoder-only-fundamentals/0-2");
     expect(worker.posted).toHaveLength(postsBefore);
   });
@@ -296,9 +297,10 @@ describe("Decoder curriculum production integration", () => {
     expect(
       screen.queryByRole("button", { name: "Focus fixture Guide" }),
     ).toBeNull();
+    expect(screen.getByTestId("open-diagram-viewer")).toBeVisible();
     expect(
-      screen.getByRole("button", { name: "Fixture section" }),
-    ).toBeVisible();
+      screen.queryByRole("button", { name: "Fixture section" }),
+    ).toBeNull();
     expect(screen.queryByRole("tab")).toBeNull();
   });
 
@@ -386,8 +388,9 @@ describe("Decoder curriculum production integration", () => {
       await user.keyboard("{Escape}");
       expect(diagramTrigger).toHaveFocus();
       expect(
-        screen.getByText(`현재 Chapter ${ordinal + 1} / 14`),
+        screen.getByText(`Part 0 · ${ordinal + 1} / 14`),
       ).toBeInTheDocument();
+      expect(screen.queryByText(`현재 Chapter ${ordinal + 1} / 14`)).toBeNull();
       expect(screen.queryByText(/Visualization/)).toBeNull();
       expect(screen.queryByRole("slider")).toBeNull();
       expect(screen.queryByRole("switch")).toBeNull();

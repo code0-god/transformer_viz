@@ -42,6 +42,12 @@ export type ComparisonColumn = {
   readonly items: readonly string[];
 };
 
+export type LearningGuideVisualAction = {
+  readonly id: string;
+  readonly kind: "diagram" | "visualization";
+  readonly label: string;
+};
+
 export type GuideBlock<Id extends string = FormulaId> =
   | {
       readonly id: string;
@@ -101,6 +107,12 @@ export type GuideBlock<Id extends string = FormulaId> =
       readonly id: string;
       readonly kind: "selected-operation";
       readonly adapterId: string;
+    }
+  | {
+      readonly id: string;
+      readonly kind: "implementation-note";
+      readonly title?: string;
+      readonly items: readonly string[];
     };
 
 export type LearningGuideSection<Id extends string = FormulaId> = {
@@ -108,6 +120,7 @@ export type LearningGuideSection<Id extends string = FormulaId> = {
   readonly title: string;
   readonly primaryNodeId?: LearningNodeId;
   readonly associatedNodeIds?: readonly LearningNodeId[];
+  readonly visualActionLabel?: string;
   readonly blocks: readonly GuideBlock<Id>[];
 };
 
@@ -127,6 +140,8 @@ export type LearningGuidePage<Id extends string = FormulaId> = {
   readonly routeId: LearningRouteId;
   readonly title: string;
   readonly learningGoal: string;
+  readonly outline?: "hidden" | "auto" | "visible";
+  readonly visualActions?: readonly LearningGuideVisualAction[];
   readonly introduction: readonly GuideBlock<Id>[];
   readonly sections: readonly LearningGuideSection<Id>[];
   readonly outlineSectionIds?: readonly string[];

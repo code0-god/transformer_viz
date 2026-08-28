@@ -40,7 +40,7 @@ describe("Curriculum Navigation disclosure", () => {
     expect(opener).toHaveAttribute("aria-expanded", "true");
   });
 
-  test("marks exactly one current Chapter and reports ordinal progress", async () => {
+  test("marks one current Chapter without duplicate ordinal progress", async () => {
     // Given: Chapter 7 is current.
     const user = userEvent.setup();
     renderNavigation(6);
@@ -48,12 +48,10 @@ describe("Curriculum Navigation disclosure", () => {
     // When: the ToC is opened.
     await user.click(screen.getByRole("button", { name: "목차 열기" }));
 
-    // Then: one item is current and progress has explicit semantics.
+    // Then: one item is current and the header owns the only ordinal.
     expect(document.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
-    expect(screen.getByText("현재 Chapter 7 / 14")).toBeInTheDocument();
-    expect(
-      screen.getByRole("progressbar", { name: "Chapter 진행률" }),
-    ).toHaveAttribute("aria-valuenow", "7");
+    expect(screen.queryByText("현재 Chapter 7 / 14")).toBeNull();
+    expect(screen.queryByRole("progressbar")).toBeNull();
   });
 
   test("emits explicit selection for the already-current ToC Chapter", async () => {

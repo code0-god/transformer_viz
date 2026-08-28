@@ -55,7 +55,25 @@ export function curriculumDiagramActionLabel(
     case "self-attention":
       return "Self-Attention 계산 흐름 보기";
     default:
-      return `${title} 도식 크게 보기`;
+      return `${title} 흐름 보기`;
+  }
+}
+
+function curriculumDiagramViewerTitle(
+  title: string,
+  diagramId: DiagramId,
+): string {
+  switch (diagramId) {
+    case "decoder.diagram.intro.nlp":
+      return "자연어 처리는 어떤 흐름일까요?";
+    case "decoder.diagram.tokenization.token":
+      return "Token은 어떻게 나뉠까요?";
+    case "decoder.diagram.tokenization.vocabulary":
+      return "Token과 ID는 어떻게 연결될까요?";
+    case "decoder.diagram.tokenization.methods":
+      return "Tokenization 방식 비교";
+    default:
+      return `${title} 살펴보기`;
   }
 }
 
@@ -64,7 +82,9 @@ export function createCurriculumViewerRequest(
   section?: LearningGuideSection<string>,
 ): FocusedViewerRequest {
   const articleTargetId =
-    section === undefined ? undefined : `${context.pageId}-${section.id}-title`;
+    section === undefined
+      ? `${context.pageId}-visual-actions`
+      : `${context.pageId}-${section.id}-title`;
   const description = section?.title ?? context.learningGoal;
   const architectureView = architectureViewForDiagram(context.diagramId);
   if (architectureView !== null) {
@@ -89,7 +109,7 @@ export function createCurriculumViewerRequest(
         return nodeId === undefined ? [] : [nodeId];
       }),
       ...(section === undefined ? {} : { conceptId: section.id }),
-      ...(articleTargetId === undefined ? {} : { articleTargetId }),
+      articleTargetId,
     };
   }
   const Diagram = context.Diagram;
@@ -97,14 +117,14 @@ export function createCurriculumViewerRequest(
     id: `${context.chapterId}:diagram:${section?.id ?? context.diagramId}`,
     kind: "diagram",
     source: "learn",
-    title: `${context.title} 전체 흐름`,
+    title: curriculumDiagramViewerTitle(context.title, context.diagramId),
     description,
     trackId: context.trackId,
     diagramId: context.diagramId,
     resetKey: `${context.chapterId}:${section?.id ?? "overview"}`,
     renderDiagram: () => <Diagram />,
     ...(section === undefined ? {} : { conceptId: section.id }),
-    ...(articleTargetId === undefined ? {} : { articleTargetId }),
+    articleTargetId,
   };
 }
 

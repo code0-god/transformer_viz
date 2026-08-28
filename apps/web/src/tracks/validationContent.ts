@@ -78,6 +78,7 @@ export function scanGuideBlock<Id extends string>(
     case "paragraph":
     case "callout":
     case "example":
+    case "implementation-note":
       scan.explained = true;
       return;
     case "rich-paragraph":

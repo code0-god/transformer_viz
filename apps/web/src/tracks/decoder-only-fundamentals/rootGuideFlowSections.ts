@@ -165,6 +165,7 @@ export const decoderRootFlowSections: readonly LearningGuideSection[] = [
       "decoder.root.generated-token",
       "decoder.root.append-context",
     ],
+    visualActionLabel: "Context 갱신 흐름 보기",
     blocks: [
       {
         id: "root-append-repeat-copy",

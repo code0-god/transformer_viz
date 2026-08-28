@@ -5,6 +5,8 @@ import userEvent from "@testing-library/user-event";
 import { useMemo, useState } from "react";
 
 import { FocusedViewerProvider } from "../overlays/FocusedViewerContext";
+import { LearningGuide } from "./LearningGuide";
+import { formulas, glossary, page } from "./LearningGuide.fixture";
 import { LearningWorkspace } from "./LearningWorkspace";
 import {
   createLearningFocusRegistry,
@@ -22,11 +24,13 @@ const diagram = {
   actionLabel: "Open diagram",
   request: {
     id: "decoder.root:diagram",
-    kind: "architecture",
+    kind: "diagram",
     source: "learn",
     title: "Diagram viewer",
-    view: "root",
-    highlightedNodeIds: [],
+    trackId: "decoder-only-fundamentals",
+    diagramId: "fixture-diagram",
+    resetKey: "fixture-diagram",
+    renderDiagram: () => <div>DIAGRAM_SENTINEL</div>,
   },
 } as const;
 
@@ -129,11 +133,12 @@ describe("LearningWorkspace", () => {
       container.querySelectorAll("[data-focus-availability]"),
     ).toHaveLength(1);
     expect(screen.getByRole("button", { name: "Header action" })).toBeVisible();
-    expect(screen.getByTestId("open-diagram-viewer")).toBeVisible();
+    expect(screen.queryByTestId("open-diagram-viewer")).toBeNull();
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
   });
 
-  test("keeps visualization on demand without persistent tabs", () => {
+  test("places visual actions after explanation without persistent tabs", async () => {
+    const user = userEvent.setup();
     render(
       <FocusedViewerProvider>
         <LearningWorkspace
@@ -142,7 +147,13 @@ describe("LearningWorkspace", () => {
           diagram={diagram}
           guide={{
             label: "Guide article",
-            content: <span>Guide content</span>,
+            content: (
+              <LearningGuide
+                page={page}
+                glossary={glossary}
+                formulas={formulas}
+              />
+            ),
           }}
           visualization={{
             label: "Visualization viewer",
@@ -160,10 +171,28 @@ describe("LearningWorkspace", () => {
       </FocusedViewerProvider>,
     );
 
-    expect(screen.getByTestId("open-diagram-viewer")).toBeVisible();
-    expect(screen.getByTestId("open-visualization-viewer")).toBeVisible();
+    const introduction = screen.getByTestId("guide-introduction");
+    const diagramAction = screen.getByRole("button", {
+      name: "OPEN_OVERVIEW",
+    });
+    expect(
+      introduction.compareDocumentPosition(diagramAction) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      document.querySelector(".learning-workspace__viewer-actions"),
+    ).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "OPEN_VISUALIZATION" }),
+    ).toBeVisible();
     expect(screen.queryByRole("tablist")).toBeNull();
     expect(document.querySelector("canvas")).toBeNull();
+
+    await user.click(diagramAction);
+
+    expect(
+      screen.getByRole("dialog", { name: "Diagram viewer" }),
+    ).toBeVisible();
   });
 
   test("does not mount diagram content before its viewer opens", () => {

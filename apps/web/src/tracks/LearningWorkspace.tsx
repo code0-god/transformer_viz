@@ -1,4 +1,10 @@
-import type { ReactElement, ReactNode } from "react";
+import {
+  createContext,
+  type ReactElement,
+  type ReactNode,
+  useContext,
+  useMemo,
+} from "react";
 
 import { useFocusedViewer } from "../overlays/focusedViewerStore";
 import type { FocusedViewerRequest } from "../overlays/focusedViewerTypes";
@@ -22,6 +28,25 @@ export type LearningWorkspaceViewer = {
   readonly actionLabel: string;
   readonly request: FocusedViewerRequest;
 };
+
+export type LearningWorkspaceViewerKind = "diagram" | "visualization";
+
+type LearningWorkspaceViewerContextValue = {
+  readonly viewers: Readonly<
+    Partial<Record<LearningWorkspaceViewerKind, LearningWorkspaceViewer>>
+  >;
+  readonly open: (
+    kind: LearningWorkspaceViewerKind,
+    articleTargetId: string,
+  ) => void;
+};
+
+const LearningWorkspaceViewerContext =
+  createContext<LearningWorkspaceViewerContextValue | null>(null);
+
+export function useLearningWorkspaceViewers(): LearningWorkspaceViewerContextValue | null {
+  return useContext(LearningWorkspaceViewerContext);
+}
 
 export type LearningRouteHeaderProps = {
   readonly route: LearningWorkspaceRoute;
@@ -82,6 +107,23 @@ export function LearningWorkspace({
   visualization,
 }: LearningWorkspaceProps): ReactElement {
   const { openViewer } = useFocusedViewer();
+  const viewerContext = useMemo<LearningWorkspaceViewerContextValue>(() => {
+    const viewers: Partial<
+      Record<LearningWorkspaceViewerKind, LearningWorkspaceViewer>
+    > = {
+      diagram,
+      ...(visualization === undefined ? {} : { visualization }),
+    };
+    return {
+      viewers,
+      open: (kind, articleTargetId) => {
+        const viewer = viewers[kind];
+        if (viewer === undefined) return;
+        openViewer({ ...viewer.request, articleTargetId });
+      },
+    };
+  }, [diagram, openViewer, visualization]);
+
   return (
     <section
       className="learning-workspace"
@@ -99,25 +141,6 @@ export function LearningWorkspace({
         />
       ) : null}
       <div className="learning-workspace__article">
-        <fieldset className="learning-workspace__viewer-actions">
-          <legend className="learning-visually-hidden">학습 시각 자료</legend>
-          <button
-            type="button"
-            data-testid="open-diagram-viewer"
-            onClick={() => openViewer(diagram.request)}
-          >
-            {diagram.actionLabel}
-          </button>
-          {visualization === undefined ? null : (
-            <button
-              type="button"
-              data-testid="open-visualization-viewer"
-              onClick={() => openViewer(visualization.request)}
-            >
-              {visualization.actionLabel}
-            </button>
-          )}
-        </fieldset>
         <section
           id="learning-guide-pane"
           className="learning-workspace__guide"
@@ -129,7 +152,9 @@ export function LearningWorkspace({
           >
             {guide.label}
           </span>
-          {guide.content}
+          <LearningWorkspaceViewerContext value={viewerContext}>
+            {guide.content}
+          </LearningWorkspaceViewerContext>
         </section>
       </div>
       <p

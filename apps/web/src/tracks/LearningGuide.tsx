@@ -1,11 +1,13 @@
 import type { ReactElement } from "react";
 import type { FormulaDefinition } from "../math/formulaCatalog";
 import { GuideBlockView } from "./GuideBlocks";
+import { useLearningWorkspaceViewers } from "./LearningWorkspace";
 import type {
   GlossaryEntry,
   LearningGuideNextStep,
   LearningGuidePage,
   LearningGuideSection,
+  LearningGuideVisualAction,
   LearningNodeId,
   RuntimeFactsPresentation,
   SelectedOperationPresentation,
@@ -58,11 +60,44 @@ export function LearningGuide<Id extends string>({
   presentation = "route",
   labelledBy,
 }: LearningGuideProps<Id>): ReactElement {
-  const outlineSections = (page.outlineSectionIds ?? []).flatMap(
+  const viewerContext = useLearningWorkspaceViewers();
+  const candidateOutlineSections = (page.outlineSectionIds ?? []).flatMap(
     (sectionId) => {
       const section = page.sections.find(({ id }) => id === sectionId);
       return section === undefined ? [] : [section];
     },
+  );
+  const outlineMode = page.outline ?? "auto";
+  const outlineSections =
+    outlineMode === "visible" ||
+    (outlineMode === "auto" && candidateOutlineSections.length > 5)
+      ? candidateOutlineSections
+      : [];
+  const fallbackVisualActions: readonly LearningGuideVisualAction[] =
+    viewerContext === null
+      ? []
+      : [
+          ...(viewerContext.viewers.diagram === undefined
+            ? []
+            : [
+                {
+                  id: "default-diagram",
+                  kind: "diagram" as const,
+                  label: viewerContext.viewers.diagram.actionLabel,
+                },
+              ]),
+          ...(viewerContext.viewers.visualization === undefined
+            ? []
+            : [
+                {
+                  id: "default-visualization",
+                  kind: "visualization" as const,
+                  label: viewerContext.viewers.visualization.actionLabel,
+                },
+              ]),
+        ];
+  const visualActions = (page.visualActions ?? fallbackVisualActions).filter(
+    ({ kind }) => viewerContext?.viewers[kind] !== undefined,
   );
   const glossaryEntries = page.glossary.flatMap((termId) => {
     const entry = glossary.find(({ id }) => id === termId);
@@ -89,6 +124,48 @@ export function LearningGuide<Id extends string>({
           </p>
         </header>
       ) : null}
+
+      {page.introduction.length === 0 ? null : (
+        <section
+          className="learning-guide-introduction"
+          data-testid="guide-introduction"
+          aria-label="들어가기"
+        >
+          {page.introduction.map((block) => (
+            <GuideBlockView
+              key={block.id}
+              block={block}
+              pageId={page.id}
+              glossary={glossary}
+              formulas={formulas}
+              runtimeFacts={runtimeFacts}
+              selectedOperations={selectedOperations}
+              showSelectedOperation={false}
+            />
+          ))}
+        </section>
+      )}
+
+      {visualActions.length === 0 || viewerContext === null ? null : (
+        <div
+          id={`${page.id}-visual-actions`}
+          className="learning-guide-visual-actions"
+        >
+          {visualActions.map((action) => (
+            <button
+              key={action.id}
+              type="button"
+              data-testid={`open-${action.kind}-viewer`}
+              aria-controls="focused-viewer"
+              onClick={() =>
+                viewerContext.open(action.kind, `${page.id}-visual-actions`)
+              }
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {outlineSections.length === 0 ? null : (
         <details className="learning-guide-outline">
@@ -124,27 +201,6 @@ export function LearningGuide<Id extends string>({
         </details>
       )}
 
-      {page.introduction.length === 0 ? null : (
-        <section
-          className="learning-guide-introduction"
-          data-testid="guide-introduction"
-          aria-label="들어가기"
-        >
-          {page.introduction.map((block) => (
-            <GuideBlockView
-              key={block.id}
-              block={block}
-              pageId={page.id}
-              glossary={glossary}
-              formulas={formulas}
-              runtimeFacts={runtimeFacts}
-              selectedOperations={selectedOperations}
-              showSelectedOperation={false}
-            />
-          ))}
-        </section>
-      )}
-
       <div className="learning-guide-sections">
         {page.sections.map((section) => {
           const isActive = section.id === activeSectionId;
@@ -171,18 +227,6 @@ export function LearningGuide<Id extends string>({
                   <SectionHeading id={sectionHeadingId(page.id, section.id)}>
                     {section.title}
                   </SectionHeading>
-                  {section.primaryNodeId === undefined ||
-                  onSectionFocus === undefined ? null : (
-                    <button
-                      type="button"
-                      className="learning-guide-section-control"
-                      aria-label={section.title}
-                      aria-controls="focused-viewer"
-                      onClick={() => onSectionFocus(section)}
-                    >
-                      이 단계 도식 크게 보기
-                    </button>
-                  )}
                 </div>
               )}
               {section.blocks.map((block) => (
@@ -197,6 +241,26 @@ export function LearningGuide<Id extends string>({
                   showSelectedOperation={containsSelectedNode}
                 />
               ))}
+              {section.visualActionLabel === undefined ||
+              section.primaryNodeId === undefined ||
+              onSectionFocus === undefined ? null : (
+                <div className="learning-guide-section-actions">
+                  <button
+                    type="button"
+                    className="learning-guide-section-control"
+                    data-testid={
+                      visualActions.length === 0
+                        ? "open-diagram-viewer"
+                        : "open-section-diagram-viewer"
+                    }
+                    aria-label={section.visualActionLabel}
+                    aria-controls="focused-viewer"
+                    onClick={() => onSectionFocus(section)}
+                  >
+                    {section.visualActionLabel}
+                  </button>
+                </div>
+              )}
             </section>
           );
         })}

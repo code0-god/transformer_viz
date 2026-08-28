@@ -32,6 +32,7 @@ export type {
   LearningGuideNextStep,
   LearningGuidePage,
   LearningGuideSection,
+  LearningGuideVisualAction,
 } from "./guideTypes";
 export type {
   ArchitectureRouteCatalog,

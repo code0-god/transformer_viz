@@ -137,7 +137,9 @@ describe("Learning Workspace production integration", () => {
     const section = screen.getByRole("region", { name: "Self-Attention" });
 
     await user.click(
-      within(section).getByRole("button", { name: "Self-Attention" }),
+      within(section).getByRole("button", {
+        name: "Self-Attention 흐름 보기",
+      }),
     );
     const viewer = focusedViewer();
     expect(

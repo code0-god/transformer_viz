@@ -50,6 +50,13 @@ describe("LearningGuide", () => {
     expect(screen.getByTestId("guide-introduction")).toHaveTextContent(
       "INTRO_SENTINEL",
     );
+    const outline = container.querySelector(".learning-guide-outline");
+    if (outline === null) throw new Error("Fixture outline is missing");
+    expect(
+      screen
+        .getByTestId("guide-introduction")
+        .compareDocumentPosition(outline) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(screen.getByText("RICH_STRONG").tagName).toBe("STRONG");
     expect(screen.getByText("CODE_SENTINEL").tagName).toBe("CODE");
     expect(screen.getByLabelText("INLINE_FORMULA")).toHaveAttribute(
@@ -74,6 +81,12 @@ describe("LearningGuide", () => {
       expect(pending).toHaveAttribute("data-fact-status", "pending");
     }
     expect(screen.getByText("OPERATION_SUMMARY")).toBeVisible();
+    expect(
+      screen.getByText("구현 노트").closest("details"),
+    ).not.toHaveAttribute("open");
+    expect(
+      screen.getByText("IMPLEMENTATION_NOTE_SENTINEL"),
+    ).toBeInTheDocument();
     expect(screen.getAllByLabelText("BLOCK_FORMULA")).toHaveLength(2);
     expect(screen.getByTestId("key-takeaway")).toHaveTextContent(
       "TAKEAWAY_SENTINEL",
@@ -127,6 +140,52 @@ describe("LearningGuide", () => {
     window.history.replaceState(null, "", window.location.pathname);
   });
 
+  test("honors explicit hidden and automatic outline policies", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <LearningGuide
+        page={{ ...page, outline: "hidden" }}
+        glossary={glossary}
+        formulas={formulas}
+      />,
+    );
+    expect(screen.queryByRole("navigation", { name: "학습 목차" })).toBeNull();
+
+    rerender(
+      <LearningGuide
+        page={{ ...page, outline: "auto" }}
+        glossary={glossary}
+        formulas={formulas}
+      />,
+    );
+    expect(screen.queryByRole("navigation", { name: "학습 목차" })).toBeNull();
+    expect(screen.getByRole("heading", { name: "SECTION_ONE" })).toBeVisible();
+
+    const sectionTemplate = page.sections[1];
+    if (sectionTemplate === undefined)
+      throw new Error("Fixture requires a second section");
+    const additionalSections = Array.from({ length: 4 }, (_, index) => ({
+      ...sectionTemplate,
+      id: `fixture-section-${index + 3}`,
+      title: `SECTION_${index + 3}`,
+    }));
+    const longSections = [...page.sections, ...additionalSections];
+    rerender(
+      <LearningGuide
+        page={{
+          ...page,
+          outline: "auto",
+          sections: longSections,
+          outlineSectionIds: longSections.map(({ id }) => id),
+        }}
+        glossary={glossary}
+        formulas={formulas}
+      />,
+    );
+    await user.click(screen.getByText("이 글의 흐름"));
+    expect(screen.getByRole("navigation", { name: "학습 목차" })).toBeVisible();
+  });
+
   test("invokes native section and next-route controls with typed data", async () => {
     const user = userEvent.setup();
     const onSectionFocus = vi.fn();
@@ -143,14 +202,13 @@ describe("LearningGuide", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "SECTION_ONE" }));
+    await user.click(screen.getByRole("button", { name: "OPEN_SECTION" }));
     await user.click(screen.getByRole("button", { name: "NEXT_STEP_LABEL" }));
 
-    for (const sectionTitle of ["SECTION_ONE", "SECTION_TWO"] as const) {
-      expect(
-        screen.getByRole("button", { name: sectionTitle }),
-      ).toHaveAttribute("aria-controls", "focused-viewer");
-    }
+    expect(
+      screen.getByRole("button", { name: "OPEN_SECTION" }),
+    ).toHaveAttribute("aria-controls", "focused-viewer");
+    expect(screen.queryByRole("button", { name: "SECTION_TWO" })).toBeNull();
     expect(onSectionFocus).toHaveBeenCalledWith(page.sections[0]);
     expect(onSectionRef).toHaveBeenCalledWith(
       "fixture-section-one",

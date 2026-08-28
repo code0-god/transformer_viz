@@ -1,14 +1,4 @@
-import { curriculumTokenExamples } from "../../generated/tokenExamples";
 import { type Part0ChapterContent, part0Authorship } from "./glossary";
-
-const runtimeExample = curriculumTokenExamples.find(
-  ({ id }) => id === "the-cats",
-);
-const koreanExample = curriculumTokenExamples.find(
-  ({ id }) => id === "korean-han",
-);
-if (runtimeExample === undefined || koreanExample === undefined)
-  throw new Error("Generated Part 0 token examples are incomplete");
 
 export const tokenChapterContent = {
   page: {
@@ -16,108 +6,102 @@ export const tokenChapterContent = {
     routeId: "decoder.root",
     title: "Token이란?",
     learningGoal:
-      "token 단위가 단어와 같지 않음을 여러 경계 방식으로 비교한다.",
+      "모델이 텍스트를 어떤 단위로 나누고 처리하는지, 토큰과 토큰 ID의 차이를 익힙니다.",
+    outline: "hidden",
+    visualActions: [],
     introduction: [
       {
         id: "intro",
         kind: "paragraph",
-        text: "Token은 모델이 sequence의 한 칸으로 처리하는 단위입니다. 눈에 보이는 단어 경계와 token boundary는 tokenizer 방식에 따라 같을 수도, 다를 수도 있습니다.",
+        text: "모델은 문장을 그대로 한 덩어리로 계산하지 않습니다. 먼저 텍스트를 순서대로 다룰 수 있는 작은 단위로 나누어야 합니다.",
       },
     ],
     sections: [
       {
-        id: "decoder.curriculum.guide.0.2.section",
-        title: "같은 텍스트를 보는 네 가지 렌즈",
+        id: "token-unit",
+        title: "왜 문장을 나눌까요?",
         primaryNodeId: "decoder.root.input-context",
+        visualActionLabel: "Token 경계 보기",
         blocks: [
           {
-            id: "p.unit",
+            id: "p.why-split",
             kind: "paragraph",
-            text: "단어 방식은 공백을 중심으로 큰 단위를 만들지만, character 방식은 글자와 공백을 각각 순서의 한 칸으로 봅니다.",
+            text: "문장은 길이가 제각각이고 단어와 기호가 이어져 있습니다. 모델이 앞뒤 순서를 따라 계산하려면, 먼저 입력을 셀 수 있는 칸으로 나누는 일이 필요합니다.",
           },
           {
-            id: "p.subword",
+            id: "p.token-definition",
             kind: "paragraph",
-            text: "Subword 방식은 자주 쓰이는 조각을 재사용해 단어 전체와 문자 하나 사이의 경계를 만들 수 있습니다. 여기의 subword는 방식 비교를 위한 개념 예시입니다.",
+            text: "이때 만들어지는 각 칸이 토큰(token)입니다. 토큰은 모델이 순서열의 한 칸으로 처리하는 텍스트 단위입니다.",
           },
           {
-            id: "p.runtime",
+            id: "p.token-not-word",
             kind: "paragraph",
-            text: "현재 Rust tokenizer는 결정적 UTF-8 byte fallback을 사용합니다. 브라우저가 경계를 다시 계산하지 않고 exporter가 만든 fixture의 token 순서를 그대로 표시합니다.",
+            text: "토큰은 사람이 세는 단어와 항상 같지 않습니다. 한 단어가 여러 토큰으로 나뉠 수도 있고, 여러 글자나 기호가 한 토큰에 함께 들어갈 수도 있습니다.",
           },
           {
-            id: "p.word-token",
+            id: "p.boundary",
             kind: "paragraph",
-            text: "따라서 token 수를 단어 수로 대신 세면 입력 길이와 context 사용량을 잘못 판단할 수 있습니다. token은 언어학적 단어가 아니라 모델 입력 규약의 단위입니다.",
+            text: "어디에서 나눌지는 토크나이저(tokenizer)가 정합니다. 그래서 같은 문장도 어떤 토크나이저를 쓰느냐에 따라 토큰의 경계와 개수가 달라질 수 있습니다.",
+          },
+        ],
+      },
+      {
+        id: "token-id-bridge",
+        title: "Token과 Token ID는 다릅니다",
+        primaryNodeId: "decoder.root.token-embedding",
+        blocks: [
+          {
+            id: "p.token-and-id",
+            kind: "paragraph",
+            text: "토큰은 나눈 텍스트 단위이고, 토큰 ID는 그 단위를 vocabulary에서 찾기 위한 숫자 주소입니다. 텍스트 조각과 주소는 같은 것이 아닙니다.",
           },
           {
-            id: "p.korean",
+            id: "p.current-nanogpt",
             kind: "paragraph",
-            text: "한글 한 글자도 byte 방식에서는 하나의 token이라고 보장되지 않습니다. UTF-8로 표현한 ‘한’은 현재 runtime fixture에서 세 byte token으로 이어집니다.",
-          },
-          {
-            id: "p.unknown",
-            kind: "paragraph",
-            text: "Byte fallback은 정상 UTF-8 입력의 각 byte를 vocabulary 주소로 나타낼 수 있습니다. 그래서 이 범위의 입력을 곧바로 UNK 하나로 접지 않습니다.",
-          },
-          {
-            id: "example.the-cats",
-            kind: "example",
-            title: "the cats 경계 비교",
-            lines: [
-              "word: [the] [cats]",
-              "character: [t] [h] [e] [␠] [c] [a] [t] [s]",
-              "conceptual subword: [the] [cat] [s]",
-              `current Rust UTF-8 bytes: ${runtimeExample.generationPrefix
-                .filter(({ kind }) => kind === "byte")
-                .map(({ display }) => `[${display}]`)
-                .join(" ")}`,
-              `secondary edge 한: ${koreanExample.generationPrefix
-                .filter(({ kind }) => kind === "byte")
-                .map(({ display }) => `[${display}]`)
-                .join(" ")}`,
-            ],
+            text: "현재 nanoGPT Edu는 텍스트를 매우 작은 바이트(byte) 기반 단위로 처리합니다. 그래서 화면에 보이는 글자 하나가 항상 토큰 하나와 같지는 않습니다. 다음 Chapter에서는 토큰과 ID가 어떻게 연결되는지 자세히 봅니다.",
           },
           {
             id: "misconception.word-equals-token",
             kind: "callout",
             tone: "warning",
             title: "오개념: 한 단어는 항상 한 token",
-            text: "Token boundary는 tokenizer 규약이 정하며 단어 경계와 일치할 필요가 없습니다.",
+            text: "Token boundary는 tokenizer 규약이 정하므로 단어 경계와 일치할 필요가 없습니다.",
           },
           {
-            id: "misconception.korean-one-token",
+            id: "misconception.token-equals-id",
             kind: "callout",
             tone: "warning",
-            title: "오개념: 한글 한 글자는 항상 한 token",
-            text: "현재 byte 방식에서 ‘한’은 UTF-8 byte token 세 개입니다.",
-          },
-          {
-            id: "misconception.utf8-unknown",
-            kind: "callout",
-            tone: "warning",
-            title: "오개념: 일반 UTF-8 입력은 UNK",
-            text: "현재 byte fallback은 정상 UTF-8 byte를 직접 표현합니다.",
+            title: "오개념: token과 Token ID는 같은 것",
+            text: "Token은 텍스트 단위이고 Token ID는 vocabulary에서 그 단위를 가리키는 숫자 주소입니다.",
           },
           { id: "term.token", kind: "term", termId: "token" },
           { id: "term.token-boundary", kind: "term", termId: "token-boundary" },
-          { id: "term.byte", kind: "term", termId: "byte" },
-          { id: "term.subword", kind: "term", termId: "subword" },
+          { id: "term.token-id", kind: "term", termId: "token-id" },
+          {
+            id: "implementation.current-tokenizer",
+            kind: "implementation-note",
+            title: "구현 노트",
+            items: [
+              "현재 nanoGPT Edu의 tokenizer runtime은 Rust에서 결정적으로 token 순서를 만듭니다.",
+              "Exporter가 만든 fixture를 브라우저가 소비하므로, 화면은 token 경계를 다시 계산하지 않습니다.",
+              "표시하는 예시의 provenance는 이 생성 경로에 연결되어 있습니다.",
+            ],
+          },
         ],
       },
     ],
-    outlineSectionIds: ["decoder.curriculum.guide.0.2.section"],
+    outlineSectionIds: ["token-unit", "token-id-bridge"],
     keyTakeaway: [
       {
         id: "takeaway",
         kind: "paragraph",
-        text: "Token은 모델이 한 번에 처리하는 텍스트 단위이며, 단어보다 작거나 여러 글자를 포함할 수 있습니다.",
+        text: "Token은 모델이 순서대로 처리하는 텍스트 단위이며, Token ID는 그 token을 찾는 숫자 주소입니다.",
       },
     ],
-    glossary: ["token", "token-boundary", "byte", "subword"],
+    glossary: ["token", "token-boundary", "token-id"],
   },
   primaryDiagramId: "decoder.diagram.tokenization.token",
   referenceIds: ["ref.tistory.22", "ref.repo.tokenizer", "ref.rfc3629"],
-  misconceptionIds: ["word-equals-token", "korean-one-token", "utf8-unknown"],
+  misconceptionIds: ["word-equals-token", "token-equals-id"],
   authorship: part0Authorship("rust-generated-fixture"),
 } as const satisfies Part0ChapterContent;

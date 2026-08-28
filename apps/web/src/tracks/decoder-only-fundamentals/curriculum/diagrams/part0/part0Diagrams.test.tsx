@@ -9,9 +9,9 @@ import { TokenComparisonDiagram } from "./TokenComparisonDiagram";
 
 const CHAPTERS = [
   ["자연어 처리란?", "자연어 처리 추론 경로"],
-  ["Token이란?", "Token 경계 비교"],
+  ["Token이란?", "Token 개념 흐름"],
   ["Vocabulary와 Token ID", "Vocabulary 주소와 순서"],
-  ["Tokenization 방식", "Tokenization 방식의 정성 비교"],
+  ["Tokenization 방식", "Tokenization 방식 비교"],
 ] as const;
 
 const BEGINNER_STAGE_LABELS = [
@@ -49,7 +49,7 @@ function readyCurriculum(): TestWorker {
 }
 
 describe("Part 0 curriculum Diagrams", () => {
-  test("uses a portrait Token comparison layout at the mobile breakpoint", () => {
+  test("renders the Token concept as four ordered stages", () => {
     const originalMatchMedia = window.matchMedia;
     const mobileQuery = {
       matches: true,
@@ -67,10 +67,16 @@ describe("Part 0 curriculum Diagrams", () => {
     });
 
     try {
-      render(<TokenComparisonDiagram />);
+      const { container } = render(<TokenComparisonDiagram />);
       expect(
-        screen.getByRole("img", { name: "Token 경계 비교" }),
-      ).toHaveAttribute("viewBox", "0 0 420 1030");
+        screen.getByRole("img", { name: "Token 개념 흐름" }),
+      ).toBeVisible();
+      expect(
+        Array.from(container.querySelectorAll("[data-token-stage]")).map(
+          (stage) => stage.getAttribute("data-token-stage"),
+        ),
+      ).toEqual(["text", "boundary", "tokens", "model"]);
+      expect(container.querySelector("[data-token-lens]")).toBeNull();
     } finally {
       Object.defineProperty(window, "matchMedia", {
         configurable: true,
@@ -185,5 +191,8 @@ describe("Part 0 curriculum Diagrams", () => {
     const badges = document.querySelectorAll("[data-current-runtime='true']");
     expect(badges).toHaveLength(1);
     expect(badges[0]?.getAttribute("data-tokenization-method")).toBe("byte");
+    expect(
+      document.querySelectorAll("[data-tokenization-example]"),
+    ).toHaveLength(4);
   });
 });

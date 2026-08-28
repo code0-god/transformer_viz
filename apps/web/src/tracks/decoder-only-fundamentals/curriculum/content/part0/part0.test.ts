@@ -145,6 +145,55 @@ describe("Part 0 curriculum content", () => {
     ).toBe(false);
   });
 
+  test("separates Token concepts from Tokenization method comparisons", () => {
+    const tokenPage = part0GuidePage(1);
+    const methodsPage = part0GuidePage(3);
+    const tokenMainText = JSON.stringify(
+      tokenPage.sections.flatMap(({ blocks }) =>
+        blocks.filter(({ kind }) => kind !== "implementation-note"),
+      ),
+    ).toLowerCase();
+    const methodsText = JSON.stringify(methodsPage.sections).toLowerCase();
+
+    expect(Reflect.get(tokenPage, "outline")).toBe("hidden");
+    expect(Reflect.get(methodsPage, "outline")).toBe("hidden");
+    expect(Reflect.get(tokenPage, "visualActions")).toEqual([]);
+    expect(Reflect.get(methodsPage, "visualActions")).toEqual([]);
+    expect(
+      tokenPage.sections.some((section) =>
+        String(Reflect.get(section, "visualActionLabel") ?? "").includes(
+          "Token 경계",
+        ),
+      ),
+    ).toBe(true);
+    for (const method of ["word-level", "character-level", "subword", "bpe"]) {
+      expect(tokenMainText).not.toContain(method);
+    }
+    for (const implementationTerm of ["rust", "exporter", "fixture"]) {
+      expect(tokenMainText).not.toContain(implementationTerm);
+    }
+    for (const method of ["word", "character", "subword", "byte"]) {
+      expect(methodsText).toContain(method);
+    }
+    expect(
+      methodsPage.sections.some((section) =>
+        String(Reflect.get(section, "visualActionLabel") ?? "").includes(
+          "Tokenization 방식",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("keeps implementation details collapsed outside beginner prose", () => {
+    const pages = [part0GuidePage(1), part0GuidePage(3)];
+    for (const page of pages) {
+      const notes = page.sections.flatMap(({ blocks }) =>
+        blocks.filter(({ kind }) => kind === "implementation-note"),
+      );
+      expect(notes.length).toBeGreaterThan(0);
+    }
+  });
+
   test("exposes typed independent-authorship provenance for Part 0", () => {
     // Given: the curriculum reference module is the provenance boundary.
     const provenance: unknown = Reflect.get(

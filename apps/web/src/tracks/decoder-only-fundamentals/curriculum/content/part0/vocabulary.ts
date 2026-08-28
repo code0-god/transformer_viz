@@ -17,6 +17,14 @@ export const vocabularyChapterContent = {
     title: "Vocabulary와 Token ID",
     learningGoal:
       "vocabulary 주소와 embedding에서 시작하는 의미 계산을 분리한다.",
+    outline: "hidden",
+    visualActions: [
+      {
+        id: "decoder.diagram.tokenization.vocabulary",
+        kind: "diagram",
+        label: "Token과 ID 연결 보기",
+      },
+    ],
     introduction: [
       {
         id: "intro",

@@ -4,11 +4,8 @@ import { type Part0ChapterContent, part0Authorship } from "./glossary";
 const runtimeExample = curriculumTokenExamples.find(
   ({ id }) => id === "the-cats",
 );
-const koreanExample = curriculumTokenExamples.find(
-  ({ id }) => id === "korean-han",
-);
-if (runtimeExample === undefined || koreanExample === undefined)
-  throw new Error("Generated tokenization method examples are incomplete");
+if (runtimeExample === undefined)
+  throw new Error("Generated tokenization method example is missing");
 
 export const methodsChapterContent = {
   page: {
@@ -16,54 +13,67 @@ export const methodsChapterContent = {
     routeId: "decoder.root",
     title: "Tokenization 방식",
     learningGoal:
-      "word, character, subword, byte 방식의 vocabulary 크기·sequence 길이·coverage 균형을 질적으로 비교한다.",
+      "같은 텍스트를 Word, Character, Subword, Byte 방식으로 나누어 비교합니다.",
+    outline: "hidden",
+    visualActions: [],
     introduction: [
       {
         id: "intro",
         kind: "paragraph",
-        text: "Tokenization 방식은 텍스트를 어느 크기의 단위로 나눌지 정합니다. 단위를 크게 잡을수록 항상 좋은 것도, 작게 잡을수록 항상 안전한 것도 아닙니다.",
+        text: "Tokenization 방식은 같은 텍스트를 어디에서 나눌지 정합니다. 여기서는 ‘the cats’라는 하나의 예시를 네 방식으로 계속 비교합니다.",
       },
     ],
     sections: [
       {
-        id: "decoder.curriculum.guide.0.4.section",
-        title: "네 방식의 정성적 균형",
+        id: "word",
+        title: "Word: 단어로 나누기",
         primaryNodeId: "decoder.root.input-context",
         blocks: [
           {
             id: "p.word",
             kind: "paragraph",
-            text: "Word-level은 읽기 쉬운 짧은 sequence를 만들 수 있지만, 가능한 단어를 넓게 담으려면 vocabulary가 커지고 새 단어 coverage가 어려워질 수 있습니다.",
+            text: "Word 방식에서는 ‘the cats’를 [the] [cats]처럼 단어 단위로 나눕니다. 익숙한 단위라 읽기 쉽고, 한 문장을 비교적 짧은 sequence로 만들기 쉽습니다.",
           },
+        ],
+      },
+      {
+        id: "character",
+        title: "Character: 문자로 나누기",
+        primaryNodeId: "decoder.root.input-context",
+        blocks: [
           {
             id: "p.character",
             kind: "paragraph",
-            text: "Character-level은 작은 기본 목록으로 많은 표기를 조합할 수 있는 대신, 같은 문장을 더 긴 sequence로 펼치는 경향이 있습니다.",
+            text: "Character 방식에서는 ‘the cats’를 [t] [h] [e] [␠] [c] [a] [t] [s]처럼 문자와 공백으로 나눕니다. 기본 단위는 작지만, 같은 문장이 더 긴 sequence가 됩니다.",
           },
+        ],
+      },
+      {
+        id: "subword",
+        title: "Subword: 단어 조각으로 나누기",
+        primaryNodeId: "decoder.root.input-context",
+        blocks: [
           {
             id: "p.subword",
             kind: "paragraph",
-            text: "Subword 계열은 빈번한 조각을 묶어 vocabulary와 sequence 길이 사이를 조절합니다. BPE는 이 일반 비교의 한 방식이며 현재 교육용 tokenizer의 구현이라고 말하지 않습니다.",
+            text: "Subword 방식은 자주 쓰이는 단어 조각을 단위로 씁니다. ‘the cats’를 [the] [cat] [s]로 나누는 것은 방식 차이를 보여 주는 개념 예시이며, 현재 nanoGPT Edu tokenizer의 실제 분할 결과를 뜻하지 않습니다.",
           },
+        ],
+      },
+      {
+        id: "byte",
+        title: "Byte: byte로 나누기",
+        primaryNodeId: "decoder.root.input-context",
+        blocks: [
           {
             id: "p.byte",
             kind: "paragraph",
-            text: "Byte 방식은 UTF-8 byte를 기본 단위로 삼아 폭넓은 입력을 작은 고정 주소 집합으로 표현합니다. 현재 Rust runtime은 결정적 byte fallback을 사용합니다.",
+            text: "Byte 방식은 텍스트를 byte 단위까지 나누어 표현합니다. 이 방식에서는 사람이 보는 글자 수와 token 수가 같다고 가정할 수 없습니다.",
           },
           {
-            id: "p.korean",
-            kind: "paragraph",
-            text: "‘한’은 UTF-8에서 byte 세 개이며 현재 fixture에서도 byte token 세 개로 나타납니다. 화면은 브라우저에서 이를 재계산하지 않고 exporter 결과를 소비합니다.",
-          },
-          {
-            id: "p.truncation",
-            kind: "paragraph",
-            text: "Byte token sequence를 길이 제한에서 자를 때는 디코딩 결과가 UTF-8 문자 경계를 깨지 않도록 안전하게 처리해야 합니다. token 수와 문자 수를 같은 값으로 가정할 수 없습니다.",
-          },
-          {
-            id: "example.methods",
+            id: "example.the-cats",
             kind: "example",
-            title: "the cats — 네 방식",
+            title: "the cats — 같은 입력을 네 방식으로 보기",
             lines: [
               "word: [the] [cats]",
               "character: [t] [h] [e] [␠] [c] [a] [t] [s]",
@@ -72,11 +82,20 @@ export const methodsChapterContent = {
                 .filter(({ kind }) => kind === "byte")
                 .map(({ display }) => `[${display}]`)
                 .join(" ")}`,
-              `한: ${koreanExample.generationPrefix
-                .filter(({ kind }) => kind === "byte")
-                .map(({ display }) => `[${display}]`)
-                .join(" ")} — UTF-8-safe truncation required`,
             ],
+          },
+        ],
+      },
+      {
+        id: "trade-off",
+        title: "Vocabulary와 sequence 길이의 균형",
+        primaryNodeId: "decoder.root.input-context",
+        visualActionLabel: "Tokenization 방식 비교 보기",
+        blocks: [
+          {
+            id: "p.trade-off",
+            kind: "paragraph",
+            text: "Vocabulary는 사용할 수 있는 token 종류의 목록이고, sequence 길이는 한 입력을 나타내는 token 칸의 수입니다. Word처럼 큰 단위는 vocabulary가 커지는 대신 sequence가 짧아지기 쉽고, character나 byte처럼 작은 단위는 vocabulary를 작게 유지하는 대신 sequence가 길어지기 쉽습니다. Subword는 그 사이를 조절하려는 방식입니다.",
           },
           {
             id: "comparison.axes",
@@ -104,36 +123,41 @@ export const methodsChapterContent = {
               },
               {
                 id: "coverage",
-                title: "Coverage",
+                title: "새 표기 표현",
                 items: [
                   "word: 새 단어에 민감",
-                  "character: 폭넓음",
-                  "subword: 조각 재사용",
-                  "byte: 정상 UTF-8 byte 표현",
+                  "character: 문자 조합으로 표현",
+                  "subword: 조각을 재사용",
+                  "byte: byte 조합으로 표현",
                 ],
               },
             ],
           },
           {
-            id: "misconception.current-bpe",
-            kind: "callout",
-            tone: "warning",
-            title: "오개념: BPE가 현재 edu tokenizer다",
-            text: "BPE는 일반 방식 비교이며 현재 runtime은 UTF-8 byte fallback입니다.",
-          },
-          {
             id: "misconception.always-best",
             kind: "callout",
             tone: "warning",
-            title: "오개념: 한 방식이 모든 축에서 항상 최선",
-            text: "각 방식은 vocabulary, sequence 길이, coverage 사이에 다른 균형을 만듭니다.",
+            title: "오개념: 한 방식이 모든 경우에 가장 좋다",
+            text: "방식마다 vocabulary 크기, sequence 길이, 새 표기를 다루는 방법의 균형이 다릅니다.",
           },
           {
             id: "misconception.context-characters",
             kind: "callout",
             tone: "warning",
             title: "오개념: context 길이는 문자 수다",
-            text: "Context는 tokenizer가 만든 token 수로 측정합니다.",
+            text: "Context는 tokenizer가 만든 token 수로 측정하므로 문자 수와 같지 않을 수 있습니다.",
+          },
+        ],
+      },
+      {
+        id: "current-nanogpt",
+        title: "현재 nanoGPT Edu에서는",
+        primaryNodeId: "decoder.root.input-context",
+        blocks: [
+          {
+            id: "p.current-nanogpt",
+            kind: "paragraph",
+            text: "현재 nanoGPT Edu에서는 byte 방식의 결과를 실제 예시로 살펴보고, 나머지 세 방식은 차이를 이해하기 위한 비교 개념으로 사용합니다.",
           },
           { id: "term.word-level", kind: "term", termId: "word-level" },
           {
@@ -148,15 +172,32 @@ export const methodsChapterContent = {
             kind: "term",
             termId: "sequence-length",
           },
+          {
+            id: "implementation.current-tokenizer",
+            kind: "implementation-note",
+            title: "구현 노트",
+            items: [
+              "현재 runtime은 Rust tokenizer의 결정적 UTF-8 byte fallback을 사용합니다.",
+              "Exporter가 만든 fixture의 byte token 순서를 브라우저가 그대로 표시하며, 브라우저는 경계를 다시 계산하지 않습니다.",
+              "이 예시의 provenance는 생성된 curriculumTokenExamples에 연결되어 있습니다.",
+            ],
+          },
         ],
       },
     ],
-    outlineSectionIds: ["decoder.curriculum.guide.0.4.section"],
+    outlineSectionIds: [
+      "word",
+      "character",
+      "subword",
+      "byte",
+      "trade-off",
+      "current-nanogpt",
+    ],
     keyTakeaway: [
       {
         id: "takeaway",
         kind: "paragraph",
-        text: "Tokenization 방식은 vocabulary 크기와 sequence 길이 사이의 균형을 결정합니다.",
+        text: "Tokenization 방식은 vocabulary 크기와 sequence 길이 사이의 균형을 다르게 만듭니다.",
       },
     ],
     glossary: [
@@ -169,6 +210,6 @@ export const methodsChapterContent = {
   },
   primaryDiagramId: "decoder.diagram.tokenization.methods",
   referenceIds: ["ref.tistory.22", "ref.repo.tokenizer", "ref.rfc3629"],
-  misconceptionIds: ["current-bpe", "always-best", "context-characters"],
+  misconceptionIds: ["always-best", "context-characters"],
   authorship: part0Authorship("rust-generated-fixture"),
 } as const satisfies Part0ChapterContent;

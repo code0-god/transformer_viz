@@ -16,6 +16,7 @@ const ARCHITECTURE_CHAPTERS = [
     routeId: "decoder.root",
     pageId: "decoder-guide-root",
     sectionId: "root-generation-overview",
+    part: 3,
     progress: 12,
   },
   {
@@ -24,6 +25,7 @@ const ARCHITECTURE_CHAPTERS = [
     routeId: "decoder.block",
     pageId: "decoder-guide-block",
     sectionId: "block-overview",
+    part: 4,
     progress: 13,
   },
   {
@@ -32,6 +34,7 @@ const ARCHITECTURE_CHAPTERS = [
     routeId: "decoder.self-attention",
     pageId: "decoder-guide-self-attention",
     sectionId: "qkv",
+    part: 5,
     progress: 14,
   },
 ] as const;
@@ -77,7 +80,7 @@ function focusedViewer(): HTMLElement {
 describe("Parts 3 through 5 incumbent route integration", () => {
   test.each(ARCHITECTURE_CHAPTERS)(
     "reuses the incumbent $title route and Guide identity",
-    async ({ title, routeId, pageId, sectionId, progress }) => {
+    async ({ title, routeId, pageId, sectionId, part, progress }) => {
       // Given: a fresh legacy architecture surface and stable Worker traffic.
       const worker = readyCurriculum();
       const postsBefore = worker.posted.length;
@@ -96,7 +99,7 @@ describe("Parts 3 through 5 incumbent route integration", () => {
         document.querySelector(`[data-guide-section-id='${sectionId}']`),
       ).toHaveFocus();
       expect(
-        screen.getByText(`현재 Chapter ${progress} / 14`),
+        screen.getByText(`Part ${part} · ${progress} / 14`),
       ).toBeInTheDocument();
       expect(worker.posted).toHaveLength(postsBefore);
     },
@@ -166,7 +169,7 @@ describe("Parts 3 through 5 incumbent route integration", () => {
           "[data-guide-section-id='root-generation-overview']",
         ),
       ).toHaveFocus();
-      expect(screen.getByText("현재 Chapter 12 / 14")).toBeInTheDocument();
+      expect(screen.getByText("Part 3 · 12 / 14")).toBeInTheDocument();
     } finally {
       window.removeEventListener("curriculum-focus", record);
     }
@@ -241,7 +244,7 @@ describe("Parts 3 through 5 incumbent route integration", () => {
     // When: the article asks for that stage again.
     await user.click(
       within(guideSection).getByRole("button", {
-        name: "붙이고 다시 계산하기",
+        name: "Context 갱신 흐름 보기",
       }),
     );
 

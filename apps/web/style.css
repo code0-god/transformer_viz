@@ -385,15 +385,15 @@ button.primary {
 
 .course-home {
   display: grid;
-  gap: clamp(var(--s5), 4vw, var(--s7));
+  gap: clamp(var(--s4), 3vw, var(--s6));
   inline-size: min(100%, 76rem);
   min-inline-size: 0;
   margin-inline: auto;
-  padding: clamp(var(--s5), 5vh, 3.5rem) 0;
+  padding: clamp(var(--s4), 3vh, 2.5rem) 0;
 }
 .course-home__intro {
   display: grid;
-  gap: var(--s4);
+  gap: var(--s3);
   max-inline-size: 56rem;
 }
 .lab-introduction__eyebrow {
@@ -404,7 +404,7 @@ button.primary {
 }
 .course-home__intro h1 {
   max-inline-size: 20ch;
-  font-size: clamp(2.35rem, 4vw, 3.4rem);
+  font-size: clamp(2.1rem, 3.2vw, 2.8rem);
   line-height: 1.08;
   letter-spacing: -.04em;
   text-wrap: balance;
@@ -413,7 +413,7 @@ button.primary {
 .course-home__intro > p:last-child {
   max-inline-size: 54ch;
   color: var(--ink-muted);
-  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-size: clamp(1rem, 1.5vw, 1.125rem);
   line-height: 1.7;
   word-break: keep-all;
 }
@@ -422,7 +422,7 @@ button.primary {
   grid-template-columns: minmax(17rem, .8fr) minmax(0, 1.2fr);
   gap: var(--s5) clamp(var(--s5), 5vw, var(--s7));
   align-items: start;
-  padding-block: clamp(var(--s5), 5vw, var(--s7));
+  padding-block: clamp(var(--s4), 3vw, var(--s6));
   border-block: 1px solid var(--hairline);
 }
 .course-home__course-copy {
@@ -438,7 +438,7 @@ button.primary {
 }
 .course-home__course-copy h2 {
   max-inline-size: 18ch;
-  font-size: clamp(1.65rem, 3vw, 2.8rem);
+  font-size: clamp(1.6rem, 2.5vw, 2.35rem);
   line-height: 1.05;
   letter-spacing: -.04em;
   overflow-wrap: anywhere;
@@ -686,8 +686,8 @@ button.primary {
     border-block-start: 1px solid var(--hairline);
   }
   .app-navigation a { flex: 1; justify-content: center; text-align: center; }
-  .course-home { gap: var(--s6); padding-block: var(--s6); }
-  .course-home__intro h1 { font-size: clamp(2rem, 10.5vw, 2.5rem); }
+  .course-home { gap: var(--s5); padding-block: var(--s5); }
+  .course-home__intro h1 { font-size: clamp(1.9rem, 9vw, 2.2rem); }
   .course-home__actions { display: flex; inline-size: 100%; }
   .course-home__journey { gap: 0 var(--s3); }
   .generation-primary { grid-template-columns: minmax(0, 1fr); }

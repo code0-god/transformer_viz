@@ -10,6 +10,14 @@ export const nlpChapterContent = {
     title: "자연어 처리란?",
     learningGoal:
       "사람이 사용하는 언어가 모델의 숫자 계산으로 바뀌는 전체 흐름을 먼저 살펴봅니다.",
+    outline: "hidden",
+    visualActions: [
+      {
+        id: "decoder.diagram.intro.nlp",
+        kind: "diagram",
+        label: "자연어 처리 흐름 보기",
+      },
+    ],
     introduction: [
       {
         id: "intro",

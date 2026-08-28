@@ -236,9 +236,12 @@ export function registerAppRouteTests({
 
         // Then
         expect(document.body.style.top).toBe("-180px");
-        expect(firstButton).toHaveFocus();
+        expect(
+          within(dialog).getByRole("button", { name: "집중 보기 닫기" }),
+        ).toHaveFocus();
         if (lastButton === undefined)
           throw new Error("Viewer controls missing");
+        firstButton?.focus();
         await user.keyboard("{Shift>}{Tab}{/Shift}");
         expect(lastButton).toHaveFocus();
         await user.keyboard("{Tab}");

@@ -36,7 +36,10 @@ def _article_probe(browser: ChromeSession) -> JsonObject:
           );
           const guide = document.querySelector('.learning-workspace__guide');
           const actions = Array.from(document.querySelectorAll(
-            '.learning-workspace__viewer-actions button',
+            [
+              '.learning-guide-visual-actions button',
+              '.learning-guide-section-actions button',
+            ].join(','),
           ));
           const rect = article?.getBoundingClientRect();
           const guideStyle = guide ? getComputedStyle(guide) : null;
@@ -50,6 +53,9 @@ def _article_probe(browser: ChromeSession) -> JsonObject:
             canvasMounted: document.querySelector('canvas') !== null,
             actionCount: actions.length,
             actionLabels: actions.map(action => action.textContent?.trim()),
+            topActionBar:
+              document.querySelector('.learning-workspace__viewer-actions')
+                !== null,
             prompt: document.querySelector('[aria-label="Prompt"]') !== null,
             generate: document.querySelector('[data-testid="generate"]') !== null,
             overflowX: document.documentElement.scrollWidth > innerWidth,
@@ -77,7 +83,8 @@ def _require_article(
     require(
         article["diagramMounted"] is False
         and article["canvasMounted"] is False
-        and article["tablist"] is False,
+        and article["tablist"] is False
+        and article["topActionBar"] is False,
         f"{slug} visual mounted in reading mode: {article}",
     )
     require(
@@ -276,7 +283,7 @@ def capture_learning_phase(
 
     go_chapter(browser, "3-1")
     gpt_article = _article_probe(browser)
-    _require_article(gpt_article, "3-1", action_count=1)
+    _require_article(gpt_article, "3-1", action_count=2)
     shots["gptArticle"] = capture(
         browser, screenshots / "learn-gpt-article-1440x900.png"
     )

@@ -19,7 +19,6 @@ export function CurriculumNavigation({
 }: CurriculumNavigationProps): ReactElement {
   const [open, setOpen] = useState(false);
   const navigation = chapterNavigation(currentChapterId);
-  const ordinal = (navigation?.index ?? 0) + 1;
   const navigate = (chapterId: ChapterId): void => {
     setOpen(false);
     onNavigate(chapterId);
@@ -28,21 +27,6 @@ export function CurriculumNavigation({
   return (
     <section className="curriculum-navigation" aria-label="Chapter navigation">
       <div className="curriculum-navigation__header">
-        <div>
-          <p className="curriculum-navigation__progress-copy">
-            현재 Chapter {ordinal} / 14
-          </p>
-          <div
-            className="curriculum-navigation__progress"
-            role="progressbar"
-            aria-label="Chapter 진행률"
-            aria-valuemin={1}
-            aria-valuemax={14}
-            aria-valuenow={ordinal}
-          >
-            <span style={{ inlineSize: `${(ordinal / 14) * 100}%` }} />
-          </div>
-        </div>
         <button
           type="button"
           className="curriculum-navigation__opener"

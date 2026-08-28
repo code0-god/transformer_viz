@@ -19,6 +19,7 @@ export const blockOperationSections: readonly LearningGuideSection[] = [
     title: "Self-Attention",
     primaryNodeId: "decoder.block.self-attention",
     associatedNodeIds: ["decoder.block.self-attention"],
+    visualActionLabel: "Self-Attention 흐름 보기",
     blocks: [
       {
         id: "block-attention-role",

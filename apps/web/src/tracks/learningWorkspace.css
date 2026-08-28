@@ -101,40 +101,11 @@
 
 .learning-workspace__article {
   display: grid;
-  gap: clamp(var(--s5), 5vw, var(--s7));
+  gap: var(--s4);
   inline-size: 100%;
   max-inline-size: 56rem;
   min-inline-size: 0;
   margin-inline: auto;
-}
-
-.learning-workspace__viewer-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s3);
-  align-items: center;
-  min-inline-size: 0;
-  margin-inline: 0;
-  padding-inline: 0;
-  padding-block: var(--s3);
-  border-inline: 0;
-  border-block: 1px solid var(--hairline);
-}
-
-.learning-workspace__viewer-actions button {
-  min-block-size: 44px;
-  padding: var(--s2) 0;
-  border: 0;
-  border-block-end: 1px solid currentColor;
-  border-radius: 0;
-  background: transparent;
-  color: var(--accent);
-  font-weight: 760;
-  cursor: pointer;
-}
-
-.learning-workspace__viewer-actions button:hover {
-  color: var(--accent-strong);
 }
 
 .learning-workspace__guide {
@@ -170,13 +141,4 @@
     inline-size: 100%;
   }
 
-  .learning-workspace__viewer-actions {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .learning-workspace__viewer-actions button {
-    inline-size: 100%;
-    text-align: start;
-  }
 }
