@@ -14,7 +14,7 @@ export const nextTokenChapterContent = {
       {
         id: "intro",
         kind: "paragraph",
-        text: "다음 token 하나가 정해질 때에는 모델 계산과 생성 전략이 차례로 만납니다. 같은 ‘확률’이라는 말로 합치지 않고 각 값의 provenance를 따라갑니다.",
+        text: "다음 token 하나가 정해질 때에는 모델 계산과 생성 전략이 차례로 만납니다. 같은 ‘확률’이라는 말로 합치지 않고 각 값의 역할을 구분합니다.",
       },
       {
         id: "figure.next-token",
@@ -65,7 +65,7 @@ export const nextTokenChapterContent = {
           {
             id: "p.selected",
             kind: "paragraph",
-            text: "마지막에는 sampler가 retained-set probability와 mode에 따라 selected token 하나를 정합니다. 브라우저 Guide는 Worker가 준 값을 읽기만 하며 softmax나 sampling을 다시 계산하지 않습니다.",
+            text: "마지막에는 sampler가 retained-set probability와 mode에 따라 selected token 하나를 정합니다.",
           },
           {
             id: "prediction-stages",
@@ -92,8 +92,8 @@ export const nextTokenChapterContent = {
             id: "current-model.next-token",
             kind: "callout",
             tone: "important",
-            title: "현재 값의 provenance",
-            text: "현재 Worker가 raw logits와 full-vocabulary inspection 값을 반환하며, sampler retained-set probability와 selected token은 별도 선택 단계에 속합니다. 브라우저는 softmax를 다시 계산하지 않습니다.",
+            title: "현재 모델의 두 확률",
+            text: "현재 nanoGPT Edu는 vocabulary 전체를 살펴보는 확률과 sampler가 실제 선택에 사용하는 retained-set probability를 구분합니다.",
           },
           {
             id: "misconception.logit-probability",

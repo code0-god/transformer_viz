@@ -174,11 +174,6 @@ export const attentionOperationSections: readonly LearningGuideSection[] = [
         kind: "formula",
         formulaId: "attention-output-projection",
       },
-      {
-        id: "attention-runtime-facts",
-        kind: "runtime-facts",
-        adapterId: "decoder.runtime.attention-facts",
-      },
       attentionInterpretationWarning,
       {
         id: "merge-selected-operation",

@@ -17,7 +17,7 @@ export const decoderRootGuide: LearningGuidePage = {
     {
       id: "root-introduction",
       kind: "paragraph",
-      text: "이 페이지는 입력 문자열을 숫자 표현으로 바꾸는 순간부터 다음 token을 context에 붙이는 순간까지, 한 generation step의 전체 지도를 따라갑니다. 먼저 말과 예시로 이해한 뒤 도식과 runtime 사실을 확인하고 마지막에 수식으로 정리합니다.",
+      text: "이 페이지는 입력 문자열을 숫자 표현으로 바꾸는 순간부터 다음 token을 context에 붙이는 순간까지, 한 generation step의 전체 지도를 따라갑니다. 먼저 말과 예시로 이해한 뒤 도식으로 흐름을 확인하고 마지막에 수식으로 정리합니다.",
     },
   ],
   sections,

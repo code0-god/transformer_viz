@@ -90,16 +90,27 @@ describe("Part 0 curriculum content", () => {
       const blocks = part0GuidePage(index).sections.flatMap(
         (section) => section.blocks,
       );
-      expect(
-        blocks.filter(({ kind }) => kind === "paragraph").length,
-      ).toBeGreaterThanOrEqual(6);
+      if (index === 2) {
+        expect(blocks.map(({ id }) => id)).toEqual([
+          "p.address",
+          "p.embedding",
+          "misconception.id-magnitude",
+          "misconception.id-distance",
+          "term.vocabulary",
+          "term.token-id",
+        ]);
+      } else {
+        expect(
+          blocks.filter(({ kind }) => kind === "paragraph").length,
+        ).toBeGreaterThanOrEqual(6);
+        expect(
+          blocks.filter(({ kind }) => kind === "term").length,
+        ).toBeGreaterThanOrEqual(3);
+      }
       const misconceptionCount = blocks.filter(
         ({ id, kind }) => kind === "callout" && id.startsWith("misconception."),
       ).length;
       expect(misconceptionCount).toBeGreaterThanOrEqual(index === 0 ? 1 : 2);
-      expect(
-        blocks.filter(({ kind }) => kind === "term").length,
-      ).toBeGreaterThanOrEqual(3);
       expect(blocks.some(({ kind }) => kind === "formula")).toBe(false);
     }
     expect(decoderCurriculumRegistries.termIds.size).toBeGreaterThanOrEqual(15);
@@ -151,11 +162,7 @@ describe("Part 0 curriculum content", () => {
   test("separates Token concepts from Tokenization method comparisons", () => {
     const tokenPage = part0GuidePage(1);
     const methodsPage = part0GuidePage(3);
-    const tokenMainText = JSON.stringify(
-      tokenPage.sections.flatMap(({ blocks }) =>
-        blocks.filter(({ kind }) => kind !== "implementation-note"),
-      ),
-    ).toLowerCase();
+    const tokenMainText = JSON.stringify(tokenPage.sections).toLowerCase();
     const methodsText = JSON.stringify(methodsPage.sections).toLowerCase();
 
     expect(Reflect.get(tokenPage, "outline")).toBe("hidden");
@@ -191,13 +198,20 @@ describe("Part 0 curriculum content", () => {
     ).toBe(true);
   });
 
-  test("keeps implementation details collapsed outside beginner prose", () => {
-    const pages = [part0GuidePage(1), part0GuidePage(3)];
+  test("keeps implementation details out of beginner prose", () => {
+    const pages = [0, 1, 2, 3].map(part0GuidePage);
     for (const page of pages) {
-      const notes = page.sections.flatMap(({ blocks }) =>
-        blocks.filter(({ kind }) => kind === "implementation-note"),
-      );
-      expect(notes.length).toBeGreaterThan(0);
+      const beginnerText = JSON.stringify(page.sections).toLowerCase();
+      for (const forbidden of [
+        "implementation-note",
+        "구현 노트",
+        "rust",
+        "exporter",
+        "fixture",
+        "provenance",
+      ]) {
+        expect(beginnerText).not.toContain(forbidden);
+      }
     }
   });
 

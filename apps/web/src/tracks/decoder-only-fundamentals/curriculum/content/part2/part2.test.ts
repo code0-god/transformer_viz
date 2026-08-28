@@ -52,7 +52,7 @@ describe("Part 2 curriculum content", () => {
       chapter.concepts[0]?.diagramId,
     ]);
 
-    // Then: each Chapter has explanation, current facts, misconceptions, and glossary.
+    // Then: each Chapter has explanations, misconceptions, and glossary.
     expect(contracts).toEqual(CHAPTERS);
     for (const page of part2Pages()) {
       const blocks = page.sections.flatMap(({ blocks }) => blocks);
@@ -61,7 +61,7 @@ describe("Part 2 curriculum content", () => {
       ).toBeGreaterThanOrEqual(6);
       expect(
         blocks.filter(({ kind }) => kind === "runtime-facts"),
-      ).toHaveLength(1);
+      ).toHaveLength(0);
       expect(
         blocks.filter(({ kind }) => kind === "callout").length,
       ).toBeGreaterThanOrEqual(3);
@@ -73,7 +73,7 @@ describe("Part 2 curriculum content", () => {
     }
   });
 
-  test("keeps dimensions out of prose and current claims inside typed adapters", () => {
+  test("keeps dimensions and implementation details out of prose", () => {
     // Given: Part 2 learner-visible static copy and machine blocks.
     const pages = part2Pages();
     const prose = pages
@@ -92,21 +92,22 @@ describe("Part 2 curriculum content", () => {
       ])
       .join(" ");
 
-    // When/Then: current dimensions are never prose literals or fixture truth.
+    // When/Then: current dimensions and developer terms stay out of prose.
     expect(prose).not.toMatch(
       /(?:Vocab|block_size|\bC\b|\bN\b)[^.!]{0,24}\b(?:259|64|24|2)\b/,
     );
     expect(prose).not.toMatch(
       /(?:current|현재)[^.!]{0,30}(?:sinusoidal|RoPE)/i,
     );
+    expect(prose).not.toMatch(
+      /\b(?:asset|fixture|metadata|provenance|runtime|source|typed)\b/i,
+    );
     expect(
-      pages.map(
-        (page) =>
-          page.sections
-            .flatMap(({ blocks }) => blocks)
-            .find((block) => block.kind === "runtime-facts")?.kind,
-      ),
-    ).toEqual(["runtime-facts", "runtime-facts", "runtime-facts"]);
+      pages
+        .flatMap((page) => page.sections)
+        .flatMap(({ blocks }) => blocks)
+        .some((block) => block.kind === "runtime-facts"),
+    ).toBe(false);
   });
 
   test("orders explanation before trusted formulas and preserves shape semantics", () => {

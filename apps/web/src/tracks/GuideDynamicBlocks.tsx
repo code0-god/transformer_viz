@@ -31,7 +31,7 @@ export function RuntimeFacts({
       className="learning-guide-runtime"
       data-runtime-presentation-id={presentation.id}
     >
-      <summary>{presentation.title ?? "구현 노트"}</summary>
+      <summary>{presentation.title ?? "현재 모델 정보"}</summary>
       <dl>
         {presentation.facts.map((fact) => (
           <Fact key={fact.id} fact={fact} />

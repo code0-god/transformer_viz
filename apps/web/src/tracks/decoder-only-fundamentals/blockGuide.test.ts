@@ -18,7 +18,6 @@ const sectionIds = [
   "block-residual-2",
   "block-attention-vs-mlp",
   "block-depth",
-  "block-runtime",
   "block-formulas",
   "block-misconceptions",
 ] as const;
@@ -93,15 +92,9 @@ describe("beginner Transformer Block guide contract", () => {
     );
   });
 
-  test("keeps runtime facts dynamic and formulas after explanations", () => {
+  test("keeps implementation details out and formulas after explanations", () => {
     const blocks = decoderBlockGuide.sections.flatMap(({ blocks }) => blocks);
-    expect(blocks.filter(({ kind }) => kind === "runtime-facts")).toEqual([
-      {
-        id: "block-runtime-facts",
-        kind: "runtime-facts",
-        adapterId: "decoder.runtime.block-facts",
-      },
-    ]);
+    expect(blocks.some(({ kind }) => kind === "runtime-facts")).toBe(false);
     expect(
       blocks
         .filter(({ kind }) => kind === "formula")

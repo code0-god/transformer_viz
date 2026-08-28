@@ -75,7 +75,7 @@ export const positionChapterContent = {
           {
             id: "p.limit",
             kind: "paragraph",
-            text: "Learned position table의 행 범위가 처리 가능한 위치 주소의 상한을 이룹니다. 현재 범위는 prose 숫자가 아니라 typed fact로 표시합니다.",
+            text: "Learned position table의 행 범위가 현재 모델이 처리할 수 있는 위치 주소의 상한을 정합니다.",
           },
           {
             id: "composition-flow",
@@ -104,23 +104,18 @@ export const positionChapterContent = {
             ],
           },
           {
-            id: "runtime.position",
-            kind: "runtime-facts",
-            adapterId: "current-model.position",
-          },
-          {
             id: "current-model.position",
             kind: "callout",
             tone: "important",
             title: "현재 모델 방식",
-            text: "현재 source는 learned absolute position table을 조회한 뒤 token embedding에 broadcast addition합니다. Asset의 block_size와 C는 위 typed facts가 표시합니다.",
+            text: "현재 nanoGPT Edu는 learned absolute position embedding을 token embedding과 원소별로 더합니다.",
           },
           {
             id: "misconception.position-kind",
             kind: "callout",
             tone: "warning",
             title: "오개념: 현재 모델은 sinusoidal 또는 RoPE를 쓴다",
-            text: "현재 source가 구현한 방식은 learned absolute position lookup입니다.",
+            text: "현재 nanoGPT Edu가 사용하는 방식은 learned absolute position lookup입니다.",
           },
           {
             id: "misconception.concat",

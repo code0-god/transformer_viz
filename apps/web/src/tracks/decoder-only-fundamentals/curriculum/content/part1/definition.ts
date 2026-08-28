@@ -55,7 +55,7 @@ export const definitionChapterContent = {
           {
             id: "p.candidates",
             kind: "paragraph",
-            text: "마지막 행에는 후보 A, 후보 B, 후보 C처럼 vocabulary 전체에 대응하는 symbolic raw logit이 있습니다. 이 Chapter는 golden fixture의 token이나 고정 수치를 학습 예시로 노출하지 않습니다.",
+            text: "마지막 행에는 후보 A, 후보 B, 후보 C처럼 vocabulary 전체에 대응하는 symbolic raw logit이 있습니다. 여기서는 고정 수치보다 후보 점수의 구조에 집중합니다.",
           },
           {
             id: "p.scope",

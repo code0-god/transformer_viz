@@ -155,9 +155,19 @@ LEARN_ATTENTION_GUIDE_PROBE = r"""
     if (!element) throw new Error(`missing ${selector}`);
     return element;
   };
-  const factValue = factId => required(
-    `[data-guide-fact-id="${factId}"] [data-fact-status]`,
-  ).textContent.trim();
+  const articleText = required('article').textContent.toLocaleLowerCase();
+  const forbiddenTerms = [
+    '구현 노트',
+    'rust',
+    'exporter',
+    'fixture',
+    'provenance',
+    'current runtime',
+    'kv cache',
+    'replay cache',
+    'runtime 사실',
+    '교육용 runtime',
+  ];
   return {
     guidePage: required('[data-guide-page-id]').dataset.guidePageId,
     guideSections: [...document.querySelectorAll('[data-guide-section-id]')]
@@ -166,13 +176,9 @@ LEARN_ATTENTION_GUIDE_PROBE = r"""
     runtimePresentation: Boolean(document.querySelector(
       '[data-runtime-presentation-id="decoder.runtime.attention-facts"]',
     )),
-    currentValues: {
-      t: factValue('decoder.fact.sequence-length'),
-      c: factValue('decoder.fact.model-width'),
-      h: factValue('decoder.fact.heads'),
-      d: factValue('decoder.fact.head-dimension'),
-      scale: factValue('decoder.fact.scale-factor'),
-    },
+    implementationTermHits: forbiddenTerms.filter(term =>
+      articleText.includes(term),
+    ),
     articleLayout: required('[data-learning-layout]').dataset.learningLayout,
     architectureMounted: Boolean(document.querySelector(
       '[data-testid="architecture-root"]',

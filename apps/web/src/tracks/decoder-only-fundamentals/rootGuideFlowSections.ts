@@ -180,13 +180,6 @@ export const decoderRootFlowSections: readonly LearningGuideSection[] = [
         kind: "paragraph",
         text: "선택된 token은 context의 맨 뒤에 붙습니다. 다음 생성 단계에서는 길어진 context 전체가 다시 embedding과 모든 Transformer Block을 통과합니다.",
       },
-      {
-        id: "root-no-kv-cache",
-        kind: "callout",
-        tone: "important",
-        title: "이 교육용 runtime에는 KV cache가 없습니다",
-        text: "이전 단계의 Key와 Value를 재사용하지 않으므로, 새 token이 붙을 때마다 현재 context 전체를 완전히 다시 계산합니다.",
-      },
     ],
   },
 ];

@@ -21,14 +21,18 @@ Learn is `Article + Inline Figure`.
 
 - `GuideBlock.kind = "figure"` stores `figureId`, width variant, caption, and
   optional accessible summary in content order.
-- A track-owned `LearningFigureRegistry` resolves model-specific renderers.
+- A track-owned `LearningFigureRegistry` resolves model-specific renderers and
+  their canonical preferred display widths.
 - `LearningFigure` emits semantic `<figure>` and `<figcaption>` markup.
-- Width variants are `prose`, `wide`, and `full`; prose measure remains narrow
-  while Figures may break out through grid columns.
+- Width variants are `prose`, `wide`, and `full`; they define maximum available
+  presentation space, not mandatory stretch width. The graphic uses the
+  smaller of available and registry preferred width.
 - Learn Figure renderers are static. They do not own modal state, scroll
   locking, Fit, zoom, pan, WebGL, or runtime inspection.
 - GPT Root uses shared geometry with a static Learn presentation and a normal
   Chapter link to Transformer Block.
+- Learn has no implementation-note block. Model-specific facts needed for a
+  concept use ordinary article prose; developer details stay in docs or Lab.
 
 Lab is `Experiment + Floating Inspection Overlay`.
 
@@ -44,6 +48,8 @@ Lab is `Experiment + Floating Inspection Overlay`.
 - Educational Figures load with only the active Chapter.
 - Learn does not request the Three/R3F Score Matrix chunk.
 - Figure placement and captions are validated as content contracts.
+- Preferred-width metadata prevents simple concepts from stretching to a
+  comparison or architecture ceiling while preserving responsive shrink.
 - Part 0 and GPT establish the migration pattern for later editorial work.
 - Transformer Block and Self-Attention Figure decomposition remains separate
   follow-up work; overlay behavior is not reintroduced into Learn.

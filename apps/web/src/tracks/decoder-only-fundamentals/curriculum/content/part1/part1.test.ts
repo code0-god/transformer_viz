@@ -138,7 +138,7 @@ describe("Part 1 curriculum content", () => {
     );
   });
 
-  test("pins current generation behavior and all six typed terminal reasons", () => {
+  test("pins current model repetition and all six terminal reasons", () => {
     // Given: the autoregressive Chapter's machine-readable block IDs.
     const autoregressive = part1Pages()[3];
     if (autoregressive === undefined)
@@ -146,13 +146,15 @@ describe("Part 1 curriculum content", () => {
     const blocks = autoregressive.sections.flatMap(({ blocks }) => blocks);
     const reasons = blocks.find(({ id }) => id === "terminal-reasons");
 
-    // When/Then: re-forward/no-persistent-cache and exact terminal variants are present.
+    // When/Then: full-context repetition and exact terminal variants are present.
     expect(
-      blocks.some(({ id }) => id === "current-runtime.full-prefix-reforward"),
+      blocks.some(
+        ({ id }) => id === "current-model.full-context-recalculation",
+      ),
     ).toBe(true);
     expect(
       blocks.some(
-        ({ id }) => id === "current-runtime.no-persistent-generation-kv-cache",
+        ({ id }) => id === "current-model.context-includes-selection",
       ),
     ).toBe(true);
     expect(reasons?.kind).toBe("steps");

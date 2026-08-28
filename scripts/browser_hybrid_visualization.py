@@ -477,6 +477,51 @@ def _verify_lab_responsive(browser: ChromeSession) -> list[JsonObject]:
             },
             f"Lab close restoration failed: {focus}",
         )
+    browser.require_cdp().evaluate(
+        browser.page_session,
+        """
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          left: 0,
+          behavior: 'auto',
+        })
+        """,
+        True,
+    )
+    wait_for(browser, "scrollY > 0", "Lab mobile scroll baseline")
+    scroll_before = evaluate_int(browser, "Math.round(scrollY)")
+    opened = browser.require_cdp().evaluate(
+        browser.page_session,
+        """(() => {
+          const trigger = document.querySelector(
+            '[data-testid="lab-open-architecture-root"]',
+          );
+          if (!(trigger instanceof HTMLButtonElement)) return false;
+          trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          return true;
+        })()""",
+        True,
+    )
+    require(opened is True, "Lab architecture trigger missing")
+    wait_for(
+        browser,
+        (
+            "document.querySelector('#focused-viewer"
+            "[data-viewer-kind=\"architecture\"]') !== null"
+        ),
+        "Lab scroll restoration overlay",
+    )
+    _close_viewer(browser)
+    scroll_after = evaluate_int(browser, "Math.round(scrollY)")
+    require(
+        scroll_after == scroll_before,
+        f"Lab overlay changed page scroll: {scroll_before} -> {scroll_after}",
+    )
+    evidence[-1] = {
+        **evidence[-1],
+        "closeScrollBefore": scroll_before,
+        "closeScrollAfter": scroll_after,
+    }
     set_viewport(browser, 1440, 900)
     return evidence
 

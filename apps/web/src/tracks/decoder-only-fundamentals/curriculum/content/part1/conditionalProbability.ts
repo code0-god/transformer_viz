@@ -120,7 +120,7 @@ export const conditionalProbabilityChapterContent = {
             kind: "callout",
             tone: "warning",
             title: "오개념: chain rule 수치는 sampler 설정과 무관한 보편값이다",
-            text: "확률의 provenance와 sampler 설정을 함께 밝혀야 실제 수치를 비교할 수 있습니다.",
+            text: "실제 수치를 비교할 때에는 같은 분포와 sampler 설정을 사용했는지 확인해야 합니다.",
           },
           {
             id: "term.conditional",

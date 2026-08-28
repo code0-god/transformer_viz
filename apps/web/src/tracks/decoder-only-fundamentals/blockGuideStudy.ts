@@ -76,22 +76,6 @@ export const blockClosingSections: readonly LearningGuideSection[] = [
     ],
   },
   {
-    id: "block-runtime",
-    title: "현재 모델과 Layer",
-    blocks: [
-      {
-        id: "block-runtime-explanation",
-        kind: "paragraph",
-        text: "현재 모델의 전체 Block 수와 선택한 Layer는 실행 중인 모델 metadata와 도식 상태에서 읽습니다.",
-      },
-      {
-        id: "block-runtime-facts",
-        kind: "runtime-facts",
-        adapterId: "decoder.runtime.block-facts",
-      },
-    ],
-  },
-  {
     id: "block-formulas",
     title: "연산 순서 수식",
     blocks: [

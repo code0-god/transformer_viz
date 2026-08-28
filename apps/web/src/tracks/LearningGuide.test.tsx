@@ -17,6 +17,7 @@ import type { LearningFigureRegistry } from "./learningFigureTypes";
 
 const figures: LearningFigureRegistry = {
   figureIds: new Set(["fixture.figure"]),
+  preferredWidth: () => 720,
   render: () => (
     <svg role="img" aria-label="FIGURE_RENDERER" viewBox="0 0 10 10">
       <title>FIGURE_RENDERER</title>
@@ -53,6 +54,10 @@ describe("LearningGuide", () => {
     const figure = screen.getByRole("figure", { name: "FIGURE_ALT" });
     expect(figure).toHaveAttribute("data-figure-id", "fixture.figure");
     expect(figure).toHaveAttribute("data-figure-size", "wide");
+    expect(figure).toHaveAttribute("data-figure-preferred-width", "720");
+    expect(figure.querySelector(".learning-figure__graphic")).toHaveStyle(
+      "--learning-figure-preferred-width: 720px",
+    );
     expect(
       within(figure).getByRole("img", { name: "FIGURE_RENDERER" }),
     ).toBeVisible();
@@ -60,6 +65,42 @@ describe("LearningGuide", () => {
       "FIGCAPTION",
     );
     expect(screen.queryByRole("button", { name: /Figure/ })).toBeNull();
+  });
+
+  test("caps Figure graphics at preferred width without stretching", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "src/tracks/learningGuide.css"),
+      "utf8",
+    );
+
+    expect(css).toMatch(
+      /\.learning-figure__graphic\s*{[^}]*inline-size:\s*min\(100%,\s*var\(--learning-figure-preferred-width\)\)/s,
+    );
+    expect(css).toMatch(
+      /\.learning-figure__graphic\s*{[^}]*margin-inline:\s*auto/s,
+    );
+    expect(css).not.toMatch(
+      /\.learning-figure__graphic\s*{[^}]*block-size:\s*[^a}]/s,
+    );
+  });
+
+  test("does not ship an implementation-note GuideBlock surface", () => {
+    const guideTypes = readFileSync(
+      resolve(process.cwd(), "src/tracks/guideTypes.ts"),
+      "utf8",
+    );
+    const renderer = readFileSync(
+      resolve(process.cwd(), "src/tracks/GuideBlocks.tsx"),
+      "utf8",
+    );
+    const css = readFileSync(
+      resolve(process.cwd(), "src/tracks/learningGuide.css"),
+      "utf8",
+    );
+
+    expect(guideTypes).not.toContain('"implementation-note"');
+    expect(renderer).not.toContain("learning-guide-implementation-note");
+    expect(css).not.toContain("learning-guide-implementation-note");
   });
 
   test("aligns every outline link on the same block-start edge", () => {
@@ -130,12 +171,6 @@ describe("LearningGuide", () => {
       expect(pending).toHaveAttribute("data-fact-status", "pending");
     }
     expect(screen.getByText("OPERATION_SUMMARY")).toBeVisible();
-    expect(
-      screen.getByText("구현 노트").closest("details"),
-    ).not.toHaveAttribute("open");
-    expect(
-      screen.getByText("IMPLEMENTATION_NOTE_SENTINEL"),
-    ).toBeInTheDocument();
     expect(screen.getAllByLabelText("BLOCK_FORMULA")).toHaveLength(2);
     expect(screen.getByTestId("key-takeaway")).toHaveTextContent(
       "TAKEAWAY_SENTINEL",

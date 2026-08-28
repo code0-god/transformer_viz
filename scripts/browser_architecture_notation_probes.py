@@ -107,6 +107,19 @@ LEARN_BLOCK_GUIDE_PROBE = r"""
   const formulaHeights = [
     ...document.querySelectorAll('.learning-guide [role="math"]'),
   ].map(element => element.getBoundingClientRect().height);
+  const articleText = required('article').textContent.toLocaleLowerCase();
+  const forbiddenTerms = [
+    '구현 노트',
+    'rust',
+    'exporter',
+    'fixture',
+    'provenance',
+    'current runtime',
+    'kv cache',
+    'replay cache',
+    'runtime 사실',
+    '교육용 runtime',
+  ];
   return {
     formulas: [
       String.raw`X_{\mathrm{LN1}} = \operatorname{LN1}(X_{\mathrm{in}})`,
@@ -116,10 +129,12 @@ LEARN_BLOCK_GUIDE_PROBE = r"""
       String.raw`Y_{\mathrm{MLP}} = \operatorname{MLP}(X_{\mathrm{LN2}})`,
       String.raw`X_{\mathrm{out}} = X_{\mathrm{res1}} + Y_{\mathrm{MLP}}`,
     ].every(value => panelFormulas.includes(value)),
-    layerCount: required(
-      '[data-runtime-presentation-id="decoder.runtime.block-facts"] ' +
-        '[data-guide-fact-id="decoder.fact.blocks"] [data-fact-status="ready"]',
-    ).textContent.trim() === '2',
+    runtimePresentation: Boolean(document.querySelector(
+      '[data-runtime-presentation-id="decoder.runtime.block-facts"]',
+    )),
+    implementationTermHits: forbiddenTerms.filter(term =>
+      articleText.includes(term),
+    ),
     formulaMaxHeight: Math.max(0, ...formulaHeights),
     articleLayout: required('[data-learning-layout]').dataset.learningLayout,
     architectureMounted: Boolean(document.querySelector(

@@ -150,11 +150,6 @@ export const page: LearningGuidePage<FixtureFormulaId> = {
           kind: "selected-operation",
           adapterId: "fixture-operation",
         },
-        {
-          id: "fixture-implementation-note",
-          kind: "implementation-note",
-          items: ["IMPLEMENTATION_NOTE_SENTINEL"],
-        },
       ],
     },
     {

@@ -83,7 +83,11 @@ radii, no default shadow, and one conclusion sentence as caption.
 - This refactor migrates Figure presentation without rewriting Part 1, Part 2,
   Block, or Attention teaching scope.
 - Article sections use typography, whitespace, dividers, formulas, examples, and restrained
-  callouts rather than nested dashboard cards. Runtime facts collapse under implementation notes.
+  callouts rather than nested dashboard cards.
+- Learn contains conceptual explanation and only current-model facts needed to
+  understand that concept. Implementation-language, exporter, fixture,
+  provenance, transport, and schema details belong in docs or Lab diagnostics,
+  never in a collapsed implementation note inside the article.
 - Prompt and generation controls exist only in Lab.
 - Lab is one centered experiment flow: Prompt, controls, continuation, replay, and current-run
   inspection actions. Architecture and Score Matrix content open through the shared viewer.
@@ -107,6 +111,19 @@ caption, annotation, or drill-down rather than the root composition.
 Figure placement is part of guide content order, never inferred from a section
 ID by a React component. SVG/DOM Figures mount only with the active Chapter.
 Runtime data visualization remains Lab-owned and lazy.
+
+Figure sizing follows three separate constraints:
+
+- **Intrinsic composition** comes from the renderer and SVG `viewBox`.
+- **Preferred display width** is Figure-specific metadata owned by the
+  track registry.
+- **Maximum available width** comes from the article's `prose`, `wide`, or
+  `full` layout category.
+
+The rendered graphic uses the smaller of its preferred width and available
+width. Size variants define maximum presentation space, not mandatory stretch
+width. Content files do not carry pixel-width overrides. Responsive layouts
+shrink within the viewport and reflow before SVG labels become unreadable.
 
 Future Self-Attention editorial work must use multiple single-question inline
 Figures rather than one giant composition: overall flow, Q/K/V, score, causal
@@ -160,8 +177,9 @@ mask, softmax, and weighted value. That redesign is outside ADR 0012.
 
 - Desktop, tablet, and mobile share one content-first Learn model. The page owns scrolling;
   Diagram and Guide never become independent scroll panes.
-- The article shell may reach 72rem. Prose stays within 52rem, wide Figures
-  within 64rem, and full Figures within 72rem.
+- The article shell may reach 72rem. Prose stays within 52rem; `wide` and
+  `full` define 64rem and 72rem maximum available Figure space. Registry
+  preferred widths may keep a graphic substantially narrower.
 - Lab uses one centered instrument column with a maximum inline size of 72rem.
 - `FocusedViewerOverlay` uses one application-level `OverlayHost`. Desktop surfaces occupy about
   90vw by 86dvh; mobile uses an almost full-screen surface with the same local controls.
@@ -230,6 +248,14 @@ copy, and arbitrary runtime strings never enter KaTeX.
   page scroll, and restores the exact trigger on Close or Escape.
 - Learn Figure detail uses Chapter hash navigation; it has no modal return
   state.
+- Chapter identity is `trackId + chapterId`. Entering a different Chapter
+  resets document scroll to top with `behavior: "auto"` before the existing
+  heading/section focus handoff.
+- Browser Back/Forward uses the same Chapter-top policy. Chapter pages own
+  manual browser scroll restoration while mounted.
+- ToC disclosure, inline Figures, architecture state, and other same-Chapter
+  interactions do not reset document scroll. Lab overlay open/close preserves
+  its independent scroll-lock and exact restoration contract.
 - Lab Diagram viewers support Fit, zoom, pan, Ctrl+Wheel, and `+`, `-`, `F`, or
   `0` keyboard controls.
 

@@ -178,7 +178,7 @@ def verify_learn_attention_guide(browser: ChromeSession, url: str) -> None:
     require(
         guide["guidePage"] == "decoder-guide-self-attention"
         and guide["outlineCount"] == 8
-        and guide["runtimePresentation"]
+        and not guide["runtimePresentation"]
         and all(
             section in guide["guideSections"]
             for section in (
@@ -194,11 +194,7 @@ def verify_learn_attention_guide(browser: ChromeSession, url: str) -> None:
         ),
         f"attention Guide hierarchy: {guide}",
     )
-    require(
-        guide["currentValues"]
-        == {"t": "—", "c": "64", "h": "4", "d": "16", "scale": "0.25"},
-        f"attention current values: {guide}",
-    )
+    require(guide["implementationTermHits"] == [], f"attention details: {guide}")
     require(
         guide["articleLayout"] == "article"
         and not guide["architectureMounted"]

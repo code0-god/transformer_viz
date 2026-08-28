@@ -107,12 +107,6 @@ export type GuideBlock<Id extends string = FormulaId> =
     }
   | {
       readonly id: string;
-      readonly kind: "implementation-note";
-      readonly title?: string;
-      readonly items: readonly string[];
-    }
-  | {
-      readonly id: string;
       readonly kind: "figure";
       readonly figureId: string;
       readonly size?: LearningFigureSize;

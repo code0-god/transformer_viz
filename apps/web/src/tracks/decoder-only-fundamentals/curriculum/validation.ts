@@ -143,7 +143,6 @@ function blockIssues(
       case "callout":
       case "comparison":
       case "example":
-      case "implementation-note":
       case "paragraph":
       case "steps":
         explained = true;

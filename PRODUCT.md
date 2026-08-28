@@ -59,8 +59,15 @@ Canonical split:
 - Lab = Experiment + Floating Inspection Overlay
 
 Part 0 keeps Token definition in 0.2, Token-to-ID mapping in 0.3, and
-Word/Character/Subword/Byte comparison in 0.4. Implementation-language, exporter, fixture, and
-provenance details stay collapsed under implementation notes instead of entering beginner prose.
+Word/Character/Subword/Byte comparison in 0.4. Learn exposes conceptual
+explanations and only current nanoGPT Edu facts needed for understanding.
+Implementation-language, exporter, fixture, provenance, schema, and transport
+details belong in docs or Lab diagnostics; Learn has no implementation-note
+surface.
+
+Every Chapter identity change starts at document top, including Next,
+Previous, ToC, Figure Chapter links, direct routes, and browser Back/Forward.
+Same-Chapter state changes and Lab overlays preserve their current scroll.
 
 ## Capabilities and Constraints
 
@@ -82,6 +89,9 @@ provenance details stay collapsed under implementation notes instead of entering
   inference are outside product scope.
 - WebGL is an optional, lazy numerical-evidence layer. This milestone implements only the actual
   attention Score Matrix; decorative scenes and three-dimensional architecture are outside scope.
+- Figure size categories are maximum available article widths. Each registry
+  renderer owns a smaller preferred display width when its information does not
+  need the full category.
 - The Score Matrix Canvas uses demand-driven rendering and bounded controls. Its exact Worker
   values remain available in an accessible HTML table when WebGL is unavailable or interrupted.
 - The model is nanoGPT-compatible, not GPT-2 124M and not a general-purpose language model.

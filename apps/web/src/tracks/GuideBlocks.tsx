@@ -138,17 +138,6 @@ export function GuideBlockView<Id extends string>({
         />
       );
     }
-    case "implementation-note":
-      return (
-        <details className="learning-guide-implementation-note">
-          <summary>{block.title ?? "구현 노트"}</summary>
-          <ul>
-            {block.items.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </details>
-      );
     case "figure":
       return <LearningFigure block={block} registry={figures} />;
   }

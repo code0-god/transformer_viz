@@ -1,23 +1,6 @@
 import type { LearningGuideSection } from "../types";
-import { decoderGuideRuntimeAdapterIds } from "./guideRuntime";
 
 export const decoderRootReferenceSections: readonly LearningGuideSection[] = [
-  {
-    id: "root-current-model",
-    title: "현재 모델에서 확인하기",
-    blocks: [
-      {
-        id: "root-current-model-intro",
-        kind: "paragraph",
-        text: "아래 값은 설명문에 적어 둔 예시가 아니라, 현재 로드된 모델 metadata에서 읽은 runtime 사실입니다.",
-      },
-      {
-        id: "root-runtime-facts",
-        kind: "runtime-facts",
-        adapterId: decoderGuideRuntimeAdapterIds.rootFacts,
-      },
-    ],
-  },
   {
     id: "root-formula-summary",
     title: "흐름을 수식으로 요약하기",
@@ -83,13 +66,6 @@ export const decoderRootReferenceSections: readonly LearningGuideSection[] = [
         tone: "warning",
         title: "한 번의 forward pass가 문장 전체를 만들지 않습니다",
         text: "한 단계는 다음 token 하나만 고르고, append와 full forward를 반복해 continuation을 만듭니다.",
-      },
-      {
-        id: "root-misconception-cache",
-        kind: "callout",
-        tone: "warning",
-        title: "이 runtime은 이전 계산을 KV cache로 재사용하지 않습니다",
-        text: "각 단계에서 현재 context 전체의 hidden state를 다시 계산합니다.",
       },
     ],
   },

@@ -99,16 +99,11 @@ export const embeddingChapterContent = {
             ],
           },
           {
-            id: "runtime.embedding",
-            kind: "runtime-facts",
-            adapterId: "current-model.embedding",
-          },
-          {
             id: "current-model.embedding",
             kind: "callout",
             tone: "important",
             title: "현재 모델 값",
-            text: "현재 asset의 Vocab과 C는 위 typed runtime facts에서 직접 표시합니다. 학습용 fixture의 작은 shape를 현재 모델 사실로 대체하지 않습니다.",
+            text: "현재 nanoGPT Edu도 token ID로 embedding table의 한 행을 찾습니다. Vocabulary 크기와 vector 폭은 모델 설정에 따라 달라집니다.",
           },
           {
             id: "misconception.id-vector",

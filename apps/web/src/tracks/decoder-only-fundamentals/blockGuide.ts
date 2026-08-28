@@ -13,7 +13,6 @@ const outlineSectionIds = [
   "block-residual-2",
   "block-attention-vs-mlp",
   "block-depth",
-  "block-runtime",
   "block-formulas",
   "block-misconceptions",
 ] as const;

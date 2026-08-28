@@ -65,7 +65,7 @@ export const hiddenStateChapterContent = {
           {
             id: "p.block",
             kind: "paragraph",
-            text: "Transformer Block은 현재 hidden state를 받아 새 hidden state로 보내는 반복 단위입니다. N은 현재 asset의 typed layer-count fact가 정합니다.",
+            text: "Transformer Block은 현재 hidden state를 받아 새 hidden state로 보내는 반복 단위입니다. 여러 Block을 지날 때마다 각 위치의 표현이 갱신됩니다.",
           },
           {
             id: "transformer-block-formula",
@@ -109,16 +109,11 @@ export const hiddenStateChapterContent = {
             ],
           },
           {
-            id: "runtime.hidden-state",
-            kind: "runtime-facts",
-            adapterId: "current-model.hidden-state",
-          },
-          {
             id: "current-model.hidden-state",
             kind: "callout",
             tone: "important",
             title: "현재 모델 경계",
-            text: "현재 source의 Block은 [B,T,C] 경계를 유지하고 explicit causal self-attention을 사용합니다. N과 C는 위 typed facts에서 표시합니다.",
+            text: "현재 nanoGPT Edu는 각 token 위치의 C차원 표현을 유지하고 causal self-attention으로 이전 위치만 참고합니다.",
           },
           {
             id: "misconception.single-vector",

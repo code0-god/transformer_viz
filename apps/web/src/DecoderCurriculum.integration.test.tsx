@@ -1,5 +1,5 @@
 // allow: SIZE_OK — curriculum end-to-end integration matrix
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { type ReactElement, StrictMode } from "react";
 import { describe, expect, test, vi } from "vitest";
@@ -54,7 +54,7 @@ const PART0_PRODUCTION_CHAPTERS = [
   [
     "Vocabulary와 Token ID",
     "decoder.curriculum.guide.0.3",
-    "Vocabulary 주소와 순서",
+    "Token과 Token ID를 embedding row에 연결하는 vocabulary lookup",
   ],
   [
     "Tokenization 방식",
@@ -110,6 +110,7 @@ const fixtureRegistry: CurriculumRendererRegistry = {
   resolveDiagram: () => FixtureDiagram,
   figures: {
     figureIds: new Set(["decoder.diagram.intro.nlp"]),
+    preferredWidth: () => 544,
     render: () => <FixtureDiagram />,
   },
   glossary: [],
@@ -152,11 +153,11 @@ async function activateCurrentGenericChapter(
   renderGenericCurriculum(rendererRegistry);
 }
 
-function readyCurriculum() {
+function readyCurriculum(slug = "0-1") {
   window.history.replaceState(
     null,
     "",
-    "/#/learn/decoder-only-fundamentals/0-1",
+    `/#/learn/decoder-only-fundamentals/${slug}`,
   );
   const worker = new TestWorker();
   render(
@@ -172,14 +173,13 @@ function readyCurriculum() {
 }
 
 describe("Decoder curriculum production integration", () => {
-  test("keeps every Learn Chapter free of diagram overlay triggers", async () => {
+  test("keeps every Learn Chapter free of overlays and developer notes", () => {
     readyCurriculum();
-    const user = userEvent.setup();
     const chapters = decoderCurriculum.parts.flatMap((part) => part.chapters);
 
     for (const chapter of chapters) {
-      await user.click(screen.getByRole("button", { name: "목차 열기" }));
-      await user.click(
+      fireEvent.click(screen.getByRole("button", { name: "목차 열기" }));
+      fireEvent.click(
         within(
           screen.getByRole("navigation", { name: "Chapter 목차" }),
         ).getByRole("link", { name: chapter.title }),
@@ -190,6 +190,10 @@ describe("Decoder curriculum production integration", () => {
       ).toHaveLength(0);
       expect(article.querySelectorAll("[aria-haspopup='dialog']")).toHaveLength(
         0,
+      );
+      expect(article).not.toHaveTextContent("구현 노트");
+      expect(article.textContent).not.toMatch(
+        /\b(?:Rust|exporter|fixture|provenance|current runtime|KV cache|Replay cache)\b|runtime 사실|교육용 runtime/i,
       );
     }
   });
@@ -228,23 +232,63 @@ describe("Decoder curriculum production integration", () => {
 
   test("updates the Chapter URL without Worker traffic and focuses the heading", async () => {
     // Given: the real app is ready at the first Chapter.
+    const scrollTo = vi
+      .spyOn(window, "scrollTo")
+      .mockImplementation(() => undefined);
     const worker = readyCurriculum();
     const user = userEvent.setup();
     const postsBefore = worker.posted.length;
+    scrollTo.mockClear();
 
-    // When: the learner opens ToC and chooses Chapter 0.2.
-    await user.click(screen.getByRole("button", { name: "목차 열기" }));
-    const toc = screen.getByRole("navigation", { name: "Chapter 목차" });
-    await user.click(within(toc).getByRole("link", { name: /Token이란\?/ }));
+    try {
+      // When: the learner opens ToC and chooses Chapter 0.2.
+      await user.click(screen.getByRole("button", { name: "목차 열기" }));
+      const toc = screen.getByRole("navigation", { name: "Chapter 목차" });
+      await user.click(within(toc).getByRole("link", { name: /Token이란\?/ }));
 
-    // Then: Chapter state changes in place and focus follows once.
-    expect(
-      screen.getByRole("heading", { name: "Token이란?", level: 1 }),
-    ).toHaveFocus();
-    expect(screen.getByText("Part 0 · 2 / 14")).toBeInTheDocument();
-    expect(screen.queryByText("현재 Chapter 2 / 14")).toBeNull();
-    expect(window.location.hash).toBe("#/learn/decoder-only-fundamentals/0-2");
-    expect(worker.posted).toHaveLength(postsBefore);
+      // Then: Chapter state changes in place, resets to top, and focuses once.
+      expect(
+        screen.getByRole("heading", { name: "Token이란?", level: 1 }),
+      ).toHaveFocus();
+      expect(scrollTo).toHaveBeenCalled();
+      expect(scrollTo).toHaveBeenLastCalledWith({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+      expect(screen.getByText("Part 0 · 2 / 14")).toBeInTheDocument();
+      expect(screen.queryByText("현재 Chapter 2 / 14")).toBeNull();
+      expect(window.location.hash).toBe(
+        "#/learn/decoder-only-fundamentals/0-2",
+      );
+      expect(worker.posted).toHaveLength(postsBefore);
+    } finally {
+      scrollTo.mockRestore();
+    }
+  });
+
+  test("starts a directly loaded Chapter at top without resetting local state", async () => {
+    const scrollTo = vi
+      .spyOn(window, "scrollTo")
+      .mockImplementation(() => undefined);
+    const user = userEvent.setup();
+
+    try {
+      readyCurriculum("0-3");
+      expect(window.history.scrollRestoration).toBe("manual");
+      expect(scrollTo).toHaveBeenCalled();
+      expect(scrollTo).toHaveBeenLastCalledWith({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+      scrollTo.mockClear();
+
+      await user.click(screen.getByRole("button", { name: "목차 열기" }));
+      expect(scrollTo).not.toHaveBeenCalled();
+    } finally {
+      scrollTo.mockRestore();
+    }
   });
 
   test("hands focus across a route only after the matching route registers", async () => {
@@ -513,7 +557,7 @@ describe("Decoder curriculum production integration", () => {
   );
 
   test.each(PART2_PRODUCTION_CHAPTERS)(
-    "activates production %s with typed runtime facts and no side effects",
+    "activates production %s without implementation details or side effects",
     async (chapterTitle, pageId, imageName) => {
       // Given: a fresh inactive app with URL, history, and Worker counters.
       const worker = readyCurriculum();
@@ -528,7 +572,7 @@ describe("Decoder curriculum production integration", () => {
         ).getByRole("link", { name: chapterTitle }),
       );
 
-      // Then: the exact content pair and current facts replace legacy atomically.
+      // Then: the exact content pair replaces legacy atomically.
       expect(
         document.querySelector(`[data-guide-page-id='${pageId}']`),
       ).not.toBeNull();
@@ -542,7 +586,7 @@ describe("Decoder curriculum production integration", () => {
       expect(screen.queryByRole("dialog")).toBeNull();
       expect(
         document.querySelectorAll("[data-runtime-presentation-id]").length,
-      ).toBeGreaterThanOrEqual(1);
+      ).toBe(0);
       expect(screen.queryByTestId("architecture-root")).toBeNull();
       expect(screen.queryByText(/Visualization/)).toBeNull();
       expect(screen.queryByRole("slider")).toBeNull();

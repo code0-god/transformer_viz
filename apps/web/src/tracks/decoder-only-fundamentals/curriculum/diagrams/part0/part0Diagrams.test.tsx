@@ -10,7 +10,10 @@ import { TokenComparisonDiagram } from "./TokenComparisonDiagram";
 const CHAPTERS = [
   ["자연어 처리란?", "자연어 처리 추론 경로"],
   ["Token이란?", "Token 개념 흐름"],
-  ["Vocabulary와 Token ID", "Vocabulary 주소와 순서"],
+  [
+    "Vocabulary와 Token ID",
+    "Token과 Token ID를 embedding row에 연결하는 vocabulary lookup",
+  ],
   ["Tokenization 방식", "Tokenization 방식 비교"],
 ] as const;
 
@@ -30,7 +33,7 @@ const INLINE_CHAPTERS = [
   [
     "Vocabulary와 Token ID",
     "decoder.diagram.tokenization.vocabulary",
-    "Vocabulary 주소와 순서",
+    "Token과 Token ID를 embedding row에 연결하는 vocabulary lookup",
     "Token ID는 vocabulary에서 token을 찾는 주소이며, 의미 계산은 embedding vector에서 시작합니다.",
   ],
   [

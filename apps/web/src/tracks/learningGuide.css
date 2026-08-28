@@ -191,6 +191,11 @@
   scrollbar-width: thin;
 }
 
+.learning-figure__graphic {
+  inline-size: min(100%, var(--learning-figure-preferred-width));
+  margin-inline: auto;
+}
+
 .learning-figure:not([data-figure-size="prose"]) .learning-figure__content {
   padding-block: clamp(.8rem, 2vw, 1.25rem);
   border-block: 1px solid var(--hairline, #d3ccbd);
@@ -283,7 +288,6 @@
 
 .learning-guide-callout,
 .learning-guide-runtime,
-.learning-guide-implementation-note,
 .learning-guide-operation,
 .learning-guide-example {
   min-inline-size: 0;
@@ -323,19 +327,6 @@
   cursor: pointer;
   font-size: 0.82rem;
   font-weight: 760;
-}
-
-.learning-guide-implementation-note summary {
-  color: var(--ink-muted, #68645c);
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 760;
-}
-
-.learning-guide-implementation-note ul {
-  margin-block-start: var(--s3, 0.75rem);
-  color: var(--ink-muted, #68645c);
-  font-size: 0.92rem;
 }
 
 .learning-guide-runtime[open] summary {

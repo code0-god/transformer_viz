@@ -179,16 +179,6 @@ export const methodsChapterContent = {
             kind: "term",
             termId: "sequence-length",
           },
-          {
-            id: "implementation.current-tokenizer",
-            kind: "implementation-note",
-            title: "구현 노트",
-            items: [
-              "현재 runtime은 Rust tokenizer의 결정적 UTF-8 byte fallback을 사용합니다.",
-              "Exporter가 만든 fixture의 byte token 순서를 브라우저가 그대로 표시하며, 브라우저는 경계를 다시 계산하지 않습니다.",
-              "이 예시의 provenance는 생성된 curriculumTokenExamples에 연결되어 있습니다.",
-            ],
-          },
         ],
       },
     ],

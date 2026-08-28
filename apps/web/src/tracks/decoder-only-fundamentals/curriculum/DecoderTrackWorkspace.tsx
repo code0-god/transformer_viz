@@ -77,6 +77,8 @@ function DecoderCurriculumWorkspace({
   const headingRef = useRef<HTMLHeadingElement | null>(null);
   const workspaceRef = useRef<HTMLElement | null>(null);
   const previousChapterRef = useRef<ChapterId | null>(null);
+  const previousScrollChapterKeyRef = useRef<string | null>(null);
+  const chapterKey = `${course.trackId}:${chapterId}`;
   useGeneratedTokenFocus(workspaceRef, context.state.selectedNodeId);
   const routeId = decoderRouteId(decoderRoute(context.state));
   const learningContext = createCourseArchitectureContext(context, course);
@@ -99,6 +101,20 @@ function DecoderCurriculumWorkspace({
       }),
     [],
   );
+
+  useLayoutEffect(() => {
+    const previousRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    return () => {
+      window.history.scrollRestoration = previousRestoration;
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (previousScrollChapterKeyRef.current === chapterKey) return;
+    previousScrollChapterKeyRef.current = chapterKey;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [chapterKey]);
 
   useLayoutEffect(() => {
     const heading = headingRef.current;

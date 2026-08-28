@@ -153,7 +153,8 @@ def verify_notation(
     guide = cdp.evaluate(session, LEARN_BLOCK_GUIDE_PROBE, True)
     require(
         guide["formulas"]
-        and guide["layerCount"]
+        and not guide["runtimePresentation"]
+        and guide["implementationTermHits"] == []
         and guide["formulaMaxHeight"] < 48,
         f"block Guide notation: {guide}",
     )

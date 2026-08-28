@@ -7,13 +7,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from browser_hybrid_capture import capture
+from browser_hybrid_capture import capture, request_urls
 from browser_hybrid_contract import require, set_viewport
 from browser_hybrid_helpers import (
     JsonObject,
     JsonValue,
     evaluate_dict,
     navigate_hash,
+    pointer_click,
     wait_for,
 )
 from browser_session import ChromeSession
@@ -40,6 +41,34 @@ INLINE_FIGURES = (
         "learn-methods-0-4-inline-1440x900.png",
     ),
 )
+EXPECTED_PREFERRED_WIDTHS = {
+    "decoder.diagram.intro.nlp": 544,
+    "decoder.diagram.tokenization.token": 800,
+    "decoder.diagram.tokenization.vocabulary": 760,
+    "decoder.diagram.tokenization.methods": 840,
+    "decoder.diagram.language-model.definition": 760,
+    "decoder.diagram.language-model.next-token": 600,
+    "decoder.diagram.language-model.conditional-probability": 780,
+    "decoder.diagram.language-model.autoregressive": 760,
+    "decoder.diagram.representation.embedding": 760,
+    "decoder.diagram.representation.position": 760,
+    "decoder.diagram.representation.hidden-state": 760,
+    "root": 832,
+}
+ALL_LEARNING_FIGURES = (
+    ("0-1", "decoder.diagram.intro.nlp", "prose"),
+    ("0-2", "decoder.diagram.tokenization.token", "wide"),
+    ("0-3", "decoder.diagram.tokenization.vocabulary", "wide"),
+    ("0-4", "decoder.diagram.tokenization.methods", "wide"),
+    ("1-1", "decoder.diagram.language-model.definition", "wide"),
+    ("1-2", "decoder.diagram.language-model.next-token", "wide"),
+    ("1-3", "decoder.diagram.language-model.conditional-probability", "wide"),
+    ("1-4", "decoder.diagram.language-model.autoregressive", "wide"),
+    ("2-1", "decoder.diagram.representation.embedding", "wide"),
+    ("2-2", "decoder.diagram.representation.position", "wide"),
+    ("2-3", "decoder.diagram.representation.hidden-state", "wide"),
+    ("3-1", "root", "full"),
+)
 
 
 def _figure_selector(figure_id: str) -> str:
@@ -58,6 +87,13 @@ def _integer(data: JsonObject, key: str) -> int:
     if not isinstance(value, int):
         raise TypeError(f"{key} must be an integer: {value!r}")
     return value
+
+
+def _number(data: JsonObject, key: str) -> float:
+    value = data.get(key)
+    if not isinstance(value, int | float):
+        raise TypeError(f"{key} must be a number: {value!r}")
+    return float(value)
 
 
 def _boolean(data: JsonObject, key: str) -> bool:
@@ -130,6 +166,61 @@ def _wait_for_figure(browser: ChromeSession, figure_id: str) -> None:
     )
 
 
+def _scroll_to_bottom(browser: ChromeSession, minimum: int = 1) -> int:
+    _evaluate(
+        browser,
+        """
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          left: 0,
+          behavior: 'auto',
+        })
+        """,
+    )
+    wait_for(
+        browser,
+        (
+            "Math.abs(scrollY - Math.max(0, "
+            "document.documentElement.scrollHeight - innerHeight)) <= 1"
+        ),
+        "Chapter bottom scroll",
+    )
+    scroll_y = _integer(
+        evaluate_dict(browser, "({ scrollY: Math.round(scrollY) })"),
+        "scrollY",
+    )
+    require(
+        scroll_y >= minimum,
+        f"Chapter is not tall enough for scroll test: {scroll_y} < {minimum}",
+    )
+    return scroll_y
+
+
+def _wait_for_chapter_top(browser: ChromeSession, chapter_id: str) -> JsonObject:
+    wait_for(
+        browser,
+        (
+            "Boolean(document.querySelector("
+            + json.dumps(
+                f'[data-curriculum-chapter-id="{chapter_id}"]',
+            )
+            + ")) && scrollY === 0"
+        ),
+        f"{chapter_id} at top",
+    )
+    probe = evaluate_dict(
+        browser,
+        """(() => ({
+          scrollY: Math.round(scrollY),
+          activeId: document.activeElement?.id ?? '',
+          activeSection:
+            document.activeElement?.getAttribute('data-guide-section-id') ?? '',
+        }))()""",
+    )
+    require(_integer(probe, "scrollY") == 0, f"Chapter not at top: {probe}")
+    return probe
+
+
 def _scroll_figure(browser: ChromeSession, figure_id: str) -> None:
     selector = _figure_selector(figure_id)
     _evaluate(
@@ -159,6 +250,8 @@ def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
               const rect = figure?.getBoundingClientRect();
               const articleRect = article?.getBoundingClientRect();
               const content = figure?.querySelector('.learning-figure__content');
+              const graphic = figure?.querySelector('.learning-figure__graphic');
+              const graphicRect = graphic?.getBoundingClientRect();
               const visible = (element) => {{
                 if (!(element instanceof Element)) return false;
                 const box = element.getBoundingClientRect();
@@ -180,9 +273,25 @@ def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
               const mobileFlow = figure?.querySelector(
                 '.decoder-learning-architecture__mobile',
               );
+              const articleText = article?.textContent ?? '';
+              const forbiddenTerms = [
+                '구현 노트',
+                'rust',
+                'exporter',
+                'fixture',
+                'provenance',
+                'current runtime',
+                'kv cache',
+                'replay cache',
+                'runtime 사실',
+                '교육용 runtime',
+              ];
               return {{
                 figureId: figure?.getAttribute('data-figure-id') ?? '',
                 size: figure?.getAttribute('data-figure-size') ?? '',
+                preferredWidth: Number(
+                  figure?.getAttribute('data-figure-preferred-width') ?? 0,
+                ),
                 caption: caption?.textContent?.trim() ?? '',
                 triggerCount:
                   article?.querySelectorAll('[aria-haspopup="dialog"]').length ?? -1,
@@ -221,11 +330,17 @@ def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
                 visible: visible(figure),
                 width: rect?.width ?? 0,
                 height: rect?.height ?? 0,
+                graphicWidth: graphicRect?.width ?? 0,
+                graphicLeft: graphicRect?.left ?? 0,
+                graphicRight: graphicRect?.right ?? 0,
                 left: rect?.left ?? 0,
                 right: rect?.right ?? 0,
                 tokenRows: Array.from(
                   figure?.querySelectorAll('[data-token-row]') ?? [],
                   (node) => node.getAttribute('data-token-row'),
+                ),
+                implementationTermHits: forbiddenTerms.filter((term) =>
+                  articleText.toLocaleLowerCase().includes(term),
                 ),
               }};
             }})()
@@ -245,6 +360,29 @@ def _assert_inline_figure(
         f"Wrong Figure size: {figure_id}",
     )
     require(_string(probe, "caption") != "", "Caption missing")
+    require(
+        probe.get("implementationTermHits") == [],
+        f"Learn implementation detail exposed: {figure_id}: {probe}",
+    )
+    expected_preferred = EXPECTED_PREFERRED_WIDTHS[figure_id]
+    require(
+        _number(probe, "preferredWidth") == expected_preferred,
+        f"Wrong Figure preferred width: {figure_id}: {probe}",
+    )
+    require(
+        _number(probe, "graphicWidth") <= expected_preferred + 1,
+        f"Figure stretched past preferred width: {figure_id}: {probe}",
+    )
+    require(
+        _number(probe, "graphicWidth") <= _number(probe, "width") + 1,
+        f"Figure exceeded available width: {figure_id}: {probe}",
+    )
+    require(
+        _number(probe, "graphicLeft") >= -1
+        and _number(probe, "graphicRight")
+        <= _number(probe, "width") + _number(probe, "left") + 1,
+        f"Figure graphic escaped wrapper: {figure_id}: {probe}",
+    )
     require(_integer(probe, "triggerCount") == 0, "Learn overlay trigger found")
     require(_integer(probe, "viewerControlCount") == 0, "Learn viewer control found")
     require(not _boolean(probe, "dialogOpen"), "Learn dialog opened")
@@ -273,7 +411,7 @@ def _capture_part_zero(
         _open_chapter(browser, slug)
         _wait_for_article(browser)
         _wait_for_figure(browser, figure_id)
-        _scroll_article_top(browser)
+        _scroll_figure(browser, figure_id)
         evidence.append(
             _assert_inline_figure(browser, figure_id, expected_sizes[figure_id]),
         )
@@ -289,7 +427,7 @@ def _capture_gpt(
     _open_chapter(browser, "3-1")
     _wait_for_article(browser)
     _wait_for_figure(browser, "root")
-    _scroll_article_top(browser)
+    _scroll_figure(browser, "root")
     probe = _assert_inline_figure(browser, "root", "full")
     require(_integer(probe, "buttonCount") == 0, "GPT Learn Figure is interactive")
     require(_string(probe, "visualMode") == "svg", "Desktop GPT SVG hidden")
@@ -359,7 +497,7 @@ def _capture_responsive(
     _open_chapter(browser, "0-2")
     _wait_for_article(browser)
     _wait_for_figure(browser, "decoder.diagram.tokenization.token")
-    _scroll_article_top(browser)
+    _scroll_figure(browser, "decoder.diagram.tokenization.token")
     responsive.append(
         _assert_inline_figure(
             browser,
@@ -372,11 +510,21 @@ def _capture_responsive(
         screenshots / "learn-token-0-2-inline-1366x768.png",
     )
 
+    _open_chapter(browser, "3-1")
+    _wait_for_article(browser)
+    _wait_for_figure(browser, "root")
+    _scroll_figure(browser, "root")
+    responsive.append(_assert_inline_figure(browser, "root", "full"))
+    shots["inline-gpt-1366"] = capture(
+        browser,
+        screenshots / "learn-gpt-inline-1366x768.png",
+    )
+
     set_viewport(browser, 1024, 768)
     _open_chapter(browser, "3-1")
     _wait_for_article(browser)
     _wait_for_figure(browser, "root")
-    _scroll_article_top(browser)
+    _scroll_figure(browser, "root")
     responsive.append(_assert_inline_figure(browser, "root", "full"))
     shots["inline-gpt-1024"] = capture(
         browser,
@@ -483,22 +631,16 @@ def _capture_responsive(
 
 def _verify_learn_matrix(browser: ChromeSession) -> list[JsonObject]:
     evidence: list[JsonObject] = []
-    expected_sizes = {
-        "decoder.diagram.intro.nlp": "prose",
-        "decoder.diagram.tokenization.token": "wide",
-        "decoder.diagram.tokenization.vocabulary": "wide",
-        "decoder.diagram.tokenization.methods": "wide",
-    }
     for width, height in ((1440, 900), (1366, 768), (1024, 768), (390, 844)):
         set_viewport(browser, width, height)
-        for slug, figure_id, _filename in INLINE_FIGURES:
+        for slug, figure_id, expected_size in ALL_LEARNING_FIGURES:
             _open_chapter(browser, slug)
             _wait_for_article(browser)
             _wait_for_figure(browser, figure_id)
             probe = _assert_inline_figure(
                 browser,
                 figure_id,
-                expected_sizes[figure_id],
+                expected_size,
             )
             evidence.append(
                 {
@@ -506,21 +648,208 @@ def _verify_learn_matrix(browser: ChromeSession) -> list[JsonObject]:
                     "height": height,
                     "figureId": figure_id,
                     "figureWidth": probe["width"],
+                    "graphicWidth": probe["graphicWidth"],
+                    "preferredWidth": probe["preferredWidth"],
                 },
             )
-        _open_chapter(browser, "3-1")
-        _wait_for_article(browser)
-        _wait_for_figure(browser, "root")
-        probe = _assert_inline_figure(browser, "root", "full")
-        evidence.append(
-            {
-                "width": width,
-                "height": height,
-                "figureId": "root",
-                "figureWidth": probe["width"],
-            },
-        )
     return evidence
+
+
+def _capture_navigation(
+    browser: ChromeSession,
+    screenshots: Path,
+    shots: dict[str, str],
+) -> JsonObject:
+    set_viewport(browser, 1440, 900)
+
+    _open_chapter(browser, "0-2")
+    before_next = _scroll_to_bottom(browser, 1001)
+    shots["navigation-0-2-bottom"] = capture(
+        browser,
+        screenshots / "navigation-0-2-bottom-before-next-1440x900.png",
+    )
+    pointer_click(
+        browser,
+        'document.querySelector(\'a[aria-label="다음: Vocabulary와 Token ID"]\')',
+        condition=(
+            "Boolean(document.querySelector("
+            "'[data-curriculum-chapter-id=\"decoder.chapter.0.3\"]'"
+            "))"
+        ),
+        label="Next Chapter 0.3",
+    )
+    after_next = _wait_for_chapter_top(browser, "decoder.chapter.0.3")
+    require(
+        _string(after_next, "activeId") == "curriculum-chapter-title",
+        f"Next Chapter H1 not focused: {after_next}",
+    )
+    shots["navigation-0-3-after-next"] = capture(
+        browser,
+        screenshots / "navigation-0-3-after-next-1440x900.png",
+    )
+
+    before_previous = _scroll_to_bottom(browser)
+    pointer_click(
+        browser,
+        'document.querySelector(\'a[aria-label="이전: Token이란?"]\')',
+        condition=(
+            "Boolean(document.querySelector("
+            "'[data-curriculum-chapter-id=\"decoder.chapter.0.2\"]'"
+            "))"
+        ),
+        label="Previous Chapter 0.2",
+    )
+    after_previous = _wait_for_chapter_top(browser, "decoder.chapter.0.2")
+
+    _open_chapter(browser, "0-4")
+    before_toc = _scroll_to_bottom(browser)
+    pointer_click(
+        browser,
+        'document.querySelector(\'button[aria-label="목차 열기"]\')',
+        condition="Boolean(document.querySelector('#curriculum-toc'))",
+        label="Open Chapter ToC",
+    )
+    pointer_click(
+        browser,
+        (
+            "document.querySelector("
+            "'#curriculum-toc a[aria-label=\"다음 Token 예측\"]'"
+            ")"
+        ),
+        condition=(
+            "Boolean(document.querySelector("
+            "'[data-curriculum-chapter-id=\"decoder.chapter.1.2\"]'"
+            "))"
+        ),
+        label="ToC Chapter 1.2",
+    )
+    after_toc = _wait_for_chapter_top(browser, "decoder.chapter.1.2")
+
+    _open_chapter(browser, "3-1")
+    before_figure_link = _scroll_to_bottom(browser)
+    pointer_click(
+        browser,
+        (
+            "document.querySelector("
+            "'a[aria-label=\"Transformer Block 설명으로 이동\"]'"
+            ")"
+        ),
+        condition=(
+            "Boolean(document.querySelector("
+            "'[data-curriculum-chapter-id=\"decoder.chapter.4.1\"]'"
+            "))"
+        ),
+        label="GPT Figure Chapter link",
+    )
+    after_figure_link = _wait_for_chapter_top(
+        browser,
+        "decoder.chapter.4.1",
+    )
+    require(
+        _string(after_figure_link, "activeSection") == "block-overview",
+        f"Block Chapter focus target missing: {after_figure_link}",
+    )
+
+    _open_chapter(browser, "0-2")
+    before_back = _scroll_to_bottom(browser, 1001)
+    pointer_click(
+        browser,
+        'document.querySelector(\'a[aria-label="다음: Vocabulary와 Token ID"]\')',
+        condition=(
+            "Boolean(document.querySelector("
+            "'[data-curriculum-chapter-id=\"decoder.chapter.0.3\"]'"
+            "))"
+        ),
+        label="Next before Back",
+    )
+    _wait_for_chapter_top(browser, "decoder.chapter.0.3")
+    _evaluate(browser, "history.back()")
+    after_back = _wait_for_chapter_top(browser, "decoder.chapter.0.2")
+    _evaluate(browser, "history.forward()")
+    after_forward = _wait_for_chapter_top(browser, "decoder.chapter.0.3")
+
+    _open_chapter(browser, "0-2")
+    _evaluate(browser, "window.scrollTo({ top: 600, left: 0, behavior: 'auto' })")
+    wait_for(browser, "scrollY === 600", "Same Chapter baseline scroll")
+    _evaluate(
+        browser,
+        """
+        (() => {
+          window.__chapterScrollToCalls = [];
+          window.__chapterOriginalScrollTo = window.scrollTo;
+          window.scrollTo = (...args) => {
+            window.__chapterScrollToCalls.push(args);
+            return window.__chapterOriginalScrollTo(...args);
+          };
+        })()
+        """,
+    )
+    clicked_same_chapter = _evaluate(
+        browser,
+        """
+        (() => {
+          const button = document.querySelector(
+            'button[aria-label="목차 열기"]',
+          );
+          if (!(button instanceof HTMLButtonElement)) return false;
+          button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          return true;
+        })()
+        """,
+    )
+    require(
+        clicked_same_chapter is True,
+        "Same Chapter ToC control missing",
+    )
+    wait_for(
+        browser,
+        "Boolean(document.querySelector('#curriculum-toc'))",
+        "Same Chapter ToC state",
+    )
+    same_chapter = evaluate_dict(
+        browser,
+        """(() => {
+          const result = {
+            scrollY: Math.round(scrollY),
+            scrollToCalls: window.__chapterScrollToCalls?.length ?? -1,
+          };
+          window.scrollTo = window.__chapterOriginalScrollTo;
+          delete window.__chapterOriginalScrollTo;
+          delete window.__chapterScrollToCalls;
+          return result;
+        })()""",
+    )
+    require(
+        _integer(same_chapter, "scrollY") > 0
+        and _integer(same_chapter, "scrollToCalls") == 0,
+        f"Same Chapter state reset scroll: {same_chapter}",
+    )
+
+    direct_url = _evaluate(
+        browser,
+        (
+            "location.origin + location.pathname "
+            "+ '#/learn/decoder-only-fundamentals/0-3'"
+        ),
+    )
+    if not isinstance(direct_url, str):
+        raise TypeError(f"Direct Chapter URL must be a string: {direct_url!r}")
+    browser.navigate(direct_url)
+    after_direct = _wait_for_chapter_top(browser, "decoder.chapter.0.3")
+
+    return {
+        "next": {"before": before_next, "after": after_next},
+        "previous": {"before": before_previous, "after": after_previous},
+        "toc": {"before": before_toc, "after": after_toc},
+        "figureChapterLink": {
+            "before": before_figure_link,
+            "after": after_figure_link,
+        },
+        "back": {"before": before_back, "after": after_back},
+        "forward": after_forward,
+        "sameChapter": same_chapter,
+        "direct": after_direct,
+    }
 
 
 def capture_learning_phase(
@@ -540,6 +869,7 @@ def capture_learning_phase(
     gpt = _capture_gpt(browser, screenshots, shots)
     responsive = _capture_responsive(browser, screenshots, shots)
     viewport_matrix = _verify_learn_matrix(browser)
+    navigation = _capture_navigation(browser, screenshots, shots)
     observed_triggers = max(
         _integer(probe, "triggerCount")
         for probe in [*part_zero, gpt, *responsive]
@@ -551,11 +881,27 @@ def capture_learning_phase(
         browser,
         screenshots / "course-home-390x844.png",
     )
+    learn_requests = request_urls(browser)
+    webgl_requests = [
+        url for url in learn_requests if "ScoreMatrixScene" in url
+    ]
+    canvas_count = _integer(
+        evaluate_dict(
+            browser,
+            "({ canvasCount: document.querySelectorAll('canvas').length })",
+        ),
+        "canvasCount",
+    )
+    require(webgl_requests == [], f"Learn loaded WebGL chunk: {webgl_requests}")
+    require(canvas_count == 0, f"Learn mounted canvas: {canvas_count}")
     evidence["learning"] = {
         "product": "article-inline-figure",
         "partZero": part_zero,
         "gpt": gpt,
         "responsive": responsive,
         "viewportMatrix": viewport_matrix,
+        "navigation": navigation,
         "learnOverlayTriggers": observed_triggers,
+        "webglRequests": webgl_requests,
+        "canvasCount": canvas_count,
     }

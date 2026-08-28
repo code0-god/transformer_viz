@@ -9,7 +9,7 @@ export const autoregressiveChapterContent = {
     routeId: "decoder.root",
     title: "Autoregressive Generation",
     learningGoal:
-      "Predict, append, repeat loop에서 모델과 sampler의 책임을 나누고 현재 runtime의 종료 경계를 설명한다.",
+      "Predict, append, repeat loop에서 모델과 sampler의 책임을 나누고 현재 모델의 종료 경계를 설명한다.",
     introduction: [
       {
         id: "intro",
@@ -53,14 +53,14 @@ export const autoregressiveChapterContent = {
             text: "Repeat 단계에서는 길어진 prefix로 다시 predict를 시작합니다. 한 번의 forward가 남은 continuation 전체를 미리 만들지는 않습니다.",
           },
           {
-            id: "current-runtime.full-prefix-reforward",
+            id: "current-model.full-context-recalculation",
             kind: "paragraph",
-            text: "현재 active generation은 block_size에 닿기 전까지 매 단계의 full accumulated prefix를 모델에 다시 forward합니다.",
+            text: "현재 nanoGPT Edu는 block_size에 닿기 전까지 선택한 token을 붙인 context 전체를 다음 step에서 다시 계산합니다.",
           },
           {
-            id: "current-runtime.no-persistent-generation-kv-cache",
+            id: "current-model.context-includes-selection",
             kind: "paragraph",
-            text: "현재 runtime에는 persistent generation KV cache가 없습니다. Replay cache는 선택한 과거 step을 inspection하기 위한 경계이며 active generation 계산을 재사용하지 않습니다.",
+            text: "다음 step의 입력에는 앞에서 선택한 token까지 포함됩니다. Context가 달라지므로 다음 token의 후보 점수도 새로 계산됩니다.",
           },
           {
             id: "generation-loop",
@@ -129,7 +129,7 @@ export const autoregressiveChapterContent = {
             kind: "callout",
             tone: "important",
             title: "현재 generation 경계",
-            text: "현재 active generation은 block_size까지 full accumulated prefix를 매 step 다시 forward하며 persistent generation KV cache를 사용하지 않습니다.",
+            text: "현재 nanoGPT Edu는 매 step마다 늘어난 context 전체를 다시 계산합니다.",
           },
           {
             id: "misconception.single-forward",
@@ -137,13 +137,6 @@ export const autoregressiveChapterContent = {
             tone: "warning",
             title: "오개념: 한 번의 forward로 전체 생성이 끝난다",
             text: "한 step은 token 하나를 선택하고 context를 늘린 뒤 다시 forward합니다.",
-          },
-          {
-            id: "misconception.kv-cache",
-            kind: "callout",
-            tone: "warning",
-            title: "오개념: 현재 runtime이 KV cache를 사용한다",
-            text: "Active generation은 매 step full prefix를 다시 계산합니다.",
           },
           {
             id: "misconception.stop-equivalence",
@@ -159,7 +152,6 @@ export const autoregressiveChapterContent = {
             termId: "generation-step",
           },
           { id: "term.context-limit", kind: "term", termId: "context-length" },
-          { id: "term.kv-cache", kind: "term", termId: "kv-cache" },
           {
             id: "term.terminal-reason",
             kind: "term",
@@ -174,13 +166,12 @@ export const autoregressiveChapterContent = {
       "autoregressive",
       "generation-step",
       "context-length",
-      "kv-cache",
       "terminal-reason",
     ],
   },
   currentModelCalloutId: "current-model.autoregressive",
   primaryDiagramId: "decoder.diagram.language-model.autoregressive",
   referenceIds: ["ref.tistory.21", "ref.repo.generation", "ref.nanogpt-pinned"],
-  misconceptionIds: ["single-forward", "kv-cache", "stop-equivalence"],
+  misconceptionIds: ["single-forward", "stop-equivalence"],
   authorship: part1Authorship,
 } as const satisfies Part1ChapterContent;

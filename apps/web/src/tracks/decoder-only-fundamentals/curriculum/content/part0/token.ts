@@ -84,16 +84,6 @@ export const tokenChapterContent = {
           { id: "term.token", kind: "term", termId: "token" },
           { id: "term.token-boundary", kind: "term", termId: "token-boundary" },
           { id: "term.token-id", kind: "term", termId: "token-id" },
-          {
-            id: "implementation.current-tokenizer",
-            kind: "implementation-note",
-            title: "구현 노트",
-            items: [
-              "현재 nanoGPT Edu의 tokenizer runtime은 Rust에서 결정적으로 token 순서를 만듭니다.",
-              "Exporter가 만든 fixture를 브라우저가 소비하므로, 화면은 token 경계를 다시 계산하지 않습니다.",
-              "표시하는 예시의 provenance는 이 생성 경로에 연결되어 있습니다.",
-            ],
-          },
         ],
       },
     ],

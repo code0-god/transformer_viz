@@ -1,6 +1,5 @@
 import type { LearningNodeId } from "../types";
 import { validateLearningProfile } from "../validation";
-import { decoderGuideRuntimeAdapterIds } from "./guideRuntime";
 import { decoderOnlyFundamentalsProfile } from "./profile";
 import { decoderRootGlossary } from "./rootGlossary";
 import { decoderRootGuide } from "./rootGuide";
@@ -13,7 +12,6 @@ const sectionIds = [
   "root-transformer-block",
   "root-prediction",
   "root-append-repeat",
-  "root-current-model",
   "root-formula-summary",
   "root-misconceptions",
 ] as const;
@@ -94,29 +92,19 @@ describe("decoder Root beginner guide", () => {
     ]);
   });
 
-  test("uses typed example, runtime, formula, and misconception blocks", () => {
+  test("uses example, formula, and misconception blocks", () => {
     // Given: concept sections whose block kinds carry renderer behavior.
     const tokenBlocks = section("root-token-context").blocks;
-    const runtimeBlocks = section("root-current-model").blocks;
     const formulaBlocks = section("root-formula-summary").blocks;
     const misconceptionBlocks = section("root-misconceptions").blocks;
 
     // When: block IDs and discriminants are projected.
-    // Then: examples and runtime facts precede a prose-led formula summary.
+    // Then: examples precede a prose-led formula summary.
     expect(tokenBlocks.map(({ id, kind }) => ({ id, kind }))).toEqual(
       expect.arrayContaining([
         { id: "root-byte-token-example", kind: "example" },
       ]),
     );
-    expect(runtimeBlocks.map(({ id, kind }) => ({ id, kind }))).toEqual([
-      { id: "root-current-model-intro", kind: "paragraph" },
-      { id: "root-runtime-facts", kind: "runtime-facts" },
-    ]);
-    expect(runtimeBlocks[1]).toEqual({
-      id: "root-runtime-facts",
-      kind: "runtime-facts",
-      adapterId: decoderGuideRuntimeAdapterIds.rootFacts,
-    });
     expect(formulaBlocks[0]?.kind).toBe("paragraph");
     expect(formulaBlocks.slice(1).every(({ kind }) => kind === "formula")).toBe(
       true,

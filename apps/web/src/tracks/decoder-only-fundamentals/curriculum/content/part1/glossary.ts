@@ -84,12 +84,6 @@ export const part1Glossary = [
       "현재 context에서 다음 token 하나를 예측하고 선택해 붙이는 한 차례입니다.",
   },
   {
-    id: "kv-cache",
-    term: "KV cache",
-    definition:
-      "이전 위치의 attention Key와 Value 계산을 다음 단계에서 재사용하는 최적화입니다.",
-  },
-  {
     id: "terminal-reason",
     term: "terminal reason",
     definition:

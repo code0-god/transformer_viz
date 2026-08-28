@@ -19,8 +19,8 @@ export function AutoregressiveLoopDiagram(): ReactElement {
         <title>Autoregressive predict append repeat loop</title>
         <desc id="autoregressive-desc">
           Full prefix를 predict하고 sampler가 token을 선택한 뒤 context에
-          append하여 반복하는 현재 generation 흐름. Persistent generation KV
-          cache는 없음
+          append하여 반복하며, 늘어난 context 전체를 다음 step에서 다시 계산하는
+          현재 모델의 generation 흐름
         </desc>
         <defs>
           <marker
@@ -72,7 +72,7 @@ export function AutoregressiveLoopDiagram(): ReactElement {
         <g className="part1-diagram__product">
           <rect x="266" y="208" width="228" height="76" rx="12" />
           <text x="380" y="238" textAnchor="middle">
-            Current runtime
+            Current model
           </text>
           <text
             className="part1-diagram__note"
@@ -80,7 +80,7 @@ export function AutoregressiveLoopDiagram(): ReactElement {
             y="263"
             textAnchor="middle"
           >
-            No persistent generation KV cache
+            Full context processed again
           </text>
         </g>
       </svg>
@@ -93,8 +93,7 @@ export function AutoregressiveLoopDiagram(): ReactElement {
               </li>
             ))}
             <li>
-              Current runtime: full accumulated prefix re-forward, no persistent
-              generation KV cache
+              Current model: the full accumulated context is processed again
             </li>
           </ol>
         </fieldset>

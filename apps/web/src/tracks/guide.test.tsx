@@ -6,6 +6,7 @@ import { validateLearningProfile } from "./validation";
 
 const figures: LearningFigureRegistry = {
   figureIds: new Set(["root"]),
+  preferredWidth: () => 832,
   render: () => (
     <svg role="img" aria-label="Registered Figure" viewBox="0 0 1 1">
       <title>Registered Figure</title>

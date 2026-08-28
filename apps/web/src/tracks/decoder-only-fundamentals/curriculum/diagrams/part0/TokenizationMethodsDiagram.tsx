@@ -83,7 +83,7 @@ export function TokenizationMethodsDiagram(): ReactElement {
               </text>
               {method.id === "byte" ? (
                 <text className="part0-diagram__badge" x="48" y={y + 51}>
-                  CURRENT RUNTIME
+                  CURRENT MODEL
                 </text>
               ) : null}
               <text x="285" y={y + 41} textAnchor="middle">
