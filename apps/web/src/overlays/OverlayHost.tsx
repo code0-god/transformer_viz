@@ -22,10 +22,7 @@ const FOCUSABLE_SELECTOR = [
 type OverlayHostProps = Readonly<{
   request: FocusedViewerRequest;
   triggerElement: HTMLElement | null;
-  onAfterClose: () => void;
   onClose: () => void;
-  onArticleTargetChange: (articleTargetId: string) => void;
-  onReturnToArticle: () => void;
 }>;
 
 function focusableElements(container: HTMLElement): readonly HTMLElement[] {
@@ -37,10 +34,7 @@ function focusableElements(container: HTMLElement): readonly HTMLElement[] {
 export function OverlayHost({
   request,
   triggerElement,
-  onAfterClose,
   onClose,
-  onArticleTargetChange,
-  onReturnToArticle,
 }: OverlayHostProps): ReactElement {
   const dialogRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -107,9 +101,8 @@ export function OverlayHost({
       body.style.overflow = previousBodyStyle.overflow;
       if (scrollY !== 0) window.scrollTo(0, scrollY);
       if (triggerElement?.isConnected === true) triggerElement.focus();
-      onAfterClose();
     };
-  }, [onAfterClose, onClose, triggerElement]);
+  }, [onClose, triggerElement]);
 
   function handleBackdropPointerDown(
     event: ReactPointerEvent<HTMLDivElement>,
@@ -162,11 +155,6 @@ export function OverlayHost({
             )}
           </div>
           <div className="focused-viewer__header-actions">
-            {request.articleTargetId === undefined ? null : (
-              <button type="button" onClick={onReturnToArticle}>
-                설명에서 보기
-              </button>
-            )}
             <button
               ref={closeRef}
               type="button"
@@ -181,10 +169,7 @@ export function OverlayHost({
           </div>
         </header>
         <div className="focused-viewer__body">
-          <FocusedViewerContent
-            request={request}
-            onArticleTargetChange={onArticleTargetChange}
-          />
+          <FocusedViewerContent request={request} />
         </div>
       </section>
     </div>,

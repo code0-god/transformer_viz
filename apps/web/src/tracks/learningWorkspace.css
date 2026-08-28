@@ -103,7 +103,7 @@
   display: grid;
   gap: var(--s4);
   inline-size: 100%;
-  max-inline-size: 56rem;
+  max-inline-size: 72rem;
   min-inline-size: 0;
   margin-inline: auto;
 }

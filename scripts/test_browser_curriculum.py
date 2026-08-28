@@ -105,7 +105,8 @@ class BrowserCurriculumContractTest(unittest.TestCase):
                 {"id": event_id, **({"role": "math", "name": "probability", "partialAxMathCount": 1} if event_id == "math-semantic-unit" else {})}
                 for event_id in (
                     "toc-expanded-current", "chapter-heading-focus", "diagram-semantics", "sibling-controls",
-                    "generated-token-focus", "adjacent-navigation-names", "progress", "math-semantic-unit",
+                    "gpt-static-image", "gpt-chapter-link",
+                    "adjacent-navigation-names", "progress", "math-semantic-unit",
                 )
             ],
         }

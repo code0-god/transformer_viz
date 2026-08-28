@@ -48,10 +48,9 @@ describe("Part 1 curriculum Diagrams", () => {
           screen.getByRole("navigation", { name: "Chapter 목차" }),
         ).getByRole("link", { name: chapterTitle }),
       );
-      await user.click(screen.getByTestId("open-diagram-viewer"));
-
-      // Then: the Diagram is semantic, non-interactive, and Worker-inert.
-      const pane = document.querySelector("#focused-viewer .diagram-viewport");
+      // Then: the inline Figure is semantic, non-interactive, and Worker-inert.
+      const image = screen.getByRole("img", { name: imageName });
+      const pane = image.closest("figure");
       expect(pane).toBeInstanceOf(HTMLElement);
       expect(pane?.querySelectorAll("svg[role='img']")).toHaveLength(1);
       expect(
@@ -65,6 +64,8 @@ describe("Part 1 curriculum Diagrams", () => {
       expect(
         pane?.querySelector("[role='slider'],[role='switch'],select,input"),
       ).toBeNull();
+      expect(screen.queryByTestId("open-diagram-viewer")).toBeNull();
+      expect(screen.queryByRole("dialog")).toBeNull();
       expect(worker.posted).toHaveLength(postsBefore);
     },
   );
@@ -78,10 +79,10 @@ describe("Part 1 curriculum Diagrams", () => {
         screen.getByRole("navigation", { name: "Chapter 목차" }),
       ).getByRole("link", { name: "다음 Token 예측" }),
     );
-    await user.click(screen.getByTestId("open-diagram-viewer"));
-
     const stages = Array.from(
-      document.querySelectorAll("#focused-viewer [data-stage] > rect"),
+      document.querySelectorAll(
+        "[data-guide-page-id='decoder.curriculum.guide.1.2'] [data-stage] > rect",
+      ),
     );
     const xCoordinates = stages.map((stage) => stage.getAttribute("x"));
     const yCoordinates = stages.map((stage) => Number(stage.getAttribute("y")));

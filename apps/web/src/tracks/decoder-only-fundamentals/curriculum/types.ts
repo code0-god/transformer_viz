@@ -1,4 +1,4 @@
-import type { GuideBlock, LearningGuidePage } from "../../guideTypes";
+import type { LearningGuidePage } from "../../guideTypes";
 
 export type PartId = `decoder.part.${0 | 1 | 2 | 3 | 4 | 5}`;
 export type ChapterId =
@@ -68,7 +68,7 @@ export type LearningPart = {
 
 export type CurriculumGuidePage = Pick<
   LearningGuidePage<string>,
-  "id" | "sections"
+  "id" | "introduction" | "sections" | "keyTakeaway"
 >;
 
 export type LearningCurriculum = {
@@ -102,18 +102,13 @@ export type CurriculumCandidate = {
       readonly concepts: readonly CurriculumConceptCandidate[];
     }[];
   }[];
-  readonly guidePages: readonly {
-    readonly id: string;
-    readonly sections: readonly {
-      readonly id: string;
-      readonly title: string;
-      readonly blocks: readonly GuideBlock<string>[];
-    }[];
-  }[];
+  readonly guidePages: readonly CurriculumGuidePage[];
 };
 
 export type CurriculumRegistries = {
   readonly diagramIds: ReadonlySet<string>;
+  readonly figureIds: ReadonlySet<string>;
+  readonly figureOwners: ReadonlyMap<string, ChapterId>;
   readonly visualizationIds: ReadonlySet<string>;
   readonly nodeIds: ReadonlySet<string>;
   readonly formulaIds: ReadonlySet<string>;
@@ -128,17 +123,21 @@ export type CurriculumIssueCode =
   | "duplicate-concept-id"
   | "duplicate-guide-page-id"
   | "duplicate-part-id"
+  | "figure-chapter-mismatch"
   | "formula-before-explanation"
   | "invalid-chapter-concept-count"
+  | "invalid-figure-size"
   | "missing-chapter-id"
   | "missing-concept-id"
   | "missing-diagram"
+  | "missing-figure-caption"
   | "missing-guide-page-id"
   | "missing-part-id"
   | "noncontiguous-chapter-order"
   | "noncontiguous-part-order"
   | "unknown-diagram"
   | "unknown-formula"
+  | "unknown-figure"
   | "unknown-guide-page"
   | "unknown-guide-section"
   | "unknown-reference"

@@ -16,6 +16,15 @@ export const hiddenStateChapterContent = {
         kind: "paragraph",
         text: "Embedding 합은 계산의 끝이 아니라 첫 hidden state입니다. ‘the cat’의 각 위치가 Block을 지날 때 shape와 문맥 범위가 어떻게 이어지는지 봅니다.",
       },
+      {
+        id: "figure.hidden-state",
+        kind: "figure",
+        figureId: "decoder.diagram.representation.hidden-state",
+        size: "wide",
+        caption:
+          "Transformer Block을 지날 때 shape는 유지되지만 각 위치의 hidden state에는 더 많은 문맥 정보가 반영됩니다.",
+        alt: "Embedding에서 Transformer Block과 hidden state를 거쳐 logits로 가는 흐름",
+      },
     ],
     sections: [
       {

@@ -160,8 +160,8 @@ def verify_notation(
     require(
         guide["articleLayout"] == "article"
         and not guide["architectureMounted"]
-        and guide["viewerTrigger"],
-        f"Block Learn must keep architecture on demand: {guide}",
+        and not guide["viewerTrigger"],
+        f"Block Learn must remain article-only without overlay triggers: {guide}",
     )
 
 

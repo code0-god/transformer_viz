@@ -2,17 +2,13 @@ import type { ReactElement } from "react";
 
 import { useAppContext } from "../app/AppContext";
 import { DiagramViewport } from "../tracks/DiagramViewport";
-import {
-  learningTrackRegistry,
-  resolveLearningTrack,
-} from "../tracks/registry";
+import { resolveLearningTrack } from "../tracks/registry";
 import type { ArchitectureRenderContext } from "../tracks/types";
 import { UnsupportedLearningProfile } from "../tracks/UnsupportedLearningProfile";
 import { ScoreMatrixVisualizationPane } from "../tracks/visualization/ScoreMatrixVisualizationPane";
 import { createScoreMatrixInspectionState } from "../tracks/visualization/scoreMatrixState";
 import type {
   ArchitectureViewerRequest,
-  DiagramViewerRequest,
   FocusedViewerKind,
   FocusedViewerRequest,
   VisualizationViewerRequest,
@@ -20,7 +16,6 @@ import type {
 
 type FocusedViewerContentProps = Readonly<{
   request: FocusedViewerRequest;
-  onArticleTargetChange: (articleTargetId: string) => void;
 }>;
 
 class FocusedViewerRegistryError extends Error {
@@ -51,32 +46,9 @@ function useArchitectureContext(): ArchitectureRenderContext | null {
   };
 }
 
-function DiagramViewer({
-  request,
-}: Readonly<{ request: DiagramViewerRequest }>): ReactElement {
-  const registration = learningTrackRegistry.byTrackId.get(request.trackId);
-  const diagram =
-    request.renderDiagram?.() ??
-    registration?.createAdapter().renderFocusedDiagram(request.diagramId) ??
-    null;
-  if (diagram === null) return <UnsupportedViewer />;
-  return (
-    <DiagramViewport
-      label={`${request.title} 보기`}
-      resetKey={request.resetKey}
-    >
-      {diagram}
-    </DiagramViewport>
-  );
-}
-
 function ArchitectureViewer({
   request,
-  onArticleTargetChange,
-}: Readonly<{
-  request: ArchitectureViewerRequest;
-  onArticleTargetChange: (articleTargetId: string) => void;
-}>): ReactElement {
+}: Readonly<{ request: ArchitectureViewerRequest }>): ReactElement {
   const context = useArchitectureContext();
   if (context === null) return <UnsupportedViewer />;
   const resolution = resolveLearningTrack(context.model);
@@ -84,7 +56,6 @@ function ArchitectureViewer({
     return <UnsupportedLearningProfile resolution={resolution} />;
   const presentation = resolution.adapter.renderFocusedArchitecture(context, {
     highlightedNodeIds: request.highlightedNodeIds,
-    onArticleTargetChange,
   });
   return (
     <DiagramViewport
@@ -115,26 +86,12 @@ function VisualizationViewer({
   );
 }
 
-function DiagramRegistryEntry({
-  request,
-}: FocusedViewerContentProps): ReactElement {
-  if (request.kind !== "diagram")
-    throw new FocusedViewerRegistryError("diagram", request.kind);
-  return <DiagramViewer request={request} />;
-}
-
 function ArchitectureRegistryEntry({
   request,
-  onArticleTargetChange,
 }: FocusedViewerContentProps): ReactElement {
   if (request.kind !== "architecture")
     throw new FocusedViewerRegistryError("architecture", request.kind);
-  return (
-    <ArchitectureViewer
-      request={request}
-      onArticleTargetChange={onArticleTargetChange}
-    />
-  );
+  return <ArchitectureViewer request={request} />;
 }
 
 function VisualizationRegistryEntry({
@@ -148,17 +105,13 @@ function VisualizationRegistryEntry({
 const focusedViewerRegistry: Readonly<
   Record<FocusedViewerKind, (props: FocusedViewerContentProps) => ReactElement>
 > = {
-  diagram: DiagramRegistryEntry,
   architecture: ArchitectureRegistryEntry,
   visualization: VisualizationRegistryEntry,
 };
 
 export function FocusedViewerContent({
   request,
-  onArticleTargetChange,
 }: FocusedViewerContentProps): ReactElement {
   const Renderer = focusedViewerRegistry[request.kind];
-  return (
-    <Renderer request={request} onArticleTargetChange={onArticleTargetChange} />
-  );
+  return <Renderer request={request} />;
 }

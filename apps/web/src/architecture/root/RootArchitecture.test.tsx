@@ -32,20 +32,44 @@ function renderRoot(
 }
 
 describe("RootArchitecture", () => {
-  test("renders the exact pipeline, selectors, marker, and residual paths", () => {
+  test("renders Learn presentation as static geometry without nested Figure semantics", () => {
+    render(
+      <RootArchitecture
+        presentation="learn"
+        modelName="Model"
+        config={config}
+        state={{ selectedNodeId: null }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("img", { name: /GPT text generation architecture/ }),
+    ).toBeVisible();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.queryByRole("figure")).toBeNull();
+    expect(
+      document.querySelector("[data-architecture-presentation='learn']"),
+    ).not.toBeNull();
+  });
+
+  test("renders one compact pipeline with grouped Block detail", () => {
     const { container } = renderRoot();
     const svg = screen.getByTestId("architecture-root");
 
-    expect(svg).toHaveAttribute("viewBox", "0 0 1000 1720");
+    expect(svg).toHaveAttribute("viewBox", "0 0 1000 1080");
+    expect(container.querySelector(".architecture-figure")).toHaveAttribute(
+      "data-figure-type",
+      "architecture-process",
+    );
     expect(
       container.querySelectorAll(".architecture-block-group"),
     ).toHaveLength(1);
-    expect(container.querySelectorAll(".architecture-residual")).toHaveLength(
-      2,
-    );
     expect(
-      container.querySelectorAll(".architecture-residual-junction"),
-    ).toHaveLength(2);
+      container.querySelectorAll(".architecture-block-module"),
+    ).toHaveLength(0);
+    expect(container.querySelectorAll(".architecture-residual")).toHaveLength(
+      0,
+    );
     expect(
       container.querySelectorAll(".architecture-node-focus-outline"),
     ).toHaveLength(0);
@@ -62,10 +86,8 @@ describe("RootArchitecture", () => {
       container.querySelectorAll(".architecture-node-formula .katex"),
     ).toHaveLength(10);
     expect(
-      container.querySelectorAll(
-        '[data-formula-id="root-output-state"] .katex',
-      ),
-    ).toHaveLength(1);
+      container.querySelectorAll('[data-formula-id="root-output-state"]'),
+    ).toHaveLength(0);
     expect(
       screen.getByTestId("architecture-model-width").querySelector(".katex"),
     ).not.toBeNull();
@@ -78,35 +100,32 @@ describe("RootArchitecture", () => {
     expect(
       container.querySelectorAll(".architecture-node__drill-down--label"),
     ).toHaveLength(1);
-    const drillDownLabel = container.querySelector(
-      ".architecture-node__drill-down--label",
-    );
-    expect(drillDownLabel).toHaveAttribute("x", "724");
-    expect(drillDownLabel).toHaveAttribute("y", "812");
+    expect(
+      container.querySelector(".architecture-block-summary"),
+    ).toHaveTextContent("LN → Attention → Residual");
+    expect(
+      container.querySelector(".architecture-block-summary"),
+    ).toHaveTextContent("LN → MLP → Residual");
     expect(container.querySelector("#architecture-arrow")).toHaveAttribute(
       "refX",
       "10",
     );
     expect(container.querySelector(".architecture-repeat")).toHaveAttribute(
       "d",
-      "M 305 1625 H 80 V 68 H 320",
+      "M 305 1027 H 80 V 66 H 340",
     );
     expect(
-      container.querySelector('[data-connector="block-input-to-add1"]'),
-    ).toHaveAttribute("d", "M 500 368 H 700 V 560 H 518");
-    expect(
-      container.querySelector('[data-connector="add1-output-to-add2"]'),
-    ).toHaveAttribute("d", "M 500 590 H 700 V 776 H 518");
+      container.querySelector('[data-connector="block-to-final"]'),
+    ).toBeInTheDocument();
   });
 
-  test("paints named connectors after their targets and junctions after paths", () => {
+  test("paints the compact flow after its target nodes", () => {
     const { container } = renderRoot();
     const pairs = [
-      [".architecture-block-module rect", '[data-connector="hidden-to-ln1"]'],
-      [".architecture-residual-add", '[data-connector="attention-to-add1"]'],
+      [".architecture-block-group rect", '[data-connector="block-to-final"]'],
       [
-        ".architecture-node-normalization rect",
-        '[data-connector="add2-to-final"]',
+        ".architecture-node-projection rect",
+        '[data-connector="final-to-lm-head"]',
       ],
     ];
 
@@ -122,14 +141,6 @@ describe("RootArchitecture", () => {
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).not.toBe(0);
     }
-    const residual = container.querySelector(".architecture-residual");
-    const junction = container.querySelector(".architecture-residual-junction");
-    if (residual === null || junction === null)
-      throw new Error("Missing residual contract element");
-    expect(
-      residual.compareDocumentPosition(junction) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).not.toBe(0);
   });
 
   test("uses catalog node IDs and preserves the complete forward order", () => {
@@ -154,29 +165,12 @@ describe("RootArchitecture", () => {
     ]);
     expect(
       container.querySelectorAll(".architecture-forward-label"),
-    ).toHaveLength(1);
+    ).toHaveLength(0);
     expect(
       container.querySelectorAll(".architecture-repeat-label"),
     ).toHaveLength(1);
     expect(container.querySelectorAll(".architecture-edge-state")).toHaveLength(
-      1,
-    );
-    expect(container.querySelector(".architecture-edge-state")).toHaveAttribute(
-      "data-formula-id",
-      "root-output-state",
-    );
-    expect(container.querySelector(".architecture-edge-state")).toHaveClass(
-      "architecture-node-formula-slot",
-    );
-    expect(
-      container.querySelector(".architecture-edge-state text"),
-    ).not.toBeInTheDocument();
-    expect(
-      container.querySelector(".architecture-edge-state .katex"),
-    ).not.toBeNull();
-    expect(container.querySelector(".architecture-edge-state")).toHaveAttribute(
-      "x",
-      "340",
+      0,
     );
   });
 

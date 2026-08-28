@@ -16,6 +16,15 @@ export const nextTokenChapterContent = {
         kind: "paragraph",
         text: "다음 token 하나가 정해질 때에는 모델 계산과 생성 전략이 차례로 만납니다. 같은 ‘확률’이라는 말로 합치지 않고 각 값의 provenance를 따라갑니다.",
       },
+      {
+        id: "figure.next-token",
+        kind: "figure",
+        figureId: "decoder.diagram.language-model.next-token",
+        size: "wide",
+        caption:
+          "LM Head의 logit은 후보 점수이며, 생성 설정을 적용한 sampler가 다음 token을 선택합니다.",
+        alt: "Context에서 logit과 sampler를 거쳐 다음 token을 선택하는 단계",
+      },
     ],
     sections: [
       {

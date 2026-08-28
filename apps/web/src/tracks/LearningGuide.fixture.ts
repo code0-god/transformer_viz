@@ -74,14 +74,6 @@ export const page: LearningGuidePage<FixtureFormulaId> = {
   title: "PAGE_TITLE",
   learningGoal: "GOAL_SENTINEL",
   outline: "visible",
-  visualActions: [
-    { id: "fixture-overview", kind: "diagram", label: "OPEN_OVERVIEW" },
-    {
-      id: "fixture-visualization",
-      kind: "visualization",
-      label: "OPEN_VISUALIZATION",
-    },
-  ],
   introduction: [
     { id: "intro-paragraph", kind: "paragraph", text: "INTRO_SENTINEL" },
     {
@@ -102,7 +94,6 @@ export const page: LearningGuidePage<FixtureFormulaId> = {
       title: "SECTION_ONE",
       primaryNodeId: "canonical.node-one",
       associatedNodeIds: ["canonical.node-one", "canonical.node-shared"],
-      visualActionLabel: "OPEN_SECTION",
       blocks: [
         {
           id: "fixture-bullets",

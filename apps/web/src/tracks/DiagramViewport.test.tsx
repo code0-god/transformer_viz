@@ -102,7 +102,8 @@ describe("DiagramViewport", () => {
       </DiagramViewport>,
     );
     const viewport = screen.getByTestId("diagram-viewport-surface");
-    const description = screen.getByText("Diagram metadata");
+    const description = screen.getByRole("note", { name: "Figure caption" });
+    expect(description).toHaveTextContent("Diagram metadata");
     const transformedContent = viewport.querySelector(
       ".diagram-viewport__content",
     );
@@ -115,6 +116,10 @@ describe("DiagramViewport", () => {
     expect(viewport).toHaveAttribute("data-fit-scale", "0.5");
     expect(viewport).toHaveAttribute("data-pan-y", "125");
     expect(transformedContent).not.toContainElement(description);
+    expect(
+      viewport.compareDocumentPosition(description) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).not.toBe(0);
   });
 
   test("zooms with plus and minus without going below Fit", async () => {

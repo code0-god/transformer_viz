@@ -13,7 +13,7 @@ const STAGES = [
 
 export function NextTokenPredictionDiagram(): ReactElement {
   return (
-    <figure className="part1-diagram">
+    <div className="part1-diagram">
       <svg
         viewBox="0 0 520 944"
         role="img"
@@ -62,7 +62,7 @@ export function NextTokenPredictionDiagram(): ReactElement {
           );
         })}
       </svg>
-      <figcaption className="part1-diagram__fallback">
+      <div className="part1-diagram__fallback">
         <fieldset aria-label="다음 Token 예측 의미 설명">
           <ol>
             {STAGES.map(([title, note]) => (
@@ -72,7 +72,7 @@ export function NextTokenPredictionDiagram(): ReactElement {
             ))}
           </ol>
         </fieldset>
-      </figcaption>
-    </figure>
+      </div>
+    </div>
   );
 }

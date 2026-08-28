@@ -4,7 +4,7 @@ const STATES = ["X_0", "X_1", "X_N"] as const;
 
 export function HiddenStateDiagram(): ReactElement {
   return (
-    <figure className="part2-diagram">
+    <div className="part2-diagram">
       <svg
         viewBox="0 0 760 470"
         role="img"
@@ -122,7 +122,7 @@ export function HiddenStateDiagram(): ReactElement {
           </text>
         </g>
       </svg>
-      <figcaption className="part2-diagram__fallback">
+      <div className="part2-diagram__fallback">
         <fieldset aria-label="Hidden State 의미 설명">
           <ol>
             <li>Actual Block boundary: [B,T,C]</li>
@@ -131,7 +131,7 @@ export function HiddenStateDiagram(): ReactElement {
             <li>Each position reflects only its causal prefix</li>
           </ol>
         </fieldset>
-      </figcaption>
-    </figure>
+      </div>
+    </div>
   );
 }

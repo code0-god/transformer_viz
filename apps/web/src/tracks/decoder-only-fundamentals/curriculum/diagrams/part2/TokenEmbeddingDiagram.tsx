@@ -4,7 +4,7 @@ const TOKENS = ["the", "cat"] as const;
 
 export function TokenEmbeddingDiagram(): ReactElement {
   return (
-    <figure className="part2-diagram">
+    <div className="part2-diagram">
       <svg
         viewBox="0 0 760 460"
         role="img"
@@ -104,7 +104,7 @@ export function TokenEmbeddingDiagram(): ReactElement {
           주소 → learned row → 원래 sequence 순서
         </text>
       </svg>
-      <figcaption className="part2-diagram__fallback">
+      <div className="part2-diagram__fallback">
         <fieldset aria-label="Token Embedding 의미 설명">
           <ol>
             <li>Token IDs: symbolic [T] addresses</li>
@@ -113,7 +113,7 @@ export function TokenEmbeddingDiagram(): ReactElement {
             <li>Result: sequence vectors [T,C]</li>
           </ol>
         </fieldset>
-      </figcaption>
-    </figure>
+      </div>
+    </div>
   );
 }

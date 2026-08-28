@@ -15,7 +15,6 @@ export const methodsChapterContent = {
     learningGoal:
       "같은 텍스트를 Word, Character, Subword, Byte 방식으로 나누어 비교합니다.",
     outline: "hidden",
-    visualActions: [],
     introduction: [
       {
         id: "intro",
@@ -90,12 +89,20 @@ export const methodsChapterContent = {
         id: "trade-off",
         title: "Vocabulary와 sequence 길이의 균형",
         primaryNodeId: "decoder.root.input-context",
-        visualActionLabel: "Tokenization 방식 비교 보기",
         blocks: [
           {
             id: "p.trade-off",
             kind: "paragraph",
             text: "Vocabulary는 사용할 수 있는 token 종류의 목록이고, sequence 길이는 한 입력을 나타내는 token 칸의 수입니다. Word처럼 큰 단위는 vocabulary가 커지는 대신 sequence가 짧아지기 쉽고, character나 byte처럼 작은 단위는 vocabulary를 작게 유지하는 대신 sequence가 길어지기 쉽습니다. Subword는 그 사이를 조절하려는 방식입니다.",
+          },
+          {
+            id: "figure.tokenization-methods",
+            kind: "figure",
+            figureId: "decoder.diagram.tokenization.methods",
+            size: "wide",
+            caption:
+              "같은 텍스트도 tokenization 방식에 따라 경계, vocabulary 크기, sequence 길이가 달라집니다.",
+            alt: "the cats를 Word, Character, Subword, Byte 방식으로 비교",
           },
           {
             id: "comparison.axes",

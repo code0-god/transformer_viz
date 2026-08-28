@@ -47,10 +47,9 @@ describe("Part 2 curriculum Diagrams", () => {
           screen.getByRole("navigation", { name: "Chapter 목차" }),
         ).getByRole("link", { name: chapterTitle }),
       );
-      await user.click(screen.getByTestId("open-diagram-viewer"));
-
-      // Then: one symbolic image, equivalent fallback, and native focus remain Worker-inert.
-      const pane = document.querySelector("#focused-viewer .diagram-viewport");
+      // Then: one inline symbolic image and equivalent fallback remain Worker-inert.
+      const image = screen.getByRole("img", { name: imageName });
+      const pane = image.closest("figure");
       expect(pane).toBeInstanceOf(HTMLElement);
       expect(pane?.querySelectorAll("svg[role='img']")).toHaveLength(1);
       expect(
@@ -69,6 +68,8 @@ describe("Part 2 curriculum Diagrams", () => {
       expect(pane?.textContent).not.toMatch(
         /Visualization|inspector|selected layer|Part 4|Worker/i,
       );
+      expect(screen.queryByTestId("open-diagram-viewer")).toBeNull();
+      expect(screen.queryByRole("dialog")).toBeNull();
       expect(worker.posted).toHaveLength(postsBefore);
     },
   );

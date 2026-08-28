@@ -3,6 +3,8 @@ import type { FormulaDefinition } from "../math/formulaCatalog";
 import { MathFormula } from "../math/MathFormula";
 import { RuntimeFacts, SelectedOperation } from "./GuideDynamicBlocks";
 import { GuideInlineView } from "./GuideInline";
+import { LearningFigure } from "./LearningFigure";
+import type { LearningFigureRegistry } from "./learningFigureTypes";
 import type {
   GlossaryEntry,
   GuideBlock,
@@ -20,6 +22,7 @@ interface GuideBlockViewProps<Id extends string> {
     Record<string, SelectedOperationPresentation>
   >;
   readonly showSelectedOperation: boolean;
+  readonly figures: LearningFigureRegistry | undefined;
 }
 
 export function GuideBlockView<Id extends string>({
@@ -30,6 +33,7 @@ export function GuideBlockView<Id extends string>({
   runtimeFacts,
   selectedOperations,
   showSelectedOperation,
+  figures,
 }: GuideBlockViewProps<Id>): ReactElement | null {
   switch (block.kind) {
     case "paragraph":
@@ -145,5 +149,7 @@ export function GuideBlockView<Id extends string>({
           </ul>
         </details>
       );
+    case "figure":
+      return <LearningFigure block={block} registry={figures} />;
   }
 }

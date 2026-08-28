@@ -16,6 +16,15 @@ export const conditionalProbabilityChapterContent = {
         kind: "paragraph",
         text: "Autoregressive 모델의 각 예측은 앞선 선택과 분리되어 있지 않습니다. A에서 B로, 다시 C로 이어지는 조건을 순서대로 적어 봅니다.",
       },
+      {
+        id: "figure.conditional-probability",
+        kind: "figure",
+        figureId: "decoder.diagram.language-model.conditional-probability",
+        size: "wide",
+        caption:
+          "다음 token 확률은 현재 prefix를 조건으로 하며, sequence 확률은 이 조건부 확률의 곱으로 분해됩니다.",
+        alt: "Prefix 조건부 확률과 sequence chain rule",
+      },
     ],
     sections: [
       {

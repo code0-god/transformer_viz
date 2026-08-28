@@ -13,39 +13,15 @@ export interface CircleBounds {
 
 export const VIEW_WIDTH = 1_000;
 export const CENTER_X = VIEW_WIDTH / 2;
-export const STACK_GAP = 24;
-export const INPUT: RectBounds = { x: 320, y: 40, width: 360, height: 56 };
+export const INPUT: RectBounds = { x: 340, y: 36, width: 320, height: 60 };
 export const EMBEDDINGS: readonly [RectBounds, RectBounds] = [
-  { x: 220, y: 177, width: 220, height: 54 },
-  { x: 560, y: 177, width: 220, height: 54 },
+  { x: 220, y: 142, width: 240, height: 58 },
+  { x: 540, y: 142, width: 240, height: 58 },
 ];
-export const EMBEDDING_BRANCH_Y = 128;
-export const EMBEDDING_ADD: CircleBounds = { x: CENTER_X, y: 270, radius: 16 };
-export const HIDDEN: RectBounds = { x: 370, y: 304, width: 260, height: 36 };
-export const BLOCK: RectBounds = { x: 260, y: 344, width: 480, height: 480 };
-export const BLOCK_MODULES: readonly [
-  RectBounds,
-  RectBounds,
-  RectBounds,
-  RectBounds,
-] = [
-  { x: 340, y: 392, width: 320, height: 42 },
-  { x: 340, y: 458, width: 320, height: 60 },
-  { x: 340, y: 614, width: 320, height: 42 },
-  { x: 340, y: 680, width: 320, height: 54 },
-];
-export const RESIDUAL_ADDS: readonly [CircleBounds, CircleBounds] = [
-  { x: CENTER_X, y: 560, radius: 18 },
-  { x: CENTER_X, y: 776, radius: 18 },
-];
-export const RESIDUAL_JUNCTIONS: readonly [
-  Readonly<{ x: number; y: number }>,
-  Readonly<{ x: number; y: number }>,
-] = [
-  { x: CENTER_X, y: 368 },
-  { x: CENTER_X, y: 590 },
-];
-export const RESIDUAL_RAIL_X = 700;
+export const EMBEDDING_BRANCH_Y = 116;
+export const EMBEDDING_ADD: CircleBounds = { x: CENTER_X, y: 236, radius: 14 };
+export const HIDDEN: RectBounds = { x: 370, y: 260, width: 260, height: 32 };
+export const BLOCK: RectBounds = { x: 250, y: 300, width: 500, height: 190 };
 
 export interface DiagramLayout {
   readonly finalLayerNormY: number;
@@ -59,13 +35,13 @@ export interface DiagramLayout {
 
 export function diagramLayout(_layerCount: number): DiagramLayout {
   return {
-    finalLayerNormY: 924,
-    lmHeadY: 1060,
-    logitsY: 1196,
-    selectionY: 1326,
-    generatedY: 1465,
-    appendY: 1601,
-    viewHeight: 1720,
+    finalLayerNormY: 550,
+    lmHeadY: 640,
+    logitsY: 730,
+    selectionY: 820,
+    generatedY: 910,
+    appendY: 1_000,
+    viewHeight: 1_080,
   };
 }
 
@@ -77,10 +53,10 @@ export const OUTPUT_STAGES: readonly [
   RectBounds,
   RectBounds,
 ] = [
-  { x: 305, y: 924, width: 390, height: 48 },
-  { x: 305, y: 1060, width: 390, height: 48 },
-  { x: 305, y: 1196, width: 390, height: 48 },
-  { x: 270, y: 1326, width: 460, height: 60 },
-  { x: 305, y: 1465, width: 390, height: 54 },
-  { x: 305, y: 1601, width: 390, height: 54 },
+  { x: 305, y: 550, width: 390, height: 54 },
+  { x: 305, y: 640, width: 390, height: 54 },
+  { x: 305, y: 730, width: 390, height: 54 },
+  { x: 270, y: 820, width: 460, height: 58 },
+  { x: 305, y: 910, width: 390, height: 54 },
+  { x: 305, y: 1_000, width: 390, height: 54 },
 ];

@@ -16,6 +16,15 @@ export const embeddingChapterContent = {
         kind: "paragraph",
         text: "Part 2의 도식과 본문에서는 읽기 편하도록 batch가 하나인 B=1 축을 한 번 생략합니다. 실제 모델 경계는 batch 축을 보존합니다.",
       },
+      {
+        id: "figure.token-embedding",
+        kind: "figure",
+        figureId: "decoder.diagram.representation.embedding",
+        size: "wide",
+        caption:
+          "Token ID는 embedding table의 행을 찾고, 조회된 row가 각 token의 초기 vector가 됩니다.",
+        alt: "Token ID sequence가 embedding table row를 조회해 vector가 되는 흐름",
+      },
     ],
     sections: [
       {

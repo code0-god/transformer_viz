@@ -1,7 +1,7 @@
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StrictMode } from "react";
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 
 import { App } from "./App";
 import { model, TestWorker } from "./test/workerFixtures";
@@ -109,49 +109,34 @@ describe("Learning Workspace production integration", () => {
     expect(worker.posted).toHaveLength(1);
   });
 
-  test("returns a viewer selection to its matching Learn section", async () => {
+  test("renders GPT architecture inline without a viewer selection step", () => {
     const worker = readyWorkspace("#/learn/decoder-only-fundamentals/3-1");
-    const user = userEvent.setup();
 
-    expect(screen.queryByTestId("architecture-root")).toBeNull();
-    await user.click(screen.getByTestId("open-diagram-viewer"));
-    const viewer = focusedViewer();
-    await user.click(
-      viewerElement<SVGGElement>(viewer, '[data-node-id="token-embedding"]'),
-    );
-    await user.click(
-      within(viewer).getByRole("button", { name: "설명에서 보기" }),
-    );
-
+    const architecture = screen.getByTestId("architecture-root");
+    expect(architecture).toBeVisible();
     expect(
-      screen.getByRole("heading", {
-        name: "Token과 위치를 숫자 표현으로 바꾸기",
-      }),
-    ).toHaveFocus();
+      architecture.querySelector('[data-node-id="token-embedding"]'),
+    ).toHaveAttribute("data-interactive", "false");
+    expect(screen.queryByTestId("open-diagram-viewer")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
     expect(worker.posted).toHaveLength(1);
   });
 
-  test("opens a section viewer with the matching node highlighted", async () => {
+  test("keeps Block explanation inline without a section viewer", () => {
     const worker = readyWorkspace("#/learn/decoder-only-fundamentals/4-1");
-    const user = userEvent.setup();
     const section = screen.getByRole("region", { name: "Self-Attention" });
 
-    await user.click(
-      within(section).getByRole("button", {
-        name: "Self-Attention 흐름 보기",
-      }),
-    );
-    const viewer = focusedViewer();
-    expect(
-      viewerElement<SVGGElement>(viewer, '[data-node-id="self-attention"]'),
-    ).toHaveAttribute("data-learning-highlighted", "true");
+    expect(within(section).queryByRole("button")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
     expect(worker.posted).toHaveLength(1);
   });
 
   test("preserves Attention operation across layer and head changes", async () => {
-    const worker = readyWorkspace("#/learn/decoder-only-fundamentals/5-1");
+    const worker = readyWorkspace("#/lab");
     const user = userEvent.setup();
-    await user.click(screen.getByTestId("open-diagram-viewer"));
+    await user.click(
+      screen.getByRole("button", { name: "Self-Attention 보기" }),
+    );
     const viewer = focusedViewer();
     const softmax = viewerElement<SVGGElement>(
       viewer,
@@ -178,26 +163,18 @@ describe("Learning Workspace production integration", () => {
     expect(worker.posted).toHaveLength(1);
   });
 
-  test("returns repeated viewer activations to the same article heading", async () => {
+  test("uses Chapter history instead of viewer return state", async () => {
     const worker = readyWorkspace("#/learn/decoder-only-fundamentals/3-1");
     const user = userEvent.setup();
-    const heading = screen.getByRole("heading", {
-      name: "Token과 위치를 숫자 표현으로 바꾸기",
-    });
-    const focus = vi.spyOn(heading, "focus");
 
-    for (let activation = 0; activation < 2; activation += 1) {
-      await user.click(screen.getByTestId("open-diagram-viewer"));
-      const viewer = focusedViewer();
-      await user.click(
-        viewerElement<SVGGElement>(viewer, '[data-node-id="token-embedding"]'),
-      );
-      await user.click(
-        within(viewer).getByRole("button", { name: "설명에서 보기" }),
-      );
-    }
-
-    expect(focus).toHaveBeenCalledTimes(2);
+    await user.click(
+      screen.getByRole("link", {
+        name: "Transformer Block 설명으로 이동",
+      }),
+    );
+    expect(screen.getByRole("region", { name: "Block의 목적" })).toHaveFocus();
+    await user.click(screen.getByRole("link", { name: "이전: GPT" }));
+    expect(screen.getByTestId("architecture-root")).toBeVisible();
     expect(worker.posted).toHaveLength(1);
   });
 });

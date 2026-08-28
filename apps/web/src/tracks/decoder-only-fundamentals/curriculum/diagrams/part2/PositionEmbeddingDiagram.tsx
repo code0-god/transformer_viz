@@ -7,7 +7,7 @@ const ROWS = [
 
 export function PositionEmbeddingDiagram(): ReactElement {
   return (
-    <figure className="part2-diagram">
+    <div className="part2-diagram">
       <svg
         viewBox="0 0 760 460"
         role="img"
@@ -109,7 +109,7 @@ export function PositionEmbeddingDiagram(): ReactElement {
           결합은 concatenation이 아니라 element-wise addition · [T,C] 유지
         </text>
       </svg>
-      <figcaption className="part2-diagram__fallback">
+      <div className="part2-diagram__fallback">
         <fieldset aria-label="Position Embedding 의미 설명">
           <ol>
             <li>Token rows: E_tok [T,C]</li>
@@ -118,7 +118,7 @@ export function PositionEmbeddingDiagram(): ReactElement {
             <li>Result: X_0 [T,C]</li>
           </ol>
         </fieldset>
-      </figcaption>
-    </figure>
+      </div>
+    </div>
   );
 }

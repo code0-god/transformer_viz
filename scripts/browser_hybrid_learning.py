@@ -1,226 +1,526 @@
+"""Production Chrome evidence for article-first Learn with inline Figures."""
+
 from __future__ import annotations
 
-# noqa: SIZE_OK — one ordered browser scenario owns shared page state
+# noqa: SIZE_OK — one ordered inline-Figure matrix owns live route state
 
+import json
 from pathlib import Path
 
-from browser_hybrid_capture import capture, request_urls
-from browser_hybrid_contract import (
-    diagram_probe,
-    go_chapter,
-    number,
-    require,
-    set_viewport,
-)
+from browser_hybrid_capture import capture
+from browser_hybrid_contract import require, set_viewport
 from browser_hybrid_helpers import (
     JsonObject,
+    JsonValue,
     evaluate_dict,
     navigate_hash,
-    pointer_click,
-    settle,
-    settle_animations,
     wait_for,
 )
 from browser_session import ChromeSession
 
+INLINE_FIGURES = (
+    (
+        "0-1",
+        "decoder.diagram.intro.nlp",
+        "learn-nlp-0-1-inline-1440x900.png",
+    ),
+    (
+        "0-2",
+        "decoder.diagram.tokenization.token",
+        "learn-token-0-2-inline-1440x900.png",
+    ),
+    (
+        "0-3",
+        "decoder.diagram.tokenization.vocabulary",
+        "learn-vocabulary-0-3-inline-1440x900.png",
+    ),
+    (
+        "0-4",
+        "decoder.diagram.tokenization.methods",
+        "learn-methods-0-4-inline-1440x900.png",
+    ),
+)
 
-def _article_probe(browser: ChromeSession) -> JsonObject:
+
+def _figure_selector(figure_id: str) -> str:
+    return f"[data-figure-id={json.dumps(figure_id)}]"
+
+
+def _string(data: JsonObject, key: str) -> str:
+    value = data.get(key)
+    if not isinstance(value, str):
+        raise TypeError(f"{key} must be a string: {value!r}")
+    return value
+
+
+def _integer(data: JsonObject, key: str) -> int:
+    value = data.get(key)
+    if not isinstance(value, int):
+        raise TypeError(f"{key} must be an integer: {value!r}")
+    return value
+
+
+def _boolean(data: JsonObject, key: str) -> bool:
+    value = data.get(key)
+    if not isinstance(value, bool):
+        raise TypeError(f"{key} must be a boolean: {value!r}")
+    return value
+
+
+def _evaluate(browser: ChromeSession, expression: str) -> JsonValue:
+    return browser.require_cdp().evaluate(
+        browser.page_session,
+        expression,
+        True,
+    )
+
+
+def _go_learning_home(browser: ChromeSession) -> None:
+    navigate_hash(
+        browser,
+        "#/",
+        "Boolean(document.querySelector('.course-home'))",
+        "Course Home",
+    )
+
+
+def _open_chapter(browser: ChromeSession, slug: str) -> None:
+    chapter_id = f"decoder.chapter.{slug.replace('-', '.')}"
+    navigate_hash(
+        browser,
+        f"#/learn/decoder-only-fundamentals/{slug}",
+        (
+            "Boolean(document.querySelector("
+            + json.dumps(
+                f'[data-curriculum-chapter-id="{chapter_id}"]',
+            )
+            + "))"
+        ),
+        f"Chapter {slug}",
+    )
+
+
+def _wait_for_article(browser: ChromeSession) -> None:
+    wait_for(
+        browser,
+        "Boolean(document.querySelector('article'))",
+        "Learning article",
+    )
+
+
+def _scroll_article_top(browser: ChromeSession) -> None:
+    _evaluate(
+        browser,
+        """
+        (() => {
+          if (document.activeElement instanceof HTMLElement)
+            document.activeElement.blur();
+          window.scrollTo(0, 0);
+        })()
+        """,
+    )
+
+
+def _wait_for_figure(browser: ChromeSession, figure_id: str) -> None:
+    selector = _figure_selector(figure_id)
+    wait_for(
+        browser,
+        f"Boolean(document.querySelector({json.dumps(selector)}))",
+        f"Inline Figure missing: {figure_id}",
+    )
+
+
+def _scroll_figure(browser: ChromeSession, figure_id: str) -> None:
+    selector = _figure_selector(figure_id)
+    _evaluate(
+        browser,
+        f"""
+        (() => {{
+          const figure = document.querySelector({json.dumps(selector)});
+          if (!(figure instanceof HTMLElement)) return false;
+          if (document.activeElement instanceof HTMLElement)
+            document.activeElement.blur();
+          figure.scrollIntoView({{ block: 'center', behavior: 'auto' }});
+          return true;
+        }})()
+        """,
+    )
+
+
+def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
+    selector = _figure_selector(figure_id)
     return evaluate_dict(
-        browser,
-        """(() => {
-          const workspace = document.querySelector(
-            '[data-learning-layout="article"]',
-          );
-          const article = document.querySelector(
-            '.learning-workspace__article',
-          );
-          const guide = document.querySelector('.learning-workspace__guide');
-          const actions = Array.from(document.querySelectorAll(
-            [
-              '.learning-guide-visual-actions button',
-              '.learning-guide-section-actions button',
-            ].join(','),
-          ));
-          const rect = article?.getBoundingClientRect();
-          const guideStyle = guide ? getComputedStyle(guide) : null;
-          return {
-            workspace: workspace !== null,
-            article: article !== null,
-            articleWidth: rect?.width ?? 0,
-            viewportWidth: innerWidth,
-            diagramMounted:
-              document.querySelector('.diagram-viewport') !== null,
-            canvasMounted: document.querySelector('canvas') !== null,
-            actionCount: actions.length,
-            actionLabels: actions.map(action => action.textContent?.trim()),
-            topActionBar:
-              document.querySelector('.learning-workspace__viewer-actions')
-                !== null,
-            prompt: document.querySelector('[aria-label="Prompt"]') !== null,
-            generate: document.querySelector('[data-testid="generate"]') !== null,
-            overflowX: document.documentElement.scrollWidth > innerWidth,
-            guideOverflowY: guideStyle?.overflowY ?? null,
-            tablist: document.querySelector('[role="tablist"]') !== null,
-          };
-        })()""",
+            browser,
+            f"""
+            (() => {{
+              const figure = document.querySelector({json.dumps(selector)});
+              const article = document.querySelector('article');
+              const caption = figure?.querySelector(':scope > figcaption');
+              const rect = figure?.getBoundingClientRect();
+              const articleRect = article?.getBoundingClientRect();
+              const content = figure?.querySelector('.learning-figure__content');
+              const visible = (element) => {{
+                if (!(element instanceof Element)) return false;
+                const box = element.getBoundingClientRect();
+                const style = getComputedStyle(element);
+                return box.width > 1 && box.height > 1
+                  && style.display !== 'none'
+                  && style.visibility !== 'hidden';
+              }};
+              const visibleImages = Array.from(
+                figure?.querySelectorAll('[role="img"]') ?? [],
+              ).filter(visible);
+              const visibleFallbacks = Array.from(
+                figure?.querySelectorAll(
+                  '.part0-diagram__fallback,'
+                  + '.part1-diagram__fallback,'
+                  + '.part2-diagram__fallback',
+                ) ?? [],
+              ).filter(visible);
+              const mobileFlow = figure?.querySelector(
+                '.decoder-learning-architecture__mobile',
+              );
+              return {{
+                figureId: figure?.getAttribute('data-figure-id') ?? '',
+                size: figure?.getAttribute('data-figure-size') ?? '',
+                caption: caption?.textContent?.trim() ?? '',
+                triggerCount:
+                  article?.querySelectorAll('[aria-haspopup="dialog"]').length ?? -1,
+                dialogOpen: Boolean(document.querySelector('[role="dialog"]')),
+                imageCount: figure?.querySelectorAll('[role="img"]').length ?? 0,
+                visibleImageCount: visibleImages.length,
+                visibleFallbackCount: visibleFallbacks.length,
+                mobileFlowVisible: visible(mobileFlow),
+                visualMode:
+                  visibleImages.length > 0
+                    ? 'svg'
+                    : visibleFallbacks.length > 0
+                      ? 'fallback'
+                      : visible(mobileFlow)
+                        ? 'mobile-flow'
+                        : 'blank',
+                buttonCount: figure?.querySelectorAll('button').length ?? 0,
+                viewerControlCount:
+                  article?.querySelectorAll(
+                    '[data-testid^="open-"][data-testid$="-viewer"],'
+                    + '[aria-controls="focused-viewer"],'
+                    + '.focused-viewer__close,'
+                    + '.diagram-viewport__toolbar',
+                  ).length ?? -1,
+                overflow:
+                  document.documentElement.scrollWidth
+                  - document.documentElement.clientWidth,
+                localOverflow: content
+                  ? Math.max(0, content.scrollWidth - content.clientWidth)
+                  : -1,
+                articleContains: !!article && !!figure && article.contains(figure),
+                insideArticle:
+                  !!rect && !!articleRect
+                  && rect.left >= articleRect.left - 1
+                  && rect.right <= articleRect.right + 1,
+                visible: visible(figure),
+                width: rect?.width ?? 0,
+                height: rect?.height ?? 0,
+                left: rect?.left ?? 0,
+                right: rect?.right ?? 0,
+                tokenRows: Array.from(
+                  figure?.querySelectorAll('[data-token-row]') ?? [],
+                  (node) => node.getAttribute('data-token-row'),
+                ),
+              }};
+            }})()
+            """,
     )
 
 
-def _require_article(
-    article: JsonObject,
-    slug: str,
-    *,
-    action_count: int | None = None,
-) -> None:
+def _assert_inline_figure(
+    browser: ChromeSession,
+    figure_id: str,
+    expected_size: str,
+) -> JsonObject:
+    probe = _probe_figure(browser, figure_id)
+    require(_string(probe, "figureId") == figure_id, "Wrong Figure")
     require(
-        article["workspace"] is True and article["article"] is True,
-        f"{slug} article shell missing: {article}",
+        _string(probe, "size") == expected_size,
+        f"Wrong Figure size: {figure_id}",
     )
-    require(
-        0 < number(article["articleWidth"], "article width") <= 900,
-        f"{slug} article line length drift: {article}",
-    )
-    require(
-        article["diagramMounted"] is False
-        and article["canvasMounted"] is False
-        and article["tablist"] is False
-        and article["topActionBar"] is False,
-        f"{slug} visual mounted in reading mode: {article}",
-    )
-    require(
-        article["prompt"] is False
-        and article["generate"] is False
-        and article["overflowX"] is False,
-        f"{slug} Learn/Lab separation failed: {article}",
-    )
-    require(
-        article["guideOverflowY"] not in {"auto", "scroll"},
-        f"{slug} nested guide scroll owner: {article}",
-    )
-    if action_count is not None:
-        require(
-            article["actionCount"] == action_count,
-            f"{slug} visual trigger count: {article}",
-        )
-
-
-def _open_diagram(browser: ChromeSession) -> JsonObject:
-    pointer_click(
-        browser,
-        "document.querySelector('[data-testid=\"open-diagram-viewer\"]')",
-        condition="document.querySelector('#focused-viewer') !== null",
-        label="focused Diagram viewer",
-    )
-    settle_animations(
-        browser,
-        "[data-viewer-backdrop]",
-        "focused Diagram viewer animation",
-    )
-    probe = diagram_probe(browser)
-    require(
-        probe["mode"] == "fit"
-        and probe["zoomPercent"] == "100%"
-        and probe["fullyContained"] is True
-        and probe["toolbarInsideSurface"] is True,
-        f"Diagram viewer Fit failed: {probe}",
-    )
-    visual_rects = probe["visualRects"]
-    toolbar_rect = probe["toolbarRect"]
-    if not isinstance(toolbar_rect, dict):
-        toolbar_rect = {}
-    styles = probe["styles"]
-    if not isinstance(styles, dict):
-        styles = {}
-    surface_rect = probe["surfaceRect"]
-    if not isinstance(surface_rect, dict):
-        surface_rect = {}
-    require(
-        number(probe["contentWidth"], "Diagram content width") > 0
-        and number(probe["contentHeight"], "Diagram content height") > 0
-        and isinstance(visual_rects, list)
-        and len(visual_rects) == 1
-        and number(visual_rects[0]["right"], "Diagram visual right")
-        > number(visual_rects[0]["left"], "Diagram visual left")
-        and number(visual_rects[0]["bottom"], "Diagram visual bottom")
-        > number(visual_rects[0]["top"], "Diagram visual top"),
-        f"Diagram viewer content is blank: {probe}",
-    )
-    require(
-        number(toolbar_rect.get("right"), "Diagram toolbar right")
-        > number(toolbar_rect.get("left"), "Diagram toolbar left")
-        and number(toolbar_rect.get("bottom"), "Diagram toolbar bottom")
-        > number(toolbar_rect.get("top"), "Diagram toolbar top"),
-        f"Diagram toolbar is blank: {probe}",
-    )
-    require(
-        number(surface_rect.get("right"), "Diagram surface right")
-        > number(surface_rect.get("left"), "Diagram surface left")
-        and number(surface_rect.get("bottom"), "Diagram surface bottom")
-        - number(surface_rect.get("top"), "Diagram surface top")
-        >= 400,
-        f"Diagram surface collapsed: {probe}",
-    )
-    require(
-        styles.get("viewerOpacity") == "1"
-        and styles.get("bodyOpacity") == "1"
-        and styles.get("paneOpacity") == "1"
-        and styles.get("paneVisibility") == "visible",
-        f"Diagram viewer opacity failed: {probe}",
-    )
-    require(
-        number(probe["viewerWidthRatio"], "viewer width ratio") >= 0.8
-        and number(probe["viewerHeightRatio"], "viewer height ratio") >= 0.78
-        and probe["descriptionOutsideTransform"] is True
-        and probe["overflowX"] is False,
-        f"Diagram viewer sizing failed: {probe}",
-    )
+    require(_string(probe, "caption") != "", "Caption missing")
+    require(_integer(probe, "triggerCount") == 0, "Learn overlay trigger found")
+    require(_integer(probe, "viewerControlCount") == 0, "Learn viewer control found")
+    require(not _boolean(probe, "dialogOpen"), "Learn dialog opened")
+    require(_boolean(probe, "articleContains"), "Figure is outside article")
+    require(_boolean(probe, "insideArticle"), "Figure exceeds article shell")
+    require(_boolean(probe, "visible"), "Figure has no visible geometry")
+    require(_string(probe, "visualMode") != "blank", "Figure content is blank")
+    require(_integer(probe, "overflow") == 0, "Horizontal overflow")
+    require(_integer(probe, "localOverflow") == 0, "Local Figure overflow")
     return probe
 
 
-def _close_viewer(browser: ChromeSession) -> None:
-    pointer_click(
-        browser,
-        "document.querySelector('[aria-label=\"집중 보기 닫기\"]')",
-        condition="document.querySelector('#focused-viewer') === null",
-        label="focused viewer close",
-    )
+def _capture_part_zero(
+    browser: ChromeSession,
+    screenshots: Path,
+    shots: dict[str, str],
+) -> list[JsonObject]:
+    evidence: list[JsonObject] = []
+    expected_sizes = {
+        "decoder.diagram.intro.nlp": "prose",
+        "decoder.diagram.tokenization.token": "wide",
+        "decoder.diagram.tokenization.vocabulary": "wide",
+        "decoder.diagram.tokenization.methods": "wide",
+    }
+    for slug, figure_id, filename in INLINE_FIGURES:
+        _open_chapter(browser, slug)
+        _wait_for_article(browser)
+        _wait_for_figure(browser, figure_id)
+        _scroll_article_top(browser)
+        evidence.append(
+            _assert_inline_figure(browser, figure_id, expected_sizes[figure_id]),
+        )
+        shots[f"inline-{slug}"] = capture(browser, screenshots / filename)
+    return evidence
 
 
-def _zoom_and_refit(browser: ChromeSession) -> JsonObject:
-    pointer_click(
-        browser,
-        "document.querySelector('#focused-viewer [aria-label=\"확대\"]')",
-        condition=(
-            "document.querySelector('#focused-viewer "
-            "[aria-label=\"현재 확대 비율\"]')?.textContent?.trim()"
-            " !== '100%'"
-        ),
-        label="Diagram zoom",
-    )
-    zoomed = diagram_probe(browser)
+def _capture_gpt(
+    browser: ChromeSession,
+    screenshots: Path,
+    shots: dict[str, str],
+) -> JsonObject:
+    _open_chapter(browser, "3-1")
+    _wait_for_article(browser)
+    _wait_for_figure(browser, "root")
+    _scroll_article_top(browser)
+    probe = _assert_inline_figure(browser, "root", "full")
+    require(_integer(probe, "buttonCount") == 0, "GPT Learn Figure is interactive")
+    require(_string(probe, "visualMode") == "svg", "Desktop GPT SVG hidden")
     require(
-        zoomed["mode"] == "zoomed" and zoomed["zoomPercent"] == "120%",
-        f"Diagram zoom failed: {zoomed}",
+        not _boolean(probe, "mobileFlowVisible"),
+        "Desktop GPT mobile flow visible",
     )
+    shots["inline-gpt"] = capture(
+        browser,
+        screenshots / "learn-gpt-inline-1440x900.png",
+    )
+    link_probe = evaluate_dict(
+        browser,
+        """(() => {
+          const link = document.querySelector(
+            'a[aria-label="Transformer Block 설명으로 이동"]',
+          );
+          const rect = link?.getBoundingClientRect();
+          return { width: rect?.width ?? 0, height: rect?.height ?? 0 };
+        })()""",
+    )
+    require(
+        _integer(link_probe, "height") >= 44,
+        f"GPT Chapter link target too small: {link_probe}",
+    )
+    _evaluate(
+        browser,
+        """
+        (() => {
+          const link = document.querySelector(
+            'a[aria-label="Transformer Block 설명으로 이동"]',
+          );
+          if (!(link instanceof HTMLAnchorElement)) return false;
+          link.focus();
+          return true;
+        })()
+        """,
+    )
+    cdp = browser.require_cdp()
+    key = {
+        "key": "Enter",
+        "code": "Enter",
+        "windowsVirtualKeyCode": 13,
+    }
+    cdp.send("Input.dispatchKeyEvent", {"type": "rawKeyDown", **key}, browser.page_session)
+    cdp.send("Input.dispatchKeyEvent", {"type": "keyUp", **key}, browser.page_session)
     wait_for(
         browser,
-        (
-            "document.querySelector('#focused-viewer "
-            "[aria-label=\"현재 확대 비율\"]')?.textContent?.trim()"
-            " === '100%'"
-        ),
-        "Diagram keyboard Fit",
-        """(() => {
-          const target = document.querySelector(
-            '#focused-viewer [aria-label="확대"]',
-          );
-          target?.focus();
-          target?.dispatchEvent(new KeyboardEvent('keydown', {
-            key: 'f', bubbles: true,
-          }));
-        })();""",
+        "Boolean(document.querySelector('[data-curriculum-chapter-id=\"decoder.chapter.4.1\"]'))",
+        "GPT Figure Chapter link failed",
     )
-    return zoomed
+    return {
+        **probe,
+        "chapterLink": True,
+        "chapterLinkKeyboard": "Enter",
+        "chapterLinkTarget": link_probe,
+    }
+
+
+def _capture_responsive(
+    browser: ChromeSession,
+    screenshots: Path,
+    shots: dict[str, str],
+) -> list[JsonObject]:
+    responsive: list[JsonObject] = []
+    set_viewport(browser, 1366, 768)
+    _open_chapter(browser, "0-2")
+    _wait_for_article(browser)
+    _wait_for_figure(browser, "decoder.diagram.tokenization.token")
+    _scroll_article_top(browser)
+    responsive.append(
+        _assert_inline_figure(
+            browser,
+            "decoder.diagram.tokenization.token",
+            "wide",
+        ),
+    )
+    shots["inline-token-1366"] = capture(
+        browser,
+        screenshots / "learn-token-0-2-inline-1366x768.png",
+    )
+
+    set_viewport(browser, 1024, 768)
+    _open_chapter(browser, "3-1")
+    _wait_for_article(browser)
+    _wait_for_figure(browser, "root")
+    _scroll_article_top(browser)
+    responsive.append(_assert_inline_figure(browser, "root", "full"))
+    shots["inline-gpt-1024"] = capture(
+        browser,
+        screenshots / "learn-gpt-inline-1024x768.png",
+    )
+
+    set_viewport(browser, 390, 844)
+    _open_chapter(browser, "0-2")
+    _wait_for_article(browser)
+    _wait_for_figure(browser, "decoder.diagram.tokenization.token")
+    _scroll_figure(browser, "decoder.diagram.tokenization.token")
+    token = _assert_inline_figure(
+        browser,
+        "decoder.diagram.tokenization.token",
+        "wide",
+    )
+    token_rows = token.get("tokenRows")
+    require(
+        token_rows == ["1", "1", "1", "2", "2"],
+        "Mobile Token Figure did not reflow to two rows",
+    )
+    responsive.append(token)
+    shots["inline-token-mobile"] = capture(
+        browser,
+        screenshots / "learn-token-inline-mobile-390x844.png",
+    )
+
+    for slug, figure_id, filename in (
+        (
+            "0-3",
+            "decoder.diagram.tokenization.vocabulary",
+            "learn-vocabulary-inline-mobile-390x844.png",
+        ),
+        (
+            "0-4",
+            "decoder.diagram.tokenization.methods",
+            "learn-methods-inline-mobile-390x844.png",
+        ),
+    ):
+        _open_chapter(browser, slug)
+        _wait_for_article(browser)
+        _wait_for_figure(browser, figure_id)
+        _scroll_figure(browser, figure_id)
+        responsive.append(_assert_inline_figure(browser, figure_id, "wide"))
+        shots[f"inline-{slug}-mobile"] = capture(browser, screenshots / filename)
+
+    _open_chapter(browser, "3-1")
+    _wait_for_article(browser)
+    _wait_for_figure(browser, "root")
+    _scroll_figure(browser, "root")
+    gpt = _assert_inline_figure(browser, "root", "full")
+    mobile_flow = evaluate_dict(
+            browser,
+            """
+            (() => {
+              const flow = document.querySelector(
+                '.decoder-learning-architecture__mobile',
+              );
+              const desktop = document.querySelector(
+                '.architecture-root-screen[data-architecture-presentation="learn"]',
+              );
+              return {
+                visible: flow instanceof HTMLElement
+                  && getComputedStyle(flow).display !== 'none',
+                stages: flow?.querySelectorAll('li').length ?? 0,
+                labels: Array.from(
+                  flow?.querySelectorAll('li') ?? [],
+                  (item) => item.textContent?.trim() ?? '',
+                ),
+                desktopVisible: desktop instanceof HTMLElement
+                  && getComputedStyle(desktop).display !== 'none',
+              };
+            })()
+            """,
+    )
+    require(_boolean(mobile_flow, "visible"), "Mobile GPT flow hidden")
+    require(_integer(mobile_flow, "stages") == 9, "Mobile GPT stage count")
+    require(
+        mobile_flow.get("labels")
+        == [
+            "Input Context",
+            "Token + Position Embedding",
+            "Transformer Block × N",
+            "Final LayerNorm",
+            "LM Head",
+            "Logits",
+            "Token Selection",
+            "Generated Token",
+            "Context Update ↺",
+        ],
+        f"Mobile GPT stage order: {mobile_flow}",
+    )
+    require(
+        not _boolean(mobile_flow, "desktopVisible"),
+        "Desktop GPT SVG remained visible on mobile",
+    )
+    responsive.append({**gpt, "mobileStages": mobile_flow["stages"]})
+    shots["inline-gpt-mobile"] = capture(
+        browser,
+        screenshots / "learn-gpt-inline-mobile-390x844.png",
+    )
+    return responsive
+
+
+def _verify_learn_matrix(browser: ChromeSession) -> list[JsonObject]:
+    evidence: list[JsonObject] = []
+    expected_sizes = {
+        "decoder.diagram.intro.nlp": "prose",
+        "decoder.diagram.tokenization.token": "wide",
+        "decoder.diagram.tokenization.vocabulary": "wide",
+        "decoder.diagram.tokenization.methods": "wide",
+    }
+    for width, height in ((1440, 900), (1366, 768), (1024, 768), (390, 844)):
+        set_viewport(browser, width, height)
+        for slug, figure_id, _filename in INLINE_FIGURES:
+            _open_chapter(browser, slug)
+            _wait_for_article(browser)
+            _wait_for_figure(browser, figure_id)
+            probe = _assert_inline_figure(
+                browser,
+                figure_id,
+                expected_sizes[figure_id],
+            )
+            evidence.append(
+                {
+                    "width": width,
+                    "height": height,
+                    "figureId": figure_id,
+                    "figureWidth": probe["width"],
+                },
+            )
+        _open_chapter(browser, "3-1")
+        _wait_for_article(browser)
+        _wait_for_figure(browser, "root")
+        probe = _assert_inline_figure(browser, "root", "full")
+        evidence.append(
+            {
+                "width": width,
+                "height": height,
+                "figureId": "root",
+                "figureWidth": probe["width"],
+            },
+        )
+    return evidence
 
 
 def capture_learning_phase(
@@ -230,145 +530,32 @@ def capture_learning_phase(
     shots: dict[str, str],
 ) -> None:
     set_viewport(browser, 1440, 900)
-    navigate_hash(
+    _go_learning_home(browser)
+    shots["courseHomeDesktop"] = capture(
         browser,
-        "#/",
-        "document.querySelector('.course-home') !== null",
-        "Course Home",
-    )
-    settle(browser)
-    home = evaluate_dict(
-        browser,
-        """(() => {
-          const style = getComputedStyle(document.documentElement);
-          const background = getComputedStyle(document.body).backgroundImage;
-          return {
-            canvasCount: document.querySelectorAll('canvas').length,
-            overflowX: document.documentElement.scrollWidth > innerWidth,
-            radialLayers: (background.match(/radial-gradient/g) ?? []).length,
-            palette: {
-              clay: style.getPropertyValue('--mesh-terracotta').trim(),
-              amber: style.getPropertyValue('--mesh-amber').trim(),
-              sage: style.getPropertyValue('--mesh-sage').trim(),
-              slate: style.getPropertyValue('--mesh-sky').trim(),
-            },
-          };
-        })()""",
-    )
-    require(
-        home["canvasCount"] == 0
-        and home["overflowX"] is False
-        and home["radialLayers"] == 4,
-        f"Course Home contract failed: {home}",
-    )
-    evidence["home"] = home
-    shots["courseHome"] = capture(
-        browser, screenshots / "course-home-1440x900.png"
-    )
-    require(
-        not any("ScoreMatrixScene" in url for url in request_urls(browser)),
-        "Three/R3F chunk loaded on Course Home",
+        screenshots / "course-home-1440x900.png",
     )
 
-    article_specs = [
-        ("0-2", "learn-token-0-2-1440x900.png", 1),
-        ("1-1", "learn-language-model-1440x900.png", 1),
-    ]
-    for slug, filename, action_count in article_specs:
-        go_chapter(browser, slug)
-        article = _article_probe(browser)
-        _require_article(article, slug, action_count=action_count)
-        evidence[f"article-{slug}"] = article
-        shots[f"article-{slug}"] = capture(browser, screenshots / filename)
-
-    go_chapter(browser, "3-1")
-    gpt_article = _article_probe(browser)
-    _require_article(gpt_article, "3-1", action_count=2)
-    shots["gptArticle"] = capture(
-        browser, screenshots / "learn-gpt-article-1440x900.png"
+    part_zero = _capture_part_zero(browser, screenshots, shots)
+    gpt = _capture_gpt(browser, screenshots, shots)
+    responsive = _capture_responsive(browser, screenshots, shots)
+    viewport_matrix = _verify_learn_matrix(browser)
+    observed_triggers = max(
+        _integer(probe, "triggerCount")
+        for probe in [*part_zero, gpt, *responsive]
     )
-    evidence["gptViewerFit"] = _open_diagram(browser)
-    shots["gptDiagramFit"] = capture(
-        browser, screenshots / "viewer-gpt-fit-1440x900.png"
-    )
-    evidence["gptViewerZoom"] = _zoom_and_refit(browser)
-    pointer_click(
-        browser,
-        "document.querySelector('#focused-viewer [aria-label=\"확대\"]')",
-        condition=(
-            "document.querySelector('#focused-viewer "
-            "[aria-label=\"현재 확대 비율\"]')?.textContent?.trim()"
-            " !== '100%'"
-        ),
-        label="Diagram screenshot zoom",
-    )
-    shots["gptDiagramZoom"] = capture(
-        browser, screenshots / "viewer-gpt-zoom-1440x900.png"
-    )
-    _close_viewer(browser)
-
-    go_chapter(browser, "5-1")
-    attention_article = _article_probe(browser)
-    _require_article(attention_article, "5-1", action_count=2)
-    shots["attentionArticle"] = capture(
-        browser, screenshots / "learn-self-attention-1440x900.png"
-    )
-    attention_viewer = _open_diagram(browser)
-    require(
-        evaluate_dict(
-            browser,
-            """(() => ({
-              attention: document.querySelector(
-                '#focused-viewer [data-testid="attention-detail"]',
-              ) !== null,
-              dialogCount: document.querySelectorAll(
-                '[role="dialog"]',
-              ).length,
-            }))()""",
-        )
-        == {"attention": True, "dialogCount": 1},
-        "Self-Attention viewer did not mount one live architecture",
-    )
-    evidence["attentionViewer"] = attention_viewer
-    shots["attentionDiagram"] = capture(
-        browser, screenshots / "viewer-self-attention-1440x900.png"
-    )
-    _close_viewer(browser)
-
-    responsive: JsonObject = {}
-    for width, height in ((1366, 768), (1024, 768)):
-        set_viewport(browser, width, height)
-        go_chapter(browser, "1-1")
-        article = _article_probe(browser)
-        _require_article(article, f"1-1@{width}")
-        viewer = _open_diagram(browser)
-        responsive[str(width)] = {"article": article, "viewer": viewer}
-        _close_viewer(browser)
 
     set_viewport(browser, 390, 844)
-    go_chapter(browser, "0-2")
-    mobile_article = _article_probe(browser)
-    _require_article(mobile_article, "0-2@390", action_count=1)
-    shots["mobileArticle"] = capture(
-        browser, screenshots / "mobile-learn-article-390x844.png"
+    _go_learning_home(browser)
+    shots["courseHomeMobile"] = capture(
+        browser,
+        screenshots / "course-home-390x844.png",
     )
-    mobile_viewer = _open_diagram(browser)
-    require(
-        number(mobile_viewer["viewerWidthRatio"], "mobile viewer width") >= 0.95
-        and number(mobile_viewer["viewerHeightRatio"], "mobile viewer height")
-        >= 0.95,
-        f"Mobile viewer is not near full-screen: {mobile_viewer}",
-    )
-    shots["mobileDiagram"] = capture(
-        browser, screenshots / "mobile-diagram-viewer-390x844.png"
-    )
-    _close_viewer(browser)
-    responsive["390"] = {
-        "article": mobile_article,
-        "viewer": mobile_viewer,
+    evidence["learning"] = {
+        "product": "article-inline-figure",
+        "partZero": part_zero,
+        "gpt": gpt,
+        "responsive": responsive,
+        "viewportMatrix": viewport_matrix,
+        "learnOverlayTriggers": observed_triggers,
     }
-    evidence["responsive"] = responsive
-    require(
-        not any("ScoreMatrixScene" in url for url in request_urls(browser)),
-        "Three/R3F chunk loaded before visualization viewer",
-    )

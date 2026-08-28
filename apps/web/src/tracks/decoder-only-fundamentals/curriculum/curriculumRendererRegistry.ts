@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 
 import type { FormulaDefinition } from "../../../math/formulaCatalog";
+import type { LearningFigureRegistry } from "../../learningFigureTypes";
 import type {
   GlossaryEntry,
   LearningGuidePage,
@@ -20,6 +21,7 @@ export type CurriculumRendererRegistry = {
   readonly glossary: readonly GlossaryEntry[];
   readonly formulas: Readonly<Record<string, FormulaDefinition<string>>>;
   readonly runtimeFacts: Readonly<Record<string, RuntimeFactsPresentation>>;
+  readonly figures: LearningFigureRegistry;
 };
 
 export type RenderableCurriculum = LearningCurriculum & {

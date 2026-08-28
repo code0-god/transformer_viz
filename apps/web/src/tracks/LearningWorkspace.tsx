@@ -1,13 +1,4 @@
-import {
-  createContext,
-  type ReactElement,
-  type ReactNode,
-  useContext,
-  useMemo,
-} from "react";
-
-import { useFocusedViewer } from "../overlays/focusedViewerStore";
-import type { FocusedViewerRequest } from "../overlays/focusedViewerTypes";
+import type { ReactElement, ReactNode } from "react";
 import type { LearningFocusStatus } from "./learningFocus";
 import type { LearningRouteId } from "./workspaceTypes";
 import "./learningWorkspace.css";
@@ -23,31 +14,6 @@ export type LearningWorkspacePane = {
   readonly content: ReactNode;
 };
 
-export type LearningWorkspaceViewer = {
-  readonly label: string;
-  readonly actionLabel: string;
-  readonly request: FocusedViewerRequest;
-};
-
-export type LearningWorkspaceViewerKind = "diagram" | "visualization";
-
-type LearningWorkspaceViewerContextValue = {
-  readonly viewers: Readonly<
-    Partial<Record<LearningWorkspaceViewerKind, LearningWorkspaceViewer>>
-  >;
-  readonly open: (
-    kind: LearningWorkspaceViewerKind,
-    articleTargetId: string,
-  ) => void;
-};
-
-const LearningWorkspaceViewerContext =
-  createContext<LearningWorkspaceViewerContextValue | null>(null);
-
-export function useLearningWorkspaceViewers(): LearningWorkspaceViewerContextValue | null {
-  return useContext(LearningWorkspaceViewerContext);
-}
-
 export type LearningRouteHeaderProps = {
   readonly route: LearningWorkspaceRoute;
   readonly controls?: ReactNode;
@@ -56,13 +22,11 @@ export type LearningRouteHeaderProps = {
 
 type LearningWorkspaceBaseProps = {
   readonly route: LearningWorkspaceRoute;
-  readonly diagram: LearningWorkspaceViewer;
   readonly guide: LearningWorkspacePane;
   readonly status: LearningFocusStatus;
   readonly headerControls?: ReactNode;
   readonly onRouteTitleRef?: (element: HTMLHeadingElement | null) => void;
   readonly presentation?: "route" | "chapter";
-  readonly visualization?: LearningWorkspaceViewer;
 };
 
 export type LearningWorkspaceProps = LearningWorkspaceBaseProps;
@@ -98,32 +62,12 @@ function focusStatusMessage(status: LearningFocusStatus): string {
 
 export function LearningWorkspace({
   route,
-  diagram,
   guide,
   status,
   headerControls,
   onRouteTitleRef,
   presentation = "route",
-  visualization,
 }: LearningWorkspaceProps): ReactElement {
-  const { openViewer } = useFocusedViewer();
-  const viewerContext = useMemo<LearningWorkspaceViewerContextValue>(() => {
-    const viewers: Partial<
-      Record<LearningWorkspaceViewerKind, LearningWorkspaceViewer>
-    > = {
-      diagram,
-      ...(visualization === undefined ? {} : { visualization }),
-    };
-    return {
-      viewers,
-      open: (kind, articleTargetId) => {
-        const viewer = viewers[kind];
-        if (viewer === undefined) return;
-        openViewer({ ...viewer.request, articleTargetId });
-      },
-    };
-  }, [diagram, openViewer, visualization]);
-
   return (
     <section
       className="learning-workspace"
@@ -152,9 +96,7 @@ export function LearningWorkspace({
           >
             {guide.label}
           </span>
-          <LearningWorkspaceViewerContext value={viewerContext}>
-            {guide.content}
-          </LearningWorkspaceViewerContext>
+          {guide.content}
         </section>
       </div>
       <p

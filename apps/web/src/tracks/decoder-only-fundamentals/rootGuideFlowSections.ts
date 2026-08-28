@@ -11,6 +11,15 @@ export const decoderRootFlowSections: readonly LearningGuideSection[] = [
         text: "Decoder-only Transformer는 현재 context 전체를 읽고 다음 token 하나의 후보 점수를 만듭니다. 선택된 token을 context 뒤에 붙인 뒤 같은 흐름을 다시 실행하면서 문장을 이어 갑니다.",
       },
       {
+        id: "figure.gpt-root",
+        kind: "figure",
+        figureId: "root",
+        size: "full",
+        caption:
+          "Decoder-only GPT는 현재 context에서 다음 token을 예측하고, 선택된 token을 다시 context에 붙여 생성을 반복합니다.",
+        alt: "현재 context에서 다음 token을 예측하고 다시 context에 붙이는 GPT 전체 흐름",
+      },
+      {
         id: "root-generation-steps",
         kind: "steps",
         items: [
@@ -165,7 +174,6 @@ export const decoderRootFlowSections: readonly LearningGuideSection[] = [
       "decoder.root.generated-token",
       "decoder.root.append-context",
     ],
-    visualActionLabel: "Context 갱신 흐름 보기",
     blocks: [
       {
         id: "root-append-repeat-copy",

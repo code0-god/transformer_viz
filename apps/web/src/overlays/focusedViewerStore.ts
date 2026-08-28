@@ -6,8 +6,6 @@ export type FocusedViewerContextValue = Readonly<{
   request: FocusedViewerRequest | null;
   openViewer: (request: FocusedViewerRequest) => void;
   closeViewer: () => void;
-  setArticleTarget: (articleTargetId: string) => void;
-  returnToArticle: () => void;
 }>;
 
 export const FocusedViewerContext =

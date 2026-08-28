@@ -143,18 +143,13 @@ export function registerAppRouteTests({
       assertChapter0_1();
     });
 
-    test("renders Learn as an article and opens its diagram in one focused viewer", async () => {
+    test("renders Learn as an article with its Figure already inline", () => {
       // Given
       const { worker } = renderRouteApp(
         renderApp,
         "#/learn/decoder-only-fundamentals/0-2",
       );
       readyWorker(worker);
-      const user = userEvent.setup();
-      const trigger = screen.getByTestId("open-diagram-viewer");
-
-      // When
-      await user.click(trigger);
 
       // Then
       expect(
@@ -162,20 +157,11 @@ export function registerAppRouteTests({
       ).not.toBeNull();
       expect(document.getElementById("learning-diagram-pane")).toBeNull();
       expect(screen.queryByRole("tablist", { name: "학습 보기" })).toBeNull();
-      expect(screen.getByRole("dialog")).toBeVisible();
-      expect(screen.getByRole("dialog")).toHaveAttribute(
-        "aria-labelledby",
-        "focused-viewer-title",
-      );
-      expect(document.querySelector(".architecture-app")).toHaveAttribute(
-        "inert",
-      );
-      expect(document.body.style.position).toBe("fixed");
-
-      await user.keyboard("{Escape}");
-
+      expect(
+        screen.getByRole("img", { name: "Token 개념 흐름" }),
+      ).toBeVisible();
+      expect(screen.queryByTestId("open-diagram-viewer")).toBeNull();
       expect(screen.queryByRole("dialog")).toBeNull();
-      expect(trigger).toHaveFocus();
       expect(document.querySelector(".architecture-app")).not.toHaveAttribute(
         "inert",
       );
@@ -209,13 +195,10 @@ export function registerAppRouteTests({
 
     test("traps focus, rejects drag-dismiss, and restores page scroll on close", async () => {
       // Given
-      const { worker } = renderRouteApp(
-        renderApp,
-        "#/learn/decoder-only-fundamentals/0-2",
-      );
+      const { worker } = renderRouteApp(renderApp, "#/lab");
       readyWorker(worker);
       const user = userEvent.setup();
-      const trigger = screen.getByTestId("open-diagram-viewer");
+      const trigger = screen.getByTestId("lab-open-architecture-root");
       const scrollTo = vi
         .spyOn(window, "scrollTo")
         .mockImplementation(() => undefined);

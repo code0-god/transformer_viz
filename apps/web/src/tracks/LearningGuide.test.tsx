@@ -3,16 +3,65 @@ import { resolve } from "node:path";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
+import type { LearningGuidePage } from "./guideTypes";
 import { LearningGuide } from "./LearningGuide";
 import {
+  type FixtureFormulaId,
   formulas,
   glossary,
   page,
   runtimeFacts,
   selectedOperations,
 } from "./LearningGuide.fixture";
+import type { LearningFigureRegistry } from "./learningFigureTypes";
+
+const figures: LearningFigureRegistry = {
+  figureIds: new Set(["fixture.figure"]),
+  render: () => (
+    <svg role="img" aria-label="FIGURE_RENDERER" viewBox="0 0 10 10">
+      <title>FIGURE_RENDERER</title>
+    </svg>
+  ),
+};
 
 describe("LearningGuide", () => {
+  test("renders a content-owned semantic Figure with its size and caption", () => {
+    const figurePage = {
+      ...page,
+      introduction: [
+        ...page.introduction,
+        {
+          id: "fixture-figure",
+          kind: "figure",
+          figureId: "fixture.figure",
+          size: "wide",
+          caption: "FIGURE_CAPTION",
+          alt: "FIGURE_ALT",
+        },
+      ],
+    } satisfies LearningGuidePage<FixtureFormulaId>;
+
+    render(
+      <LearningGuide
+        page={figurePage}
+        glossary={glossary}
+        formulas={formulas}
+        figures={figures}
+      />,
+    );
+
+    const figure = screen.getByRole("figure", { name: "FIGURE_ALT" });
+    expect(figure).toHaveAttribute("data-figure-id", "fixture.figure");
+    expect(figure).toHaveAttribute("data-figure-size", "wide");
+    expect(
+      within(figure).getByRole("img", { name: "FIGURE_RENDERER" }),
+    ).toBeVisible();
+    expect(within(figure).getByText("FIGURE_CAPTION").tagName).toBe(
+      "FIGCAPTION",
+    );
+    expect(screen.queryByRole("button", { name: /Figure/ })).toBeNull();
+  });
+
   test("aligns every outline link on the same block-start edge", () => {
     const css = readFileSync(
       resolve(process.cwd(), "src/tracks/learningGuide.css"),
@@ -186,9 +235,8 @@ describe("LearningGuide", () => {
     expect(screen.getByRole("navigation", { name: "학습 목차" })).toBeVisible();
   });
 
-  test("invokes native section and next-route controls with typed data", async () => {
+  test("registers sections and navigates without viewer controls", async () => {
     const user = userEvent.setup();
-    const onSectionFocus = vi.fn();
     const onSectionRef = vi.fn();
     const onNavigate = vi.fn();
     render(
@@ -196,20 +244,16 @@ describe("LearningGuide", () => {
         page={page}
         glossary={glossary}
         formulas={formulas}
-        onSectionFocus={onSectionFocus}
         onSectionRef={onSectionRef}
         onNavigate={onNavigate}
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "OPEN_SECTION" }));
     await user.click(screen.getByRole("button", { name: "NEXT_STEP_LABEL" }));
 
-    expect(
-      screen.getByRole("button", { name: "OPEN_SECTION" }),
-    ).toHaveAttribute("aria-controls", "focused-viewer");
+    expect(screen.queryByRole("button", { name: "OPEN_SECTION" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "OPEN_OVERVIEW" })).toBeNull();
     expect(screen.queryByRole("button", { name: "SECTION_TWO" })).toBeNull();
-    expect(onSectionFocus).toHaveBeenCalledWith(page.sections[0]);
     expect(onSectionRef).toHaveBeenCalledWith(
       "fixture-section-one",
       expect.any(HTMLElement),

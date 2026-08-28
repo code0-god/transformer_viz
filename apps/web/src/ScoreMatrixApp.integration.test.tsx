@@ -32,7 +32,7 @@ describe("Score Matrix production App integration", () => {
     window.history.replaceState(null, "", "/#/lab");
   });
 
-  test("loads only correlated actual trace values in Learn", async () => {
+  test("loads only correlated actual trace values in Lab", async () => {
     const { worker, user } = await readyLab();
     const prompt = screen.getByRole("textbox", { name: "Prompt" });
     await user.clear(prompt);
@@ -66,18 +66,9 @@ describe("Score Matrix production App integration", () => {
       });
     });
 
-    act(() => {
-      window.location.hash = "#/learn/decoder-only-fundamentals/5-1";
-      window.dispatchEvent(new HashChangeEvent("hashchange"));
-    });
-    expect(
-      await screen.findByRole("heading", {
-        name: "Self-Attention",
-        level: 1,
-      }),
-    ).toBeVisible();
-
-    await user.click(screen.getByTestId("open-diagram-viewer"));
+    await user.click(
+      screen.getByRole("button", { name: "Self-Attention 보기" }),
+    );
     const viewer = screen.getByRole("dialog");
     const headOne = viewer.querySelector('button[data-head-index="1"]');
     if (!(headOne instanceof HTMLButtonElement))

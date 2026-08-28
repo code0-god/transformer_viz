@@ -11,7 +11,7 @@ const CANDIDATES = ["후보 A", "후보 B", "후보 C"] as const;
 
 export function LanguageModelDiagram(): ReactElement {
   return (
-    <figure className="part1-diagram">
+    <div className="part1-diagram">
       <svg
         viewBox="0 0 760 470"
         role="img"
@@ -73,7 +73,7 @@ export function LanguageModelDiagram(): ReactElement {
           </g>
         ))}
       </svg>
-      <figcaption className="part1-diagram__fallback">
+      <div className="part1-diagram__fallback">
         <fieldset aria-label="언어 모델이란? 의미 설명">
           <ol>
             <li>Context: the · cat · sat · on · the</li>
@@ -82,7 +82,7 @@ export function LanguageModelDiagram(): ReactElement {
             <li>Symbolic candidates: 후보 A, 후보 B, 후보 C</li>
           </ol>
         </fieldset>
-      </figcaption>
-    </figure>
+      </div>
+    </div>
   );
 }

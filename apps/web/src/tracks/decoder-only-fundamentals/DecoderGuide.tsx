@@ -2,10 +2,10 @@ import type { ReactElement } from "react";
 
 import type { ArchitectureView } from "../../architecture/state";
 import { LearningGuide } from "../LearningGuide";
+import type { LearningFigureRegistry } from "../learningFigureTypes";
 import type {
   ArchitectureRenderContext,
   LearningGuidePage,
-  LearningGuideSection,
   LearningNodeId,
   LearningTrackProfile,
 } from "../types";
@@ -28,12 +28,12 @@ type DecoderGuideProps = {
   readonly page: LearningGuidePage;
   readonly activeSectionId: string | null;
   readonly selectedNodeId: LearningNodeId | undefined;
-  readonly onSectionFocus: (section: LearningGuideSection) => void;
   readonly onSectionRef: (
     sectionId: string,
     element: HTMLElement | null,
   ) => void;
   readonly navigateTo: (view: ArchitectureView) => void;
+  readonly figures: LearningFigureRegistry;
 };
 
 export function DecoderGuide({
@@ -42,9 +42,9 @@ export function DecoderGuide({
   page,
   activeSectionId,
   selectedNodeId,
-  onSectionFocus,
   onSectionRef,
   navigateTo,
+  figures,
 }: DecoderGuideProps): ReactElement {
   const runtimeFacts = {
     [decoderGuideRuntimeAdapterIds.rootFacts]: resolveDecoderRuntimeFacts(
@@ -78,9 +78,9 @@ export function DecoderGuide({
       formulas={profile.notation.formulas}
       runtimeFacts={runtimeFacts}
       selectedOperations={selectedOperations}
+      figures={figures}
       {...(activeSectionId === null ? {} : { activeSectionId })}
       {...(selectedNodeId === undefined ? {} : { selectedNodeId })}
-      onSectionFocus={onSectionFocus}
       onSectionRef={onSectionRef}
       onNavigate={(nextStep) => {
         switch (nextStep.routeId) {

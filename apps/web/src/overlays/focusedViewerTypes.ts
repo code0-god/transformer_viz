@@ -1,17 +1,10 @@
-import type { ReactNode } from "react";
-
 import type { ArchitectureNodeId } from "../architecture/catalog";
 import type { ArchitectureView } from "../architecture/state";
-import type { LearningTrackId } from "../tracks/types";
 
-export const focusedViewerKinds = [
-  "diagram",
-  "architecture",
-  "visualization",
-] as const;
+export const focusedViewerKinds = ["architecture", "visualization"] as const;
 
 export type FocusedViewerKind = (typeof focusedViewerKinds)[number];
-export type FocusedViewerSource = "learn" | "lab";
+export type FocusedViewerSource = "lab";
 
 type FocusedViewerRequestBase = Readonly<{
   id: string;
@@ -19,18 +12,7 @@ type FocusedViewerRequestBase = Readonly<{
   source: FocusedViewerSource;
   title: string;
   description?: string;
-  articleTargetId?: string;
 }>;
-
-export type DiagramViewerRequest = FocusedViewerRequestBase &
-  Readonly<{
-    kind: "diagram";
-    trackId: LearningTrackId;
-    diagramId: string;
-    resetKey: string;
-    conceptId?: string;
-    renderDiagram?: () => ReactNode | null;
-  }>;
 
 export type ArchitectureViewerRequest = FocusedViewerRequestBase &
   Readonly<{
@@ -52,6 +34,5 @@ export type VisualizationViewerRequest = FocusedViewerRequestBase &
   }>;
 
 export type FocusedViewerRequest =
-  | DiagramViewerRequest
   | ArchitectureViewerRequest
   | VisualizationViewerRequest;

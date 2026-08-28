@@ -55,6 +55,26 @@ def _open_score_viewer(browser: ChromeSession) -> None:
         "[data-viewer-backdrop]",
         "Score Matrix viewer animation",
     )
+    viewer = evaluate_dict(
+        browser,
+        """(() => {
+          const dialogs = document.querySelectorAll(
+            '#focused-viewer[role="dialog"]',
+          );
+          const dialog = dialogs[0];
+          return {
+            count: dialogs.length,
+            source: dialog?.getAttribute('data-viewer-source') ?? '',
+            kind: dialog?.getAttribute('data-viewer-kind') ?? '',
+            modal: dialog?.getAttribute('aria-modal') ?? '',
+          };
+        })()""",
+    )
+    require(
+        viewer
+        == {"count": 1, "source": "lab", "kind": "visualization", "modal": "true"},
+        f"Score Matrix viewer boundary: {viewer}",
+    )
 
 
 def _assert_lab_base(browser: ChromeSession) -> JsonObject:
@@ -351,6 +371,114 @@ def capture_visualization_phase(
             matrix["inspectRequests"],
         ),
     }
+    evidence["labResponsive"] = _verify_lab_responsive(browser)
+
+
+def _verify_lab_responsive(browser: ChromeSession) -> list[JsonObject]:
+    evidence: list[JsonObject] = []
+    for width, height in ((1440, 900), (1366, 768), (1024, 768), (390, 844)):
+        set_viewport(browser, width, height)
+        base = _assert_lab_base(browser)
+        require(base["overflowX"] is False, f"Lab base overflow: {base}")
+        pointer_click(
+            browser,
+            "document.querySelector('[data-testid=\"lab-open-architecture-root\"]')",
+            condition=(
+                "document.querySelector('#focused-viewer"
+                "[data-viewer-kind=\"architecture\"]') !== null"
+            ),
+            label=f"Lab architecture {width}",
+        )
+        settle_animations(
+            browser,
+            "[data-viewer-backdrop]",
+            f"Lab architecture animation {width}",
+        )
+        probe = evaluate_dict(
+            browser,
+            """(() => {
+              const viewer = document.querySelector('#focused-viewer');
+              const close = viewer?.querySelector(
+                '[aria-label="집중 보기 닫기"]',
+              );
+              const v = viewer?.getBoundingClientRect();
+              const c = close?.getBoundingClientRect();
+              const root = viewer?.querySelector('[data-testid="architecture-root"]');
+              const r = root?.getBoundingClientRect();
+              const body = viewer?.querySelector('.focused-viewer__body');
+              return {
+                count: document.querySelectorAll(
+                  '#focused-viewer[role="dialog"]',
+                ).length,
+                source: viewer?.getAttribute('data-viewer-source') ?? '',
+                kind: viewer?.getAttribute('data-viewer-kind') ?? '',
+                modal: viewer?.getAttribute('aria-modal') ?? '',
+                overflow:
+                  document.documentElement.scrollWidth
+                  - document.documentElement.clientWidth,
+                localOverflow: body
+                  ? Math.max(0, body.scrollWidth - body.clientWidth)
+                  : -1,
+                fits:
+                  !!v && v.left >= 0 && v.top >= 0
+                  && v.right <= innerWidth + 1 && v.bottom <= innerHeight + 1,
+                contentVisible: !!r && r.width > 1 && r.height > 1,
+                backgroundInert:
+                  document.querySelector('.architecture-app')?.hasAttribute(
+                    'inert',
+                  ) ?? false,
+                scrollLocked: document.body.style.position === 'fixed',
+                closeFocused: document.activeElement === close,
+                closeWidth: c?.width ?? 0,
+                closeHeight: c?.height ?? 0,
+              };
+            })()""",
+        )
+        require(probe["count"] == 1, f"Wrong dialog count: {probe}")
+        require(probe["source"] == "lab", f"Wrong overlay source: {probe}")
+        require(probe["kind"] == "architecture", f"Wrong overlay kind: {probe}")
+        require(probe["modal"] == "true", f"Lab dialog is not modal: {probe}")
+        require(probe["overflow"] == 0, f"Lab overflow at {width}: {probe}")
+        require(
+            probe["localOverflow"] == 0,
+            f"Lab viewer local overflow at {width}: {probe}",
+        )
+        require(probe["fits"] is True, f"Lab overlay exceeds viewport: {probe}")
+        require(probe["contentVisible"] is True, f"Lab viewer blank: {probe}")
+        require(probe["backgroundInert"] is True, f"Lab background active: {probe}")
+        require(probe["scrollLocked"] is True, f"Lab scroll unlocked: {probe}")
+        require(probe["closeFocused"] is True, f"Lab close not focused: {probe}")
+        require(
+            number(probe["closeWidth"], "close width") >= 44
+            and number(probe["closeHeight"], "close height") >= 44,
+            f"Lab close target too small: {probe}",
+        )
+        evidence.append({"width": width, "height": height, **probe})
+        _close_viewer(browser)
+        focus = evaluate_dict(
+            browser,
+            """(() => ({
+              dialogCount: document.querySelectorAll('[role="dialog"]').length,
+              triggerFocused:
+                document.activeElement?.getAttribute('data-testid')
+                === 'lab-open-architecture-root',
+              backgroundInert:
+                document.querySelector('.architecture-app')?.hasAttribute(
+                  'inert',
+                ) ?? false,
+            }))()""",
+        )
+        require(
+            focus
+            == {
+                "dialogCount": 0,
+                "triggerFocused": True,
+                "backgroundInert": False,
+            },
+            f"Lab close restoration failed: {focus}",
+        )
+    set_viewport(browser, 1440, 900)
+    return evidence
 
 
 def _require_matrix_contract(matrix: JsonObject) -> None:

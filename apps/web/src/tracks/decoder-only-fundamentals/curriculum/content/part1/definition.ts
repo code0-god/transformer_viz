@@ -16,6 +16,15 @@ export const definitionChapterContent = {
         kind: "paragraph",
         text: "언어 모델을 문장 완성 장치로만 보면 내부의 한 단계를 놓치기 쉽습니다. 이 Chapter에서는 현재 context를 받아 다음 token 후보를 점수화하는 계산으로 범위를 좁힙니다.",
       },
+      {
+        id: "figure.language-model-definition",
+        kind: "figure",
+        figureId: "decoder.diagram.language-model.definition",
+        size: "wide",
+        caption:
+          "언어 모델은 context의 각 위치에 다음 token 후보 점수를 만들고, 마지막 위치의 점수를 생성에 사용합니다.",
+        alt: "Context의 위치별 logit과 마지막 위치의 다음 token 후보",
+      },
     ],
     sections: [
       {

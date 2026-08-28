@@ -1,13 +1,11 @@
 import type { ReactElement } from "react";
 import type { FormulaDefinition } from "../math/formulaCatalog";
 import { GuideBlockView } from "./GuideBlocks";
-import { useLearningWorkspaceViewers } from "./LearningWorkspace";
+import type { LearningFigureRegistry } from "./learningFigureTypes";
 import type {
   GlossaryEntry,
   LearningGuideNextStep,
   LearningGuidePage,
-  LearningGuideSection,
-  LearningGuideVisualAction,
   LearningNodeId,
   RuntimeFactsPresentation,
   SelectedOperationPresentation,
@@ -25,7 +23,6 @@ interface LearningGuideProps<Id extends string> {
   readonly activeSectionId?: string;
   readonly selectedNodeId?: LearningNodeId;
   readonly className?: string;
-  readonly onSectionFocus?: (section: LearningGuideSection<Id>) => void;
   readonly onSectionRef?: (
     sectionId: string,
     element: HTMLElement | null,
@@ -33,6 +30,7 @@ interface LearningGuideProps<Id extends string> {
   readonly onNavigate?: (nextStep: LearningGuideNextStep) => void;
   readonly presentation?: "route" | "chapter";
   readonly labelledBy?: string;
+  readonly figures?: LearningFigureRegistry;
 }
 
 const EMPTY_RUNTIME_FACTS: Readonly<Record<string, RuntimeFactsPresentation>> =
@@ -54,13 +52,12 @@ export function LearningGuide<Id extends string>({
   activeSectionId,
   selectedNodeId,
   className,
-  onSectionFocus,
   onSectionRef,
   onNavigate,
   presentation = "route",
   labelledBy,
+  figures,
 }: LearningGuideProps<Id>): ReactElement {
-  const viewerContext = useLearningWorkspaceViewers();
   const candidateOutlineSections = (page.outlineSectionIds ?? []).flatMap(
     (sectionId) => {
       const section = page.sections.find(({ id }) => id === sectionId);
@@ -73,32 +70,6 @@ export function LearningGuide<Id extends string>({
     (outlineMode === "auto" && candidateOutlineSections.length > 5)
       ? candidateOutlineSections
       : [];
-  const fallbackVisualActions: readonly LearningGuideVisualAction[] =
-    viewerContext === null
-      ? []
-      : [
-          ...(viewerContext.viewers.diagram === undefined
-            ? []
-            : [
-                {
-                  id: "default-diagram",
-                  kind: "diagram" as const,
-                  label: viewerContext.viewers.diagram.actionLabel,
-                },
-              ]),
-          ...(viewerContext.viewers.visualization === undefined
-            ? []
-            : [
-                {
-                  id: "default-visualization",
-                  kind: "visualization" as const,
-                  label: viewerContext.viewers.visualization.actionLabel,
-                },
-              ]),
-        ];
-  const visualActions = (page.visualActions ?? fallbackVisualActions).filter(
-    ({ kind }) => viewerContext?.viewers[kind] !== undefined,
-  );
   const glossaryEntries = page.glossary.flatMap((termId) => {
     const entry = glossary.find(({ id }) => id === termId);
     return entry === undefined ? [] : [entry];
@@ -141,30 +112,10 @@ export function LearningGuide<Id extends string>({
               runtimeFacts={runtimeFacts}
               selectedOperations={selectedOperations}
               showSelectedOperation={false}
+              figures={figures}
             />
           ))}
         </section>
-      )}
-
-      {visualActions.length === 0 || viewerContext === null ? null : (
-        <div
-          id={`${page.id}-visual-actions`}
-          className="learning-guide-visual-actions"
-        >
-          {visualActions.map((action) => (
-            <button
-              key={action.id}
-              type="button"
-              data-testid={`open-${action.kind}-viewer`}
-              aria-controls="focused-viewer"
-              onClick={() =>
-                viewerContext.open(action.kind, `${page.id}-visual-actions`)
-              }
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
       )}
 
       {outlineSections.length === 0 ? null : (
@@ -239,28 +190,9 @@ export function LearningGuide<Id extends string>({
                   runtimeFacts={runtimeFacts}
                   selectedOperations={selectedOperations}
                   showSelectedOperation={containsSelectedNode}
+                  figures={figures}
                 />
               ))}
-              {section.visualActionLabel === undefined ||
-              section.primaryNodeId === undefined ||
-              onSectionFocus === undefined ? null : (
-                <div className="learning-guide-section-actions">
-                  <button
-                    type="button"
-                    className="learning-guide-section-control"
-                    data-testid={
-                      visualActions.length === 0
-                        ? "open-diagram-viewer"
-                        : "open-section-diagram-viewer"
-                    }
-                    aria-label={section.visualActionLabel}
-                    aria-controls="focused-viewer"
-                    onClick={() => onSectionFocus(section)}
-                  >
-                    {section.visualActionLabel}
-                  </button>
-                </div>
-              )}
             </section>
           );
         })}
@@ -283,6 +215,7 @@ export function LearningGuide<Id extends string>({
               runtimeFacts={runtimeFacts}
               selectedOperations={selectedOperations}
               showSelectedOperation={false}
+              figures={figures}
             />
           ))}
         </section>

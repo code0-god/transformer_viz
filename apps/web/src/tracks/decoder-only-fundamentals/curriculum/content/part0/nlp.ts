@@ -11,18 +11,20 @@ export const nlpChapterContent = {
     learningGoal:
       "사람이 사용하는 언어가 모델의 숫자 계산으로 바뀌는 전체 흐름을 먼저 살펴봅니다.",
     outline: "hidden",
-    visualActions: [
-      {
-        id: "decoder.diagram.intro.nlp",
-        kind: "diagram",
-        label: "자연어 처리 흐름 보기",
-      },
-    ],
     introduction: [
       {
         id: "intro",
         kind: "paragraph",
         text: "컴퓨터에게 문장을 읽고 판단하거나 새로운 글을 만들어 달라고 하려면 무엇부터 해야 할까요? 이 질문에서 자연어 처리 공부를 시작하겠습니다.",
+      },
+      {
+        id: "figure.nlp-process",
+        kind: "figure",
+        figureId: "decoder.diagram.intro.nlp",
+        size: "prose",
+        caption:
+          "자연어 처리는 텍스트를 숫자로 표현해 계산하고, 그 결과를 사람이 사용하는 형태로 바꿉니다.",
+        alt: "자연어 처리의 입력, 숫자 표현, 모델 계산, 결과 흐름",
       },
     ],
     sections: [

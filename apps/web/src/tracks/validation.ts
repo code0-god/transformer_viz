@@ -167,6 +167,7 @@ export function validateLearningProfile<Id extends string>(
     glossaryIds,
     runtimeAdapterIds: new Set(profile.guide.runtimeAdapterIds ?? []),
     operationAdapterIds: new Set(profile.guide.operationAdapterIds ?? []),
+    figureIds: new Set(profile.guide.figureIds ?? []),
   };
 
   const pageIds = new Set<string>();

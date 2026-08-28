@@ -78,6 +78,44 @@ function focusedViewer(): HTMLElement {
 // allow: SIZE_OK — fixed Parts 3–5 route and focus integration matrix
 
 describe("Parts 3 through 5 incumbent route integration", () => {
+  test("renders GPT Root inline and links detail to the Block Chapter", async () => {
+    readyCurriculum();
+    const user = userEvent.setup();
+    await selectChapter("GPT");
+
+    const figure = document.querySelector("[data-figure-id='root']");
+    expect(figure).not.toBeNull();
+    if (!(figure instanceof HTMLElement))
+      throw new Error("GPT inline Figure is missing");
+    expect(
+      within(figure).getByRole("img", {
+        name: /GPT text generation architecture/,
+      }),
+    ).toBeVisible();
+    expect(
+      within(figure).getByText(
+        "Decoder-only GPT는 현재 context에서 다음 token을 예측하고, 선택된 token을 다시 context에 붙여 생성을 반복합니다.",
+      ).tagName,
+    ).toBe("FIGCAPTION");
+    expect(within(figure).queryByRole("button")).toBeNull();
+    expect(screen.queryByTestId("open-diagram-viewer")).toBeNull();
+    const detail = within(figure).getByRole("link", {
+      name: "Transformer Block 설명으로 이동",
+    });
+    expect(detail).toHaveAttribute(
+      "href",
+      "#/learn/decoder-only-fundamentals/4-1",
+    );
+
+    await user.click(detail);
+
+    expect(
+      document.querySelector(
+        "[data-curriculum-chapter-id='decoder.chapter.4.1']",
+      ),
+    ).not.toBeNull();
+  });
+
   test.each(ARCHITECTURE_CHAPTERS)(
     "reuses the incumbent $title route and Guide identity",
     async ({ title, routeId, pageId, sectionId, part, progress }) => {
@@ -215,59 +253,27 @@ describe("Parts 3 through 5 incumbent route integration", () => {
     ).toHaveFocus();
   });
 
-  test("moves between generated-token viewer focus and its article section", async () => {
-    // Given: the GPT article opens its on-demand Root viewer.
-    const worker = readyCurriculum();
-    const user = userEvent.setup();
-    const postsBefore = worker.posted.length;
+  test("keeps generated-token explanation in the article flow", async () => {
+    // Given: the GPT article is active.
+    readyCurriculum();
     await selectChapter("GPT");
-    await user.click(screen.getByTestId("open-diagram-viewer"));
-    const viewer = focusedViewer();
-    const generatedToken = within(viewer).getByRole("button", {
-      name: /생성된 token.*선택 가능/,
-    });
 
-    // When: viewer selection chooses the matching article destination.
-    await user.click(generatedToken);
-    await user.click(
-      within(viewer).getByRole("button", { name: "설명에서 보기" }),
-    );
-    const guideSection = screen.getByRole("region", {
-      name: "붙이고 다시 계산하기",
-    });
+    // Then: map and explanation coexist without modal state.
+    expect(screen.getByTestId("architecture-root")).toBeVisible();
     expect(
-      within(guideSection).getByRole("heading", {
-        name: "붙이고 다시 계산하기",
-      }),
-    ).toHaveFocus();
-
-    // When: the article asks for that stage again.
-    await user.click(
-      within(guideSection).getByRole("button", {
-        name: "Context 갱신 흐름 보기",
-      }),
-    );
-
-    // Then: one viewer reopens with the exact node highlighted and no Worker post.
-    const reopenedViewer = focusedViewer();
-    expect(
-      within(reopenedViewer).getByRole("button", {
-        name: /생성된 token.*선택 가능/,
-      }),
-    ).toHaveAttribute("data-learning-highlighted", "true");
-    expect(worker.posted).toHaveLength(postsBefore);
+      screen.getByRole("region", { name: "붙이고 다시 계산하기" }),
+    ).toBeVisible();
+    expect(screen.queryByTestId("open-diagram-viewer")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  test("does not consume a pending focus for the wrong route registration", async () => {
-    // Given: a subscribed handoff and a bounded completion signal.
+  test("does not consume a pending focus for the wrong route registration", () => {
+    // Given: a subscribed handoff and an observable focus signal.
     const events: string[] = [];
-    let resolveFocus = (): void => undefined;
-    const completion = new Promise<void>((resolve) => {
-      resolveFocus = resolve;
-    });
+    let focused = false;
     const handoff = createCurriculumFocusHandoff((event) => {
       events.push(event);
-      if (event === "focus") resolveFocus();
+      if (event === "focus") focused = true;
     });
     const destination = {
       routeId: "decoder.block",
@@ -282,20 +288,8 @@ describe("Parts 3 through 5 incumbent route integration", () => {
       routeId: "decoder.root",
       element: document.createElement("section"),
     });
-    const bounded = Promise.race([
-      completion,
-      new Promise<void>((_resolve, reject) => {
-        window.setTimeout(
-          () => reject(new Error("curriculum-focus-timeout: decoder.block")),
-          25,
-        );
-      }),
-    ]);
-
     // Then: the mismatch cannot consume the original pending destination.
-    await expect(bounded).rejects.toThrow(
-      "curriculum-focus-timeout: decoder.block",
-    );
+    expect(focused).toBe(false);
     expect(handoff.pending()).toEqual(destination);
     expect(events).toEqual(["subscribe", "transition"]);
   });
@@ -326,12 +320,14 @@ describe("Parts 3 through 5 incumbent route integration", () => {
     expect(handoff.pending()).toEqual(back);
   });
 
-  test("preserves architecture-owned layer and head state across curriculum transitions", async () => {
-    // Given: incumbent Attention state has non-default layer and head selections.
+  test("preserves Lab Attention state across overlay close and reopen", async () => {
+    // Given: Lab Attention has non-default layer and head selections.
     readyCurriculum();
     const user = userEvent.setup();
-    await selectChapter("Self-Attention");
-    await user.click(screen.getByTestId("open-diagram-viewer"));
+    await user.click(screen.getByRole("link", { name: "모델 실험실" }));
+    await user.click(
+      screen.getByRole("button", { name: "Self-Attention 보기" }),
+    );
     const viewer = focusedViewer();
     await user.click(within(viewer).getByRole("button", { name: "Layer 3" }));
     await user.click(within(viewer).getByRole("button", { name: "Head 4" }));
@@ -349,16 +345,12 @@ describe("Parts 3 through 5 incumbent route integration", () => {
       "aria-hidden",
     );
 
-    // When: curriculum navigation leaves Attention and later returns.
+    // When: the same Lab inspector is reopened.
     await user.click(
-      screen.getByRole("link", { name: "이전: Transformer Block" }),
+      screen.getByRole("button", { name: "Self-Attention 보기" }),
     );
-    await user.click(
-      screen.getByRole("link", { name: "다음: Self-Attention" }),
-    );
-    await user.click(screen.getByTestId("open-diagram-viewer"));
 
-    // Then: route transition changes only view; architecture selections remain owned upstream.
+    // Then: architecture selections remain owned upstream.
     expect(screen.getByTestId("attention-detail")).toHaveAttribute(
       "data-selected-layer",
       "2",

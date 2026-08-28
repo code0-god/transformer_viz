@@ -32,7 +32,6 @@ export type {
   LearningGuideNextStep,
   LearningGuidePage,
   LearningGuideSection,
-  LearningGuideVisualAction,
 } from "./guideTypes";
 export type {
   ArchitectureRouteCatalog,
@@ -114,7 +113,6 @@ export interface ArchitectureRenderContext {
 
 export type FocusedArchitectureOptions = Readonly<{
   highlightedNodeIds: readonly ArchitectureNodeId[];
-  onArticleTargetChange?: (articleTargetId: string) => void;
 }>;
 
 export type FocusedArchitecturePresentation = Readonly<{
@@ -134,7 +132,6 @@ export interface LearningTrackAdapter {
     context: ArchitectureRenderContext,
     options: FocusedArchitectureOptions,
   ): FocusedArchitecturePresentation;
-  renderFocusedDiagram(diagramId: string): ReactNode | null;
 }
 
 export interface LearningTrackRegistration {

@@ -1,4 +1,8 @@
-import type { GuideBlock, GuideInline } from "../../guideTypes";
+import {
+  type GuideBlock,
+  type GuideInline,
+  learningFigureSizes,
+} from "../../guideTypes";
 import { conceptRegistryIssues } from "./diagramRegistry";
 import { referenceRoleIssues } from "./references";
 import type {
@@ -63,13 +67,13 @@ function inlineIssues(
 
 function blockIssues(
   blocks: readonly GuideBlock<string>[],
-  sectionPath: string,
+  blocksPath: string,
   registries: CurriculumRegistries,
 ): readonly CurriculumIssue[] {
   const issues: CurriculumIssue[] = [];
   let explained = false;
   blocks.forEach((block, index) => {
-    const path = `${sectionPath}.blocks[${index}]`;
+    const path = `${blocksPath}[${index}]`;
     switch (block.kind) {
       case "formula":
         if (!registries.formulaIds.has(block.formulaId)) {
@@ -109,6 +113,32 @@ function blockIssues(
         });
         explained = true;
         break;
+      case "figure":
+        if (!registries.figureIds.has(block.figureId)) {
+          issues.push({
+            code: "unknown-figure",
+            path: `${path}.figureId`,
+            relatedId: block.figureId,
+          });
+        }
+        if (block.caption.trim() === "") {
+          issues.push({
+            code: "missing-figure-caption",
+            path: `${path}.caption`,
+          });
+        }
+        if (
+          block.size !== undefined &&
+          !learningFigureSizes.includes(block.size)
+        ) {
+          issues.push({
+            code: "invalid-figure-size",
+            path: `${path}.size`,
+            relatedId: block.size,
+          });
+        }
+        explained = true;
+        break;
       case "bullets":
       case "callout":
       case "comparison":
@@ -128,6 +158,37 @@ function blockIssues(
   return issues;
 }
 
+type FigureReference = Readonly<{
+  figureId: string;
+  path: string;
+}>;
+
+function figureReferences(
+  page: CurriculumCandidate["guidePages"][number],
+  pagePath: string,
+): readonly FigureReference[] {
+  const references: FigureReference[] = [];
+  const collect = (
+    blocks: readonly GuideBlock<string>[],
+    path: string,
+  ): void => {
+    blocks.forEach((block, index) => {
+      if (block.kind === "figure") {
+        references.push({
+          figureId: block.figureId,
+          path: `${path}[${index}]`,
+        });
+      }
+    });
+  };
+  collect(page.introduction, `${pagePath}.introduction`);
+  page.sections.forEach((section, index) => {
+    collect(section.blocks, `${pagePath}.sections[${index}].blocks`);
+  });
+  collect(page.keyTakeaway, `${pagePath}.keyTakeaway`);
+  return references;
+}
+
 export function validateCurriculum(
   curriculum: CurriculumCandidate,
   registries: CurriculumRegistries,
@@ -136,7 +197,13 @@ export function validateCurriculum(
   const partIds = new Set<string>();
   const chapterIds = new Set<string>();
   const conceptIds = new Set<string>();
-  const pages = new Map<string, CurriculumCandidate["guidePages"][number]>();
+  const pages = new Map<
+    string,
+    Readonly<{
+      page: CurriculumCandidate["guidePages"][number];
+      path: string;
+    }>
+  >();
 
   curriculum.guidePages.forEach((page, index) => {
     const path = `guidePages[${index}]`;
@@ -148,16 +215,22 @@ export function validateCurriculum(
         path: `${path}.id`,
         relatedId: page.id,
       });
-    pages.set(page.id, page);
+    pages.set(page.id, { page, path });
+    issues.push(
+      ...blockIssues(page.introduction, `${path}.introduction`, registries),
+    );
     page.sections.forEach((section, sectionIndex) => {
       issues.push(
         ...blockIssues(
           section.blocks,
-          `${path}.sections[${sectionIndex}]`,
+          `${path}.sections[${sectionIndex}].blocks`,
           registries,
         ),
       );
     });
+    issues.push(
+      ...blockIssues(page.keyTakeaway, `${path}.keyTakeaway`, registries),
+    );
   });
 
   curriculum.parts.forEach((part, partIndex) => {
@@ -222,14 +295,15 @@ export function validateCurriculum(
         conceptIds.add(concept.id);
         issues.push(...conceptRegistryIssues(concept, path, registries));
         if (concept.guidePageId !== undefined) {
-          const page = pages.get(concept.guidePageId);
-          if (page === undefined)
+          const pageRecord = pages.get(concept.guidePageId);
+          if (pageRecord === undefined)
             issues.push({
               code: "unknown-guide-page",
               path: `${path}.guidePageId`,
               relatedId: concept.guidePageId,
             });
-          else
+          else {
+            const { page, path: pagePath } = pageRecord;
             concept.guideSectionIds.forEach((id, index) => {
               if (!page.sections.some((section) => section.id === id))
                 issues.push({
@@ -238,6 +312,17 @@ export function validateCurriculum(
                   relatedId: id,
                 });
             });
+            figureReferences(page, pagePath).forEach((reference) => {
+              const owner = registries.figureOwners.get(reference.figureId);
+              if (owner !== undefined && owner !== chapter.id) {
+                issues.push({
+                  code: "figure-chapter-mismatch",
+                  path: `${reference.path}.figureId`,
+                  relatedId: reference.figureId,
+                });
+              }
+            });
+          }
         }
       });
     });

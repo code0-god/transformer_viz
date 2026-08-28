@@ -1,7 +1,4 @@
-import {
-  type ArchitectureNodeId,
-  architectureNodeCatalog,
-} from "../../architecture/catalog";
+import type { ArchitectureNodeId } from "../../architecture/catalog";
 import type { ArchitectureView } from "../../architecture/state";
 import type {
   ArchitectureRenderContext,
@@ -10,10 +7,6 @@ import type {
 } from "../types";
 import { DecoderDiagram } from "./DecoderDiagram";
 import { DecoderRouteControls } from "./DecoderRouteControls";
-import { guideSectionForNode } from "./decoderWorkspaceSections";
-import { decoderGuidePage } from "./guide";
-import { decoderLearningNodeByArchitecture } from "./nodes";
-import { decoderRoute, decoderRouteId } from "./routes";
 
 export function createDecoderArchitecturePresentation({
   context,
@@ -22,9 +15,6 @@ export function createDecoderArchitecturePresentation({
   context: ArchitectureRenderContext;
   options: FocusedArchitectureOptions;
 }>): FocusedArchitecturePresentation {
-  const routeId = decoderRouteId(decoderRoute(context.state));
-  const page = decoderGuidePage(routeId);
-
   const navigateTo = (view: ArchitectureView): void => {
     if (view === "self-attention") {
       context.navigate({
@@ -49,12 +39,6 @@ export function createDecoderArchitecturePresentation({
       layerCount: context.model.config.n_layer,
       headCount: context.model.config.n_head,
     });
-    if (architectureNodeCatalog[nodeId].capability === "drill-down") return;
-    const learningNodeId = decoderLearningNodeByArchitecture[nodeId];
-    if (learningNodeId === undefined) return;
-    const section = guideSectionForNode(page, learningNodeId);
-    if (section === undefined) return;
-    options.onArticleTargetChange?.(`${page.id}-${section.id}-title`);
   };
 
   const selectLayer = (layer: number): void => {

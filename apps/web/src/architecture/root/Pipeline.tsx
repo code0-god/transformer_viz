@@ -1,7 +1,6 @@
 import type { ArchitectureNodeId } from "../catalog";
 import {
   BLOCK,
-  BLOCK_MODULES,
   CENTER_X,
   type DiagramLayout,
   EMBEDDING_ADD,
@@ -9,7 +8,6 @@ import {
   EMBEDDINGS,
   HIDDEN,
   INPUT,
-  RESIDUAL_JUNCTIONS,
 } from "./layout";
 import { OutputPath } from "./OutputPath";
 import { StageNode } from "./StageNode";
@@ -20,16 +18,18 @@ interface PipelineProps {
   readonly layout: DiagramLayout;
   readonly selectedNodeId: ArchitectureNodeId | null;
   readonly highlightedNodeIds: readonly ArchitectureNodeId[];
+  readonly interactive: boolean;
   readonly onActivate: (id: ArchitectureNodeId) => void;
 }
 
 function InputPath({
   selectedNodeId,
   highlightedNodeIds,
+  interactive,
   onActivate,
 }: Pick<
   PipelineProps,
-  "selectedNodeId" | "highlightedNodeIds" | "onActivate"
+  "selectedNodeId" | "highlightedNodeIds" | "interactive" | "onActivate"
 >) {
   const [token, position] = EMBEDDINGS;
   return (
@@ -40,6 +40,7 @@ function InputPath({
         bounds={INPUT}
         selected={selectedNodeId === "input-context"}
         highlighted={highlightedNodeIds.includes("input-context")}
+        interactive={interactive}
         onActivate={onActivate}
       />
       <StageNode
@@ -48,6 +49,7 @@ function InputPath({
         bounds={token}
         selected={selectedNodeId === "token-embedding"}
         highlighted={highlightedNodeIds.includes("token-embedding")}
+        interactive={interactive}
         onActivate={onActivate}
       />
       <StageNode
@@ -56,6 +58,7 @@ function InputPath({
         bounds={position}
         selected={selectedNodeId === "position-embedding"}
         highlighted={highlightedNodeIds.includes("position-embedding")}
+        interactive={interactive}
         onActivate={onActivate}
       />
       <path
@@ -83,6 +86,7 @@ function InputPath({
         bounds={HIDDEN}
         selected={false}
         highlighted={highlightedNodeIds.includes("hidden-state")}
+        interactive={interactive}
         onActivate={onActivate}
       />
       <path
@@ -119,6 +123,7 @@ function BlockPath({
   layerCount,
   selectedNodeId,
   highlightedNodeIds,
+  interactive,
   onActivate,
 }: PipelineProps) {
   return (
@@ -127,38 +132,17 @@ function BlockPath({
         layerCount={layerCount}
         selected={selectedNodeId === "transformer-block"}
         highlighted={highlightedNodeIds.includes("transformer-block")}
+        interactive={interactive}
         onActivate={onActivate}
       />
       <line
         className="architecture-flow"
-        data-connector="hidden-to-ln1"
+        data-connector="hidden-to-block"
         x1={CENTER_X}
         y1={HIDDEN.y + HIDDEN.height}
         x2={CENTER_X}
-        y2={BLOCK_MODULES[0].y}
+        y2={BLOCK.y}
       />
-      {RESIDUAL_JUNCTIONS.map((junction) => (
-        <circle
-          key={junction.y}
-          className="architecture-residual-junction"
-          cx={junction.x}
-          cy={junction.y}
-          r={5}
-        />
-      ))}
-      <line
-        className="architecture-forward-guide"
-        x1={790}
-        y1={BLOCK.y}
-        x2={790}
-        y2={BLOCK.y + BLOCK.height}
-      />
-      <text className="architecture-forward-label" x={812} y={570}>
-        FULL FORWARD
-      </text>
-      <text className="architecture-forward-subtitle" x={812} y={588}>
-        top-to-bottom pass
-      </text>
     </>
   );
 }
@@ -169,6 +153,7 @@ export function Pipeline(props: PipelineProps) {
       <InputPath
         selectedNodeId={props.selectedNodeId}
         highlightedNodeIds={props.highlightedNodeIds}
+        interactive={props.interactive}
         onActivate={props.onActivate}
       />
       <BlockPath {...props} />

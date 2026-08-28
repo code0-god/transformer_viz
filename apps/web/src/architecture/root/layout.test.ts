@@ -1,52 +1,35 @@
 import {
   BLOCK,
-  BLOCK_MODULES,
   CENTER_X,
   diagramLayout,
   EMBEDDINGS,
   INPUT,
   OUTPUT_STAGES,
-  RESIDUAL_ADDS,
-  RESIDUAL_JUNCTIONS,
 } from "./layout";
 
 describe("Root architecture geometry", () => {
-  test("preserves the approved fixed root layout", () => {
-    expect(INPUT).toEqual({ x: 320, y: 40, width: 360, height: 56 });
+  test("keeps one compact vertical root composition", () => {
+    expect(INPUT).toEqual({ x: 340, y: 36, width: 320, height: 60 });
     expect(EMBEDDINGS).toEqual([
-      { x: 220, y: 177, width: 220, height: 54 },
-      { x: 560, y: 177, width: 220, height: 54 },
+      { x: 220, y: 142, width: 240, height: 58 },
+      { x: 540, y: 142, width: 240, height: 58 },
     ]);
-    expect(BLOCK).toEqual({ x: 260, y: 344, width: 480, height: 480 });
-    expect(BLOCK_MODULES.map(({ y, height }) => [y, height])).toEqual([
-      [392, 42],
-      [458, 60],
-      [614, 42],
-      [680, 54],
-    ]);
-    expect(RESIDUAL_ADDS).toEqual([
-      { x: 500, y: 560, radius: 18 },
-      { x: 500, y: 776, radius: 18 },
-    ]);
-    expect(RESIDUAL_JUNCTIONS).toEqual([
-      { x: 500, y: 368 },
-      { x: 500, y: 590 },
-    ]);
+    expect(BLOCK).toEqual({ x: 250, y: 300, width: 500, height: 190 });
   });
 
-  test("keeps one configured block and exact output rhythm", () => {
+  test("keeps one grouped block and compact output rhythm", () => {
     const two = diagramLayout(2);
     const twelve = diagramLayout(12);
 
     expect(two).toEqual(twelve);
     expect(two).toEqual({
-      finalLayerNormY: 924,
-      lmHeadY: 1060,
-      logitsY: 1196,
-      selectionY: 1326,
-      generatedY: 1465,
-      appendY: 1601,
-      viewHeight: 1720,
+      finalLayerNormY: 550,
+      lmHeadY: 640,
+      logitsY: 730,
+      selectionY: 820,
+      generatedY: 910,
+      appendY: 1_000,
+      viewHeight: 1_080,
     });
     expect(OUTPUT_STAGES.map(({ x, width }) => x + width / 2)).toEqual([
       CENTER_X,
@@ -58,13 +41,13 @@ describe("Root architecture geometry", () => {
     ]);
   });
 
-  test("keeps every actionable 136-unit target disjoint and horizontally contained", () => {
+  test("keeps every actionable 88-unit target disjoint and contained", () => {
     const targets = [INPUT, ...EMBEDDINGS, BLOCK, ...OUTPUT_STAGES].map(
       ({ x, y, width, height }) => ({
-        x: x + width / 2 - Math.max(width, 136) / 2,
-        y: y + height / 2 - Math.max(height, 136) / 2,
-        width: Math.max(width, 136),
-        height: Math.max(height, 136),
+        x: x + width / 2 - Math.max(width, 88) / 2,
+        y: y + height / 2 - Math.max(height, 88) / 2,
+        width: Math.max(width, 88),
+        height: Math.max(height, 88),
       }),
     );
 

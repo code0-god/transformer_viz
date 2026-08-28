@@ -43,17 +43,23 @@ assistant answer.
 
 Users open one static URL at Course Home, start Chapter 0.1 with one primary action, optionally
 open Lab through its outlined route, and move through URL-addressable Chapters. Learn hides
-model-generation controls and uses a centered explanation-first article. Large SVG and R3F
-visuals are absent from the reading surface until a concept-specific action opens the shared
-focused viewer. Lab preserves Prompt, Generate, Stop, Continuation, Replay, sampling settings,
-trace, and Architecture inside the existing React and Worker state, but presents them as one
-experiment-first flow with on-demand inspection viewers instead of a permanent architecture
-pane. The default Lab prompt is `the cat`; the legacy `the cat sat on the` phrase remains only as
-the full-forward golden/parity fixture.
+model-generation controls and uses a centered explanation-first article. Required SVG/DOM Figures
+render inline at the exact position declared by content, with semantic captions and prose, wide,
+or full width variants. Learn has no diagram overlay trigger or viewer chrome.
 
-Chapter chrome never precedes the article with a generic viewer toolbar. Visual actions sit beside
-the explanation they support. Part 0 keeps Token definition in 0.2, Token-to-ID mapping in 0.3,
-and Word/Character/Subword/Byte comparison in 0.4. Implementation-language, exporter, fixture, and
+Lab preserves Prompt, Generate, Stop, Continuation, Replay, sampling settings, trace, and
+Architecture inside the existing React and Worker state, but presents them as one experiment-first
+flow with on-demand inspection viewers instead of a permanent architecture pane. Architecture and
+the actual-trace Score Matrix remain Lab overlays. The default Lab prompt is `the cat`; the legacy
+`the cat sat on the` phrase remains only as the full-forward golden/parity fixture.
+
+Canonical split:
+
+- Learn = Article + Inline Figure
+- Lab = Experiment + Floating Inspection Overlay
+
+Part 0 keeps Token definition in 0.2, Token-to-ID mapping in 0.3, and
+Word/Character/Subword/Byte comparison in 0.4. Implementation-language, exporter, fixture, and
 provenance details stay collapsed under implementation notes instead of entering beginner prose.
 
 ## Capabilities and Constraints

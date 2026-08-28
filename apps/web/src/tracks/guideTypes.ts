@@ -42,11 +42,8 @@ export type ComparisonColumn = {
   readonly items: readonly string[];
 };
 
-export type LearningGuideVisualAction = {
-  readonly id: string;
-  readonly kind: "diagram" | "visualization";
-  readonly label: string;
-};
+export const learningFigureSizes = ["prose", "wide", "full"] as const;
+export type LearningFigureSize = (typeof learningFigureSizes)[number];
 
 export type GuideBlock<Id extends string = FormulaId> =
   | {
@@ -113,6 +110,14 @@ export type GuideBlock<Id extends string = FormulaId> =
       readonly kind: "implementation-note";
       readonly title?: string;
       readonly items: readonly string[];
+    }
+  | {
+      readonly id: string;
+      readonly kind: "figure";
+      readonly figureId: string;
+      readonly size?: LearningFigureSize;
+      readonly caption: string;
+      readonly alt?: string;
     };
 
 export type LearningGuideSection<Id extends string = FormulaId> = {
@@ -120,7 +125,6 @@ export type LearningGuideSection<Id extends string = FormulaId> = {
   readonly title: string;
   readonly primaryNodeId?: LearningNodeId;
   readonly associatedNodeIds?: readonly LearningNodeId[];
-  readonly visualActionLabel?: string;
   readonly blocks: readonly GuideBlock<Id>[];
 };
 
@@ -141,7 +145,6 @@ export type LearningGuidePage<Id extends string = FormulaId> = {
   readonly title: string;
   readonly learningGoal: string;
   readonly outline?: "hidden" | "auto" | "visible";
-  readonly visualActions?: readonly LearningGuideVisualAction[];
   readonly introduction: readonly GuideBlock<Id>[];
   readonly sections: readonly LearningGuideSection<Id>[];
   readonly outlineSectionIds?: readonly string[];
@@ -157,4 +160,5 @@ export type LearningGuideCatalog<Id extends string = FormulaId> = {
   readonly glossary: readonly GlossaryEntry[];
   readonly runtimeAdapterIds?: readonly string[];
   readonly operationAdapterIds?: readonly string[];
+  readonly figureIds?: readonly string[];
 };

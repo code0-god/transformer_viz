@@ -1,4 +1,3 @@
-import { ArchitectureCanvasFormula } from "../ArchitectureNode";
 import type { ArchitectureNodeId } from "../catalog";
 import {
   BLOCK,
@@ -6,7 +5,6 @@ import {
   type DiagramLayout,
   INPUT,
   OUTPUT_STAGES,
-  RESIDUAL_ADDS,
 } from "./layout";
 import { StageNode } from "./StageNode";
 
@@ -14,6 +12,7 @@ interface OutputPathProps {
   readonly layout: DiagramLayout;
   readonly selectedNodeId: ArchitectureNodeId | null;
   readonly highlightedNodeIds: readonly ArchitectureNodeId[];
+  readonly interactive: boolean;
   readonly onActivate: (id: ArchitectureNodeId) => void;
 }
 
@@ -55,7 +54,7 @@ const CONNECTOR_NAMES: readonly [
   string,
   string,
 ] = [
-  "add2-to-final",
+  "block-to-final",
   "final-to-lm-head",
   "lm-head-to-logits",
   "logits-to-selection",
@@ -67,10 +66,11 @@ export function OutputPath({
   layout,
   selectedNodeId,
   highlightedNodeIds,
+  interactive,
   onActivate,
 }: OutputPathProps) {
   const starts = [
-    RESIDUAL_ADDS[1].y + RESIDUAL_ADDS[1].radius,
+    BLOCK.y + BLOCK.height,
     ...OUTPUT_STAGES.map((stage) => stage.y + stage.height),
   ];
   return (
@@ -86,18 +86,11 @@ export function OutputPath({
             bounds={bounds}
             selected={selectedNodeId === id}
             highlighted={highlightedNodeIds.includes(id)}
+            interactive={interactive}
             onActivate={onActivate}
           />
         );
       })}
-      <ArchitectureCanvasFormula
-        className="architecture-edge-state"
-        formulaId="root-output-state"
-        x={BLOCK.x + 80}
-        y={RESIDUAL_ADDS[1].y + RESIDUAL_ADDS[1].radius + 3}
-        width={CENTER_X - 18 - (BLOCK.x + 80)}
-        height={24}
-      />
       {OUTPUT_STAGES.map((stage, index) => {
         const y1 = starts[index];
         const name = CONNECTOR_NAMES[index];
@@ -115,19 +108,19 @@ export function OutputPath({
       })}
       <path
         className="architecture-repeat"
-        d={`M ${OUTPUT_STAGES[5].x} ${layout.appendY + 24} H 80 V ${INPUT.y + INPUT.height / 2} H ${INPUT.x}`}
+        d={`M ${OUTPUT_STAGES[5].x} ${layout.appendY + 27} H 80 V ${INPUT.y + INPUT.height / 2} H ${INPUT.x}`}
       />
       <text
         className="architecture-repeat-label"
         x={98}
-        y={layout.selectionY + 22}
+        y={layout.selectionY + 28}
       >
         CONTEXT UPDATE
       </text>
       <text
         className="architecture-repeat-subtitle"
         x={98}
-        y={layout.selectionY + 41}
+        y={layout.selectionY + 48}
       >
         Updated context
       </text>

@@ -15,6 +15,7 @@ import {
 } from "./diagramRegistry";
 import { curriculumGuidePage, curriculumGuidePages } from "./guidePages";
 import { CHAPTER_IDS, GUIDE_PAGE_IDS, PART_IDS } from "./ids";
+import { curriculumLearningFigures } from "./learningFigureRegistry";
 import { curriculumReferences } from "./references";
 import { guideRuntimeFacts } from "./runtimeFacts";
 import type {
@@ -319,6 +320,7 @@ const rendererRegistry = {
   glossary: curriculumGlossary,
   formulas: formulaCatalog,
   runtimeFacts: guideRuntimeFacts,
+  figures: curriculumLearningFigures,
 } satisfies CurriculumRendererRegistry;
 
 export const decoderCurriculum = {
@@ -334,6 +336,10 @@ export const decoderCurriculumRegistries: CurriculumRegistries = {
     "transformer-block",
     "self-attention",
   ]),
+  figureIds: new Set(CHAPTER_SPECS.map(({ diagramId }) => diagramId)),
+  figureOwners: new Map(
+    CHAPTER_SPECS.map(({ id, diagramId }) => [diagramId, id]),
+  ),
   visualizationIds: curriculumVisualizationIds,
   nodeIds: new Set(Object.keys(decoderNodeMap)),
   formulaIds: new Set(FORMULA_IDS),

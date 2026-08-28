@@ -21,7 +21,7 @@ describe("decoder curriculum shell", () => {
     );
     expect(curriculumCss).not.toMatch(/48fr|52fr|pane--diagram|pane--guide/);
     expect(learningWorkspaceCss).toMatch(
-      /\.learning-workspace__article\s*{[^}]*max-inline-size:\s*56rem;/s,
+      /\.learning-workspace__article\s*{[^}]*max-inline-size:\s*72rem;/s,
     );
     expect(learningWorkspaceCss).toMatch(
       /\.learning-workspace__article\s*{[^}]*margin-inline:\s*auto;/s,

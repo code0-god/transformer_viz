@@ -28,7 +28,8 @@ TRANSCRIPT_START: Final = "<!-- machine-contract\n"
 TRANSCRIPT_END: Final = "\n-->"
 TRANSCRIPT_EVENTS: Final = (
     "toc-expanded-current", "chapter-heading-focus", "diagram-semantics", "sibling-controls",
-    "generated-token-focus", "adjacent-navigation-names", "progress", "math-semantic-unit",
+    "gpt-static-image", "gpt-chapter-link", "adjacent-navigation-names",
+    "progress", "math-semantic-unit",
 )
 VIEWPORTS: Final = ((1440, 900), (1024, 768), (390, 844))
 CHAPTER_IDS: Final = tuple(
@@ -263,9 +264,19 @@ def _validate_artifact_ax(evidence: Path, artifact: dict[str, JsonValue], name: 
     math_units = ax.get("mathSemanticUnits")
     if ax.get("nestedMathNodes") != 0 or not isinstance(math_units, int) or math_units < 0 or ax.get("sampledMathUnitExact") is False:
         _fail("AX math", name)
-    if primary and ax.get("diagramImages") != 1:
-        _fail("AX diagram image", name)
     order = artifact.get("chapterOrder")
+    figure_alternatives = ax.get("visibleFigureAlternatives")
+    if (
+        primary
+        and isinstance(order, int)
+        and order <= 12
+        and ax.get("diagramImages") != 1
+        and (
+            not isinstance(figure_alternatives, int)
+            or figure_alternatives < 1
+        )
+    ):
+        _fail("AX Figure semantics", name)
     if primary and isinstance(order, int) and order >= 12 and not _array(ax.get("namedControls"), name):
         _fail("AX named controls", name)
 

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { decoderOnlyFundamentalsRegistration } from "./decoder-only-fundamentals";
+import type { GuideBlock } from "./guideTypes";
 import { createLearningTrackRegistry, learningTrackRegistry } from "./registry";
 import {
   type LearningProfileValidationError,
@@ -24,6 +25,59 @@ function issueWithCode(
 }
 
 describe("learning profile structured validation", () => {
+  test.each([
+    [
+      "unknown figure",
+      {
+        id: "figure",
+        kind: "figure",
+        figureId: "figure.missing",
+        caption: "Caption",
+      },
+      {
+        code: "unknown-figure",
+        path: "guide.pages.decoder.root.sections[0].blocks[0].figureId",
+        relatedId: "figure.missing",
+      },
+    ],
+    [
+      "missing caption",
+      {
+        id: "figure",
+        kind: "figure",
+        figureId: "root",
+        caption: "",
+      },
+      {
+        code: "missing-figure-caption",
+        path: "guide.pages.decoder.root.sections[0].blocks[0].caption",
+      },
+    ],
+    [
+      "invalid size",
+      {
+        id: "figure",
+        kind: "figure",
+        figureId: "root",
+        size: "poster",
+        caption: "Caption",
+      },
+      {
+        code: "invalid-figure-size",
+        path: "guide.pages.decoder.root.sections[0].blocks[0].size",
+        relatedId: "poster",
+      },
+    ],
+  ] as const)("validates Figure contract for %s", (_name, value, expected) => {
+    const block = value as unknown as GuideBlock;
+    const profile = withRootPage({
+      ...rootPage,
+      sections: [{ ...rootSection, blocks: [block] }],
+    });
+
+    expect(validateLearningProfile(profile)).toContainEqual(expected);
+  });
+
   test.each(routeIssueFixtures)(
     "reports exact route/page diagnostics for $name",
     ({ profile, expected }) => {

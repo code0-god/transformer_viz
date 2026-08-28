@@ -26,6 +26,7 @@ export interface ArchitectureNodeProps {
   readonly onActivate: (id: ArchitectureNodeId) => void;
   readonly drillDownIndicator?: DrillDownIndicator;
   readonly disabled?: boolean;
+  readonly interactive?: boolean;
   readonly children: ReactNode;
 }
 
@@ -100,11 +101,12 @@ export function ArchitectureNode({
   onActivate,
   drillDownIndicator,
   disabled = false,
+  interactive = true,
   children,
 }: ArchitectureNodeProps) {
   const registerNode = useArchitectureNodeRegistration();
   const definition = architectureNodeCatalog[id];
-  const interactive = definition.capability !== "static";
+  const interactionEnabled = interactive && definition.capability !== "static";
   const stateClass = selected ? " is-selected" : "";
   const highlightClass = highlighted ? " is-learning-highlighted" : "";
   const disabledClass = disabled ? " is-disabled" : "";
@@ -162,12 +164,13 @@ export function ArchitectureNode({
     </>
   );
 
-  if (!interactive) {
+  if (!interactionEnabled) {
     return (
       <g
         className={className}
         data-node-id={id}
-        data-node-capability="static"
+        data-node-capability={definition.capability}
+        data-interactive="false"
         aria-label={definition.accessibleName}
       >
         {content}

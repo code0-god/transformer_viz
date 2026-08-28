@@ -8,7 +8,6 @@ export const tokenChapterContent = {
     learningGoal:
       "모델이 텍스트를 어떤 단위로 나누고 처리하는지, 토큰과 토큰 ID의 차이를 익힙니다.",
     outline: "hidden",
-    visualActions: [],
     introduction: [
       {
         id: "intro",
@@ -21,7 +20,6 @@ export const tokenChapterContent = {
         id: "token-unit",
         title: "왜 문장을 나눌까요?",
         primaryNodeId: "decoder.root.input-context",
-        visualActionLabel: "Token 경계 보기",
         blocks: [
           {
             id: "p.why-split",
@@ -42,6 +40,15 @@ export const tokenChapterContent = {
             id: "p.boundary",
             kind: "paragraph",
             text: "어디에서 나눌지는 토크나이저(tokenizer)가 정합니다. 그래서 같은 문장도 어떤 토크나이저를 쓰느냐에 따라 토큰의 경계와 개수가 달라질 수 있습니다.",
+          },
+          {
+            id: "figure.token-boundary",
+            kind: "figure",
+            figureId: "decoder.diagram.tokenization.token",
+            size: "wide",
+            caption:
+              "Token의 경계는 사용하는 tokenizer에 따라 달라질 수 있습니다.",
+            alt: "The cats are sleeping 문장이 다섯 token으로 나뉜 경계",
           },
         ],
       },

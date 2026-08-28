@@ -16,6 +16,15 @@ export const positionChapterContent = {
         kind: "paragraph",
         text: "같은 token도 sequence에서 놓인 위치가 다르면 맡는 문맥 역할이 달라질 수 있습니다. Token 주소와 position 주소를 분리해 결합 방식을 살펴봅니다.",
       },
+      {
+        id: "figure.position-embedding",
+        kind: "figure",
+        figureId: "decoder.diagram.representation.position",
+        size: "wide",
+        caption:
+          "Token embedding과 position embedding을 원소별로 더해 token 종류와 순서를 함께 표현합니다.",
+        alt: "Token embedding과 learned position embedding의 원소별 합",
+      },
     ],
     sections: [
       {

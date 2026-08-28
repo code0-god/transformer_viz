@@ -202,9 +202,9 @@ def verify_learn_attention_guide(browser: ChromeSession, url: str) -> None:
     require(
         guide["articleLayout"] == "article"
         and not guide["architectureMounted"]
-        and guide["viewerTrigger"]
+        and not guide["viewerTrigger"]
         and guide["summaryFormula"],
-        f"Learn must keep architecture on demand: {guide}",
+        f"Learn must remain article-only without overlay triggers: {guide}",
     )
 
 

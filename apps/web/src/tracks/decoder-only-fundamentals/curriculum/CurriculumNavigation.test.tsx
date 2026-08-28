@@ -2,14 +2,30 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test, vi } from "vitest";
 
+import { CurriculumChapterFooter } from "./CurriculumChapterFooter";
 import { CurriculumNavigation } from "./CurriculumNavigation";
 import { CHAPTER_IDS } from "./ids";
+import { chapterNavigation } from "./navigation";
 
 function renderNavigation(index = 6) {
   const onNavigate = vi.fn();
   render(
     <CurriculumNavigation
       currentChapterId={CHAPTER_IDS[index] ?? CHAPTER_IDS[0]}
+      onNavigate={onNavigate}
+    />,
+  );
+  return onNavigate;
+}
+
+function renderFooter(index = 6) {
+  const onNavigate = vi.fn();
+  const navigation = chapterNavigation(CHAPTER_IDS[index] ?? CHAPTER_IDS[0]);
+  render(
+    <CurriculumChapterFooter
+      previous={navigation?.previous}
+      next={navigation?.next}
+      chapterHref={(chapterId) => `#/test/${chapterId}`}
       onNavigate={onNavigate}
     />,
   );
@@ -72,32 +88,39 @@ describe("Curriculum Navigation disclosure", () => {
     expect(onNavigate).toHaveBeenCalledWith(CHAPTER_IDS[0]);
   });
 
-  test("uses destination-named native previous and next buttons", async () => {
+  test("keeps adjacent routes out of compact Chapter header", () => {
+    renderNavigation(6);
+
+    expect(screen.queryByRole("button", { name: /^이전:/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^다음:/ })).toBeNull();
+  });
+
+  test("uses destination-named native footer links", async () => {
     // Given: a middle Chapter is current.
     const user = userEvent.setup();
-    const onNavigate = renderNavigation(6);
+    const onNavigate = renderFooter(6);
 
-    // When: the destination-named next button is clicked.
+    // When: the destination-named next link is clicked.
     await user.click(
-      screen.getByRole("button", { name: "다음: Autoregressive Generation" }),
+      screen.getByRole("link", { name: "다음: Autoregressive Generation" }),
     );
 
     // Then: ordered navigation emits that destination Chapter.
     expect(
-      screen.getByRole("button", { name: "이전: 다음 Token 예측" }),
+      screen.getByRole("link", { name: "이전: 다음 Token 예측" }),
     ).toBeInTheDocument();
     expect(onNavigate).toHaveBeenCalledWith(CHAPTER_IDS[7]);
   });
 
-  test("omits boundary controls instead of rendering disabled placeholders", () => {
+  test("omits footer boundary controls instead of disabled placeholders", () => {
     // Given/When: the first Chapter is current.
-    renderNavigation(0);
+    renderFooter(0);
 
     // Then: previous is absent and no disabled placeholder exists.
-    expect(screen.queryByRole("button", { name: /^이전:/ })).toBeNull();
+    expect(screen.queryByRole("link", { name: /^이전:/ })).toBeNull();
     expect(
-      screen.getByRole("button", { name: "다음: Token이란?" }),
-    ).toBeEnabled();
+      screen.getByRole("link", { name: "다음: Token이란?" }),
+    ).toHaveAttribute("href", "#/test/decoder.chapter.0.2");
     expect(
       screen.queryByRole("button", { name: "이전 Chapter 없음" }),
     ).toBeNull();

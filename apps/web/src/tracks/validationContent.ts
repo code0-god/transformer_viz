@@ -1,4 +1,8 @@
-import type { GuideBlock, GuideInline } from "./guideTypes";
+import {
+  type GuideBlock,
+  type GuideInline,
+  learningFigureSizes,
+} from "./guideTypes";
 import type {
   LearningProfileIssue,
   ValidationContext,
@@ -79,6 +83,32 @@ export function scanGuideBlock<Id extends string>(
     case "callout":
     case "example":
     case "implementation-note":
+      scan.explained = true;
+      return;
+    case "figure":
+      if (!scan.context.figureIds.has(block.figureId)) {
+        scan.issues.push({
+          code: "unknown-figure",
+          path: `${path}.figureId`,
+          relatedId: block.figureId,
+        });
+      }
+      if (block.caption.trim() === "") {
+        scan.issues.push({
+          code: "missing-figure-caption",
+          path: `${path}.caption`,
+        });
+      }
+      if (
+        block.size !== undefined &&
+        !learningFigureSizes.includes(block.size)
+      ) {
+        scan.issues.push({
+          code: "invalid-figure-size",
+          path: `${path}.size`,
+          relatedId: block.size,
+        });
+      }
       scan.explained = true;
       return;
     case "rich-paragraph":

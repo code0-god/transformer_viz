@@ -27,8 +27,8 @@
   align-items: start;
   justify-content: space-between;
   gap: var(--s4);
-  padding: var(--s3) var(--s4);
-  border-block-end: 1px solid var(--hairline);
+  padding: .8rem var(--s4);
+  border-block-end: 1px solid var(--border-subtle);
 }
 
 .focused-viewer__header > div:first-child {
@@ -38,28 +38,32 @@
 }
 
 .focused-viewer__header h2 {
-  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-weight: 700;
   letter-spacing: -0.03em;
 }
 
 .focused-viewer__header p {
   max-inline-size: 68ch;
   color: var(--ink-muted);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
 }
 
 .focused-viewer__header-actions {
   display: flex;
   flex: none;
   align-items: center;
-  gap: var(--s2);
+  gap: var(--s1);
 }
 
 .focused-viewer__close {
   display: grid;
-  inline-size: 2.75rem;
-  min-inline-size: 2.75rem;
+  inline-size: 44px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
   padding: 0;
+  border-color: transparent;
+  background: transparent;
   place-items: center;
 }
 
@@ -127,6 +131,11 @@
 
   .focused-viewer__header {
     padding: var(--s2) var(--s3);
+  }
+
+  .focused-viewer__close {
+    inline-size: 44px;
+    min-inline-size: 44px;
   }
 
   .focused-viewer[data-viewer-kind="visualization"] .score-matrix-canvas {

@@ -18,18 +18,20 @@ export const vocabularyChapterContent = {
     learningGoal:
       "vocabulary 주소와 embedding에서 시작하는 의미 계산을 분리한다.",
     outline: "hidden",
-    visualActions: [
-      {
-        id: "decoder.diagram.tokenization.vocabulary",
-        kind: "diagram",
-        label: "Token과 ID 연결 보기",
-      },
-    ],
     introduction: [
       {
         id: "intro",
         kind: "paragraph",
         text: "Vocabulary는 token 표기와 정수 ID를 연결하는 주소록입니다. 주소를 안다는 것과 그 token의 의미를 계산한다는 것은 서로 다른 단계입니다.",
+      },
+      {
+        id: "figure.vocabulary-address",
+        kind: "figure",
+        figureId: "decoder.diagram.tokenization.vocabulary",
+        size: "wide",
+        caption:
+          "Token ID는 vocabulary에서 token을 찾는 주소이며, 의미 계산은 embedding vector에서 시작합니다.",
+        alt: "Vocabulary의 token 표기와 정수 ID 주소 관계",
       },
     ],
     sections: [

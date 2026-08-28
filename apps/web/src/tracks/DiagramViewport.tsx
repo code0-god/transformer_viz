@@ -239,7 +239,6 @@ export function DiagramViewport({
   const isFit = currentTransform.scale <= fitScale + SCALE_EPSILON;
   const zoomRatio =
     fitScale <= SCALE_EPSILON ? 1 : currentTransform.scale / fitScale;
-  const hasMetadata = description !== undefined || extraControls !== undefined;
 
   function handleKeyDown(event: ReactKeyboardEvent<HTMLDivElement>): void {
     switch (event.key) {
@@ -264,18 +263,13 @@ export function DiagramViewport({
 
   return (
     <section className="diagram-viewport" aria-label={label}>
-      {hasMetadata ? (
+      {extraControls === undefined ? null : (
         <div className="diagram-viewport__meta">
-          {extraControls === undefined ? null : (
-            <div className="diagram-viewport__extra-controls">
-              {extraControls}
-            </div>
-          )}
-          {description === undefined ? null : (
-            <div className="diagram-viewport__description">{description}</div>
-          )}
+          <div className="diagram-viewport__extra-controls">
+            {extraControls}
+          </div>
         </div>
-      ) : null}
+      )}
       <div
         ref={viewportRef}
         className="diagram-viewport__surface"
@@ -317,6 +311,15 @@ export function DiagramViewport({
           {children}
         </div>
       </div>
+      {description === undefined ? null : (
+        <div
+          className="diagram-viewport__description"
+          role="note"
+          aria-label="Figure caption"
+        >
+          {description}
+        </div>
+      )}
     </section>
   );
 }

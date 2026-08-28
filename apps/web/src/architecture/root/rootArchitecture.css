@@ -1,16 +1,86 @@
 .architecture-root-screen {
-  --architecture-node-formula-color: var(--ink-muted, #756b5d);
-  --architecture-node-hint-color: var(--accent, #b5533c);
-  color: var(--ink, #352e22);
+  --architecture-node-formula-color: var(--text-secondary, #655f58);
+  --architecture-node-hint-color: var(--accent, #ad482f);
+  color: var(--text-primary, #292521);
+}
+
+.architecture-root-screen[data-architecture-presentation="learn"] {
+  max-inline-size: 58rem;
+}
+
+.decoder-learning-architecture {
+  display: grid;
+  gap: var(--s3);
+}
+
+.decoder-learning-architecture__next {
+  display: inline-flex;
+  align-items: center;
+  justify-self: end;
+  min-block-size: 44px;
+  color: var(--accent);
+  font-size: .88rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.decoder-learning-architecture__next:hover,
+.decoder-learning-architecture__next:focus-visible {
+  color: var(--accent-hover);
+}
+
+.decoder-learning-architecture__mobile {
+  display: none;
+}
+
+@media (max-width: 44rem) {
+  .decoder-learning-architecture
+    > .architecture-root-screen[data-architecture-presentation="learn"] {
+    display: none;
+  }
+
+  .decoder-learning-architecture__mobile {
+    display: grid;
+    gap: .75rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .decoder-learning-architecture__mobile li {
+    position: relative;
+    padding: .8rem 1rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    background: var(--bg-article);
+    color: var(--text-primary);
+    font-size: .92rem;
+    font-weight: 650;
+    text-align: center;
+  }
+
+  .decoder-learning-architecture__mobile li:not(:last-child)::after {
+    position: absolute;
+    inset-block-end: -.72rem;
+    inset-inline-start: 50%;
+    color: var(--text-tertiary);
+    content: "↓";
+    transform: translateX(-50%);
+  }
+
+  .decoder-learning-architecture__mobile li:last-child {
+    border-style: dashed;
+    color: var(--text-secondary);
+  }
 }
 
 .architecture-root-screen .architecture-metadata{
-  color: var(--ink-muted, #756b5d);
-  font-size: 0.78rem;
+  color: var(--text-tertiary, #857c72);
+  font-size: 0.75rem;
   word-break: keep-all;
 }
 
-.architecture-root-screen .architecture-metadata strong{ color: var(--ink, #352e22); }
+.architecture-root-screen .architecture-metadata strong{ color: var(--text-primary, #292521); }
 .architecture-root-screen .architecture-metadata [role="math"]{ display: inline-flex; align-items: center; }
 .architecture-root-screen .architecture-metadata .katex{ font-size: 1em; }
 
@@ -54,10 +124,18 @@
 }
 
 .architecture-root-screen .architecture-figure { display: grid; gap: var(--s2, 0.5rem); min-inline-size: 0; }
+.architecture-root-screen[data-architecture-presentation="learn"]
+  .architecture-figure {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
 .architecture-root-screen .architecture-svg-scroll {
   inline-size: 100%;
   overflow-x: clip;
-  border-block-start: 1px solid color-mix(in srgb, var(--hairline, #d8cdb9) 70%, transparent);
+  border-block-start: 1px solid var(--border-subtle);
   background: transparent;
 }
 .architecture-root-screen .architecture-diagram{
@@ -69,62 +147,61 @@
   margin-inline: auto;
 }
 .architecture-root-screen .architecture-diagram text{
-  fill: var(--ink, #352e22);
+  fill: var(--text-primary, #292521);
   font-family: "Avenir Next", "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
-  font-size: 24px;
-  font-weight: 750;
+  font-size: 22px;
+  font-weight: 650;
   pointer-events: none;
 }
-.architecture-root-screen .architecture-node > g.architecture-node > rect:not(.architecture-node-focus-outline){ fill: var(--surface, #fffaf0); stroke: var(--line, #9c8f7b); stroke-width: 1.5; }
-.architecture-root-screen .architecture-node > g.architecture-node-input > rect:not(.architecture-node-focus-outline){ fill: var(--projection-soft, #edf2f7); stroke: var(--block-border, #6b858f); }
-.architecture-root-screen .architecture-node > g.architecture-node-embedding > rect:not(.architecture-node-focus-outline){ fill: var(--embedding-soft, #e5f0df); stroke: var(--embedding-border, #66806e); }
-.architecture-root-screen .architecture-node > g.architecture-node-hidden > rect:not(.architecture-node-focus-outline){ fill: var(--surface, #fffaf0); stroke: var(--hairline, #d8cdb9); }
-.architecture-root-screen .architecture-block-frame{ fill: var(--block-soft, #e8eff8); stroke: var(--block-border, #6b858f); stroke-width: 2; }
-.architecture-root-screen .architecture-diagram text.architecture-block-title{ fill: var(--mesh-sky, #748c95); font-size: 20px; }
-.architecture-root-screen .architecture-block-group > g.architecture-block-module > rect{ stroke-width: 1.4; }
-.architecture-root-screen .architecture-block-group > g.architecture-block-normalization > rect{ fill: var(--normalization-soft, #fff0c9); stroke: var(--normalization-border, #b8892e); }
-.architecture-root-screen .architecture-block-group > g.architecture-block-attention > rect{ fill: var(--attention-soft, #e5edf7); stroke: var(--attention-border, #647f89); }
-.architecture-root-screen .architecture-block-group > g.architecture-block-mlp > rect{ fill: var(--mlp-soft, #fae2dc); stroke: var(--mlp-border, #a7523d); }
+.architecture-root-screen .architecture-node > g.architecture-node > rect:not(.architecture-node-focus-outline){ fill: var(--bg-overlay); stroke: var(--border-strong); stroke-width: 1.35; }
+.architecture-root-screen .architecture-node > g.architecture-node-input > rect:not(.architecture-node-focus-outline){ fill: var(--figure-input); stroke: var(--border-strong); }
+.architecture-root-screen .architecture-node > g.architecture-node-embedding > rect:not(.architecture-node-focus-outline){ fill: var(--figure-representation); stroke: var(--embedding-border, #66806e); }
+.architecture-root-screen .architecture-node > g.architecture-node-hidden > rect:not(.architecture-node-focus-outline){ fill: transparent; stroke: var(--border-subtle); }
+.architecture-root-screen .architecture-block-frame{ fill: var(--figure-operation); stroke: var(--block-border, #6b858f); stroke-width: 1.75; }
+.architecture-root-screen .architecture-diagram text.architecture-block-title{
+  fill: var(--text-primary);
+  font-size: 24px;
+  font-weight: 700;
+}
+.architecture-root-screen .architecture-block-summary text {
+  fill: var(--text-secondary);
+  font-size: 19px;
+  font-weight: 600;
+}
+.architecture-root-screen .architecture-block-summary__divider {
+  stroke: var(--border-subtle);
+  stroke-width: 1.5;
+}
 .architecture-root-screen .architecture-residual-add,
-.architecture-root-screen .architecture-add { fill: var(--surface, #fffaf0); stroke: var(--line, #9c8f7b); stroke-width: 1.5; }
+.architecture-root-screen .architecture-add { fill: var(--bg-overlay); stroke: var(--border-strong); stroke-width: 1.5; }
 .architecture-root-screen .architecture-add.is-learning-highlighted { stroke: var(--accent); stroke-width: 3; }
-.architecture-root-screen .architecture-node > g.architecture-node-normalization > rect:not(.architecture-node-focus-outline){ fill: var(--normalization-soft, #fff0c9); stroke: var(--normalization-border, #b8892e); }
-.architecture-root-screen .architecture-node > g.architecture-node-projection > rect:not(.architecture-node-focus-outline){ fill: var(--projection-soft, #edf2f7); stroke: var(--block-border, #6b858f); }
-.architecture-root-screen .architecture-node > g.architecture-node-logits > rect:not(.architecture-node-focus-outline){ fill: var(--token-soft, #f9e1d9); stroke: var(--mlp-border, #a7523d); }
-.architecture-root-screen .architecture-node > g.architecture-node-sampling > rect:not(.architecture-node-focus-outline){ fill: var(--sampling-soft, #fae7c9); stroke: var(--normalization-border, #b8892e); }
-.architecture-root-screen .architecture-node > g.architecture-node-token > rect:not(.architecture-node-focus-outline){ fill: var(--token-soft, #f9e1d9); stroke: var(--accent, #b5533c); }
-.architecture-root-screen .architecture-node-token text{ fill: var(--accent, #b5533c); }
-.architecture-root-screen .architecture-node > g.architecture-node-append > rect:not(.architecture-node-focus-outline){ fill: var(--ready-soft, #e2efdc); stroke: var(--embedding-border, #66806e); }
+.architecture-root-screen .architecture-node > g.architecture-node-normalization > rect:not(.architecture-node-focus-outline){ fill: color-mix(in srgb, var(--normalization-soft) 74%, var(--bg-overlay)); stroke: var(--normalization-border, #b8892e); }
+.architecture-root-screen .architecture-node > g.architecture-node-projection > rect:not(.architecture-node-focus-outline){ fill: var(--figure-operation); stroke: var(--block-border, #6b858f); }
+.architecture-root-screen .architecture-node > g.architecture-node-logits > rect:not(.architecture-node-focus-outline){ fill: var(--figure-output); stroke: color-mix(in srgb, var(--mesh-sky) 62%, var(--border-strong)); }
+.architecture-root-screen .architecture-node > g.architecture-node-sampling > rect:not(.architecture-node-focus-outline){ fill: color-mix(in srgb, var(--normalization-soft) 64%, var(--bg-overlay)); stroke: var(--normalization-border, #b8892e); }
+.architecture-root-screen .architecture-node > g.architecture-node-token > rect:not(.architecture-node-focus-outline){ fill: var(--accent-soft); stroke: var(--accent); }
+.architecture-root-screen .architecture-node-token text{ fill: var(--accent); }
+.architecture-root-screen .architecture-node > g.architecture-node-append > rect:not(.architecture-node-focus-outline){ fill: var(--figure-representation); stroke: var(--embedding-border, #66806e); }
 .architecture-root-screen .architecture-diagram text.architecture-add-label{ font-size: 22px; }
 
 .architecture-root-screen .architecture-flow,
 .architecture-root-screen .architecture-repeat,
-.architecture-root-screen .architecture-merge,
-.architecture-root-screen .architecture-residual,
-.architecture-root-screen .architecture-forward-guide{
+.architecture-root-screen .architecture-merge{
   fill: none;
-  stroke: var(--ink, #352e22);
-  stroke-width: 1.6;
+  stroke: var(--text-primary, #292521);
+  stroke-width: 1.7;
   marker-end: url("#architecture-arrow");
 }
-.architecture-root-screen .architecture-merge{ stroke: var(--line, #9c8f7b); }
-.architecture-root-screen .architecture-residual{ stroke: var(--line, #9c8f7b); stroke-width: 1.5; }
-.architecture-root-screen .architecture-residual-junction { fill: var(--ink, #352e22); stroke: var(--surface, #fffaf0); stroke-width: 1.5; }
-.architecture-root-screen .architecture-repeat{ stroke: var(--ready, #56834e); stroke-width: 2.2; stroke-dasharray: 8 7; }
-.architecture-root-screen .architecture-forward-guide{ stroke: var(--ink-muted, #756b5d); stroke-dasharray: 5 5; }
-.architecture-root-screen .architecture-forward-label,
+.architecture-root-screen .architecture-merge{ stroke: var(--border-strong); }
+.architecture-root-screen .architecture-repeat{ stroke: var(--ready, #56834e); stroke-width: 2; stroke-dasharray: 8 7; }
 .architecture-root-screen .architecture-repeat-label,
-.architecture-root-screen .architecture-forward-subtitle,
 .architecture-root-screen .architecture-repeat-subtitle{
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   font-size: 15px;
   letter-spacing: 0.08em;
 }
-.architecture-root-screen .architecture-diagram text.architecture-forward-label{ fill: var(--ink, #352e22); font-size: 20px; font-weight: 850; }
-.architecture-root-screen .architecture-diagram text.architecture-forward-subtitle,
-.architecture-root-screen .architecture-diagram text.architecture-repeat-subtitle{ fill: var(--ink-muted, #756b5d); font-size: 14px; letter-spacing: 0; }
-.architecture-root-screen .architecture-diagram text.architecture-repeat-label{ fill: var(--ready, #56834e); font-size: 20px; font-weight: 850; }
-.architecture-root-screen .architecture-edge-state{ color: var(--ink-muted, #756b5d); }
+.architecture-root-screen .architecture-diagram text.architecture-repeat-subtitle{ fill: var(--text-tertiary); font-size: 14px; letter-spacing: 0; }
+.architecture-root-screen .architecture-diagram text.architecture-repeat-label{ fill: var(--ready, #56834e); font-size: 18px; font-weight: 700; }
 
 .architecture-root-screen .architecture-figure figcaption {
   padding-block-start: var(--s2, 0.5rem);

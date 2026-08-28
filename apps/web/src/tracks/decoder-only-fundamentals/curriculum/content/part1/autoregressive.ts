@@ -16,6 +16,15 @@ export const autoregressiveChapterContent = {
         kind: "paragraph",
         text: "한 token을 골랐다고 generation이 끝나는 것은 아닙니다. 선택한 token을 context에 붙여 다음 단계의 입력으로 만드는 반복 구조를 살펴봅니다.",
       },
+      {
+        id: "figure.autoregressive-loop",
+        kind: "figure",
+        figureId: "decoder.diagram.language-model.autoregressive",
+        size: "wide",
+        caption:
+          "Autoregressive generation은 token 하나를 예측해 context에 붙이고 같은 계산을 반복합니다.",
+        alt: "다음 token 예측, 선택, context 추가, 반복 흐름",
+      },
     ],
     sections: [
       {

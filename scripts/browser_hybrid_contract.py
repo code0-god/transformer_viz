@@ -76,6 +76,12 @@ def diagram_probe(browser: ChromeSession) -> JsonObject:
             '#focused-viewer-description',
           );
           const toolbar = viewer?.querySelector('.diagram-viewport__toolbar');
+          const closeButton = viewer?.querySelector(
+            '[aria-label="집중 보기 닫기"]',
+          );
+          const returnButton = viewer?.querySelector(
+            '.focused-viewer__return',
+          );
           if (!viewer || !surface || !content || !toolbar)
             throw new Error('focused Diagram viewer missing');
           const body = viewer.querySelector('.focused-viewer__body');
@@ -158,6 +164,16 @@ def diagram_probe(browser: ChromeSession) -> JsonObject:
               return rect.width > 0 && rect.height > 0;
             }),
             toolbarInsideSurface: surface.contains(toolbar),
+            dialogLabelled:
+              viewer.getAttribute('aria-labelledby')
+              === 'focused-viewer-title',
+            closeNative: closeButton instanceof HTMLButtonElement,
+            returnNative:
+              returnButton === null
+              || returnButton instanceof HTMLButtonElement,
+            toolbarLabelled:
+              toolbar.getAttribute('aria-label')
+              === '다이어그램 보기 도구',
             zoomPercent: toolbar.querySelector('output')?.textContent?.trim(),
           };
         })()""",

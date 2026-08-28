@@ -1,6 +1,5 @@
 import { type ReactElement, useLayoutEffect, useMemo, useRef } from "react";
 
-import { useFocusedViewer } from "../../../overlays/focusedViewerStore";
 import { LearningGuide } from "../../LearningGuide";
 import { LearningWorkspace } from "../../LearningWorkspace";
 import type {
@@ -22,12 +21,6 @@ import {
   type CurriculumFocusEvent,
   createCurriculumFocusHandoff,
 } from "./curriculumState";
-import {
-  type CurriculumViewerContext,
-  createCurriculumViewerRequest,
-  createCurriculumVisualizationViewer,
-  curriculumDiagramActionLabel,
-} from "./focusedViewerRequests";
 import {
   chapterNavigation,
   destinationForChapter,
@@ -81,7 +74,6 @@ function DecoderCurriculumWorkspace({
   chapterId,
   rendererRegistry,
 }: DecoderCurriculumWorkspaceProps): ReactElement {
-  const { openViewer } = useFocusedViewer();
   const headingRef = useRef<HTMLHeadingElement | null>(null);
   const workspaceRef = useRef<HTMLElement | null>(null);
   const previousChapterRef = useRef<ChapterId | null>(null);
@@ -97,10 +89,6 @@ function DecoderCurriculumWorkspace({
     registry === undefined || concept?.guidePageId === undefined
       ? undefined
       : registry.resolveGuidePage(concept.guidePageId);
-  const Diagram =
-    registry === undefined || concept === undefined
-      ? undefined
-      : registry.resolveDiagram(concept.diagramId);
   const part = curriculum.parts.find(({ id }) => id === chapter?.partId);
   const handoff = useMemo(
     () =>
@@ -148,50 +136,12 @@ function DecoderCurriculumWorkspace({
     handoff.register({ ...destination, element: registeredElement });
   }, [chapterId, context, handoff, routeId]);
 
-  const visualizationId = concept?.visualizationId;
-  const diagramId = concept?.diagramId;
-  const viewerContext: CurriculumViewerContext | null =
-    Diagram === undefined ||
-    diagramId === undefined ||
-    page === undefined ||
-    chapter === undefined
-      ? null
-      : {
-          chapterId,
-          title: chapter.title,
-          learningGoal: page.learningGoal,
-          pageId: page.id,
-          trackId: course.trackId,
-          diagramId,
-          Diagram,
-          profile,
-        };
-  const diagramRequest =
-    viewerContext === null
-      ? null
-      : createCurriculumViewerRequest(viewerContext);
-  const visualization =
-    visualizationId === undefined
-      ? undefined
-      : createCurriculumVisualizationViewer({
-          chapterId,
-          title: chapter?.title ?? "Chapter",
-          visualizationId,
-          layer: context.state.selectedLayer,
-          head: context.state.selectedHead,
-        });
   const content =
-    page === undefined ||
-    Diagram === undefined ||
-    diagramId === undefined ||
-    viewerContext === null ||
-    diagramRequest === null ||
-    registry === undefined ? (
+    page === undefined || registry === undefined ? (
       <DecoderLearningWorkspace
         context={learningContext}
         profile={profile}
         presentation="chapter"
-        {...(visualizationId === undefined ? {} : { visualizationId })}
       />
     ) : (
       <LearningWorkspace
@@ -202,14 +152,6 @@ function DecoderCurriculumWorkspace({
         }}
         status={{ availability: "available" }}
         presentation="chapter"
-        diagram={{
-          label: `${chapter?.title ?? page.title} Diagram`,
-          actionLabel: curriculumDiagramActionLabel(
-            chapter?.title ?? page.title,
-            diagramId,
-          ),
-          request: diagramRequest,
-        }}
         guide={{
           label: `${chapter?.title ?? page.title} Guide`,
           content: (
@@ -220,15 +162,10 @@ function DecoderCurriculumWorkspace({
               glossary={registry.glossary}
               formulas={registry.formulas}
               runtimeFacts={registry.runtimeFacts}
-              onSectionFocus={(section) =>
-                openViewer(
-                  createCurriculumViewerRequest(viewerContext, section),
-                )
-              }
+              figures={registry.figures}
             />
           ),
         }}
-        {...(visualization === undefined ? {} : { visualization })}
       />
     );
 
@@ -251,6 +188,7 @@ function DecoderCurriculumWorkspace({
       <CurriculumChapterFooter
         previous={navigation?.previous}
         next={navigation?.next}
+        chapterHref={(nextChapterId) => course.chapterHref(nextChapterId)}
         onNavigate={course.navigateChapter}
       />
     </section>

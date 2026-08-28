@@ -26,9 +26,9 @@
 }
 
 .curriculum-workspace__eyebrow {
-  color: var(--accent);
+  color: var(--text-tertiary);
   font-size: .72rem;
-  font-weight: 850;
+  font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -72,8 +72,6 @@
 }
 
 .curriculum-navigation__opener,
-.curriculum-navigation__adjacent button,
-.curriculum-navigation__adjacent a,
 .curriculum-toc button,
 .curriculum-toc a {
   min-block-size: 44px;
@@ -83,13 +81,17 @@
   min-inline-size: 3.25rem;
   padding-inline: var(--s3);
   border-color: transparent;
-  border-block-end-color: currentColor;
-  border-radius: 0;
+  border-radius: 5px;
   background: transparent;
-  color: var(--accent);
+  color: var(--text-secondary);
   font-size: .82rem;
-  font-weight: 760;
+  font-weight: 650;
   white-space: nowrap;
+}
+
+.curriculum-navigation__opener:hover {
+  background: var(--surface-subtle);
+  color: var(--text-primary);
 }
 
 .curriculum-workspace__header:has(.curriculum-toc) .curriculum-navigation {
@@ -157,30 +159,6 @@
   color: var(--accent);
 }
 
-.curriculum-navigation__adjacent {
-  display: flex;
-  gap: var(--s2);
-  justify-content: flex-end;
-}
-
-.curriculum-navigation__adjacent button,
-.curriculum-navigation__adjacent a {
-  display: inline-flex;
-  align-items: center;
-  max-inline-size: 24ch;
-  min-block-size: 36px;
-  padding: var(--s1) var(--s2);
-  border: 0;
-  border-block-end: 1px solid currentColor;
-  border-radius: 0;
-  background: transparent;
-  color: var(--accent);
-  font-size: 0.82rem;
-  font-weight: 720;
-  text-decoration: none;
-  overflow-wrap: anywhere;
-}
-
 .curriculum-chapter-footer {
   display: flex;
   justify-content: space-between;
@@ -192,14 +170,23 @@
   border-block-start: 1px solid var(--hairline);
 }
 
-.curriculum-chapter-footer button {
+.curriculum-chapter-footer a {
+  display: inline-flex;
+  align-items: center;
   min-block-size: 44px;
-  padding: var(--s2) 0;
-  border: 0;
-  border-block-end: 1px solid currentColor;
-  border-radius: 0;
-  background: transparent;
-  color: var(--accent);
+  max-inline-size: 28ch;
+  padding: var(--s2) var(--s1);
+  color: var(--text-secondary);
+  font-size: .86rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  text-align: start;
+  text-decoration: none;
+}
+
+.curriculum-chapter-footer a:hover,
+.curriculum-chapter-footer a:focus-visible {
+  color: var(--accent-hover);
 }
 
 .part0-diagram {
@@ -208,6 +195,17 @@
   min-inline-size: 0;
   margin: 0;
   padding: 0;
+}
+
+.part0-diagram--pipeline {
+  inline-size: min(100%, 34rem);
+  margin-inline: auto;
+}
+
+.part0-diagram--vocabulary,
+.part0-diagram--methods {
+  inline-size: min(100%, 56rem);
+  margin-inline: auto;
 }
 
 .part0-diagram svg {
@@ -277,6 +275,65 @@
 
 .part0-diagram__flow-example {
   font-weight: 750;
+}
+
+.part0-token-concept__eyebrow,
+.part0-token-concept__boundary-label {
+  fill: var(--text-tertiary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.part0-token-concept__source {
+  fill: var(--text-primary);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 36px;
+  font-weight: 550;
+  letter-spacing: -.03em;
+}
+
+.part0-token-concept__boundary {
+  stroke: color-mix(in srgb, var(--figure-highlight) 72%, transparent);
+  stroke-width: 2;
+}
+
+.part0-token-concept__segment rect {
+  fill: var(--figure-representation);
+  stroke: color-mix(
+    in srgb,
+    var(--embedding-border) 58%,
+    var(--border-subtle)
+  );
+  stroke-width: 1.5;
+}
+
+.part0-token-concept__segment > text:not(
+    .part0-token-concept__token-label
+  ) {
+  fill: var(--text-primary);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.part0-token-concept__bracket {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+
+.part0-token-concept__token-label {
+  fill: var(--text-secondary);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.part0-token-concept__conclusion {
+  fill: var(--text-secondary);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 15px;
+  font-weight: 550;
 }
 
 .part0-diagram__example {
@@ -373,6 +430,25 @@
 
 .part0-diagram__fallback p + p {
   margin-block-start: var(--s2);
+}
+
+.part0-token-concept__fallback ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  padding: 0;
+  margin: var(--s2) 0;
+  list-style: none;
+}
+
+.part0-token-concept__fallback li {
+  padding: .2rem .45rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--figure-representation);
+  color: var(--text-primary);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-weight: 600;
 }
 
 .part1-diagram {
@@ -603,6 +679,20 @@
 }
 
 @media (max-width: 40rem) {
+  .part0-token-concept__source {
+    font-size: 25px;
+  }
+
+  .part0-token-concept__segment > text:not(
+      .part0-token-concept__token-label
+    ) {
+    font-size: 17px;
+  }
+
+  .part0-token-concept__conclusion {
+    font-size: 12px;
+  }
+
   .curriculum-workspace
     [data-guide-page-id="decoder-guide-self-attention"]
     .learning-guide-formula.learning-guide-math-scroll
@@ -624,6 +714,15 @@
   .part0-diagram__fallback td {
     display: block;
     inline-size: 100%;
+  }
+
+  .part0-diagram__fallback td::before {
+    display: block;
+    margin-block-end: var(--s1);
+    color: var(--text-tertiary);
+    content: attr(data-label);
+    font-size: .72rem;
+    font-weight: 700;
   }
 
   .part0-diagram__fallback caption {

@@ -33,7 +33,6 @@ export function CurriculumChapterHeader({
       <CurriculumNavigation
         currentChapterId={chapterId}
         onNavigate={course.navigateChapter}
-        homeHref={course.homeHref}
         chapterHref={(nextChapterId) => course.chapterHref(nextChapterId)}
       />
     </header>

@@ -70,6 +70,25 @@ const firstPage = fixtureValue(decoderCurriculum.guidePages[0]);
 // allow: SIZE_OK — fixed curriculum validator mutation matrix
 
 describe("decoder curriculum structural validation", () => {
+  test("rejects a Figure owned by another Chapter", () => {
+    const firstSection = fixtureValue(firstPage.sections[0]);
+    const candidate = withFirstPageSections([
+      {
+        ...firstSection,
+        blocks: [
+          {
+            id: "wrong-owner",
+            kind: "figure",
+            figureId: "decoder.diagram.tokenization.token",
+            caption: "Caption",
+          },
+        ],
+      },
+    ]);
+
+    expect(issueCodes(candidate)).toContain("figure-chapter-mismatch");
+  });
+
   test("models the exact fixed spine and eleven independent pages", () => {
     const chapters = decoderCurriculum.parts.flatMap((part) => part.chapters);
     const concepts = chapters.flatMap((chapter) => chapter.concepts);

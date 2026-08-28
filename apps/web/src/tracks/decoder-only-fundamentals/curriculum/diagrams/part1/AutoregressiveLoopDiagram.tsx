@@ -9,7 +9,7 @@ const LOOP = [
 
 export function AutoregressiveLoopDiagram(): ReactElement {
   return (
-    <figure className="part1-diagram">
+    <div className="part1-diagram">
       <svg
         viewBox="0 0 760 470"
         role="img"
@@ -84,7 +84,7 @@ export function AutoregressiveLoopDiagram(): ReactElement {
           </text>
         </g>
       </svg>
-      <figcaption className="part1-diagram__fallback">
+      <div className="part1-diagram__fallback">
         <fieldset aria-label="Autoregressive Generation 의미 설명">
           <ol>
             {LOOP.map(([title, note]) => (
@@ -98,7 +98,7 @@ export function AutoregressiveLoopDiagram(): ReactElement {
             </li>
           </ol>
         </fieldset>
-      </figcaption>
-    </figure>
+      </div>
+    </div>
   );
 }

@@ -17,8 +17,9 @@ ROOT_NOTATION_PROBE = r"""
     repeatedBlock: text.includes('Transformer Block × 2'),
     hiddenInput: text.includes('Hidden State X₀') &&
       formula('hidden-state') === String.raw`X_0 = E_{\mathrm{tok}} + E_{\mathrm{pos}}`,
-    hiddenOutput: formula('root-output-state') ===
-      String.raw`\text{Hidden State }X_N\;[T,C]`,
+    hiddenOutput:
+      !svg.querySelector('[data-formula-id="root-output-state"]') &&
+      text.includes('Append to Context'),
     modelWidth: required(
       '[data-testid="architecture-model-width"] ' +
         'annotation[encoding="application/x-tex"]',

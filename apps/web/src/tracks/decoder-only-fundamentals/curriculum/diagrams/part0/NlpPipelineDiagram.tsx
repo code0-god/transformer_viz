@@ -9,7 +9,7 @@ const STAGES = [
 
 export function NlpPipelineDiagram(): ReactElement {
   return (
-    <figure className="part0-diagram part0-diagram--pipeline">
+    <div className="part0-diagram part0-diagram--pipeline">
       <svg
         viewBox="0 0 520 640"
         role="img"
@@ -85,7 +85,7 @@ export function NlpPipelineDiagram(): ReactElement {
           언어에서 계산으로, 계산에서 활용으로
         </text>
       </svg>
-      <figcaption className="part0-diagram__fallback">
+      <div className="part0-diagram__fallback">
         <fieldset aria-label="자연어 처리란? 의미 설명">
           <ol>
             {STAGES.map(([label]) => (
@@ -93,7 +93,7 @@ export function NlpPipelineDiagram(): ReactElement {
             ))}
           </ol>
         </fieldset>
-      </figcaption>
-    </figure>
+      </div>
+    </div>
   );
 }

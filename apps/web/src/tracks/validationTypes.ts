@@ -12,6 +12,7 @@ export type LearningProfileIssueCode =
   | "duplicate-primary-node"
   | "duplicate-route-id"
   | "formula-before-explanation"
+  | "invalid-figure-size"
   | "guide-page-id-mismatch"
   | "guide-page-route-mismatch"
   | "invalid-route-transition-exemption"
@@ -22,6 +23,7 @@ export type LearningProfileIssueCode =
   | "missing-guide-section-id"
   | "missing-key-takeaway"
   | "missing-learning-goal"
+  | "missing-figure-caption"
   | "missing-next-step"
   | "missing-page-glossary"
   | "primary-node-not-interactive"
@@ -30,6 +32,7 @@ export type LearningProfileIssueCode =
   | "uncovered-interactive-node"
   | "unknown-associated-node"
   | "unknown-formula"
+  | "unknown-figure"
   | "unknown-glossary-term"
   | "unknown-initial-route"
   | "unknown-next-step-route"
@@ -63,4 +66,5 @@ export type ValidationContext<Id extends string> = {
   readonly glossaryIds: ReadonlySet<string>;
   readonly runtimeAdapterIds: ReadonlySet<string>;
   readonly operationAdapterIds: ReadonlySet<string>;
+  readonly figureIds: ReadonlySet<string>;
 };

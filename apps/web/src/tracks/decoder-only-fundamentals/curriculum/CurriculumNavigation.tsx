@@ -1,24 +1,20 @@
 import { type ReactElement, useState } from "react";
 
 import { decoderCurriculum } from "./catalog";
-import { chapterNavigation } from "./navigation";
 import type { ChapterId } from "./types";
 
 type CurriculumNavigationProps = {
   readonly currentChapterId: ChapterId;
   readonly onNavigate: (chapterId: ChapterId) => void;
-  readonly homeHref?: string;
   readonly chapterHref?: (chapterId: ChapterId) => string;
 };
 
 export function CurriculumNavigation({
   currentChapterId,
   onNavigate,
-  homeHref,
   chapterHref,
 }: CurriculumNavigationProps): ReactElement {
   const [open, setOpen] = useState(false);
-  const navigation = chapterNavigation(currentChapterId);
   const navigate = (chapterId: ChapterId): void => {
     setOpen(false);
     onNavigate(chapterId);
@@ -81,42 +77,6 @@ export function CurriculumNavigation({
           ))}
         </nav>
       ) : null}
-
-      <nav
-        className="curriculum-navigation__adjacent"
-        aria-label="인접 Chapter"
-      >
-        {navigation?.previous === undefined ? (
-          homeHref === undefined ? null : (
-            <a href={homeHref}>이전: 학습 과정 홈</a>
-          )
-        ) : chapterHref === undefined ? (
-          <button
-            type="button"
-            onClick={() =>
-              navigate(navigation.previous?.id ?? currentChapterId)
-            }
-          >
-            이전: {navigation.previous.title}
-          </button>
-        ) : (
-          <a href={chapterHref(navigation.previous.id)}>
-            이전: {navigation.previous.title}
-          </a>
-        )}
-        {navigation?.next === undefined ? null : chapterHref === undefined ? (
-          <button
-            type="button"
-            onClick={() => navigate(navigation.next?.id ?? currentChapterId)}
-          >
-            다음: {navigation.next.title}
-          </button>
-        ) : (
-          <a href={chapterHref(navigation.next.id)}>
-            다음: {navigation.next.title}
-          </a>
-        )}
-      </nav>
     </section>
   );
 }

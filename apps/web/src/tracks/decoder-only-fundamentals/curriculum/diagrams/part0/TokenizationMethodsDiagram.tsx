@@ -41,7 +41,7 @@ const methods = [
 
 export function TokenizationMethodsDiagram(): ReactElement {
   return (
-    <figure className="part0-diagram part0-diagram--methods">
+    <div className="part0-diagram part0-diagram--methods">
       <svg
         viewBox="0 0 760 520"
         role="img"
@@ -105,7 +105,7 @@ export function TokenizationMethodsDiagram(): ReactElement {
           </text>
         </g>
       </svg>
-      <figcaption className="part0-diagram__fallback">
+      <div className="part0-diagram__fallback">
         <fieldset aria-label="Tokenization 방식 의미 설명">
           <table>
             <caption>the cats를 나누는 Tokenization 방식의 trade-off</caption>
@@ -121,15 +121,15 @@ export function TokenizationMethodsDiagram(): ReactElement {
               {methods.map((method) => (
                 <tr key={method.id}>
                   <th scope="row">{method.label}</th>
-                  <td>{method.example}</td>
-                  <td>{method.vocabulary}</td>
-                  <td>{method.sequence}</td>
+                  <td data-label="예시">{method.example}</td>
+                  <td data-label="Vocabulary">{method.vocabulary}</td>
+                  <td data-label="Sequence">{method.sequence}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </fieldset>
-      </figcaption>
-    </figure>
+      </div>
+    </div>
   );
 }

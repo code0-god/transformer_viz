@@ -1,12 +1,17 @@
 .learning-guide {
+  --learning-prose-width: 52rem;
+  --learning-figure-wide: 64rem;
+  --learning-figure-full: 72rem;
   display: grid;
-  gap: clamp(var(--s4, 1rem), 3vw, var(--s6, 2rem));
+  gap: clamp(var(--s4, 1rem), 2vw, var(--s5, 1.5rem));
   min-inline-size: 0;
-  max-inline-size: 52rem;
+  inline-size: 100%;
+  max-inline-size: var(--learning-figure-full);
   margin-inline: auto;
   padding: 0 var(--s5, 1.5rem) var(--s5, 1.5rem);
   color: var(--ink, #24231f);
   font-size: 1.0625rem;
+  font-weight: 400;
   line-height: 1.75;
 }
 
@@ -21,6 +26,7 @@
 .learning-guide-takeaway h4,
 .learning-guide-glossary h4 {
   color: var(--ink, #24231f);
+  font-weight: 700;
   line-height: 1.3;
   overflow-wrap: break-word;
   word-break: keep-all;
@@ -35,16 +41,9 @@
 
 .learning-guide-goal strong,
 .learning-guide-outline {
-  color: var(--accent, #a53d23);
+  color: var(--text-secondary, #655f58);
   font-size: 0.75rem;
   font-weight: 800;
-}
-
-.learning-guide-section-control,
-.learning-guide-visual-actions {
-  color: var(--accent, #a53d23);
-  font-size: 0.86rem;
-  font-weight: 780;
 }
 
 .learning-guide-goal span,
@@ -88,7 +87,6 @@
 }
 
 .learning-guide-introduction,
-.learning-guide-sections,
 .learning-guide-section,
 .learning-guide-takeaway,
 .learning-guide-glossary {
@@ -97,13 +95,40 @@
   min-inline-size: 0;
 }
 
+.learning-guide-introduction,
+.learning-guide-section {
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, var(--learning-prose-width))
+    minmax(0, 1fr);
+}
+
+.learning-guide-introduction > *,
+.learning-guide-section > * {
+  grid-column: 2;
+}
+
+.learning-guide-outline,
+.learning-guide-takeaway,
+.learning-guide-glossary,
+.learning-guide-next-step {
+  inline-size: min(100%, var(--learning-prose-width));
+  margin-inline: auto;
+}
+
+.learning-guide-sections {
+  display: grid;
+  gap: 2rem;
+  min-inline-size: 0;
+}
+
 .learning-guide-section {
   position: relative;
-  padding-block: var(--s4, 1rem);
+  padding-block: 0;
 }
 
 .learning-guide-section + .learning-guide-section {
-  margin-block-start: var(--s4, 1rem);
+  margin-block-start: 0;
 }
 
 .learning-guide-section:focus-visible {
@@ -135,34 +160,65 @@
   gap: var(--s3, 0.75rem);
 }
 
-.learning-guide-visual-actions,
-.learning-guide-section-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s3, 0.75rem);
-  align-items: center;
+.learning-figure {
+  display: grid;
+  gap: .65rem;
+  min-inline-size: 0;
+  margin-block: clamp(2rem, 5vw, 3rem) clamp(2.4rem, 5vw, 3.5rem);
 }
 
-.learning-guide-visual-actions {
-  padding-block: var(--s2, 0.5rem);
+.learning-figure[data-figure-size="prose"] {
+  grid-column: 2;
+  inline-size: min(100%, var(--learning-prose-width));
 }
 
-.learning-guide-visual-actions button,
-.learning-guide-section-control {
-  min-block-size: 44px;
-  padding: var(--s2, 0.5rem) 0;
-  border: 0;
-  border-block-end: 1px solid currentColor;
-  border-radius: 0;
+.learning-figure[data-figure-size="wide"] {
+  grid-column: 1 / -1;
+  justify-self: center;
+  inline-size: min(100%, var(--learning-figure-wide));
+}
+
+.learning-figure[data-figure-size="full"] {
+  grid-column: 1 / -1;
+  justify-self: center;
+  inline-size: min(100%, var(--learning-figure-full));
+}
+
+.learning-figure__content {
+  min-inline-size: 0;
+  overflow-x: auto;
   background: transparent;
-  color: var(--accent, #a53d23);
-  font-weight: 780;
-  cursor: pointer;
+  scrollbar-width: thin;
 }
 
-.learning-guide-visual-actions button:hover,
-.learning-guide-section-control:hover {
-  color: var(--accent-strong, #8f2f1b);
+.learning-figure:not([data-figure-size="prose"]) .learning-figure__content {
+  padding-block: clamp(.8rem, 2vw, 1.25rem);
+  border-block: 1px solid var(--hairline, #d3ccbd);
+}
+
+.learning-figure > figcaption {
+  inline-size: min(100%, var(--learning-prose-width));
+  margin-inline: auto;
+  color: var(--ink-muted, #68645c);
+  font-size: .875rem;
+  line-height: 1.58;
+}
+
+.learning-figure
+  :is(
+    .part0-diagram__fallback,
+    .part1-diagram__fallback,
+    .part2-diagram__fallback
+  ) {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .learning-guide ul,
@@ -186,7 +242,19 @@
 
 .learning-guide a,
 .learning-guide code {
-  color: var(--accent, #a53d23);
+  color: var(--text-primary, #292521);
+}
+
+.learning-guide a {
+  text-decoration-color: var(--border-strong, #887d71);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.learning-guide a:hover,
+.learning-guide a:focus-visible {
+  color: var(--accent-hover, #8f3522);
+  text-decoration-color: currentColor;
 }
 
 .learning-guide code {
@@ -231,6 +299,25 @@
   );
 }
 
+.learning-guide-callout {
+  padding: var(--s3, 0.75rem) var(--s4, 1rem);
+  border-block-start: 0;
+  border-inline-start: 2px solid var(--border-strong, #887d71);
+  background: color-mix(
+    in srgb,
+    var(--surface-subtle, #ebe5dc) 58%,
+    transparent
+  );
+}
+
+.learning-guide-callout strong {
+  display: block;
+  margin-block-end: var(--s1, 0.25rem);
+  color: var(--text-secondary, #655f58);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
 .learning-guide-runtime summary {
   color: var(--ink-muted, #68645c);
   cursor: pointer;
@@ -257,7 +344,7 @@
 
 .learning-guide-callout[data-guide-tone="important"],
 .learning-guide-operation {
-  border-block-start-color: color-mix(
+  border-inline-start-color: color-mix(
     in srgb,
     var(--accent, #a53d23) 58%,
     var(--hairline, #d3ccbd)
@@ -265,7 +352,7 @@
 }
 
 .learning-guide-callout[data-guide-tone="warning"] {
-  border-block-start-color: var(--error, #a73c31);
+  border-inline-start-color: var(--error, #a73c31);
 }
 
 .learning-guide-callout[data-guide-tone="analogy"] {
@@ -363,6 +450,71 @@
 }
 
 @media (max-width: 44rem) {
+  .learning-guide {
+    --learning-prose-width: 100%;
+    --learning-figure-wide: 100%;
+    --learning-figure-full: 100%;
+  }
+
+  .learning-guide-introduction,
+  .learning-guide-section {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .learning-guide-introduction > *,
+  .learning-guide-section > *,
+  .learning-figure[data-figure-size] {
+    grid-column: 1;
+  }
+
+  .learning-figure {
+    margin-block: 1.8rem 2.5rem;
+  }
+
+  .learning-figure__content {
+    overflow-x: clip;
+  }
+
+  .learning-figure > figcaption {
+    font-size: .84rem;
+  }
+
+  .learning-figure
+    :is(
+      .part0-diagram--vocabulary,
+      .part0-diagram--methods,
+      .part1-diagram,
+      .part2-diagram
+    )
+    > svg {
+    display: none;
+  }
+
+  .learning-figure
+    :is(
+      .part0-diagram--vocabulary,
+      .part0-diagram--methods,
+      .part1-diagram,
+      .part2-diagram
+    )
+    > :is(
+      .part0-diagram__fallback,
+      .part1-diagram__fallback,
+      .part2-diagram__fallback
+    ) {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    padding: var(--s3, .75rem);
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    border: 1px solid var(--hairline, #d3ccbd);
+    border-radius: 6px;
+    background: var(--surface-subtle, #f4efe6);
+  }
+
   .learning-guide-runtime dl > div,
   .learning-guide-operation dl > div,
   .learning-guide-glossary dl > div {

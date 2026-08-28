@@ -9,7 +9,7 @@ const generationTokens = example.generationPrefix;
 
 export function VocabularyAddressDiagram(): ReactElement {
   return (
-    <figure className="part0-diagram part0-diagram--vocabulary">
+    <div className="part0-diagram part0-diagram--vocabulary">
       <svg
         viewBox="0 0 760 570"
         role="img"
@@ -112,7 +112,7 @@ export function VocabularyAddressDiagram(): ReactElement {
           </text>
         </g>
       </svg>
-      <figcaption className="part0-diagram__fallback">
+      <div className="part0-diagram__fallback">
         <fieldset aria-label="Vocabulary와 Token ID 의미 설명">
           <p>
             Display encoding:{" "}
@@ -128,7 +128,7 @@ export function VocabularyAddressDiagram(): ReactElement {
           </p>
           <p>Reserved UNK는 주소이며 embedding 의미와 분리됩니다.</p>
         </fieldset>
-      </figcaption>
-    </figure>
+      </div>
+    </div>
   );
 }

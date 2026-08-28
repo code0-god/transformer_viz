@@ -9,6 +9,7 @@ export interface StageNodeProps {
   readonly bounds: RectBounds;
   readonly selected: boolean;
   readonly highlighted?: boolean;
+  readonly interactive?: boolean;
   readonly onActivate: (id: ArchitectureNodeId) => void;
 }
 
@@ -18,6 +19,7 @@ export function StageNode({
   bounds,
   selected,
   highlighted = false,
+  interactive = true,
   onActivate,
 }: StageNodeProps) {
   const notation = notationCatalog[id];
@@ -34,10 +36,11 @@ export function StageNode({
       bounds={{ ...bounds, radius: 9 }}
       selected={selected}
       highlighted={highlighted}
+      interactive={interactive}
       onActivate={onActivate}
     >
       <g
-        className={`architecture-node ${className} architecture-interactive-node architecture-interactive-node--${capability}${selected ? " is-selected" : ""}`}
+        className={`architecture-node ${className}${interactive ? ` architecture-interactive-node architecture-interactive-node--${capability}` : ""}${selected ? " is-selected" : ""}`}
       >
         <rect {...bounds} rx={9} />
         <text

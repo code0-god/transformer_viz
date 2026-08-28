@@ -1,12 +1,13 @@
 .diagram-viewport {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: var(--s2);
   min-block-size: 0;
   min-inline-size: 0;
 }
 
 .diagram-viewport__meta {
+  grid-row: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
@@ -20,19 +21,15 @@
 }
 
 .diagram-viewport__description {
+  grid-row: 3;
   min-inline-size: 0;
+  padding-block-start: var(--s2);
+  border-block-start: 1px solid var(--border-subtle);
   color: var(--ink-muted);
   font-size: 0.78rem;
   line-height: 1.55;
   overflow-wrap: anywhere;
   word-break: keep-all;
-}
-
-.diagram-viewport__meta:has(.diagram-viewport__extra-controls)
-  .diagram-viewport__description {
-  padding-block-start: var(--s2);
-  border-block-start: 1px solid
-    color-mix(in srgb, var(--hairline) 68%, transparent);
 }
 
 .diagram-viewport__toolbar {
@@ -42,12 +39,12 @@
   inset-inline-end: var(--s2);
   display: flex;
   align-items: center;
-  padding: var(--s1);
-  border: 1px solid color-mix(in srgb, var(--hairline) 72%, transparent);
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--surface) 68%, transparent);
-  box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(10px) saturate(1.08);
+  padding: 2px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--bg-overlay) 82%, transparent);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
 }
 
 .diagram-viewport__extra-controls {
@@ -65,9 +62,9 @@
 }
 
 .diagram-viewport__toolbar button {
-  min-inline-size: 34px;
-  min-block-size: 34px;
-  padding: 0 var(--s2);
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding: 0 .4rem;
   border: 0;
   background: transparent;
   font-size: 0.78rem;
@@ -78,7 +75,7 @@
 }
 
 .diagram-viewport__toolbar output {
-  min-inline-size: 2.9rem;
+  min-inline-size: 2.7rem;
   color: var(--ink-muted);
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
@@ -93,9 +90,9 @@
   min-block-size: 28rem;
   min-inline-size: 0;
   overflow: clip;
-  border: 1px solid color-mix(in srgb, var(--hairline) 68%, transparent);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--mesh-surface) 74%, transparent);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+  background: var(--bg-overlay);
   cursor: default;
   overscroll-behavior: contain;
 }
@@ -139,6 +136,11 @@
 }
 
 @media (max-width: 40rem) {
+  .diagram-viewport__toolbar button {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+  }
+
   .diagram-viewport__extra-controls {
     justify-content: flex-start;
   }

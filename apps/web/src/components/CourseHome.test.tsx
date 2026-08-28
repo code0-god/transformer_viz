@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { CourseHome } from "./CourseHome";
@@ -8,8 +8,17 @@ describe("Course Home frontispiece", () => {
     render(<CourseHome />);
 
     const journey = screen.getByRole("list", { name: "학습 순서" });
+    const steps = within(journey).getAllByRole("listitem");
     expect(journey.tagName).toBe("OL");
-    expect(screen.getAllByRole("listitem")).toHaveLength(7);
+    expect(steps).toHaveLength(7);
+    expect(
+      steps.every(
+        (step) =>
+          step.querySelector("[data-course-step-number]") !== null &&
+          step.querySelector("[data-course-step-title]") !== null &&
+          step.querySelector("[data-course-step-summary]") !== null,
+      ),
+    ).toBe(true);
     expect(screen.getByRole("link", { name: "처음부터 시작" })).toHaveAttribute(
       "href",
       "#/learn/decoder-only-fundamentals/0-1",

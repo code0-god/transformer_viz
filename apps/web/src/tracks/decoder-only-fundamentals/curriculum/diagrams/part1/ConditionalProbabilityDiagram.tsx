@@ -8,7 +8,7 @@ const FACTORS = [
 
 export function ConditionalProbabilityDiagram(): ReactElement {
   return (
-    <figure className="part1-diagram">
+    <div className="part1-diagram">
       <svg
         viewBox="0 0 760 450"
         role="img"
@@ -79,7 +79,7 @@ export function ConditionalProbabilityDiagram(): ReactElement {
           </text>
         </g>
       </svg>
-      <figcaption className="part1-diagram__fallback">
+      <div className="part1-diagram__fallback">
         <fieldset aria-label="조건부 확률 의미 설명">
           <ol>
             {FACTORS.map(([label, probability]) => (
@@ -90,7 +90,7 @@ export function ConditionalProbabilityDiagram(): ReactElement {
             <li>Joint probability: 세 prefix factor의 곱</li>
           </ol>
         </fieldset>
-      </figcaption>
-    </figure>
+      </div>
+    </div>
   );
 }

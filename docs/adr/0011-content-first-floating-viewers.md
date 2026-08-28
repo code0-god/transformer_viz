@@ -1,8 +1,12 @@
 # ADR 0011: Content-first pages with focused viewer overlays
 
-- Status: Accepted
+- Status: Superseded in part by ADR 0012
 - Date: 2026-08-27
 - Supersedes: ADR 0009's permanent desktop Diagram/Guide split
+
+ADR 0012 supersedes this record's Learn diagram-presentation decision. The
+article-first shell remains accepted, and OverlayHost/DiagramViewport remain
+accepted for Lab inspection.
 
 ## Context
 

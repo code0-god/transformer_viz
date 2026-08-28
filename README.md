@@ -68,11 +68,16 @@ label, title, learning promise, and the first explanatory paragraph. Short Part 
 outline; longer GPT, Transformer Block, and Self-Attention guides may expose one compact,
 collapsed outline.
 
-Visual material appears only when the surrounding explanation needs it. Concept-specific text
-actions such as **Token 경계 보기**, **GPT 전체 구조 보기**, and
-**Self-Attention 계산 흐름 보기** open the shared focused viewer. Closing the viewer restores the
-article scroll position and trigger focus. Diagram selection can return to the matching article
-heading without changing Worker state, generation semantics, route ownership, layer, or head.
+Required educational material appears directly where the surrounding
+explanation needs it. Content-owned Figure blocks resolve through the active
+Learning Track registry and render semantic prose, wide, or full Figures with
+captions. Learn has no diagram overlay trigger, close button, backdrop, or zoom
+toolbar. Architecture detail links use normal Chapter hash navigation.
+
+Lab remains experiment-first. Architecture, Block, Self-Attention, and the
+actual-trace Score Matrix open through the shared focused viewer. Closing the
+viewer restores trigger focus without changing Worker state, generation
+semantics, route ownership, layer, or head.
 
 Part 0 keeps separate editorial responsibilities:
 
@@ -85,7 +90,7 @@ Attention Score Matrix remains the only R3F visualization and keeps its exact HT
 The workspace does not ship general tensor, Q/K/V, Scale, Mask, Softmax, KV-cache, Encoder-Decoder,
 or Cross-Attention visualizations. See
 [Model and Learning Profiles](docs/MODEL_AND_LEARNING_PROFILES.md) and
-[ADR 0011](docs/adr/0011-content-first-floating-viewers.md).
+[ADR 0012](docs/adr/0012-inline-learning-figures.md).
 
 ## Development
 

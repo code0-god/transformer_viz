@@ -64,9 +64,14 @@ class BrowserState(TypedDict):
     visualizationUiCount: int
     workerPosts: int
     workerActionDelta: int
-    diagramRatio: float
     layout: str
-    diagramBeforeGuide: bool
+    hasArticle: bool
+    hasGuide: bool
+    hasFigure: bool
+    figureInside: bool
+    triggerCount: int
+    dialogOpen: bool
+    legacyDiagramPane: bool
     diagramImages: int
     semanticFallbacks: int
     controls: list[Control]
@@ -130,18 +135,22 @@ STATE_PROBE: Final = f"""(() => {{
     }}
   }}
   scrollTo({{top:initialScrollY,behavior:'instant'}});
-  const body=document.querySelector('.learning-workspace__body')?.getBoundingClientRect();
-  const diagram=document.querySelector('.learning-workspace__pane--diagram')?.getBoundingClientRect();
-  const guide=document.querySelector('.learning-workspace__pane--guide')?.getBoundingClientRect();
+  const workspace=document.querySelector('.learning-workspace');
+  const article=document.querySelector('.learning-workspace__article');
+  const guide=document.getElementById('learning-guide-pane');
+  const figure=guide?.querySelector('.learning-figure');
   return {{
     title:document.querySelector('.curriculum-workspace__chapter-copy h2')?.textContent||document.querySelector('.learning-route-title')?.textContent||'',
     progress:document.querySelector('[role=progressbar]')?.textContent||'', currentCount:[...document.querySelectorAll('[aria-current=page]')].filter(visible).length,
     documentOverflow:Math.max(0,document.documentElement.scrollWidth-document.documentElement.clientWidth), localOwners:local,
     visualizationUiCount:[...document.querySelectorAll('button,a,[role=tab],[role=button]')].filter(element=>visible(element)&&/Visualization/.test(element.textContent||element.getAttribute('aria-label')||'')).length,
     workerPosts:window.__releaseWorkerPosts, historyCalls:window.__releaseHistoryCalls,
-    diagramRatio:body&&diagram?diagram.width/body.width:0, layout:diagram&&guide&&diagram.right<=guide.left+4?'split':'stack', diagramBeforeGuide:diagram&&guide?diagram.top<=guide.top:false,
-    diagramImages:document.querySelectorAll('.learning-workspace__pane--diagram [role=img]').length,
-    semanticFallbacks:document.querySelectorAll('.learning-workspace__pane--diagram figcaption').length,
+    layout:workspace?.dataset.learningLayout||null,
+    hasArticle:!!article,hasGuide:!!guide,hasFigure:!!figure,figureInside:!!figure&&!!guide&&guide.contains(figure),
+    triggerCount:article?.querySelectorAll('[aria-haspopup="dialog"]').length||0,
+    dialogOpen:!!document.querySelector('[role="dialog"]'),legacyDiagramPane:!!document.getElementById('learning-diagram-pane'),
+    diagramImages:figure?.querySelectorAll('[role=img]').length||0,
+    semanticFallbacks:figure?.querySelectorAll(':scope > figcaption').length||0,
     controls, hitFailures, cjkReplacement:(document.body.textContent||'').includes('�'),
     reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,
   }};
@@ -167,15 +176,25 @@ def _set_viewport(cdp: Cdp, session: str, width: int, height: int) -> None:
 
 def _keyboard_activate(cdp: Cdp, session: str, selector: str) -> None:
     encoded = json.dumps(selector, ensure_ascii=False)
-    cdp.evaluate(session, f"""(() => {{
+    tag_name = cdp.evaluate(session, f"""(() => {{
       const target=document.querySelector({encoded});
       if (!(target instanceof HTMLElement)) throw new Error('missing '+{encoded});
       window.__releaseAction=new Promise(resolve=>target.addEventListener('click',()=>requestAnimationFrame(()=>requestAnimationFrame(resolve)),{{once:true}}));
       target.focus();
+      return target.tagName;
     }})()""")
-    key = {"key": " ", "code": "Space", "windowsVirtualKeyCode": 32}
+    key = (
+        {"key": "Enter", "code": "Enter", "windowsVirtualKeyCode": 13}
+        if tag_name == "A"
+        else {"key": " ", "code": "Space", "windowsVirtualKeyCode": 32}
+    )
     cdp.send("Input.dispatchKeyEvent", {"type": "rawKeyDown", **key}, session)
-    cdp.send("Input.dispatchKeyEvent", {"type": "char", "text": " ", **key}, session)
+    if tag_name != "A":
+        cdp.send(
+            "Input.dispatchKeyEvent",
+            {"type": "char", "text": " ", **key},
+            session,
+        )
     cdp.send("Input.dispatchKeyEvent", {"type": "keyUp", **key}, session)
     cdp.evaluate(session, "window.__releaseAction", True)
 
@@ -188,10 +207,50 @@ def _ax(cdp: Cdp, session: str, chapter_order: int) -> tuple[dict[str, JsonValue
     math_ids = {node.get("nodeId") for node in math_nodes}
     nested = sum(1 for node in math_nodes if node.get("parentId") in math_ids)
     controls = [name(node) for node in nodes if role(node) in ("button", "link") and name(node)]
-    dom_math_units = cdp.evaluate(session, "document.querySelectorAll('[role=math]').length", True)
+    visible_math = """[...document.querySelectorAll('[role=math]')].filter(
+      element => {
+        const box=element.getBoundingClientRect();
+        const style=getComputedStyle(element);
+        return box.width>1&&box.height>1
+          &&style.display!=='none'&&style.visibility!=='hidden';
+      }
+    )"""
+    dom_math_units = cdp.evaluate(
+        session,
+        f"{visible_math}.length",
+        True,
+    )
+    visible_alternatives = cdp.evaluate(
+        session,
+        """(() => {
+          const visible = (element) => {
+            const box = element.getBoundingClientRect();
+            const style = getComputedStyle(element);
+            return box.width > 1 && box.height > 1
+              && style.display !== 'none'
+              && style.visibility !== 'hidden';
+          };
+          return [
+            ...document.querySelectorAll(
+              '.learning-figure .part0-diagram__fallback,'
+              + '.learning-figure .part1-diagram__fallback,'
+              + '.learning-figure .part2-diagram__fallback,'
+              + '.decoder-learning-architecture__mobile',
+            ),
+          ].filter(visible).length;
+        })()""",
+        True,
+    )
     sampled_exact = True
     if dom_math_units:
-        remote = cdp.send("Runtime.evaluate", {"expression": "document.querySelector('[role=math]')", "returnByValue": False}, session)
+        remote = cdp.send(
+            "Runtime.evaluate",
+            {
+                "expression": f"{visible_math}[0]",
+                "returnByValue": False,
+            },
+            session,
+        )
         object_id = remote["result"]["objectId"]
         backend_id = cdp.send("DOM.describeNode", {"objectId": object_id}, session)["node"]["backendNodeId"]
         sampled_nodes = cdp.send("Accessibility.getPartialAXTree", {"backendNodeId": backend_id, "fetchRelatives": False}, session)["nodes"]
@@ -200,6 +259,7 @@ def _ax(cdp: Cdp, session: str, chapter_order: int) -> tuple[dict[str, JsonValue
         "mathSemanticUnits": len(math_nodes), "domMathUnits": dom_math_units,
         "sampledMathUnitExact": sampled_exact, "nestedMathNodes": nested,
         "diagramImages": sum(1 for node in nodes if role(node) in ("image", "img")),
+        "visibleFigureAlternatives": visible_alternatives,
         "namedControls": controls, "headingNames": [name(node) for node in nodes if role(node) == "heading"],
         "currentRootExpectedTen": chapter_order == 12 and len([item for item in controls if "선택 가능" in item or "보기 가능" in item]) == 10,
     }
@@ -309,17 +369,41 @@ def _capture_chrome_ax_focus_transcript(
           const current=document.querySelector('#curriculum-toc [aria-current=page]');
           return {source:'keyboard-space',expanded:opener?.getAttribute('aria-expanded')==='true',controlCount:document.querySelectorAll('#curriculum-toc a').length,currentCount:document.querySelectorAll('#curriculum-toc [aria-current=page]').length,currentName:current?.getAttribute('aria-label')||''};
         })()""", True)
-        heading_focus = _select_chapter_with_focus_event(cdp, session, "자연어 처리란?")
+        heading_focus = _select_chapter_with_focus_event(
+            cdp,
+            session,
+            "Token이란?",
+        )
         heading_ax = _ax_role_name(_partial_ax(cdp, session, ".curriculum-workspace__chapter-copy h1"), "heading")
-        diagram_ax = _ax_role_name(_partial_ax(cdp, session, ".learning-workspace__pane--diagram [role=img]"), "image")
-        fallback_ax = _ax_role_name(_partial_ax(cdp, session, ".learning-workspace__pane--diagram figcaption fieldset"), "group")
+        diagram_ax = _ax_role_name(
+            _partial_ax(
+                cdp,
+                session,
+                "[data-figure-id='decoder.diagram.tokenization.token'] [role=img]",
+            ),
+            "image",
+        )
+        fallback_ax = _ax_role_name(
+            _partial_ax(
+                cdp,
+                session,
+                "[data-figure-id='decoder.diagram.tokenization.token'] fieldset",
+            ),
+            "group",
+        )
         diagram_dom = cdp.evaluate(session, """(() => {
-          const figure=document.querySelector('.learning-workspace__pane--diagram figure');
-          return {fallbackText:figure?.querySelector('figcaption')?.textContent?.replace(/\\s+/g,' ').trim()||'',siblingControls:[...(figure?.querySelectorAll(':scope > button')||[])].map(button=>button.textContent?.trim()||button.getAttribute('aria-label')||'')};
+          const figure=document.querySelector('[data-figure-id="decoder.diagram.tokenization.token"]');
+          return {fallbackText:figure?.querySelector(':scope > figcaption')?.textContent?.replace(/\\s+/g,' ').trim()||'',siblingControls:[...(figure?.querySelectorAll('button')||[])].map(button=>button.textContent?.trim()||button.getAttribute('aria-label')||'')};
         })()""", True)
-        adjacent = cdp.evaluate(session, "[...document.querySelectorAll('.curriculum-navigation__adjacent a')].map(link=>link.textContent.trim())", True)
-        progress = _ax_role_name(_partial_ax(cdp, session, "[role=progressbar]"), "progressbar")
-        progress["valueNow"] = cdp.evaluate(session, "Number(document.querySelector('[role=progressbar]').getAttribute('aria-valuenow'))", True)
+        adjacent = cdp.evaluate(session, "[...document.querySelectorAll('.curriculum-chapter-footer a')].map(link=>link.getAttribute('aria-label'))", True)
+        progress = {
+            "role": "text",
+            "name": cdp.evaluate(
+                session,
+                "document.querySelector('.curriculum-workspace__eyebrow')?.textContent?.trim() ?? ''",
+                True,
+            ),
+        }
         if not isinstance(toc, dict) or not isinstance(diagram_dom, dict):
             raise ArchitectureContractError("transcript DOM evidence malformed")
 
@@ -347,16 +431,48 @@ def _capture_chrome_ax_focus_transcript(
         })()""")
         _select_chapter_with_curriculum_event(cdp, session, "GPT")
         cdp.evaluate(session, "window.__releaseGptCommitted", True)
-        cdp.evaluate(session, """(() => {
-          const target=document.querySelector("[data-node-id='generated-token']");
-          if (!(target instanceof Element) || typeof target.focus !== 'function') throw new Error('generated-token target missing');
-          window.__releaseGeneratedFocus=new Promise(resolve=>target.addEventListener('focus',()=>resolve({type:'focus',nodeId:target.dataset.nodeId}),{once:true}));
-          target.focus({preventScroll:true});
-        })()""")
-        generated_focus = cdp.evaluate(session, "window.__releaseGeneratedFocus", True)
-        generated_ax = _ax_role_name(_partial_ax(cdp, session, "[data-node-id='generated-token']"), "button")
-        if not isinstance(generated_focus, dict):
-            raise ArchitectureContractError("generated-token focus event absent")
+        generated_ax = _ax_role_name(
+            _partial_ax(
+                cdp,
+                session,
+                "[data-figure-id='root'] [role='img']",
+            ),
+            "image",
+        )
+        chapter_link_ax = _ax_role_name(
+            _partial_ax(
+                cdp,
+                session,
+                "a[aria-label='Transformer Block 설명으로 이동']",
+            ),
+            "link",
+        )
+        _keyboard_activate(
+            cdp,
+            session,
+            "a[aria-label='Transformer Block 설명으로 이동']",
+        )
+        generated_focus = cdp.evaluate(
+            session,
+            """(() => ({
+              type:'chapter-link',
+              chapterPresent:Boolean(document.querySelector(
+                "[data-curriculum-chapter-id='decoder.chapter.4.1']",
+              )),
+              activeSection:
+                document.activeElement?.getAttribute(
+                  'data-guide-section-id',
+                ) ?? '',
+            }))()""",
+            True,
+        )
+        if (
+            not isinstance(generated_focus, dict)
+            or generated_focus.get("chapterPresent") is not True
+        ):
+            raise ArchitectureContractError(
+                f"Transformer Block chapter link failed: {generated_focus}",
+            )
         worker_deltas.append(cdp.evaluate(session, "window.__releaseWorkerPosts", True) - worker_baseline)
         history_deltas.append(cdp.evaluate(session, "window.__releaseHistoryCalls", True) - history_baseline)
         chapter_hashes.append(cdp.evaluate(session, "location.hash", True))
@@ -372,8 +488,8 @@ def _capture_chrome_ax_focus_transcript(
         history_deltas.append(cdp.evaluate(session, "window.__releaseHistoryCalls", True) - history_baseline)
         chapter_hashes.append(cdp.evaluate(session, "location.hash", True))
         expected_hashes = (
-            "#/learn/decoder-only-fundamentals/0-1",
-            "#/learn/decoder-only-fundamentals/3-1",
+            "#/learn/decoder-only-fundamentals/0-2",
+            "#/learn/decoder-only-fundamentals/4-1",
             "#/learn/decoder-only-fundamentals/1-2",
         )
         if any(worker_deltas) or any(history_deltas) or tuple(chapter_hashes) != expected_hashes:
@@ -381,10 +497,11 @@ def _capture_chrome_ax_focus_transcript(
 
     events: list[JsonValue] = [
         {"id": "toc-expanded-current", **toc},
-        {"id": "chapter-heading-focus", "source": "keyboard-space-then-focusin", **heading_focus, **heading_ax},
+        {"id": "chapter-heading-focus", "source": "keyboard-enter-then-focusin", **heading_focus, **heading_ax},
         {"id": "diagram-semantics", **diagram_ax, "fallbackRole": fallback_ax["role"], "fallbackName": fallback_ax["name"], "fallbackText": diagram_dom["fallbackText"]},
         {"id": "sibling-controls", "names": diagram_dom["siblingControls"]},
-        {"id": "generated-token-focus", "source": "focus-event", **generated_focus, **generated_ax},
+        {"id": "gpt-static-image", **generated_ax},
+        {"id": "gpt-chapter-link", "source": "keyboard-enter", **generated_focus, **chapter_link_ax},
         {"id": "adjacent-navigation-names", "names": adjacent},
         {"id": "progress", **progress},
         {"id": "math-semantic-unit", **math_ax},
@@ -446,18 +563,32 @@ def _capture_one(origin: str, chapter: Chapter | None, viewport: tuple[int, int]
 def _verify_curriculum_capture(state: BrowserState, chapter_id: str, width: int) -> list[JsonValue]:
     failures = [control for control in state["controls"] if control["width"] < 44 or control["height"] < 44]
     local_ranges: list[JsonValue] = [owner["range"] for owner in state["localOwners"]]
+    figure_required = chapter_id not in {
+        "decoder.chapter.4.1",
+        "decoder.chapter.5.1",
+    }
     invalid = (
         state["documentOverflow"] != 0 or any(local_ranges) or failures
         or state["visualizationUiCount"] != 0 or state["workerActionDelta"] != 0
         or state["hitFailures"] or state["cjkReplacement"] or not state["reducedMotion"]
-        or state["diagramImages"] != 1 or state["semanticFallbacks"] < 1
+        or (
+            figure_required
+            and (state["diagramImages"] != 1 or state["semanticFallbacks"] < 1)
+        )
     )
     if invalid:
         raise ArchitectureContractError(f"browser surface failed: {chapter_id} {width}: {state}")
-    if width == 1440 and (state["layout"] != "split" or not 0.46 <= state["diagramRatio"] <= 0.50):
-        raise ArchitectureContractError(f"desktop geometry failed: {state}")
-    if width != 1440 and (state["layout"] != "stack" or not state["diagramBeforeGuide"]):
-        raise ArchitectureContractError(f"stack geometry failed: {state}")
+    if (
+        state["layout"] != "article"
+        or not state["hasArticle"]
+        or not state["hasGuide"]
+        or (figure_required and not state["hasFigure"])
+        or (state["hasFigure"] and not state["figureInside"])
+        or state["triggerCount"] != 0
+        or state["dialogOpen"]
+        or state["legacyDiagramPane"]
+    ):
+        raise ArchitectureContractError(f"inline article geometry failed: {state}")
     return local_ranges
 
 
