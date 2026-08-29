@@ -7,6 +7,7 @@ from browser_hybrid_contract import button_with_text, require
 from browser_hybrid_helpers import (
     JsonObject,
     evaluate_dict,
+    navigate_hash,
     pointer_click,
     settle_animations,
     wait_for,
@@ -40,10 +41,12 @@ def verify_failure_modes(url: str) -> JsonObject:
     unavailable = _verify_unavailable(url)
     reduced_motion = _verify_reduced_motion(url)
     renderer_error = _verify_renderer_error(url)
+    css_unavailable = _verify_css_unavailable(url)
     return {
         "webglUnavailable": unavailable,
         "reducedMotion": reduced_motion,
         "rendererImportError": renderer_error,
+        "cssUnavailable": css_unavailable,
     }
 
 
@@ -242,3 +245,119 @@ def _verify_renderer_error(url: str) -> JsonObject:
             f"Renderer error boundary failed: {probe}",
         )
         return probe
+
+
+def _verify_css_unavailable(url: str) -> JsonObject:
+    with ChromeSession(enable_gpu=False) as browser:
+        cdp = browser.require_cdp()
+        cdp.send(
+            "Network.setBlockedURLs",
+            {"urls": ["*.css"]},
+            browser.page_session,
+        )
+        browser.navigate(url)
+        cdp.evaluate(browser.page_session, READY_PROBE, True)
+        home = evaluate_dict(
+            browser,
+            """(() => ({
+              heading:
+                document.querySelector('.course-home h1')
+                ?.textContent?.trim() ?? '',
+              startLink:
+                document.querySelector('.course-home__start')
+                instanceof HTMLAnchorElement,
+              navigation:
+                document.querySelector('nav[aria-label="주요 탐색"]')
+                instanceof HTMLElement,
+            }))()""",
+        )
+        require(
+            home["heading"] == "Transformer를 처음부터 살펴봅니다"
+            and home["startLink"] is True
+            and home["navigation"] is True,
+            f"CSS-free Home semantics failed: {home}",
+        )
+
+        navigate_hash(
+            browser,
+            "#/learn/decoder-only-fundamentals/0-2",
+            (
+                "document.querySelector('article') !== null"
+                " && document.querySelector("
+                "'[data-figure-id=\"decoder.diagram.tokenization.token\"]'"
+                ") !== null"
+            ),
+            "CSS-free Learn",
+        )
+        learn = evaluate_dict(
+            browser,
+            """(() => {
+              const figure = document.querySelector(
+                '[data-figure-id="decoder.diagram.tokenization.token"]',
+              );
+              return {
+                article: document.querySelector('article') !== null,
+                heading:
+                  document.querySelector(
+                    '.curriculum-workspace__chapter-copy h1',
+                  )?.textContent?.trim() ?? '',
+                figure: figure instanceof HTMLElement,
+                caption: figure?.querySelector('figcaption')
+                  ?.textContent?.trim() ?? '',
+                graphic:
+                  figure?.querySelector('svg, [role="img"]') !== null,
+                canvasCount: document.querySelectorAll('canvas').length,
+              };
+            })()""",
+        )
+        require(
+            learn["article"] is True
+            and learn["heading"] == "Token이란?"
+            and learn["figure"] is True
+            and isinstance(learn["caption"], str)
+            and learn["caption"] != ""
+            and learn["graphic"] is True
+            and learn["canvasCount"] == 0,
+            f"CSS-free Learn semantics failed: {learn}",
+        )
+
+        navigate_hash(
+            browser,
+            "#/lab",
+            "document.querySelector('[data-app-view=\"lab\"]') !== null",
+            "CSS-free Lab",
+        )
+        lab = evaluate_dict(
+            browser,
+            """(() => ({
+              heading:
+                document.querySelector('.lab-introduction h1')
+                ?.textContent?.trim() ?? '',
+              prompt: document.querySelector('textarea') !== null,
+              generate:
+                document.querySelector('[data-testid="generate"]')
+                instanceof HTMLButtonElement,
+              settings:
+                document.querySelector('.generation-settings')
+                instanceof HTMLDetailsElement,
+            }))()""",
+        )
+        require(
+            lab["heading"] == "모델 실험실"
+            and lab["prompt"] is True
+            and lab["generate"] is True
+            and lab["settings"] is True,
+            f"CSS-free Lab semantics failed: {lab}",
+        )
+        blocked_styles = [
+            request
+            for request in request_urls(browser)
+            if request.split("?", 1)[0].endswith(".css")
+        ]
+        require(blocked_styles != [], "CSS-free probe blocked no stylesheet")
+        return {
+            "blockedStyleRequests": len(blocked_styles),
+            "home": home,
+            "learn": learn,
+            "lab": lab,
+        }
