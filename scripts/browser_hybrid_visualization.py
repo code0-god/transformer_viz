@@ -427,15 +427,101 @@ def capture_visualization_phase(
             matrix["inspectRequests"],
         ),
     }
-    evidence["labResponsive"] = _verify_lab_responsive(browser)
+    evidence["labResponsive"] = _verify_lab_responsive(
+        browser,
+        screenshots,
+        shots,
+    )
 
 
-def _verify_lab_responsive(browser: ChromeSession) -> list[JsonObject]:
+def _verify_lab_responsive(
+    browser: ChromeSession,
+    screenshots: Path,
+    shots: dict[str, str],
+) -> list[JsonObject]:
     evidence: list[JsonObject] = []
-    for width, height in ((1440, 900), (1366, 768), (1024, 768), (390, 844)):
+    for width, height in (
+        (1440, 900),
+        (1366, 768),
+        (1024, 768),
+        (768, 1024),
+        (390, 844),
+        (320, 568),
+    ):
         set_viewport(browser, width, height)
         base = _assert_lab_base(browser)
         require(base["overflowX"] is False, f"Lab base overflow: {base}")
+        if width == 320:
+            browser.require_cdp().evaluate(
+                browser.page_session,
+                "window.scrollTo({ top: 0, left: 0, behavior: 'auto' })",
+                True,
+            )
+            wait_for(browser, "scrollY === 0", "Lab narrow top")
+        layout = evaluate_dict(
+            browser,
+            """(() => {
+              const stacked = (selector) => {
+                const children = Array.from(
+                  document.querySelector(selector)?.children ?? [],
+                ).filter((child) => child instanceof HTMLElement);
+                if (children.length < 2) return false;
+                const first = children[0]?.getBoundingClientRect();
+                const second = children[1]?.getBoundingClientRect();
+                return !!first && !!second
+                  && Math.abs(first.left - second.left) <= 1
+                  && second.top >= first.bottom - 1;
+              };
+              const settings = document.querySelector(
+                '.generation-settings',
+              );
+              if (settings instanceof HTMLDetailsElement) settings.open = true;
+              const controls = Array.from(
+                document.querySelectorAll(
+                  '.generation-bar :is(button, input, textarea, select)',
+                ),
+              );
+              const generation = document.querySelector('.generation-bar')
+                ?.getBoundingClientRect();
+              return {
+                experimentStacked: stacked('.lab-experiment-grid'),
+                primaryStacked: stacked('.generation-primary'),
+                settingsStacked: stacked('.generation-settings-grid'),
+                controlsFit: controls.every((control) => {
+                  const rect = control.getBoundingClientRect();
+                  return !!generation
+                    && rect.left >= generation.left - 1
+                    && rect.right <= generation.right + 1;
+                }),
+                controlMinHeight: Math.min(
+                  ...controls.map(
+                    (control) => control.getBoundingClientRect().height,
+                  ),
+                ),
+              };
+            })()""",
+        )
+        if width <= 880:
+            require(
+                layout["experimentStacked"] is True,
+                f"Lab experiment did not stack at {width}: {layout}",
+            )
+        if width <= 640:
+            require(
+                layout["primaryStacked"] is True
+                and layout["settingsStacked"] is True,
+                f"Lab controls did not stack at {width}: {layout}",
+            )
+        require(
+            layout["controlsFit"] is True
+            and number(layout["controlMinHeight"], "Lab control height") >= 44,
+            f"Lab controls exceed mobile surface at {width}: {layout}",
+        )
+        if width == 320:
+            shots["labBaseNarrow"] = capture(
+                browser,
+                screenshots / "lab-base-320x568.png",
+            )
         pointer_click(
             browser,
             "document.querySelector('[data-testid=\"lab-open-architecture-root\"]')",
@@ -470,8 +556,11 @@ def _verify_lab_responsive(browser: ChromeSession) -> list[JsonObject]:
                 kind: viewer?.getAttribute('data-viewer-kind') ?? '',
                 modal: viewer?.getAttribute('aria-modal') ?? '',
                 overflow:
-                  document.documentElement.scrollWidth
-                  - document.documentElement.clientWidth,
+                  Math.max(
+                    0,
+                    document.documentElement.scrollWidth
+                    - document.documentElement.clientWidth,
+                  ),
                 localOverflow: body
                   ? Math.max(0, body.scrollWidth - body.clientWidth)
                   : -1,
@@ -509,7 +598,19 @@ def _verify_lab_responsive(browser: ChromeSession) -> list[JsonObject]:
             and number(probe["closeHeight"], "close height") >= 44,
             f"Lab close target too small: {probe}",
         )
-        evidence.append({"width": width, "height": height, **probe})
+        if width == 320:
+            shots["labArchitectureNarrow"] = capture(
+                browser,
+                screenshots / "lab-architecture-viewer-320x568.png",
+            )
+        evidence.append(
+            {
+                "width": width,
+                "height": height,
+                "layout": layout,
+                **probe,
+            },
+        )
         _close_viewer(browser)
         focus = evaluate_dict(
             browser,

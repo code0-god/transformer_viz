@@ -151,6 +151,162 @@ def _course_home_geometry(browser: ChromeSession) -> JsonObject:
     )
 
 
+def _verify_product_responsive(
+    browser: ChromeSession,
+    screenshots: Path,
+    shots: dict[str, str],
+) -> list[JsonObject]:
+    evidence: list[JsonObject] = []
+    for width, height in (
+        (320, 568),
+        (390, 844),
+        (768, 1024),
+        (1024, 768),
+        (1440, 900),
+    ):
+        set_viewport(browser, width, height)
+        _go_learning_home(browser)
+        home = evaluate_dict(
+            browser,
+            """(() => {
+              const rect = (selector) =>
+                document.querySelector(selector)?.getBoundingClientRect();
+              const intersects = (left, right) =>
+                !!left && !!right
+                && left.left < right.right && left.right > right.left
+                && left.top < right.bottom && left.bottom > right.top;
+              const header = document.querySelector('.architecture-header');
+              const brand = rect('.brand-lockup');
+              const navigation = rect('.app-navigation');
+              const status = rect('.lifecycle');
+              const course = rect('.course-home__course');
+              const home = rect('.course-home');
+              const navigationHeights = Array.from(
+                document.querySelectorAll('.app-navigation a'),
+                (link) => link.getBoundingClientRect().height,
+              );
+              const actionHeights = Array.from(
+                document.querySelectorAll(
+                  '.course-home__actions :is(a, button)',
+                ),
+                (action) => action.getBoundingClientRect().height,
+              );
+              return {
+                overflow:
+                  document.documentElement.scrollWidth
+                  - document.documentElement.clientWidth,
+                headerOverflow: header
+                  ? Math.max(0, header.scrollWidth - header.clientWidth)
+                  : -1,
+                brandNavigationOverlap: intersects(brand, navigation),
+                brandStatusOverlap: intersects(brand, status),
+                navigationStatusOverlap: intersects(navigation, status),
+                navigationMinHeight: Math.min(...navigationHeights),
+                actionMinHeight: Math.min(...actionHeights),
+                courseTop: course?.top ?? -1,
+                courseVisible: !!course && course.top < innerHeight,
+                homeFits:
+                  !!home && home.left >= 0 && home.right <= innerWidth + 1,
+              };
+            })()""",
+        )
+        require(home["overflow"] == 0, f"Home overflow at {width}: {home}")
+        require(
+            home["headerOverflow"] == 0,
+            f"Header overflow at {width}: {home}",
+        )
+        require(
+            home["brandNavigationOverlap"] is False
+            and home["brandStatusOverlap"] is False
+            and home["navigationStatusOverlap"] is False,
+            f"Header regions overlap at {width}: {home}",
+        )
+        if width <= 768:
+            require(
+                _number(home, "navigationMinHeight") >= 44,
+                f"Mobile navigation target too small at {width}: {home}",
+            )
+        require(
+            _number(home, "actionMinHeight") >= 44,
+            f"Home action target too small at {width}: {home}",
+        )
+        require(
+            _boolean(home, "homeFits"),
+            f"Home exceeds viewport at {width}: {home}",
+        )
+        if width <= 390:
+            require(
+                _boolean(home, "courseVisible"),
+                f"Home course starts below first viewport at {width}: {home}",
+            )
+        if width == 320:
+            shots["courseHomeNarrow"] = capture(
+                browser,
+                screenshots / "course-home-320x568.png",
+            )
+
+        _open_chapter(browser, "0-2")
+        _wait_for_article(browser)
+        _scroll_article_top(browser)
+        learn = evaluate_dict(
+            browser,
+            """(() => {
+              const guide = document.querySelector('.learning-guide');
+              const heading = document.querySelector(
+                '.curriculum-workspace__chapter-copy h1',
+              );
+              const toc = document.querySelector(
+                'button[aria-label="목차 열기"]',
+              );
+              const guideRect = guide?.getBoundingClientRect();
+              const headingRect = heading?.getBoundingClientRect();
+              const guideStyle = guide ? getComputedStyle(guide) : null;
+              return {
+                overflow:
+                  document.documentElement.scrollWidth
+                  - document.documentElement.clientWidth,
+                fontSize: Number.parseFloat(guideStyle?.fontSize ?? '0'),
+                lineHeight: Number.parseFloat(guideStyle?.lineHeight ?? '0'),
+                guideFits:
+                  !!guideRect && guideRect.left >= 0
+                  && guideRect.right <= innerWidth + 1,
+                headingFits:
+                  !!headingRect && headingRect.left >= 0
+                  && headingRect.right <= innerWidth + 1,
+                tocHeight: toc?.getBoundingClientRect().height ?? 0,
+              };
+            })()""",
+        )
+        require(learn["overflow"] == 0, f"Learn overflow at {width}: {learn}")
+        require(
+            _number(learn, "fontSize") >= 17
+            and _number(learn, "lineHeight") >= 27,
+            f"Learn reading type regressed at {width}: {learn}",
+        )
+        require(
+            _boolean(learn, "guideFits") and _boolean(learn, "headingFits"),
+            f"Learn content exceeds viewport at {width}: {learn}",
+        )
+        require(
+            _number(learn, "tocHeight") >= 44,
+            f"Learn ToC target too small at {width}: {learn}",
+        )
+        if width == 320:
+            shots["learnNarrow"] = capture(
+                browser,
+                screenshots / "learn-token-320x568.png",
+            )
+        evidence.append(
+            {
+                "width": width,
+                "height": height,
+                "home": home,
+                "learn": learn,
+            },
+        )
+    return evidence
+
+
 def _open_chapter(browser: ChromeSession, slug: str) -> None:
     chapter_id = f"decoder.chapter.{slug.replace('-', '.')}"
     navigate_hash(
@@ -696,7 +852,14 @@ def _capture_responsive(
 
 def _verify_learn_matrix(browser: ChromeSession) -> list[JsonObject]:
     evidence: list[JsonObject] = []
-    for width, height in ((1440, 900), (1366, 768), (1024, 768), (390, 844)):
+    for width, height in (
+        (1440, 900),
+        (1366, 768),
+        (1024, 768),
+        (768, 1024),
+        (390, 844),
+        (320, 568),
+    ):
         set_viewport(browser, width, height)
         for slug, figure_id, expected_size in ALL_LEARNING_FIGURES:
             _open_chapter(browser, slug)
@@ -931,6 +1094,11 @@ def capture_learning_phase(
         screenshots / "course-home-1440x900.png",
     )
 
+    product_responsive = _verify_product_responsive(
+        browser,
+        screenshots,
+        shots,
+    )
     part_zero = _capture_part_zero(browser, screenshots, shots)
     gpt = _capture_gpt(browser, screenshots, shots)
     responsive = _capture_responsive(browser, screenshots, shots)
@@ -967,6 +1135,7 @@ def capture_learning_phase(
             "desktop": course_home_desktop,
             "mobile": course_home_mobile,
         },
+        "productResponsive": product_responsive,
         "partZero": part_zero,
         "gpt": gpt,
         "responsive": responsive,

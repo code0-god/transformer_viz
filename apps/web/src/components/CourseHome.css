@@ -73,11 +73,17 @@
 }
 
 .course-home__course[data-threeui-surface="course"] .course-home__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--s1);
 }
 
 .course-home__course[data-threeui-surface="course"]
   :is(.course-home__start, .course-home__lab, .course-home__contents) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-block-size: 44px;
   padding-inline: var(--s4);
   border: 1px solid transparent;
