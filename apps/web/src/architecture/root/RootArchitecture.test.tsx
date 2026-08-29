@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { vi } from "vitest";
 
@@ -56,7 +58,7 @@ describe("RootArchitecture", () => {
     const { container } = renderRoot();
     const svg = screen.getByTestId("architecture-root");
 
-    expect(svg).toHaveAttribute("viewBox", "0 0 1000 1080");
+    expect(svg).toHaveAttribute("viewBox", "40 0 920 1080");
     expect(container.querySelector(".architecture-figure")).toHaveAttribute(
       "data-figure-type",
       "architecture-process",
@@ -209,5 +211,47 @@ describe("RootArchitecture", () => {
     expect(logits).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(logits);
     expect(onActivate).toHaveBeenCalledWith("logits");
+  });
+
+  test("uses precise node corners and a wider focused view", () => {
+    const { container } = renderRoot();
+
+    expect(screen.getByRole("img").getAttribute("viewBox")).toMatch(
+      /^40 0 920 /,
+    );
+    const radii = Array.from(
+      container.querySelectorAll(
+        "rect[rx]:not(.architecture-node__learning-highlight):not(.architecture-node__focus-outline)",
+      ),
+      (node) => Number(node.getAttribute("rx")),
+    );
+    expect(radii.length).toBeGreaterThan(0);
+    expect(Math.max(...radii)).toBeLessThanOrEqual(8);
+  });
+
+  test("uses restrained viewer palette and ThreeUI depth", () => {
+    const rootCss = readFileSync(
+      resolve(process.cwd(), "src/architecture/root/rootArchitecture.css"),
+      "utf8",
+    );
+    const viewportCss = readFileSync(
+      resolve(process.cwd(), "src/tracks/diagramViewport.css"),
+      "utf8",
+    );
+    const viewerCss = readFileSync(
+      resolve(process.cwd(), "src/overlays/focusedViewer.css"),
+      "utf8",
+    );
+
+    expect(rootCss).not.toMatch(/#f7e8cc|#e8e1ed|#fff1d9/i);
+    expect(rootCss).toMatch(
+      /\.architecture-interactive-node\.is-selected[\s\S]*filter:\s*drop-shadow/s,
+    );
+    expect(viewportCss).toMatch(
+      /\.diagram-viewport__toolbar\s*\{[^}]*box-shadow:(?!\s*none)/s,
+    );
+    expect(viewerCss).toContain(
+      '.focused-viewer[data-viewer-kind="architecture"]',
+    );
   });
 });

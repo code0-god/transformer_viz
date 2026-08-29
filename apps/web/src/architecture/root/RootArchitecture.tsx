@@ -43,6 +43,8 @@ export function RootArchitecture({
 }: RootArchitectureProps): ReactElement {
   const layout = diagramLayout(config.n_layer);
   const interactive = presentation === "inspection";
+  const viewportX = interactive ? 40 : 0;
+  const viewportWidth = interactive ? VIEW_WIDTH - 80 : VIEW_WIDTH;
 
   function activate(id: ArchitectureNodeId): void {
     if (!interactive) return;
@@ -58,8 +60,8 @@ export function RootArchitecture({
       <svg
         className="architecture-diagram"
         data-testid="architecture-root"
-        viewBox={`0 0 ${VIEW_WIDTH} ${layout.viewHeight}`}
-        style={{ aspectRatio: `${VIEW_WIDTH} / ${layout.viewHeight}` }}
+        viewBox={`${viewportX} 0 ${viewportWidth} ${layout.viewHeight}`}
+        style={{ aspectRatio: `${viewportWidth} / ${layout.viewHeight}` }}
         role="img"
         aria-labelledby="architecture-svg-title architecture-svg-desc"
         preserveAspectRatio="xMidYMid meet"

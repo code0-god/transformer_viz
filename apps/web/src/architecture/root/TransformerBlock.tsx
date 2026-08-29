@@ -21,7 +21,7 @@ export function TransformerBlock({
   return (
     <ArchitectureNode
       id="transformer-block"
-      bounds={{ ...BLOCK, radius: 10 }}
+      bounds={{ ...BLOCK, radius: 8 }}
       selected={selected}
       highlighted={highlighted}
       interactive={interactive}
@@ -34,7 +34,7 @@ export function TransformerBlock({
         className={`architecture-block-group architecture-interactive-node architecture-interactive-node--drill-down${selected ? " is-selected" : ""}`}
         aria-label={`Transformer Block repeated ${layerCount} times`}
       >
-        <rect className="architecture-block-frame" {...BLOCK} rx={10} />
+        <rect className="architecture-block-frame" {...BLOCK} rx={8} />
         <text
           className="architecture-block-title"
           x={BLOCK.x + 24}

@@ -223,3 +223,115 @@
   .architecture-root-screen .architecture-annotation,
   .architecture-root-screen .architecture-annotation ul { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ThreeUI-first focused-viewer skin. Geometry remains component-owned. */
+.architecture-root-screen .architecture-flow,
+.architecture-root-screen .architecture-merge {
+  stroke: #5e696c;
+  stroke-width: 1.35;
+}
+
+.architecture-root-screen .architecture-repeat {
+  stroke: #32776a;
+  stroke-width: 1.5;
+  stroke-dasharray: 8 6;
+}
+
+.architecture-root-screen .architecture-node
+  > g.architecture-node
+  > rect:not(.architecture-node-focus-outline) {
+  fill: #f3f5f5;
+  stroke: #7b888b;
+  stroke-width: 1.2;
+}
+
+.architecture-root-screen .architecture-node
+  > g.architecture-node-input
+  > rect:not(.architecture-node-focus-outline) {
+  fill: #ecefee;
+}
+
+.architecture-root-screen .architecture-node
+  > g.architecture-node-embedding
+  > rect:not(.architecture-node-focus-outline) {
+  fill: #e5efed;
+  stroke: #76958f;
+}
+
+.architecture-root-screen .architecture-block-frame {
+  fill: #e1e8e9;
+  stroke: #607b80;
+  stroke-width: 1.5;
+}
+
+.architecture-root-screen .architecture-node
+  > g.architecture-node-normalization
+  > rect:not(.architecture-node-focus-outline),
+.architecture-root-screen .architecture-node
+  > g.architecture-node-sampling
+  > rect:not(.architecture-node-focus-outline) {
+  fill: #f1eee7;
+  stroke: #9a8f7a;
+}
+
+.architecture-root-screen .architecture-node
+  > g.architecture-node-projection
+  > rect:not(.architecture-node-focus-outline) {
+  fill: #e8edef;
+  stroke: #71888f;
+}
+
+.architecture-root-screen .architecture-node
+  > g.architecture-node-logits
+  > rect:not(.architecture-node-focus-outline) {
+  fill: #eceaf0;
+  stroke: #81788e;
+}
+
+.architecture-root-screen .architecture-node
+  > g.architecture-node-token
+  > rect:not(.architecture-node-focus-outline) {
+  fill: #e3efec;
+  stroke: #5f877f;
+}
+
+.architecture-root-screen .architecture-node
+  > g.architecture-node-append
+  > rect:not(.architecture-node-focus-outline) {
+  fill: #e8eceb;
+  stroke: #7a8d89;
+}
+
+.architecture-root-screen .architecture-interactive-node.is-selected rect {
+  fill: color-mix(in srgb, var(--accent) 12%, #f4f7f6);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.architecture-root-screen .architecture-interactive-node.is-selected {
+  filter: drop-shadow(0 3px 5px rgb(25 66 59 / 0.22));
+}
+
+.architecture-root-screen .architecture-interactive-node.is-highlighted rect {
+  stroke: #3b8174;
+  stroke-width: 2.25;
+}
+
+.architecture-root-screen .architecture-node text {
+  font-weight: 620;
+}
+
+.architecture-root-screen .architecture-block-title {
+  font-weight: 700;
+}
+
+.architecture-root-screen .architecture-block-summary text {
+  fill: #4f5a5d;
+  font-size: 16px;
+  font-weight: 560;
+}
+
+.architecture-root-screen .architecture-block-summary__divider {
+  stroke: #aeb8ba;
+  stroke-width: 0.9;
+}
