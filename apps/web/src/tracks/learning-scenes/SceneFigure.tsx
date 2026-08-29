@@ -22,6 +22,7 @@ import {
 import type {
   LearningSceneModule,
   LearningSceneRendererProps,
+  LearningSceneViewport,
 } from "./sceneTypes";
 import {
   useReducedSceneMotion,
@@ -33,6 +34,7 @@ import "./sceneFigure.css";
 
 type SceneFigureProps<State extends object> = Readonly<{
   aspectRatio: number;
+  annotations?: ReactNode;
   controls: ReactNode;
   description: string;
   fallback: ReactNode;
@@ -69,6 +71,7 @@ class SceneBoundary extends Component<
 
 export function SceneFigure<State extends object>({
   aspectRatio,
+  annotations,
   controls,
   description,
   fallback,
@@ -91,6 +94,8 @@ export function SceneFigure<State extends object>({
     "unknown",
   );
   const [contextLost, setContextLost] = useState(false);
+  const [readyViewport, setReadyViewport] =
+    useState<LearningSceneViewport | null>(null);
   const loadStarted = useRef(false);
 
   useEffect(() => {
@@ -117,8 +122,14 @@ export function SceneFigure<State extends object>({
     };
   }, [loadScene, nearby, webgl]);
 
-  const onContextCreated = useCallback(recordSceneContextCreated, []);
-  const onContextDisposed = useCallback(recordSceneContextDisposed, []);
+  const onContextCreated = useCallback(() => {
+    recordSceneContextCreated();
+    setReadyViewport(viewport);
+  }, [viewport]);
+  const onContextDisposed = useCallback(() => {
+    recordSceneContextDisposed();
+    setReadyViewport(null);
+  }, []);
   const onContextLost = useCallback(() => {
     recordSceneContextLost();
     setContextLost(true);
@@ -140,11 +151,13 @@ export function SceneFigure<State extends object>({
       ? "unavailable"
       : loadState === "error"
         ? "error"
-        : canRender
+        : canRender && readyViewport === viewport
           ? "ready"
-          : loadState === "loading"
-            ? "loading"
-            : "static";
+          : canRender
+            ? "initializing"
+            : loadState === "loading"
+              ? "loading"
+              : "static";
 
   const style: SceneFigureStyle = {
     "--scene-aspect-ratio": aspectRatio,
@@ -163,7 +176,7 @@ export function SceneFigure<State extends object>({
       style={style}
     >
       <header className="scene-figure__header">
-        <strong id={`${figureId}-scene-title`}>{title}</strong>
+        <h3 id={`${figureId}-scene-title`}>{title}</h3>
         <span id={`${figureId}-scene-description`}>{description}</span>
       </header>
       <fieldset
@@ -172,6 +185,9 @@ export function SceneFigure<State extends object>({
       >
         {controls}
       </fieldset>
+      {annotations === undefined ? null : (
+        <div className="scene-figure__annotations">{annotations}</div>
+      )}
       <div className="scene-figure__plane">
         {canRender && SceneRenderer !== undefined ? (
           <SceneBoundary
@@ -208,6 +224,11 @@ export function SceneFigure<State extends object>({
         </div>
         {status === "loading" ? (
           <p className="scene-figure__status">시각화를 준비하고 있습니다.</p>
+        ) : null}
+        {status === "initializing" ? (
+          <p className="scene-figure__status">
+            3D scene을 초기화하고 있습니다.
+          </p>
         ) : null}
         {status === "unavailable" ? (
           <p className="scene-figure__status">

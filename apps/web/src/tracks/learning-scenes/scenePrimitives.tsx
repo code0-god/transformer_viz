@@ -1,4 +1,5 @@
-import type { ReactElement } from "react";
+import type { ReactElement, Ref } from "react";
+import type { Group } from "three";
 
 import { LEARNING_SCENE_COLORS } from "./scenePalette";
 
@@ -14,8 +15,10 @@ type TensorGridProps = Readonly<{
   position: readonly [number, number, number];
   rowLift?: number;
   rows: number;
+  selectionActive?: boolean;
   selectedRow?: number;
-  values: readonly number[];
+  selectedRowRef?: Ref<Group>;
+  values: readonly Readonly<{ id: string; value: number }>[];
 }>;
 
 export function VectorRow({
@@ -49,7 +52,9 @@ export function TensorGrid({
   position,
   rowLift = 0,
   rows,
+  selectionActive = true,
   selectedRow,
+  selectedRowRef,
   values,
 }: TensorGridProps): ReactElement {
   const gap = 0.56;
@@ -57,32 +62,40 @@ export function TensorGrid({
   const yStart = ((rows - 1) * gap) / 2;
   return (
     <group position={[...position]}>
-      {Array.from({ length: rows * cols }, (_, index) => {
-        const row = Math.floor(index / cols);
-        const col = index % cols;
-        const value = values[index % values.length] ?? 0;
-        const selected = row === selectedRow;
-        const cellColor = selected ? LEARNING_SCENE_COLORS.selected : color;
+      {Array.from({ length: rows }, (_, row) => {
+        const selected = selectionActive && row === selectedRow;
+        const rowCells = values.slice(row * cols, (row + 1) * cols);
+        const rowId = rowCells.map((cell) => cell.id).join("-");
         return (
-          <mesh
-            key={`${row}-${col}`}
-            position={[
-              xStart + col * gap,
-              yStart - row * gap,
-              selected ? rowLift : 0,
-            ]}
+          <group
+            key={rowId}
+            position={[0, yStart - row * gap, selected ? rowLift : 0]}
+            {...(row === selectedRow && selectedRowRef !== undefined
+              ? { ref: selectedRowRef }
+              : {})}
           >
-            <boxGeometry args={[0.46, 0.46, 0.12 + Math.abs(value) * 0.2]} />
-            <meshStandardMaterial
-              color={cellColor}
-              emissive={cellColor}
-              emissiveIntensity={selected ? 0.24 : 0.04}
-              metalness={0.06}
-              roughness={0.76}
-              transparent
-              opacity={selected ? 1 : 0.82}
-            />
-          </mesh>
+            {rowCells.map(({ id, value }, col) => {
+              const cellColor = selected
+                ? LEARNING_SCENE_COLORS.selected
+                : color;
+              return (
+                <mesh key={id} position={[xStart + col * gap, 0, 0]}>
+                  <boxGeometry
+                    args={[0.46, 0.46, 0.12 + Math.abs(value) * 0.2]}
+                  />
+                  <meshStandardMaterial
+                    color={cellColor}
+                    emissive={cellColor}
+                    emissiveIntensity={selected ? 0.24 : 0.04}
+                    metalness={0.06}
+                    roughness={0.76}
+                    transparent
+                    opacity={selected ? 1 : 0.82}
+                  />
+                </mesh>
+              );
+            })}
+          </group>
         );
       })}
     </group>
@@ -106,7 +119,7 @@ export function SceneArrow({
         <cylinderGeometry args={[0.035, 0.035, 0.68, 12]} />
         <meshStandardMaterial color={color} emissive={color} />
       </mesh>
-      <mesh position={[0, -0.08, 0]}>
+      <mesh position={[0, -0.08, 0]} rotation={[0, 0, Math.PI]}>
         <coneGeometry args={[0.12, 0.24, 16]} />
         <meshStandardMaterial color={color} emissive={color} />
       </mesh>

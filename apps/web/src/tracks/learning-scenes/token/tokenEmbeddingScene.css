@@ -1,0 +1,60 @@
+.token-scene__state {
+  display: grid;
+  gap: var(--s2);
+}
+
+.token-scene__flow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 0;
+  margin: 0;
+  border-block: 1px solid var(--boundary-content);
+  list-style: none;
+}
+
+.token-scene__flow > li {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--s1);
+  padding: var(--s3);
+}
+
+.token-scene__flow > li + li {
+  border-inline-start: 1px solid var(--boundary-internal);
+}
+
+.token-scene__flow > li[data-active="true"] {
+  background: var(--ui-control-highlight);
+  box-shadow: inset 0 -2px var(--ui-accent);
+}
+
+.token-scene__flow span {
+  color: var(--ink-muted);
+  font-size: 0.7rem;
+  font-weight: 720;
+  letter-spacing: 0.09em;
+}
+
+.token-scene__flow strong {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: clamp(0.88rem, 1.4vw, 1.02rem);
+}
+
+.token-scene__state > p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.76rem;
+}
+
+@media (max-width: 40rem) {
+  .token-scene__flow {
+    grid-template-columns: 1fr;
+  }
+
+  .token-scene__flow > li + li {
+    border-block-start: 1px solid var(--boundary-internal);
+    border-inline-start: 0;
+  }
+}

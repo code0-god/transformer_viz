@@ -16,6 +16,7 @@ export type ThreeUiActionProps = Readonly<{
   disabled?: boolean;
   label: string;
   onClick?: MouseEventHandler<HTMLButtonElement>;
+  pressed?: boolean;
   state?: "idle" | "working" | "stopping" | "error";
   testId?: string;
   tier?: "primary" | "secondary" | "tertiary";
@@ -27,6 +28,7 @@ export function ThreeUiAction({
   disabled = false,
   label,
   onClick,
+  pressed,
   state = "idle",
   testId,
   tier = "primary",
@@ -40,7 +42,9 @@ export function ThreeUiAction({
     action.setAttribute("aria-busy", String(busy));
     if (testId === undefined) action.removeAttribute("data-testid");
     else action.setAttribute("data-testid", testId);
-  }, [busy, testId]);
+    if (pressed === undefined) action.removeAttribute("aria-pressed");
+    else action.setAttribute("aria-pressed", String(pressed));
+  }, [busy, pressed, testId]);
 
   return (
     <span

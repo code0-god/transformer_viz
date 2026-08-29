@@ -1,0 +1,414 @@
+#!/usr/bin/env python3
+"""Production Chrome verifier for visible-only Part 2 Learning Scenes."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import threading
+from functools import partial
+from http.server import ThreadingHTTPServer
+from pathlib import Path
+
+from browser_hybrid_capture import capture, request_urls
+from browser_hybrid_contract import button_with_text, require, set_viewport
+from browser_hybrid_foundation import QuietHandler
+from browser_hybrid_helpers import (
+    JsonObject,
+    evaluate_dict,
+    navigate_hash,
+    pointer_click,
+    wait_for,
+)
+from browser_learning_workspace_probes import browser_errors
+from browser_probes import READY_PROBE
+from browser_session import ChromeSession
+
+TOKEN_ID = "decoder.diagram.representation.embedding"
+
+
+def _evaluate(browser: ChromeSession, expression: str) -> object:
+    return browser.require_cdp().evaluate(
+        browser.page_session,
+        expression,
+        True,
+    )
+
+
+def _settle_scene(
+    browser: ChromeSession,
+    *,
+    after_frame: int | None = None,
+) -> int:
+    required = "null" if after_frame is None else str(after_frame)
+    result = _evaluate(
+        browser,
+        f"""new Promise((resolve, reject) => {{
+          const timeout = setTimeout(
+            () => reject(new Error('Learning Scene did not settle')),
+            30000,
+          );
+          let prior = window.__learningSceneMetrics?.animationFrameCount ?? 0;
+          let stable = 0;
+          const start = prior;
+          const required = {required};
+          const check = () => {{
+            const current =
+              window.__learningSceneMetrics?.animationFrameCount ?? 0;
+            const started = required === null || current > required;
+            stable = started && current === prior ? stable + 1 : 0;
+            prior = current;
+            if (stable >= 4) {{
+              clearTimeout(timeout);
+              resolve(current - start);
+            }}
+            else requestAnimationFrame(check);
+          }};
+          requestAnimationFrame(check);
+        }})""",
+    )
+    if not isinstance(result, int):
+        raise TypeError(f"Scene frame count must be integer: {result!r}")
+    return result
+
+
+def _probe(browser: ChromeSession) -> JsonObject:
+    return evaluate_dict(
+        browser,
+        f"""(() => {{
+          const figure = document.querySelector(
+            '[data-figure-id="{TOKEN_ID}"]',
+          );
+          const scene = figure?.querySelector('.scene-figure');
+          const state = figure?.querySelector('[data-testid="token-scene-state"]');
+          const canvas = figure?.querySelector('canvas');
+          const controls = Array.from(figure?.querySelectorAll('button') ?? []);
+          const semantic = figure?.querySelector(
+            '.scene-figure__fallback--semantic',
+          );
+          const box = canvas?.getBoundingClientRect();
+          return {{
+            status: scene?.getAttribute('data-scene-status') ?? '',
+            viewport: scene?.getAttribute('data-scene-viewport') ?? '',
+            visible: scene?.getAttribute('data-scene-visible') ?? '',
+            phase: state?.getAttribute('data-phase') ?? '',
+            token: state?.getAttribute('data-selected-token') ?? '',
+            canvasCount: figure?.querySelectorAll('canvas').length ?? -1,
+            canvasWidth: box?.width ?? 0,
+            canvasHeight: box?.height ?? 0,
+            controlCount: controls.length,
+            controlMinHeight: Math.min(
+              ...controls.map(control => control.getBoundingClientRect().height),
+            ),
+            semanticFallbackPresent: semantic instanceof HTMLElement,
+            semanticFallbackHidden:
+              semantic instanceof HTMLElement
+              && semantic.getBoundingClientRect().width <= 1,
+            overflow:
+              document.documentElement.scrollWidth
+              - document.documentElement.clientWidth,
+            metrics: {{ ...(window.__learningSceneMetrics ?? {{}}) }},
+          }};
+        }})()""",
+    )
+
+
+def _open_token_scene(browser: ChromeSession) -> None:
+    navigate_hash(
+        browser,
+        "#/learn/decoder-only-fundamentals/2-1",
+        (
+            "document.querySelector("
+            "'[data-curriculum-chapter-id=\"decoder.chapter.2.1\"]'"
+            ") !== null"
+        ),
+        "Token Embedding Chapter",
+    )
+    _evaluate(
+        browser,
+        f"""document.querySelector(
+          '[data-figure-id="{TOKEN_ID}"]',
+        )?.scrollIntoView({{ block: 'start', inline: 'nearest' }})""",
+    )
+    wait_for(
+        browser,
+        (
+            f"document.querySelector('[data-figure-id=\"{TOKEN_ID}\"] "
+            "[data-scene-status=\"ready\"]') !== null"
+        ),
+        "Token Scene ready",
+    )
+    _settle_scene(browser, after_frame=0)
+
+
+def _click_phase(browser: ChromeSession, label: str, phase: str) -> None:
+    before = _probe(browser).get("metrics", {})
+    before_frame = (
+        before.get("animationFrameCount", 0)
+        if isinstance(before, dict)
+        else 0
+    )
+    if not isinstance(before_frame, int):
+        raise TypeError(f"Scene frame count must be integer: {before_frame!r}")
+    pointer_click(
+        browser,
+        button_with_text(label),
+        condition=(
+            "document.querySelector('[data-testid=\"token-scene-state\"]')"
+            f"?.getAttribute('data-phase') === {json.dumps(phase)}"
+        ),
+        label=f"Token phase {phase}",
+    )
+    _settle_scene(browser, after_frame=before_frame)
+
+
+def _verify_idle(browser: ChromeSession) -> int:
+    result = _evaluate(
+        browser,
+        """new Promise(resolve => {
+          const before =
+            window.__learningSceneMetrics?.animationFrameCount ?? 0;
+          let frames = 0;
+          const check = () => {
+            frames += 1;
+            if (frames === 12) {
+              const after =
+                window.__learningSceneMetrics?.animationFrameCount ?? 0;
+              resolve(after - before);
+            } else {
+              requestAnimationFrame(check);
+            }
+          };
+          requestAnimationFrame(check);
+        })""",
+    )
+    if not isinstance(result, int):
+        raise TypeError(f"Idle frame delta must be integer: {result!r}")
+    return result
+
+
+def run_contract(url: str, evidence_dir: Path) -> None:
+    screenshots = evidence_dir / "screenshots"
+    evidence: JsonObject = {}
+    shots: dict[str, str] = {}
+
+    with ChromeSession(enable_gpu=True) as browser:
+        set_viewport(browser, 1440, 900)
+        browser.navigate(url)
+        browser.require_cdp().evaluate(browser.page_session, READY_PROBE, True)
+        home_requests = request_urls(browser)
+        home_scene_requests = [
+            request
+            for request in home_requests
+            if "TokenEmbeddingScene" in request
+            or "react-three-fiber" in request
+        ]
+        require(
+            home_scene_requests == [],
+            f"Home eagerly loaded Learning Scene runtime: {home_scene_requests}",
+        )
+
+        _open_token_scene(browser)
+        initial = _probe(browser)
+        require(initial["status"] == "ready", f"Token initial failed: {initial}")
+        require(initial["canvasCount"] == 1, f"Token Canvas failed: {initial}")
+        require(initial["phase"] == "id", f"Token initial phase failed: {initial}")
+        require(initial["overflow"] == 0, f"Token overflow: {initial}")
+        require(
+            initial["controlCount"] == 4
+            and isinstance(initial["controlMinHeight"], int | float)
+            and initial["controlMinHeight"] >= 44,
+            f"Token control contract failed: {initial}",
+        )
+        require(
+            initial["semanticFallbackPresent"] is True
+            and initial["semanticFallbackHidden"] is True,
+            f"Token fallback missing: {initial}",
+        )
+        shots["tokenInitialDesktop"] = capture(
+            browser,
+            screenshots / "token-initial-1440x900.png",
+        )
+
+        frames_before = initial.get("metrics", {})
+        _click_phase(browser, "Row 찾기", "lookup")
+        lookup = _probe(browser)
+        shots["tokenLookupDesktop"] = capture(
+            browser,
+            screenshots / "token-lookup-1440x900.png",
+        )
+
+        _click_phase(browser, "Vector 추출", "vector")
+        vector = _probe(browser)
+        shots["tokenVectorDesktop"] = capture(
+            browser,
+            screenshots / "token-vector-1440x900.png",
+        )
+        idle_frame_delta = _verify_idle(browser)
+        require(idle_frame_delta == 0, f"Token idle RAF leaked: {idle_frame_delta}")
+
+        pointer_click(
+            browser,
+            button_with_text("cat · ID 42"),
+            condition=(
+                "document.querySelector('[data-testid=\"token-scene-state\"]')"
+                "?.getAttribute('data-selected-token') === 'cat'"
+            ),
+            label="Token cat selection",
+        )
+        cat_frame = vector.get("metrics", {})
+        previous_cat_frame = (
+            cat_frame.get("animationFrameCount", 0)
+            if isinstance(cat_frame, dict)
+            else 0
+        )
+        if not isinstance(previous_cat_frame, int):
+            raise TypeError(
+                f"Scene frame count must be integer: {previous_cat_frame!r}",
+            )
+        _settle_scene(browser, after_frame=previous_cat_frame)
+        cat = _probe(browser)
+        require(
+            cat["token"] == "cat" and cat["phase"] == "id",
+            f"Token selection not synchronized: {cat}",
+        )
+
+        mobile_frame = cat.get("metrics", {})
+        previous_mobile_frame = (
+            mobile_frame.get("animationFrameCount", 0)
+            if isinstance(mobile_frame, dict)
+            else 0
+        )
+        if not isinstance(previous_mobile_frame, int):
+            raise TypeError(
+                f"Scene frame count must be integer: {previous_mobile_frame!r}",
+            )
+        set_viewport(browser, 390, 844)
+        wait_for(
+            browser,
+            (
+                f"document.querySelector('[data-figure-id=\"{TOKEN_ID}\"] "
+                "[data-scene-viewport=\"mobile\"]"
+                "[data-scene-status=\"ready\"]') !== null"
+            ),
+            "Token mobile scene mode",
+        )
+        _evaluate(
+            browser,
+            f"""document.querySelector(
+              '[data-figure-id="{TOKEN_ID}"]',
+            )?.scrollIntoView({{ block: 'start', inline: 'nearest' }})""",
+        )
+        _settle_scene(browser, after_frame=previous_mobile_frame)
+        mobile = _probe(browser)
+        require(
+            mobile["viewport"] == "mobile"
+            and mobile["status"] == "ready"
+            and mobile["overflow"] == 0
+            and isinstance(mobile["canvasWidth"], int | float)
+            and mobile["canvasWidth"] <= 390
+            and isinstance(mobile["metrics"], dict)
+            and mobile["metrics"].get("activeCanvasCount") == 1,
+            f"Token mobile contract failed: {mobile}",
+        )
+        _click_phase(browser, "Row 찾기", "lookup")
+        _click_phase(browser, "Vector 추출", "vector")
+        _evaluate(
+            browser,
+            """document.querySelector('.scene-figure__plane')
+              ?.scrollIntoView({ block: 'center', inline: 'nearest' })""",
+        )
+        _settle_scene(browser)
+        mobile = _probe(browser)
+        require(
+            mobile["phase"] == "vector",
+            f"Token mobile vector phase failed: {mobile}",
+        )
+        shots["tokenMobile"] = capture(
+            browser,
+            screenshots / "token-vector-390x844.png",
+        )
+
+        _evaluate(
+            browser,
+            """window.scrollTo({
+              top: document.documentElement.scrollHeight,
+              left: 0,
+            })""",
+        )
+        wait_for(
+            browser,
+            (
+                f"document.querySelector('[data-figure-id=\"{TOKEN_ID}\"] "
+                "[data-scene-visible=\"false\"]') !== null"
+                f" && document.querySelector('[data-figure-id=\"{TOKEN_ID}\"] "
+                "canvas') === null"
+            ),
+            "Token offscreen Canvas cleanup",
+        )
+        offscreen = _probe(browser)
+        metrics = offscreen.get("metrics", {})
+        require(
+            isinstance(metrics, dict)
+            and metrics.get("activeCanvasCount") == 0
+            and metrics.get("webglContextCount") == 0,
+            f"Token offscreen context leaked: {offscreen}",
+        )
+
+        errors = browser_errors(browser)
+        require(not errors["network"], f"Network errors: {errors['network']}")
+        require(not errors["runtime"], f"Runtime errors: {errors['runtime']}")
+        evidence["token"] = {
+            "initial": initial,
+            "lookup": lookup,
+            "vector": vector,
+            "cat": cat,
+            "mobile": mobile,
+            "offscreen": offscreen,
+            "idleFrameDelta": idle_frame_delta,
+            "framesBefore": frames_before,
+        }
+        evidence["requests"] = request_urls(browser)
+        evidence["errors"] = errors
+        evidence["screenshots"] = shots
+
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    (evidence_dir / "evidence.json").write_text(
+        json.dumps(evidence, ensure_ascii=False, indent=2) + "\n",
+    )
+    print(f"Learning Scene browser: PASS ({len(shots)} screenshots)")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--root", type=Path, required=True)
+    parser.add_argument("--entry", default="index.html")
+    parser.add_argument("--evidence", type=Path, required=True)
+    args = parser.parse_args()
+
+    server = ThreadingHTTPServer(
+        ("127.0.0.1", 0),
+        partial(QuietHandler, directory=str(args.root.resolve())),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        base = "/" if args.entry == "index.html" else "/transformer_viz/"
+        run_contract(
+            f"http://127.0.0.1:{server.server_port}{base}",
+            args.evidence,
+        )
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=10)
+        args.evidence.mkdir(parents=True, exist_ok=True)
+        (args.evidence / "cleanup.txt").write_text(
+            "Chrome contexts closed; static server stopped; "
+            "ephemeral ports released.\n",
+        )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

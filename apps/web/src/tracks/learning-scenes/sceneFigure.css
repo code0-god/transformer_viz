@@ -31,6 +31,10 @@
   border: 0;
 }
 
+.scene-figure__annotations {
+  min-inline-size: 0;
+}
+
 .scene-figure__plane {
   position: relative;
   min-block-size: min(62vw, 38rem);
@@ -59,7 +63,8 @@
   white-space: nowrap;
 }
 
-.scene-figure__header > strong {
+.scene-figure__header > h3 {
+  margin: 0;
   color: var(--ink);
   font-size: clamp(1rem, 1.4vw, 1.2rem);
   letter-spacing: -0.02em;
@@ -68,6 +73,12 @@
 .scene-figure__header > span {
   color: var(--ink-muted);
   font-size: 0.82rem;
+}
+
+.scene-figure__plane > canvas {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
 }
 
 @media (max-width: 40rem) {

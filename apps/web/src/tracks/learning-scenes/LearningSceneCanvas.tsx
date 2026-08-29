@@ -1,6 +1,8 @@
 import { Canvas, useThree } from "@react-three/fiber";
 import { type ReactElement, type ReactNode, useEffect } from "react";
 
+import type { LearningSceneViewport } from "./sceneTypes";
+
 type SceneCamera = Readonly<{
   far?: number;
   fov: number;
@@ -16,6 +18,7 @@ type LearningSceneCanvasProps = Readonly<{
   onContextLost: () => void;
   onContextRestored: () => void;
   sceneId: string;
+  viewport: LearningSceneViewport;
 }>;
 
 const GL_OPTIONS = {
@@ -31,7 +34,7 @@ function SceneLifecycle({
   onContextLost,
   onContextRestored,
   sceneId,
-}: Omit<LearningSceneCanvasProps, "camera" | "children">): null {
+}: Omit<LearningSceneCanvasProps, "camera" | "children" | "viewport">): null {
   const { gl, invalidate } = useThree();
 
   useEffect(() => {
@@ -76,9 +79,11 @@ export function LearningSceneCanvas({
   onContextLost,
   onContextRestored,
   sceneId,
+  viewport,
 }: LearningSceneCanvasProps): ReactElement {
   return (
     <Canvas
+      key={viewport}
       aria-hidden="true"
       camera={{
         far: camera.far ?? 100,
