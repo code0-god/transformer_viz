@@ -88,7 +88,7 @@ export function TokenComparisonDiagram() {
       data-figure-question="What is a token boundary?"
     >
       <svg
-        viewBox={`0 0 ${viewWidth} ${viewHeight}`}
+        viewBox={portrait ? `0 0 ${viewWidth} ${viewHeight}` : "60 45 900 430"}
         role="img"
         aria-label="Token 개념 흐름"
         preserveAspectRatio="xMidYMid meet"

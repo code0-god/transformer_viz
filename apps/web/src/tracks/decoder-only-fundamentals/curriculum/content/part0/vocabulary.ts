@@ -20,7 +20,7 @@ export const vocabularyChapterContent = {
         figureId: "decoder.diagram.tokenization.vocabulary",
         size: "wide",
         caption:
-          "Token ID는 vocabulary에서 token을 찾는 주소이며, 의미 계산은 embedding vector에서 시작합니다.",
+          "Token ID는 의미값이 아니라 vocabulary와 embedding row를 찾는 주소입니다.",
         alt: "Vocabulary의 token 표기와 정수 ID 주소 관계",
       },
     ],

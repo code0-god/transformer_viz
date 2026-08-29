@@ -23,7 +23,7 @@ export const nlpChapterContent = {
         figureId: "decoder.diagram.intro.nlp",
         size: "prose",
         caption:
-          "자연어 처리는 텍스트를 숫자로 표현해 계산하고, 그 결과를 사람이 사용하는 형태로 바꿉니다.",
+          "언어는 숫자 표현으로 바뀐 뒤 모델 계산을 거쳐 결과로 사용됩니다.",
         alt: "자연어 처리의 입력, 숫자 표현, 모델 계산, 결과 흐름",
       },
     ],

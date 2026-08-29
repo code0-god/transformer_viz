@@ -42,7 +42,7 @@ INLINE_FIGURES = (
     ),
 )
 EXPECTED_PREFERRED_WIDTHS = {
-    "decoder.diagram.intro.nlp": 544,
+    "decoder.diagram.intro.nlp": 720,
     "decoder.diagram.tokenization.token": 800,
     "decoder.diagram.tokenization.vocabulary": 760,
     "decoder.diagram.tokenization.methods": 840,

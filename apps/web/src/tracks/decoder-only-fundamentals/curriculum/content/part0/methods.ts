@@ -101,7 +101,7 @@ export const methodsChapterContent = {
             figureId: "decoder.diagram.tokenization.methods",
             size: "wide",
             caption:
-              "같은 텍스트도 tokenization 방식에 따라 경계, vocabulary 크기, sequence 길이가 달라집니다.",
+              "Tokenization 방식은 vocabulary 크기와 sequence 길이에 영향을 줍니다.",
             alt: "the cats를 Word, Character, Subword, Byte 방식으로 비교",
           },
           {

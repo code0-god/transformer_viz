@@ -32,11 +32,6 @@ export const tokenChapterContent = {
             text: "이때 만들어지는 각 칸이 토큰(token)입니다. 토큰은 모델이 순서열의 한 칸으로 처리하는 텍스트 단위입니다.",
           },
           {
-            id: "p.token-not-word",
-            kind: "paragraph",
-            text: "토큰은 사람이 세는 단어와 항상 같지 않습니다. 한 단어가 여러 토큰으로 나뉠 수도 있고, 여러 글자나 기호가 한 토큰에 함께 들어갈 수도 있습니다.",
-          },
-          {
             id: "p.boundary",
             kind: "paragraph",
             text: "어디에서 나눌지는 토크나이저(tokenizer)가 정합니다. 그래서 같은 문장도 어떤 토크나이저를 쓰느냐에 따라 토큰의 경계와 개수가 달라질 수 있습니다.",
@@ -46,9 +41,13 @@ export const tokenChapterContent = {
             kind: "figure",
             figureId: "decoder.diagram.tokenization.token",
             size: "wide",
-            caption:
-              "Token의 경계는 사용하는 tokenizer에 따라 달라질 수 있습니다.",
+            caption: "Token 경계는 tokenizer에 따라 달라질 수 있습니다.",
             alt: "The cats are sleeping 문장이 다섯 token으로 나뉜 경계",
+          },
+          {
+            id: "p.token-not-word",
+            kind: "paragraph",
+            text: "토큰은 사람이 세는 단어와 항상 같지 않습니다. 한 단어가 여러 토큰으로 나뉠 수도 있고, 여러 글자나 기호가 한 토큰에 함께 들어갈 수도 있습니다.",
           },
         ],
       },
