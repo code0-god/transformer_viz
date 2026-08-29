@@ -26,6 +26,7 @@ from browser_session import ChromeSession
 
 TOKEN_ID = "decoder.diagram.representation.embedding"
 POSITION_ID = "decoder.diagram.representation.position"
+HIDDEN_ID = "decoder.diagram.representation.hidden-state"
 
 
 def _evaluate(browser: ChromeSession, expression: str) -> object:
@@ -214,6 +215,82 @@ def _open_position_scene(browser: ChromeSession) -> None:
     _settle_scene(browser, after_frame=before)
 
 
+def _hidden_probe(browser: ChromeSession) -> JsonObject:
+    return evaluate_dict(
+        browser,
+        f"""(() => {{
+          const figure = document.querySelector(
+            '[data-figure-id="{HIDDEN_ID}"]',
+          );
+          const scene = figure?.querySelector('.scene-figure');
+          const state = figure?.querySelector(
+            '[data-testid="hidden-scene-state"]',
+          );
+          const canvas = figure?.querySelector('canvas');
+          const controls = Array.from(figure?.querySelectorAll('button') ?? []);
+          const shapes = Array.from(
+            state?.querySelectorAll('.hidden-scene__flow em') ?? [],
+            shape => shape.textContent?.trim() ?? '',
+          );
+          const box = canvas?.getBoundingClientRect();
+          return {{
+            status: scene?.getAttribute('data-scene-status') ?? '',
+            viewport: scene?.getAttribute('data-scene-viewport') ?? '',
+            visible: scene?.getAttribute('data-scene-visible') ?? '',
+            stage: state?.getAttribute('data-stage') ?? '',
+            stateText: state?.textContent?.trim() ?? '',
+            shapes,
+            canvasCount: figure?.querySelectorAll('canvas').length ?? -1,
+            canvasWidth: box?.width ?? 0,
+            canvasHeight: box?.height ?? 0,
+            controlCount: controls.length,
+            controlMinHeight: Math.min(
+              ...controls.map(control => control.getBoundingClientRect().height),
+            ),
+            overflow:
+              document.documentElement.scrollWidth
+              - document.documentElement.clientWidth,
+            metrics: {{ ...(window.__learningSceneMetrics ?? {{}}) }},
+          }};
+        }})()""",
+    )
+
+
+def _open_hidden_scene(browser: ChromeSession) -> None:
+    before = _evaluate(
+        browser,
+        "window.__learningSceneMetrics?.animationFrameCount ?? 0",
+    )
+    if not isinstance(before, int):
+        raise TypeError(f"Scene frame count must be integer: {before!r}")
+    set_viewport(browser, 1440, 900)
+    navigate_hash(
+        browser,
+        "#/learn/decoder-only-fundamentals/2-3",
+        (
+            "document.querySelector("
+            "'[data-curriculum-chapter-id=\"decoder.chapter.2.3\"]'"
+            ") !== null"
+        ),
+        "Hidden State Chapter",
+    )
+    _evaluate(
+        browser,
+        f"""document.querySelector(
+          '[data-figure-id="{HIDDEN_ID}"]',
+        )?.scrollIntoView({{ block: 'start', inline: 'nearest' }})""",
+    )
+    wait_for(
+        browser,
+        (
+            f"document.querySelector('[data-figure-id=\"{HIDDEN_ID}\"] "
+            "[data-scene-status=\"ready\"]') !== null"
+        ),
+        "Hidden Scene ready",
+    )
+    _settle_scene(browser, after_frame=before)
+
+
 def _click_phase(browser: ChromeSession, label: str, phase: str) -> None:
     before = _probe(browser).get("metrics", {})
     before_frame = (
@@ -260,6 +337,31 @@ def _click_position_phase(
     _settle_scene(browser, after_frame=before_frame)
 
 
+def _click_hidden_stage(
+    browser: ChromeSession,
+    label: str,
+    stage: str,
+) -> None:
+    before = _hidden_probe(browser).get("metrics", {})
+    before_frame = (
+        before.get("animationFrameCount", 0)
+        if isinstance(before, dict)
+        else 0
+    )
+    if not isinstance(before_frame, int):
+        raise TypeError(f"Scene frame count must be integer: {before_frame!r}")
+    pointer_click(
+        browser,
+        button_with_text(label),
+        condition=(
+            "document.querySelector('[data-testid=\"hidden-scene-state\"]')"
+            f"?.getAttribute('data-stage') === {json.dumps(stage)}"
+        ),
+        label=f"Hidden stage {stage}",
+    )
+    _settle_scene(browser, after_frame=before_frame)
+
+
 def _verify_idle(browser: ChromeSession) -> int:
     result = _evaluate(
         browser,
@@ -300,6 +402,7 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             for request in home_requests
             if "TokenEmbeddingScene" in request
             or "PositionEmbeddingScene" in request
+            or "HiddenStateScene" in request
             or "react-three-fiber" in request
         ]
         require(
@@ -581,6 +684,120 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             screenshots / "position-sum-390x844.png",
         )
 
+        _open_hidden_scene(browser)
+        hidden_x0 = _hidden_probe(browser)
+        require(
+            hidden_x0["status"] == "ready"
+            and hidden_x0["stage"] == "x0"
+            and hidden_x0["canvasCount"] == 1
+            and hidden_x0["controlCount"] == 4
+            and isinstance(hidden_x0["controlMinHeight"], int | float)
+            and hidden_x0["controlMinHeight"] >= 44
+            and hidden_x0["overflow"] == 0,
+            f"Hidden X_0 contract failed: {hidden_x0}",
+        )
+        require(
+            hidden_x0["shapes"] == ["[T,C]", "[T,C]", "[T,C]"]
+            and "t0 · the" in str(hidden_x0["stateText"])
+            and "t1 · cat" in str(hidden_x0["stateText"])
+            and "causal prefix" not in str(hidden_x0["stateText"]).lower(),
+            f"Hidden shape or row identity failed: {hidden_x0}",
+        )
+        shots["hiddenX0Desktop"] = capture(
+            browser,
+            screenshots / "hidden-x0-1440x900.png",
+        )
+
+        _click_hidden_stage(browser, "X_1", "x1")
+        hidden_x1 = _hidden_probe(browser)
+        shots["hiddenX1Desktop"] = capture(
+            browser,
+            screenshots / "hidden-x1-1440x900.png",
+        )
+
+        _click_hidden_stage(browser, "X_N", "xn")
+        hidden_xn = _hidden_probe(browser)
+        shots["hiddenXNDesktop"] = capture(
+            browser,
+            screenshots / "hidden-xn-1440x900.png",
+        )
+        hidden_idle_delta = _verify_idle(browser)
+        require(
+            hidden_idle_delta == 0,
+            f"Hidden idle RAF leaked: {hidden_idle_delta}",
+        )
+
+        hidden_mobile_frame = hidden_xn.get("metrics", {})
+        previous_hidden_mobile_frame = (
+            hidden_mobile_frame.get("animationFrameCount", 0)
+            if isinstance(hidden_mobile_frame, dict)
+            else 0
+        )
+        if not isinstance(previous_hidden_mobile_frame, int):
+            raise TypeError(
+                "Scene frame count must be integer: "
+                f"{previous_hidden_mobile_frame!r}",
+            )
+        set_viewport(browser, 390, 844)
+        wait_for(
+            browser,
+            (
+                f"document.querySelector('[data-figure-id=\"{HIDDEN_ID}\"] "
+                "[data-scene-viewport=\"mobile\"]"
+                "[data-scene-status=\"ready\"]') !== null"
+            ),
+            "Hidden mobile scene mode",
+        )
+        _settle_scene(
+            browser,
+            after_frame=previous_hidden_mobile_frame,
+        )
+        _evaluate(
+            browser,
+            """document.querySelector('.scene-figure__plane')
+              ?.scrollIntoView({ block: 'center', inline: 'nearest' })""",
+        )
+        _settle_scene(browser)
+        hidden_mobile = _hidden_probe(browser)
+        require(
+            hidden_mobile["viewport"] == "mobile"
+            and hidden_mobile["stage"] == "xn"
+            and isinstance(hidden_mobile["canvasWidth"], int | float)
+            and hidden_mobile["canvasWidth"] <= 390
+            and hidden_mobile["overflow"] == 0,
+            f"Hidden mobile contract failed: {hidden_mobile}",
+        )
+        shots["hiddenMobile"] = capture(
+            browser,
+            screenshots / "hidden-xn-390x844.png",
+        )
+
+        _evaluate(
+            browser,
+            """window.scrollTo({
+              top: document.documentElement.scrollHeight,
+              left: 0,
+            })""",
+        )
+        wait_for(
+            browser,
+            (
+                f"document.querySelector('[data-figure-id=\"{HIDDEN_ID}\"] "
+                "[data-scene-visible=\"false\"]') !== null"
+                f" && document.querySelector('[data-figure-id=\"{HIDDEN_ID}\"] "
+                "canvas') === null"
+            ),
+            "Hidden offscreen Canvas cleanup",
+        )
+        hidden_offscreen = _hidden_probe(browser)
+        hidden_offscreen_metrics = hidden_offscreen.get("metrics", {})
+        require(
+            isinstance(hidden_offscreen_metrics, dict)
+            and hidden_offscreen_metrics.get("activeCanvasCount") == 0
+            and hidden_offscreen_metrics.get("webglContextCount") == 0,
+            f"Hidden offscreen context leaked: {hidden_offscreen}",
+        )
+
         errors = browser_errors(browser)
         require(not errors["network"], f"Network errors: {errors['network']}")
         require(not errors["runtime"], f"Runtime errors: {errors['runtime']}")
@@ -600,6 +817,14 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             "compare": position_compare,
             "mobile": position_mobile,
             "idleFrameDelta": position_idle_delta,
+        }
+        evidence["hidden"] = {
+            "x0": hidden_x0,
+            "x1": hidden_x1,
+            "xn": hidden_xn,
+            "mobile": hidden_mobile,
+            "offscreen": hidden_offscreen,
+            "idleFrameDelta": hidden_idle_delta,
         }
         evidence["requests"] = request_urls(browser)
         evidence["errors"] = errors

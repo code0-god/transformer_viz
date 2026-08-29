@@ -1,20 +1,44 @@
 import type { ReactElement } from "react";
 
-const STATES = ["X_0", "X_1", "X_N"] as const;
+const STATES = [
+  {
+    label: "X_0",
+    values: [
+      [0.2, 0.7, 0.4, 0.8],
+      [0.6, 0.3, 0.9, 0.4],
+    ],
+  },
+  {
+    label: "X_1",
+    values: [
+      [0.7, 0.4, 0.8, 0.3],
+      [0.3, 0.9, 0.5, 0.7],
+    ],
+  },
+  {
+    label: "X_N",
+    values: [
+      [0.4, 0.9, 0.3, 0.7],
+      [0.8, 0.5, 0.7, 0.2],
+    ],
+  },
+] as const;
+
+const CHANNEL_IDS = ["c0", "c1", "c2", "c3"] as const;
 
 export function HiddenStateDiagram(): ReactElement {
   return (
     <div className="part2-diagram">
       <svg
-        viewBox="0 0 760 470"
+        viewBox="0 0 760 410"
         role="img"
-        aria-label="Causal prefix를 반영하는 hidden state 흐름"
+        aria-label="Shape를 유지하며 값이 바뀌는 hidden state 흐름"
         aria-describedby="hidden-state-desc"
       >
-        <title>Causal prefix를 반영하는 hidden state 흐름</title>
+        <title>Shape를 유지하며 값이 바뀌는 hidden state 흐름</title>
         <desc id="hidden-state-desc">
-          B가 하나일 때 T by C로 적은 hidden state가 Transformer Blocks 사이에서
-          shape를 유지하고 각 token 위치는 현재까지의 causal prefix만 반영하는
+          B가 하나일 때 T by C로 적은 X_0, X_1, X_N hidden state가 같은 token
+          row와 tensor shape를 유지하면서 illustrative activation 값을 바꾸는
           symbolic 흐름
         </desc>
         <defs>
@@ -35,28 +59,31 @@ export function HiddenStateDiagram(): ReactElement {
         {STATES.map((state, stateIndex) => {
           const x = 28 + stateIndex * 250;
           return (
-            <g key={state} className="part2-diagram__state">
+            <g key={state.label} className="part2-diagram__state">
               <text x={x + 82} y="82" textAnchor="middle">
-                {state}
+                {state.label}
               </text>
-              {[0, 1, 2].map((position) => (
-                <g key={position} className="part2-diagram__state-row">
+              {state.values.map((row, position) => (
+                <g
+                  key={position === 0 ? "the" : "cat"}
+                  className="part2-diagram__state-row"
+                >
                   <rect
                     x={x}
-                    y={102 + position * 64}
+                    y={108 + position * 78}
                     width="164"
-                    height="44"
+                    height="54"
                     rx="7"
                   />
-                  <text x={x + 14} y={129 + position * 64}>
-                    t{position}
+                  <text x={x + 12} y={139 + position * 78}>
+                    t{position} · {position === 0 ? "the" : "cat"}
                   </text>
-                  {[0, 1, 2, 3].map((channel) => (
+                  {CHANNEL_IDS.map((channelId, channel) => (
                     <circle
-                      key={channel}
+                      key={channelId}
                       cx={x + 70 + channel * 24}
-                      cy={124 + position * 64}
-                      r="5"
+                      cy={135 + position * 78}
+                      r={3 + (row[channel] ?? 0) * 4}
                     />
                   ))}
                 </g>
@@ -64,7 +91,7 @@ export function HiddenStateDiagram(): ReactElement {
               <text
                 className="part2-diagram__axis"
                 x={x + 82}
-                y="322"
+                y="292"
                 textAnchor="middle"
               >
                 T positions · C channels
@@ -75,12 +102,12 @@ export function HiddenStateDiagram(): ReactElement {
         <path
           className="part2-diagram__path"
           markerEnd="url(#hidden-arrow)"
-          d="M198 196H258"
+          d="M198 171H258"
         />
         <text
           className="part2-diagram__operator"
           x="228"
-          y="180"
+          y="154"
           textAnchor="middle"
         >
           Block 1
@@ -88,47 +115,34 @@ export function HiddenStateDiagram(): ReactElement {
         <path
           className="part2-diagram__path"
           markerEnd="url(#hidden-arrow)"
-          d="M448 196H508"
+          d="M448 171H508"
         />
         <text
           className="part2-diagram__operator"
           x="478"
-          y="180"
+          y="154"
           textAnchor="middle"
         >
           … Blocks
         </text>
-        <g className="part2-diagram__prefixes">
-          <text className="part2-diagram__heading" x="28" y="378">
-            Causal prefix
-          </text>
-          <text x="172" y="378">
-            t0 ← token 0
-          </text>
-          <text x="330" y="378">
-            t1 ← tokens 0…1
-          </text>
-          <text x="520" y="378">
-            t2 ← tokens 0…2
-          </text>
-          <path className="part2-diagram__brace" d="M28 400H698" />
-          <text
-            className="part2-diagram__note"
-            x="363"
-            y="438"
-            textAnchor="middle"
-          >
-            미래 위치는 제외 · shape 유지 · 값은 문맥에 따라 갱신
-          </text>
-        </g>
+        <path className="part2-diagram__brace" d="M28 326V346H698V326" />
+        <text
+          className="part2-diagram__note"
+          x="363"
+          y="382"
+          textAnchor="middle"
+        >
+          같은 token rows · [T,C] 유지 · illustrative activations 변화
+        </text>
       </svg>
       <div className="part2-diagram__fallback">
         <fieldset aria-label="Hidden State 의미 설명">
           <ol>
             <li>Actual Block boundary: [B,T,C]</li>
             <li>Batch-one notation: [T,C]</li>
-            <li>States: X_0 → X_1 → X_N, shape preserved</li>
-            <li>Each position reflects only its causal prefix</li>
+            <li>States: X_0 → X_1 → X_N</li>
+            <li>Same token rows and [T,C] geometry</li>
+            <li>Illustrative activations change between states</li>
           </ol>
         </fieldset>
       </div>

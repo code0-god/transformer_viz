@@ -9,7 +9,7 @@ import { model, TestWorker } from "../../../../../test/workerFixtures";
 const CHAPTERS = [
   ["Token Embedding", "Token ID와 embedding table row lookup"],
   ["Position Embedding", "Token과 learned absolute position embedding의 합"],
-  ["Hidden State", "Causal prefix를 반영하는 hidden state 흐름"],
+  ["Hidden State", "Shape를 유지하며 값이 바뀌는 hidden state 흐름"],
 ] as const;
 
 function readyCurriculum(): TestWorker {

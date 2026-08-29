@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { HiddenStateSceneFigure } from "../../learning-scenes/hidden/HiddenStateSceneFigure";
 import { PositionEmbeddingSceneFigure } from "../../learning-scenes/position/PositionEmbeddingSceneFigure";
 import { TokenEmbeddingSceneFigure } from "../../learning-scenes/token/TokenEmbeddingSceneFigure";
 import type {
@@ -90,6 +91,9 @@ function renderFigure(figureId: string): ReactElement {
   }
   if (figureId === "decoder.diagram.representation.position") {
     return <PositionEmbeddingSceneFigure />;
+  }
+  if (figureId === "decoder.diagram.representation.hidden-state") {
+    return <HiddenStateSceneFigure />;
   }
   const Figure = curriculumDiagramComponent(figureId);
   if (Figure === undefined) throw new CurriculumFigureRegistryError(figureId);
