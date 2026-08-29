@@ -44,7 +44,12 @@ describe("controlled generation UI", () => {
     expect(screen.getByText("Model Ready")).toBeInTheDocument();
     await user.type(screen.getByRole("textbox", { name: "Prompt" }), "!");
     expect(onPromptChange).toHaveBeenLastCalledWith("the cat!");
-    await user.click(screen.getByRole("button", { name: "Generate" }));
+    const generate = screen.getByRole("button", { name: "Generate" });
+    expect(generate.closest(".lumen-cta")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("generate").closest(".threeui-action-host"),
+    ).toHaveAttribute("data-control-tier", "primary");
+    await user.click(generate);
     expect(onGenerate).toHaveBeenCalledWith("the cat", {
       max_new_tokens: 24,
       temperature: 1,
@@ -83,8 +88,42 @@ describe("controlled generation UI", () => {
 
     const stop = screen.getByRole("button", { name: "Stop" });
     expect(stop.closest(".lumen-cta")).toBeInTheDocument();
+    expect(stop.closest(".threeui-action-host")).toHaveAttribute(
+      "data-control-tier",
+      "secondary",
+    );
     await user.click(stop);
     expect(onStop).toHaveBeenCalledOnce();
+  });
+
+  test("exposes a disabled ThreeUI stopping state", () => {
+    render(
+      <PromptPanel
+        prompt="the cat"
+        form={form}
+        limits={{ blockSize: 32, vocabSize: 64 }}
+        generation={{
+          ...createGenerationState(),
+          phase: "running",
+          stopPending: true,
+          active: {
+            requestId: { kind: "safe-id", value: 1 },
+            runId: { kind: "safe-id", value: 2 },
+          },
+        }}
+        onPromptChange={vi.fn()}
+        onFormChange={vi.fn()}
+        onGenerate={vi.fn()}
+        onStop={vi.fn()}
+      />,
+    );
+
+    const stopping = screen.getByRole("button", { name: "Stopping…" });
+    expect(stopping).toBeDisabled();
+    expect(stopping.closest(".threeui-action-host")).toHaveAttribute(
+      "data-control-state",
+      "stopping",
+    );
   });
 
   test("renders decoded runtime continuation and selects a real step", async () => {

@@ -19,6 +19,7 @@ import {
   createGenerationState,
   type GenerationState,
   inspectGenerationStep,
+  requestGenerationStop,
   safeId,
 } from "./generationState";
 import {
@@ -54,6 +55,7 @@ export type AppAction =
       requestId: number;
       stepIndex: number;
     }>
+  | Readonly<{ type: "generation-stop-requested" }>
   | Readonly<{
       type: "score-matrix-requested";
       requestId: number;
@@ -156,7 +158,12 @@ export function reduceGenerationResponse(
     case "generation_finished":
       return state.phase === "running" &&
         exactActive(state, response.request_id, response.run_id)
-        ? { ...state, phase: "complete", stopReason: response.reason }
+        ? {
+            ...state,
+            phase: "complete",
+            stopPending: false,
+            stopReason: response.reason,
+          }
         : state;
     case "generation_step_trace": {
       const replay = state.pendingReplay;
@@ -213,6 +220,11 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           action.stepIndex,
         ),
         scoreMatrix: createScoreMatrixInspectionState(),
+      };
+    case "generation-stop-requested":
+      return {
+        ...state,
+        generation: requestGenerationStop(state.generation),
       };
     case "score-matrix-requested":
       return {

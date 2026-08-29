@@ -33,20 +33,26 @@ export function ContinuationPanel({
     <section
       className="continuation-panel"
       aria-labelledby="continuation-title"
+      data-output-state={generation.phase}
       data-threeui-surface="generation-output"
     >
-      <h2 id="continuation-title">Decoded continuation</h2>
+      <header className="continuation-panel__header">
+        <h2 id="continuation-title" aria-label="Decoded continuation">
+          Output
+        </h2>
+        <span>{stopReason(generation)}</span>
+      </header>
       <dl className="decoded-text">
         <div>
-          <dt>Decoded prompt</dt>
+          <dt>Prompt</dt>
           <dd>
-            <output>{generation.promptText}</output>
+            <output>{generation.promptText || "—"}</output>
           </dd>
         </div>
         <div>
-          <dt>Decoded continuation</dt>
+          <dt>Continuation</dt>
           <dd>
-            <output>{continuation}</output>
+            <output aria-live="polite">{continuation || "—"}</output>
           </dd>
         </div>
       </dl>

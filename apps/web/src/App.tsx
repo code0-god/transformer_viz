@@ -33,6 +33,15 @@ function AppSurface(): ReactElement {
   const config = state.worker.model?.config;
   const replaySequenceLength =
     state.generation.replaySummary?.tokens.length ?? null;
+  const labStatus =
+    state.worker.status.type === "ready" ||
+    state.worker.status.type === "complete"
+      ? "Ready"
+      : state.worker.status.type === "error"
+        ? "Error"
+        : state.worker.status.type === "running"
+          ? "Generating"
+          : "Loading";
 
   useLayoutEffect(() => {
     document.getElementById("startup-shell")?.remove();
@@ -57,16 +66,25 @@ function AppSurface(): ReactElement {
             <section
               className="lab-workspace"
               data-threeui-surface="lab"
+              data-lab-layout="instrument-stack"
               aria-labelledby="lab-title"
             >
               <header
                 className="lab-introduction"
                 data-threeui-surface="lab-header"
               >
-                <h1 id="lab-title">모델 실험실</h1>
-                <p className="lab-introduction__eyebrow">LAB / NANO GPT</p>
-                <p>
-                  Prompt와 생성 설정을 바꾸며 기존 추론·재생 흐름을 확인합니다.
+                <div className="lab-introduction__identity">
+                  <h1 id="lab-title" aria-label="모델 실험실">
+                    MODEL LAB
+                  </h1>
+                  <p>nanoGPT Educational Model</p>
+                </div>
+                <p
+                  className="lab-introduction__status"
+                  data-status={state.worker.status.type}
+                >
+                  <span aria-hidden="true" />
+                  {labStatus}
                 </p>
               </header>
               <div className="lab-experiment-grid">

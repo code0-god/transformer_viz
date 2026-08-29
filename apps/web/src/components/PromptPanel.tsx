@@ -60,6 +60,7 @@ function NumberField({
 
 export function PromptPanel(props: PromptPanelProps) {
   const running = props.generation.phase === "running";
+  const stopping = running && props.generation.stopPending;
   const generateDisabled =
     props.disabled === true || props.generation.pending !== null;
   const changeText = (field: TextField, value: string) => {
@@ -75,13 +76,24 @@ export function PromptPanel(props: PromptPanelProps) {
     <section
       className="generation-bar"
       aria-labelledby="prompt-label"
+      data-generation-state={
+        stopping ? "stopping" : running ? "generating" : props.generation.phase
+      }
       data-threeui-surface="generation-controls"
     >
+      <header className="generation-bar__header">
+        <div>
+          <h2 id="prompt-label">Prompt</h2>
+          <p>Generation input</p>
+        </div>
+        <span>{stopping ? "Stopping" : running ? "Generating" : "Ready"}</span>
+      </header>
       <div className="generation-primary">
         <label className="prompt-field" htmlFor="generation-prompt">
-          <span id="prompt-label">Prompt</span>
+          <span>Prompt text</span>
           <textarea
             id="generation-prompt"
+            aria-label="Prompt"
             rows={1}
             value={props.prompt}
             onChange={(event) =>
@@ -90,23 +102,41 @@ export function PromptPanel(props: PromptPanelProps) {
           />
         </label>
         {running ? (
-          <ThreeUiAction type="button" label="Stop" onClick={props.onStop} />
-        ) : (
-          <button
+          <ThreeUiAction
+            busy={stopping}
+            disabled={stopping}
+            label={stopping ? "Stopping…" : "Stop"}
+            onClick={props.onStop}
+            state={stopping ? "stopping" : "working"}
+            tier="secondary"
             type="button"
-            data-testid="generate"
-            className="primary"
-            style={{ minHeight: 44 }}
+          />
+        ) : (
+          <ThreeUiAction
+            busy={props.generation.pending !== null}
             disabled={generateDisabled}
-            aria-busy={props.generation.pending !== null}
+            label="Generate"
             onClick={generate}
-          >
-            Generate
-          </button>
+            state={
+              props.generation.phase === "error"
+                ? "error"
+                : props.generation.pending === null
+                  ? "idle"
+                  : "working"
+            }
+            testId="generate"
+            tier="primary"
+            type="button"
+          />
         )}
       </div>
       <details className="generation-settings">
-        <summary>Settings</summary>
+        <summary>
+          <span>Settings</span>
+          <small>
+            Temperature {props.form.temperature} · Top-K {props.form.topK}
+          </small>
+        </summary>
         <div className="generation-settings-grid">
           <NumberField
             id="max-new-tokens"

@@ -1,19 +1,15 @@
 .continuation-panel[data-threeui-surface="generation-output"] {
   align-content: start;
   gap: var(--s4);
-  padding: var(--s4);
-}
-
-.continuation-panel[data-threeui-surface="generation-output"] > h2 {
-  color: var(--ui-text);
-  font-size: 0.82rem;
-  font-weight: 740;
+  padding: clamp(var(--s4), 2.5vw, var(--s5));
 }
 
 .continuation-panel[data-threeui-surface="generation-output"]
-  .decoded-text
-  > div {
-  grid-template-columns: minmax(7.5rem, 0.36fr) minmax(0, 1fr);
+  .continuation-panel__header
+  > h2 {
+  color: var(--ui-text);
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .continuation-panel[data-threeui-surface="generation-output"]
@@ -34,62 +30,127 @@
   button[aria-current="step"] {
   border-color: var(--ui-accent);
   background: color-mix(in srgb, var(--ui-accent) 9%, var(--ui-surface));
-  box-shadow: none;
+  box-shadow:
+    0 2px 0 color-mix(in srgb, var(--ui-accent) 35%, var(--ui-border)),
+    inset 0 1px rgb(255 255 255 / 0.8);
 }
 
 .continuation-panel[data-threeui-surface="generation-output"]
   .token-details {
   padding: var(--s3);
   border: 1px solid var(--ui-border);
-  border-radius: var(--ui-radius-sm);
-  background: var(--ui-reading);
+  border-radius: 6px;
+  background: color-mix(
+    in srgb,
+    var(--ui-surface-subtle) 44%,
+    var(--ui-surface)
+  );
 }
 
 .lab-inspection[data-threeui-surface="inspection-launchers"] {
-  gap: var(--s4);
-  padding: var(--s4);
+  gap: var(--s3);
+  padding: clamp(var(--s4), 2.5vw, var(--s5));
 }
 
 .lab-inspection[data-threeui-surface="inspection-launchers"]
-  .lab-inspection__actions {
+  .lab-inspection__launcher {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--s2);
+  gap: 0;
 }
 
 .lab-inspection[data-threeui-surface="inspection-launchers"]
-  .lab-inspection__actions
+  .lab-inspection__launcher
   button {
-  min-block-size: 56px;
-  padding: var(--s3);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--ui-radius-sm);
-  background: var(--ui-reading);
-  color: var(--ui-text-muted);
-  font-size: 0.78rem;
-  font-weight: 680;
-  line-height: 1.35;
+  display: grid;
+  grid-template-columns: 2rem minmax(9rem, 0.65fr) minmax(0, 1fr) 1.25rem;
+  align-items: center;
+  gap: var(--s3);
+  min-block-size: 4.5rem;
+  padding: var(--s3) var(--s2);
+  border: 0;
+  border-block-start: 1px solid var(--ui-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ui-text);
   text-align: start;
+  transition:
+    background-color 160ms ease-out,
+    color 160ms ease-out,
+    padding-inline 160ms ease-out;
 }
 
 .lab-inspection[data-threeui-surface="inspection-launchers"]
-  .lab-inspection__actions
+  .lab-inspection__launcher
   button:not(:disabled):hover {
-  border-color: var(--ui-border-strong);
-  background: var(--ui-surface-subtle);
+  padding-inline: var(--s3) var(--s1);
+  background: color-mix(
+    in srgb,
+    var(--ui-control-highlight) 72%,
+    transparent
+  );
   color: var(--ui-text);
 }
 
-@media (max-width: 55rem) {
-  .lab-inspection[data-threeui-surface="inspection-launchers"]
-    .lab-inspection__actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.lab-inspection__index,
+.lab-inspection__context {
+  color: var(--ui-text-soft);
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lab-inspection__copy {
+  display: grid;
+  gap: 0.16rem;
+}
+
+.lab-inspection__copy strong {
+  font-size: 0.8rem;
+  font-weight: 680;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lab-inspection__copy > span {
+  color: var(--ui-text-muted);
+  font-size: 0.72rem;
+}
+
+.lab-inspection__context {
+  justify-self: end;
+}
+
+.lab-inspection__arrow {
+  inline-size: 1rem;
+  block-size: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
 }
 
 @media (max-width: 40rem) {
   .lab-inspection[data-threeui-surface="inspection-launchers"]
-    .lab-inspection__actions {
-    grid-template-columns: minmax(0, 1fr);
+    .lab-inspection__launcher
+    button {
+    grid-template-columns: 1.5rem minmax(0, 1fr) 1.25rem;
+  }
+
+  .lab-inspection__context {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .lab-inspection__arrow {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-inspection[data-threeui-surface="inspection-launchers"]
+    .lab-inspection__launcher
+    button {
+    transition: none;
   }
 }
