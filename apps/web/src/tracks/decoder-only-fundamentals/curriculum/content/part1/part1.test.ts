@@ -33,24 +33,26 @@ const CHAPTERS = [
     "decoder.diagram.language-model.autoregressive",
   ],
 ] as const;
-const SEMANTIC_STAGE_IDS = [
+const DEFINITION_STAGE_IDS = [
   "context",
-  "transformer",
-  "last-hidden-state",
-  "lm-head",
-  "raw-logit",
-  "full-vocabulary-inspection-probability",
-  "sampler-retained-set-probability",
-  "selected-token",
+  "language-model",
+  "next-token-candidates",
 ] as const;
-const TERMINAL_REASON_IDS = [
+const NEXT_TOKEN_STAGE_IDS = [
+  "context",
+  "vocabulary-logits",
+  "selection-distribution",
+  "sampler",
+  "next-token",
+] as const;
+const STOP_CONDITION_IDS = [
   "max-new-tokens",
   "end-of-sequence",
   "context-limit",
   "user-stopped",
-  "replaced",
   "error",
 ] as const;
+const CHAPTER_ROLES = ["what", "one-step", "probability", "repeat"] as const;
 
 function part1Pages() {
   return decoderCurriculum.guidePages.slice(4, 8);
@@ -69,11 +71,16 @@ describe("Part 1 curriculum content", () => {
       chapter.concepts[0]?.diagramId,
     ]);
 
-    // Then: each independent Chapter has sufficient structural teaching blocks.
+    // Then: each independent Chapter has one Figure and sufficient teaching blocks.
     expect(contracts).toEqual(CHAPTERS);
     for (const page of part1Pages()) {
       const blocks = page.sections.flatMap(({ blocks }) => blocks);
-      expect(blocks.filter(({ kind }) => kind === "paragraph")).toHaveLength(6);
+      const figures = [...page.introduction, ...blocks].filter(
+        ({ kind }) => kind === "figure",
+      );
+      expect(
+        blocks.filter(({ kind }) => kind === "paragraph").length,
+      ).toBeGreaterThanOrEqual(6);
       expect(
         blocks.filter(({ kind }) => kind === "callout").length,
       ).toBeGreaterThanOrEqual(2);
@@ -82,10 +89,45 @@ describe("Part 1 curriculum content", () => {
       ).toBeGreaterThanOrEqual(3);
       expect(page.introduction.length).toBeGreaterThan(0);
       expect(page.keyTakeaway).toHaveLength(1);
+      expect(figures).toHaveLength(1);
+      expect(
+        figures.every(
+          (figure) =>
+            figure.kind === "figure" &&
+            figure.caption.trim().length > 0 &&
+            typeof figure.alt === "string" &&
+            figure.alt.trim().length > 0,
+        ),
+      ).toBe(true);
     }
   });
 
-  test("preserves Formula order and the probability-stage boundary", () => {
+  test("locks distinct chapter roles and figure questions", () => {
+    // Given: four typed Part 1 content records.
+    const contents: readonly Part1ChapterContent[] = [
+      definitionChapterContent,
+      nextTokenChapterContent,
+      conditionalProbabilityChapterContent,
+      autoregressiveChapterContent,
+    ];
+
+    // When: editorial responsibility metadata is inspected.
+    const roles = contents.map((content) =>
+      Reflect.get(content, "chapterRole"),
+    );
+    const questions = contents.map((content) =>
+      Reflect.get(content, "figureQuestion"),
+    );
+
+    // Then: WHAT, ONE STEP, PROBABILITY, and REPEAT remain distinct.
+    expect(roles).toEqual(CHAPTER_ROLES);
+    expect(questions.every((question) => typeof question === "string")).toBe(
+      true,
+    );
+    expect(new Set(questions).size).toBe(4);
+  });
+
+  test("preserves Formula order and the score-selection boundary", () => {
     // Given: next-token and conditional-probability pages.
     const [definition, nextToken, conditional] = part1Pages();
     if (
@@ -109,16 +151,11 @@ describe("Part 1 curriculum content", () => {
       block.kind === "formula" ? [block.formulaId] : [],
     );
 
-    // Then: explanation precedes static formulas and probability stages remain distinct.
+    // Then: explanation precedes formulas and each Chapter owns only its responsibility.
     expect(definitionBlocks.some(({ kind }) => kind === "formula")).toBe(false);
     expect(
       shapeFlow?.kind === "steps" ? shapeFlow.items.map(({ id }) => id) : [],
-    ).toEqual([
-      "context-strip",
-      "all-position-logits",
-      "final-position-row",
-      "symbolic-candidates",
-    ]);
+    ).toEqual(DEFINITION_STAGE_IDS);
     expect(formulaIds).toEqual([
       "fundamentals-next-token-softmax",
       "fundamentals-chain-rule-three-token",
@@ -127,7 +164,13 @@ describe("Part 1 curriculum content", () => {
     expect(stageBlock?.kind).toBe("steps");
     expect(
       stageBlock?.kind === "steps" ? stageBlock.items.map(({ id }) => id) : [],
-    ).toEqual(SEMANTIC_STAGE_IDS);
+    ).toEqual(NEXT_TOKEN_STAGE_IDS);
+    expect(JSON.stringify(definition)).not.toMatch(
+      /(?:logit|softmax|LM head|hidden state|\[T,Vocab\])/i,
+    );
+    expect(JSON.stringify(nextToken)).not.toMatch(
+      /(?:inspection|retained-set|transport|Worker raw trace|fixture)/i,
+    );
     expect(
       validateCurriculum(decoderCurriculum, decoderCurriculumRegistries).filter(
         ({ code }) => code === "formula-before-explanation",
@@ -138,7 +181,7 @@ describe("Part 1 curriculum content", () => {
     );
   });
 
-  test("pins current model repetition and all six terminal reasons", () => {
+  test("pins current model repetition and five learner-facing stop conditions", () => {
     // Given: the autoregressive Chapter's machine-readable block IDs.
     const autoregressive = part1Pages()[3];
     if (autoregressive === undefined)
@@ -160,7 +203,19 @@ describe("Part 1 curriculum content", () => {
     expect(reasons?.kind).toBe("steps");
     expect(
       reasons?.kind === "steps" ? reasons.items.map(({ id }) => id) : [],
-    ).toEqual(TERMINAL_REASON_IDS);
+    ).toEqual(STOP_CONDITION_IDS);
+  });
+
+  test("validates every Part 1 glossary, Formula, Figure, and link contract", () => {
+    expect(
+      validateCurriculum(decoderCurriculum, decoderCurriculumRegistries),
+    ).toEqual([]);
+    expect(deriveChapterAdjacency(decoderCurriculum).slice(4, 8)).toEqual([
+      ["decoder.chapter.1.1", "decoder.chapter.1.2"],
+      ["decoder.chapter.1.2", "decoder.chapter.1.3"],
+      ["decoder.chapter.1.3", "decoder.chapter.1.4"],
+      ["decoder.chapter.1.4", "decoder.chapter.2.1"],
+    ]);
   });
 
   test("resolves generation provenance to the current Worker source", () => {

@@ -183,9 +183,9 @@ export const formulaCatalog: Readonly<
   },
   "fundamentals-next-token-softmax": {
     id: "fundamentals-next-token-softmax",
-    tex: "P(w_{t+1}=i \\mid w_{1:t}) = \\frac{\\exp(z_i)}{\\sum_j \\exp(z_j)}",
-    plainText: "P(w_(t+1)=i | w_(1:t)) = exp(z_i) / sum_j exp(z_j)",
-    accessibleLabel: "Next-token full-vocabulary softmax probability",
+    tex: "P_i = \\frac{\\exp(z_i)}{\\sum_j \\exp(z_j)}",
+    plainText: "P_i = exp(z_i) / sum_j exp(z_j)",
+    accessibleLabel: "Softmax probability for candidate i",
   },
   "fundamentals-chain-rule-three-token": {
     id: "fundamentals-chain-rule-three-token",
@@ -195,8 +195,8 @@ export const formulaCatalog: Readonly<
   },
   "fundamentals-chain-rule-sequence": {
     id: "fundamentals-chain-rule-sequence",
-    tex: "P(w_1,\\ldots,w_n)=\\prod_{t=1}^{n}P(w_t\\mid w_1,\\ldots,w_{t-1})",
-    plainText: "P(w1,...,wn) = product from t=1 to n of P(wt | w1,...,w(t-1))",
+    tex: "P(w_1,\\ldots,w_T)=\\prod_{t=1}^{T}P(w_t\\mid w_{<t})",
+    plainText: "P(w1,...,wT) = product from t=1 to T of P(wt | w before t)",
     accessibleLabel: "Sequence probability chain rule",
   },
   "fundamentals-embedding-table-shape": {
