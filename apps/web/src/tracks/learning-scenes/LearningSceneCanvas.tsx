@@ -1,0 +1,107 @@
+import { Canvas, useThree } from "@react-three/fiber";
+import { type ReactElement, type ReactNode, useEffect } from "react";
+
+type SceneCamera = Readonly<{
+  far?: number;
+  fov: number;
+  near?: number;
+  position: readonly [number, number, number];
+}>;
+
+type LearningSceneCanvasProps = Readonly<{
+  camera: SceneCamera;
+  children: ReactNode;
+  onContextCreated: () => void;
+  onContextDisposed: () => void;
+  onContextLost: () => void;
+  onContextRestored: () => void;
+  sceneId: string;
+}>;
+
+const GL_OPTIONS = {
+  alpha: true,
+  antialias: true,
+  powerPreference: "high-performance",
+  preserveDrawingBuffer: false,
+} as const;
+
+function SceneLifecycle({
+  onContextCreated,
+  onContextDisposed,
+  onContextLost,
+  onContextRestored,
+  sceneId,
+}: Omit<LearningSceneCanvasProps, "camera" | "children">): null {
+  const { gl, invalidate } = useThree();
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const loseContext = (event: Event) => {
+      event.preventDefault();
+      onContextLost();
+    };
+    const restoreContext = () => {
+      onContextRestored();
+      invalidate();
+    };
+    canvas.dataset["learningSceneCanvas"] = sceneId;
+    canvas.addEventListener("webglcontextlost", loseContext);
+    canvas.addEventListener("webglcontextrestored", restoreContext);
+    onContextCreated();
+    invalidate();
+    return () => {
+      canvas.removeEventListener("webglcontextlost", loseContext);
+      canvas.removeEventListener("webglcontextrestored", restoreContext);
+      delete canvas.dataset["learningSceneCanvas"];
+      onContextDisposed();
+    };
+  }, [
+    gl,
+    invalidate,
+    onContextCreated,
+    onContextDisposed,
+    onContextLost,
+    onContextRestored,
+    sceneId,
+  ]);
+
+  return null;
+}
+
+export function LearningSceneCanvas({
+  camera,
+  children,
+  onContextCreated,
+  onContextDisposed,
+  onContextLost,
+  onContextRestored,
+  sceneId,
+}: LearningSceneCanvasProps): ReactElement {
+  return (
+    <Canvas
+      aria-hidden="true"
+      camera={{
+        far: camera.far ?? 100,
+        fov: camera.fov,
+        near: camera.near ?? 0.1,
+        position: [...camera.position],
+      }}
+      dpr={[1, 1.5]}
+      frameloop="demand"
+      gl={GL_OPTIONS}
+      shadows={false}
+    >
+      <color attach="background" args={["#0b1113"]} />
+      <hemisphereLight args={["#e7efec", "#172126", 1.4]} />
+      <directionalLight color="#f0f6f2" intensity={2.2} position={[5, 8, 9]} />
+      <SceneLifecycle
+        onContextCreated={onContextCreated}
+        onContextDisposed={onContextDisposed}
+        onContextLost={onContextLost}
+        onContextRestored={onContextRestored}
+        sceneId={sceneId}
+      />
+      {children}
+    </Canvas>
+  );
+}

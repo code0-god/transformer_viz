@@ -50,9 +50,9 @@ EXPECTED_PREFERRED_WIDTHS = {
     "decoder.diagram.language-model.next-token": 720,
     "decoder.diagram.language-model.conditional-probability": 780,
     "decoder.diagram.language-model.autoregressive": 760,
-    "decoder.diagram.representation.embedding": 760,
-    "decoder.diagram.representation.position": 760,
-    "decoder.diagram.representation.hidden-state": 760,
+    "decoder.diagram.representation.embedding": 960,
+    "decoder.diagram.representation.position": 960,
+    "decoder.diagram.representation.hidden-state": 1000,
     "root": 832,
 }
 ALL_LEARNING_FIGURES = (

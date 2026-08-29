@@ -123,6 +123,7 @@ const fixtureRegistry: CurriculumRendererRegistry = {
   resolveDiagram: () => FixtureDiagram,
   figures: {
     figureIds: new Set(["decoder.diagram.intro.nlp"]),
+    metadata: () => ({ preferredWidth: 544, renderer: "static" }),
     preferredWidth: () => 544,
     render: () => <FixtureDiagram />,
   },

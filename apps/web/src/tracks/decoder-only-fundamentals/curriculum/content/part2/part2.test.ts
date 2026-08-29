@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { decoderCurriculum, decoderCurriculumRegistries } from "../../catalog";
+import { curriculumLearningFigures } from "../../learningFigureRegistry";
 import { deriveChapterAdjacency, validateCurriculum } from "../../validation";
 import { embeddingChapterContent } from "./embedding";
 import type { Part2ChapterContent } from "./glossary";
@@ -40,6 +41,41 @@ function part2Pages() {
 }
 
 describe("Part 2 curriculum content", () => {
+  test("registers three visible-only Scene Figures with static fallbacks", () => {
+    expect(
+      [
+        "decoder.diagram.representation.embedding",
+        "decoder.diagram.representation.position",
+        "decoder.diagram.representation.hidden-state",
+      ].map((figureId) => curriculumLearningFigures.metadata(figureId)),
+    ).toEqual([
+      {
+        fallbackFigureId: "decoder.diagram.representation.embedding.static",
+        loadingStrategy: "visible",
+        preferredAspectRatio: 1.55,
+        preferredWidth: 960,
+        reducedMotion: "static-final-state",
+        renderer: "scene",
+      },
+      {
+        fallbackFigureId: "decoder.diagram.representation.position.static",
+        loadingStrategy: "visible",
+        preferredAspectRatio: 1.55,
+        preferredWidth: 960,
+        reducedMotion: "static-final-state",
+        renderer: "scene",
+      },
+      {
+        fallbackFigureId: "decoder.diagram.representation.hidden-state.static",
+        loadingStrategy: "visible",
+        preferredAspectRatio: 1.6,
+        preferredWidth: 1000,
+        reducedMotion: "static-final-state",
+        renderer: "scene",
+      },
+    ]);
+  });
+
   test("locks three Chapter identities and substantive block roles", () => {
     // Given: the Part 2 curriculum slice.
     const part = decoderCurriculum.parts[2];
