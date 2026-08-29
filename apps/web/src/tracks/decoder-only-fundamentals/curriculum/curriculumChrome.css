@@ -3,9 +3,13 @@
 }
 
 .curriculum-workspace__header[data-threeui-surface="chapter-header"] {
-  gap: var(--s4);
-  padding-block: clamp(2rem, 5dvb, 3.5rem) var(--s5);
-  border-block-end-color: var(--ui-border);
+  gap: 0;
+}
+
+.curriculum-workspace__header[data-threeui-surface="chapter-header"]
+  .curriculum-workspace__header-content {
+  gap: var(--editorial-h1-abstract-gap) var(--s4);
+  padding-block: clamp(1.5rem, 4dvb, 2.5rem) var(--s5);
 }
 
 .curriculum-workspace__header[data-threeui-surface="chapter-header"]
@@ -15,7 +19,7 @@
 
 .curriculum-workspace__header[data-threeui-surface="chapter-header"] h1 {
   color: var(--ui-text);
-  font-size: clamp(1.85rem, 3vw, 2.5rem);
+  font-size: clamp(1.75rem, 2.7vw, 2.25rem);
   font-weight: 700;
   line-height: 1.12;
   letter-spacing: -0.035em;
@@ -118,17 +122,24 @@
 }
 
 .curriculum-chapter-footer[data-threeui-surface="chapter-footer"] {
-  gap: var(--s3);
-  padding-block: var(--s6);
-  border-block-start-color: var(--ui-border);
+  gap: 0;
 }
 
-.curriculum-chapter-footer[data-threeui-surface="chapter-footer"] > span {
+.curriculum-chapter-footer[data-threeui-surface="chapter-footer"]
+  .curriculum-chapter-footer__content {
+  gap: var(--s3);
+  padding-block: var(--s6);
+}
+
+.curriculum-chapter-footer[data-threeui-surface="chapter-footer"]
+  .curriculum-chapter-footer__content
+  > span {
   display: flex;
   min-inline-size: 0;
 }
 
 .curriculum-chapter-footer[data-threeui-surface="chapter-footer"]
+  .curriculum-chapter-footer__content
   > span:last-child {
   justify-content: flex-end;
 }
@@ -164,12 +175,13 @@
 }
 
 @media (max-width: 40rem) {
-  .curriculum-workspace__header[data-threeui-surface="chapter-header"] {
+  .curriculum-workspace__header[data-threeui-surface="chapter-header"]
+    .curriculum-workspace__header-content {
     padding-block-start: var(--s5);
   }
 
   .curriculum-workspace__header[data-threeui-surface="chapter-header"] h1 {
-    font-size: clamp(1.8rem, 8.5vw, 2.35rem);
+    font-size: clamp(1.7rem, 8vw, 2.2rem);
   }
 
   .curriculum-navigation[data-threeui-surface="chapter-navigation"]
@@ -177,7 +189,8 @@
     padding: var(--s3);
   }
 
-  .curriculum-chapter-footer[data-threeui-surface="chapter-footer"] {
+  .curriculum-chapter-footer[data-threeui-surface="chapter-footer"]
+    .curriculum-chapter-footer__content {
     align-items: stretch;
   }
 

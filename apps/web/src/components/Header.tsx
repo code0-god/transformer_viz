@@ -1,4 +1,5 @@
 import type { WorkerStatus } from "../app/workerState";
+import { PageDivider } from "../layout/PageLayout";
 import "./Header.css";
 
 export type HeaderProps = Readonly<{
@@ -27,55 +28,61 @@ export function Header({ status, activeView }: HeaderProps) {
   const copy = statusCopy(status);
   const isError = status.type === "error";
   return (
-    <header className="architecture-header" data-threeui-surface="shell">
-      <div className="brand-lockup">
-        <a
-          className="brand-lockup__title"
-          data-threeui-control="brand"
-          href="#/"
-          aria-label="Transformer Viz"
+    <header
+      className="architecture-header page-layout__full page-layout"
+      data-threeui-surface="shell"
+    >
+      <div className="architecture-header__content page-layout__wide">
+        <div className="brand-lockup">
+          <a
+            className="brand-lockup__title"
+            data-threeui-control="brand"
+            href="#/"
+            aria-label="Transformer Viz"
+          >
+            <span>Transformer</span>
+            <span className="brand-lockup__viz">Viz</span>
+          </a>
+        </div>
+        <nav
+          className="app-navigation"
+          aria-label="주요 탐색"
+          data-threeui-control="mode-navigation"
         >
-          <span>Transformer</span>
-          <span className="brand-lockup__viz">Viz</span>
-        </a>
-      </div>
-      <nav
-        className="app-navigation"
-        aria-label="주요 탐색"
-        data-threeui-control="mode-navigation"
-      >
-        <a
-          href="#/"
-          aria-current={activeView === "learn" ? "page" : undefined}
-          data-control-state={activeView === "learn" ? "selected" : "idle"}
+          <a
+            href="#/"
+            aria-current={activeView === "learn" ? "page" : undefined}
+            data-control-state={activeView === "learn" ? "selected" : "idle"}
+          >
+            학습
+          </a>
+          <a
+            href="#/lab"
+            aria-current={activeView === "lab" ? "page" : undefined}
+            data-control-state={activeView === "lab" ? "selected" : "idle"}
+          >
+            모델 실험실
+          </a>
+        </nav>
+        <div
+          className={isError ? "lifecycle lifecycle-error" : "lifecycle"}
+          data-threeui-control="status"
+          data-threeui-status={status.type}
+          role={isError ? "alert" : "status"}
+          aria-live={isError ? "assertive" : "polite"}
+          aria-describedby={isError ? "lifecycle-error-detail" : undefined}
         >
-          학습
-        </a>
-        <a
-          href="#/lab"
-          aria-current={activeView === "lab" ? "page" : undefined}
-          data-control-state={activeView === "lab" ? "selected" : "idle"}
-        >
-          모델 실험실
-        </a>
-      </nav>
-      <div
-        className={isError ? "lifecycle lifecycle-error" : "lifecycle"}
-        data-threeui-control="status"
-        data-threeui-status={status.type}
-        role={isError ? "alert" : "status"}
-        aria-live={isError ? "assertive" : "polite"}
-        aria-describedby={isError ? "lifecycle-error-detail" : undefined}
-      >
-        <span id="status" className="status-badge" data-status={status.type}>
-          {copy.label}
-        </span>
-        {isError ? (
-          <span id="lifecycle-error-detail" className="lifecycle-detail">
-            {copy.detail}
+          <span id="status" className="status-badge" data-status={status.type}>
+            {copy.label}
           </span>
-        ) : null}
+          {isError ? (
+            <span id="lifecycle-error-detail" className="lifecycle-detail">
+              {copy.detail}
+            </span>
+          ) : null}
+        </div>
       </div>
+      <PageDivider boundaryId="global-header" />
     </header>
   );
 }

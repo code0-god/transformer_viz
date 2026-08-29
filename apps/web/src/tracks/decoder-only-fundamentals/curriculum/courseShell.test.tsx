@@ -34,7 +34,7 @@ describe("decoder curriculum shell", () => {
 
   test("keeps the same content-first model on tablet and mobile", () => {
     expect(curriculumCss).toMatch(
-      /@media \(max-width:\s*79\.999rem\)[\s\S]*\.curriculum-workspace__header\s*{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s,
+      /@media \(max-width:\s*79\.999rem\)[\s\S]*\.curriculum-workspace__header-content\s*{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto;/s,
     );
     expect(curriculumCss).toMatch(
       /@media \(max-width:\s*40rem\)[\s\S]*\.curriculum-toc\s*{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s,
@@ -44,10 +44,13 @@ describe("decoder curriculum shell", () => {
 
   test("separates the reading plane without a giant rounded card", () => {
     expect(globalCss).toMatch(
-      /body:has\(\.architecture-app\[data-app-view="learn"\]\)\s*\{[^}]*--route-background:\s*var\(--ui-page\);/s,
+      /body:has\(\.architecture-app\[data-app-view="learn"\]\)\s*\{[^}]*--route-background:\s*color-mix\(/s,
     );
     expect(learningWorkspaceCss).toMatch(
-      /\.learning-workspace__article\s*\{[^}]*border-inline:\s*1px solid var\(--ui-border\);[^}]*background:\s*var\(--ui-reading\);/s,
+      /\.learning-workspace__article\s*\{[^}]*background:\s*transparent;/s,
+    );
+    expect(learningWorkspaceCss).not.toMatch(
+      /\.learning-workspace__article\s*\{[^}]*border-inline:/s,
     );
     expect(learningWorkspaceCss).not.toMatch(
       /\.learning-workspace__article\s*\{[^}]*border-radius:/s,

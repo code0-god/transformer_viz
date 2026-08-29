@@ -79,7 +79,7 @@
 }
 
 * { box-sizing: border-box; }
-html { min-inline-size: 320px; background: var(--bg-page); }
+html { min-inline-size: 0; background: var(--bg-page); }
 body {
   min-block-size: 100dvb;
   margin: 0;
@@ -94,7 +94,11 @@ body:has(.architecture-app[data-app-view="home"]) {
   --route-mesh: none;
 }
 body:has(.architecture-app[data-app-view="learn"]) {
-  --route-background: var(--ui-page);
+  --route-background: color-mix(
+    in srgb,
+    var(--ui-reading) 44%,
+    var(--ui-page)
+  );
   --route-mesh: none;
 }
 body:has(.architecture-app[data-app-view="lab"]) {
@@ -218,25 +222,18 @@ button, input, textarea, select, summary { min-block-size: 44px; }
 
 .architecture-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: clamp(var(--s5), 5vw, var(--s7));
-  padding-block-start: var(--s2);
-}
-
-.architecture-app[data-app-view="home"] .architecture-main {
-  display: block;
-}
-
-.architecture-app[data-app-view="lab"] .architecture-main {
-  max-inline-size: 72rem;
-  margin-inline: auto;
+  grid-template-columns: subgrid;
+  grid-column: full-start / full-end;
+  row-gap: 0;
+  min-inline-size: 0;
 }
 
 /* Shared architecture shell; each view owns its SVG and detail styles. */
 .architecture-shell {
   display: grid;
-  grid-column: 1 / -1;
-  gap: var(--s2);
+  grid-template-columns: subgrid;
+  grid-column: full-start / full-end;
+  gap: 0;
   padding: var(--s4);
   border-block-start: 1px solid var(--hairline);
 }
@@ -248,6 +245,10 @@ button, input, textarea, select, summary { min-block-size: 44px; }
   color: var(--ink-muted);
 }
 .architecture-error { color: var(--error); }
+.architecture-loading > *,
+.architecture-error > * {
+  grid-column: wide-start / wide-end;
+}
 .architecture-loading-mark {
   inline-size: 2rem;
   block-size: 2rem;
@@ -264,18 +265,6 @@ button, input, textarea, select, summary { min-block-size: 44px; }
 }
 
 @keyframes architecture-spin { to { rotate: 360deg; } }
-
-@media (min-width: 1100px) {
-  html {
-    scrollbar-gutter: stable;
-  }
-}
-
-@media (max-width: 1099px) {
-  .architecture-main {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
 
 @media (max-width: 767px) {
   .startup-shell {

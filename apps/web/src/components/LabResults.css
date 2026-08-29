@@ -68,7 +68,7 @@
   min-block-size: 4.5rem;
   padding: var(--s3) var(--s2);
   border: 0;
-  border-block-start: 1px solid var(--ui-border);
+  border-block-start: var(--boundary-width) solid var(--boundary-internal);
   border-radius: 0;
   background: transparent;
   color: var(--ui-text);

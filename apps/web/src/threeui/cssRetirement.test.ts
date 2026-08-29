@@ -34,6 +34,7 @@ describe("ThreeUI Phase 1 CSS retirement", () => {
   test("keeps shared controls and migrated surfaces under explicit owners", () => {
     const globalCss = source("style.css");
     const bridge = source("src/threeui/threeUi.css");
+    const layout = source("src/layout/pageLayout.css");
     const header = source("src/components/Header.css");
     const home = source("src/components/CourseHome.css");
     const lab = source("src/components/LabWorkspace.css");
@@ -41,12 +42,12 @@ describe("ThreeUI Phase 1 CSS retirement", () => {
     expect(bridge).toMatch(
       /\.threeui-root\s+:where\(button, input, textarea, select\)/,
     );
-    expect(header).toMatch(
-      /\.architecture-app\s*\{[^}]*padding:[^;}]+;[^}]*\}/s,
+    expect(layout).toMatch(
+      /\.page-layout\s*\{[^}]*\[full-start\][^}]*\[content-start\][^}]*\[full-end\]/s,
     );
-    expect(globalCss).toMatch(
-      /@media \(min-width: 1100px\)\s*\{[^}]*scrollbar-gutter:\s*stable;/s,
-    );
+    expect(layout).not.toMatch(/100vw|100dvw|margin-inline:\s*calc\(/);
+    expect(globalCss).toMatch(/html\s*\{[^}]*min-inline-size:\s*0;[^}]*\}/s);
+    expect(globalCss).not.toContain("scrollbar-gutter");
     expect(header).toContain(".architecture-header");
     expect(header).toMatch(
       /\.app-navigation\s*\{[^}]*display:\s*flex;[^}]*\}/s,
@@ -56,7 +57,7 @@ describe("ThreeUI Phase 1 CSS retirement", () => {
     );
     expect(home).toContain('.course-home[data-threeui-surface="course-home"]');
     expect(home).toMatch(
-      /\.course-home\[data-threeui-surface="course-home"\]\s*\{[^}]*margin-inline:\s*auto;[^}]*\}/s,
+      /\.course-home__content\s*\{[^}]*inline-size:\s*min\(100%,\s*80rem\);[^}]*justify-self:\s*center;[^}]*\}/s,
     );
     expect(lab).toContain(
       '.generation-bar[data-threeui-surface="generation-controls"]',

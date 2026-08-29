@@ -12,6 +12,9 @@ describe("global Header", () => {
       container.querySelector('[data-threeui-surface="shell"]'),
     ).toBeInTheDocument();
     expect(
+      container.querySelector('[data-boundary-id="global-header"]'),
+    ).toHaveAttribute("data-boundary-kind", "structural");
+    expect(
       screen.getByRole("navigation", { name: "주요 탐색" }),
     ).toHaveAttribute("data-threeui-control", "mode-navigation");
     expect(

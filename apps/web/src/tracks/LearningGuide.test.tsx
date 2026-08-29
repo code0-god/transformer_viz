@@ -92,7 +92,10 @@ describe("LearningGuide", () => {
     );
 
     expect(css).toMatch(
-      /\.learning-figure\[data-threeui-surface="figure"\]\s*\{[^}]*border-inline:\s*0;[^}]*border-radius:\s*0;[^}]*background:\s*transparent;/s,
+      /\.learning-figure\[data-threeui-surface="figure"\]\s*\{[^}]*background:\s*transparent;/s,
+    );
+    expect(css).not.toMatch(
+      /\.learning-figure\[data-threeui-surface="figure"\]\s*\{[^}]*border(?:-block|-inline)?:/s,
     );
   });
 

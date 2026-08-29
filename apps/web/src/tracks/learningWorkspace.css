@@ -11,7 +11,7 @@
   gap: var(--s4);
   inline-size: 100%;
   padding-block: var(--s5);
-  border-block-end: 1px solid var(--ui-border);
+  border-block-end: var(--boundary-width) solid var(--boundary-content);
 }
 
 .learning-route-header__copy {
@@ -106,8 +106,7 @@
   max-inline-size: 72rem;
   min-inline-size: 0;
   margin-inline: auto;
-  border-inline: 1px solid var(--ui-border);
-  background: var(--ui-reading);
+  background: transparent;
 }
 
 .learning-workspace__guide {
@@ -143,7 +142,4 @@
     inline-size: 100%;
   }
 
-  .learning-workspace__article {
-    border-inline: 0;
-  }
 }
