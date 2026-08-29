@@ -5,6 +5,7 @@ import {
   type LearningTrackRegistry,
   learningTrackRegistry,
 } from "../tracks/registry";
+import "./CourseHome.css";
 
 type CourseHomeProps = {
   readonly registry?: LearningTrackRegistry;
@@ -30,7 +31,11 @@ export function CourseHome({
   );
 
   return (
-    <section className="course-home" aria-labelledby="course-home-title">
+    <section
+      className="course-home"
+      aria-labelledby="course-home-title"
+      data-threeui-surface="course-home"
+    >
       <header className="course-home__intro">
         <h1 id="course-home-title">Transformer를 처음부터 살펴봅니다</h1>
         <p>
@@ -44,12 +49,13 @@ export function CourseHome({
           key={registration.profile.id}
           className="course-home__course"
           aria-labelledby={`${registration.profile.id}-course-title`}
+          data-threeui-surface="course"
         >
           <div className="course-home__course-copy">
-            <p className="course-home__model">{course.modelLabel}</p>
             <h2 id={`${registration.profile.id}-course-title`}>
               {course.title}
             </h2>
+            <p className="course-home__model">{course.modelLabel}</p>
             <p>{course.summary}</p>
           </div>
 

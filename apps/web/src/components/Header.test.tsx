@@ -4,8 +4,13 @@ import { Header } from "./Header";
 
 describe("global Header", () => {
   test("keeps the global surface compact and route-aware", () => {
-    render(<Header status={{ type: "ready" }} activeView="learn" />);
+    const { container } = render(
+      <Header status={{ type: "ready" }} activeView="learn" />,
+    );
 
+    expect(
+      container.querySelector('[data-threeui-surface="shell"]'),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("navigation", { name: "주요 탐색" }),
     ).toBeInTheDocument();
@@ -17,6 +22,10 @@ describe("global Header", () => {
       screen.getByRole("link", { name: "모델 실험실" }),
     ).not.toHaveAttribute("aria-current");
     expect(screen.getByRole("status")).toHaveTextContent("Model Ready");
+    expect(screen.getByRole("status")).toHaveAttribute(
+      "data-threeui-status",
+      "ready",
+    );
   });
 
   test("announces a worker error without expanding the global copy", () => {

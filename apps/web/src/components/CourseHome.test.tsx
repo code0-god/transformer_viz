@@ -8,6 +8,12 @@ describe("Course Home frontispiece", () => {
     render(<CourseHome />);
 
     const journey = screen.getByRole("list", { name: "학습 순서" });
+    expect(
+      journey.closest('[data-threeui-surface="course"]'),
+    ).toBeInTheDocument();
+    expect(
+      journey.closest('[data-threeui-surface="course-home"]'),
+    ).toBeInTheDocument();
     const steps = within(journey).getAllByRole("listitem");
     expect(journey.tagName).toBe("OL");
     expect(steps).toHaveLength(7);

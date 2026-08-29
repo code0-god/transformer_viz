@@ -1,4 +1,5 @@
 import type { WorkerStatus } from "../app/workerState";
+import "./Header.css";
 
 export type HeaderProps = Readonly<{
   status: WorkerStatus;
@@ -26,7 +27,7 @@ export function Header({ status, activeView }: HeaderProps) {
   const copy = statusCopy(status);
   const isError = status.type === "error";
   return (
-    <header className="architecture-header">
+    <header className="architecture-header" data-threeui-surface="shell">
       <div className="brand-lockup">
         <a className="brand-lockup__title" href="#/">
           Transformer Viz
@@ -45,6 +46,7 @@ export function Header({ status, activeView }: HeaderProps) {
       </nav>
       <div
         className={isError ? "lifecycle lifecycle-error" : "lifecycle"}
+        data-threeui-status={status.type}
         role={isError ? "alert" : "status"}
         aria-live={isError ? "assertive" : "polite"}
         aria-describedby={isError ? "lifecycle-error-detail" : undefined}
