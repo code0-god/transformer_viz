@@ -1,9 +1,15 @@
-.score-matrix-empty,
-.score-matrix-visualization {
+.score-matrix-empty {
   display: grid;
   gap: var(--s3);
   min-inline-size: 0;
   padding: clamp(var(--s3), 2vw, var(--s4));
+}
+
+.score-matrix-visualization {
+  display: grid;
+  gap: 0;
+  min-inline-size: 0;
+  padding: 0;
 }
 
 .score-matrix-empty {
@@ -33,8 +39,8 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--s3);
-  padding-block-end: var(--s3);
-  border-block-end: 1px solid var(--ui-border);
+  padding: var(--s3) var(--s4);
+  border: 0;
 }
 
 .score-matrix-visualization__context {
@@ -119,18 +125,35 @@
   display: grid;
   gap: var(--s3);
   min-inline-size: 0;
+  padding: var(--s4);
+}
+
+.score-matrix-main {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    var(--boundary-width)
+    minmax(16rem, 20rem);
+  min-inline-size: 0;
+}
+
+.score-matrix-main__divider {
+  block-size: 100%;
+  min-block-size: 100%;
+  inline-size: var(--boundary-width);
+  align-self: stretch;
+}
+
+.score-matrix-visualization > .ui-boundary {
+  grid-column: 1;
 }
 
 .score-matrix-table-mode {
   min-inline-size: 0;
-  padding: var(--s2);
-  border: 1px solid var(--ui-border);
-  border-radius: 6px;
-  background: color-mix(
-    in srgb,
-    var(--ui-surface-subtle) 54%,
-    var(--ui-surface)
-  );
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .score-matrix-zero-plane {
@@ -159,7 +182,7 @@
   gap: var(--s2);
   min-inline-size: 0;
   padding: var(--s2) var(--s3);
-  border-block: 1px solid var(--ui-border);
+  border-block: var(--boundary-width) solid var(--boundary-internal);
 }
 
 .score-matrix-axes strong {
@@ -204,13 +227,13 @@
 
 .three-visualization-surface [data-visualization-state] {
   padding: var(--s3);
-  border-block-start: 1px solid
+  border-block-start: var(--boundary-width) solid
     color-mix(in srgb, var(--ui-accent) 40%, var(--ui-border));
   background: color-mix(in srgb, var(--ui-accent) 6%, var(--ui-surface));
 }
 
 .three-visualization-surface__fallback {
-  border-block-start: 1px solid var(--ui-border);
+  border-block-start: var(--boundary-width) solid var(--boundary-internal);
 }
 
 .three-visualization-surface__fallback summary {
@@ -227,9 +250,37 @@
 }
 
 .score-matrix-selection--primary {
-  padding: var(--s3);
-  border-block-start: 1px solid var(--ui-border);
+  align-content: start;
+  padding: var(--s4);
+  border: 0;
   color: var(--ui-text);
+}
+
+.score-matrix-selection--primary dl {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.score-matrix-legend-region {
+  display: grid;
+  gap: var(--s3);
+  min-inline-size: 0;
+  padding: var(--s3) var(--s4) var(--s4);
+}
+
+@media (max-width: 64rem) {
+  .score-matrix-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .score-matrix-main__divider {
+    block-size: var(--boundary-width);
+    min-block-size: var(--boundary-width);
+    inline-size: 100%;
+  }
+
+  .score-matrix-selection--primary dl {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 40rem) {
@@ -253,6 +304,10 @@
 
   .score-matrix-axes {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .score-matrix-selection--primary dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

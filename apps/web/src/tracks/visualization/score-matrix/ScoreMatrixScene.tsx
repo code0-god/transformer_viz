@@ -248,26 +248,6 @@ export default function ScoreMatrixScene({
           />
         </Canvas>
       </section>
-      <p className="score-matrix-orientation">
-        Key 가로축 · Query 깊이축 · 0 plane 기준 signed height
-      </p>
-      <div className="score-matrix-legend-panel">
-        <span className="score-matrix-legend-scale" aria-hidden="true" />
-        <ul className="score-matrix-legend" aria-label="점수 범례">
-          {geometry.legend.map((entry) => (
-            <li key={entry.tone}>
-              <span
-                className="score-matrix-legend-swatch"
-                data-tone={entry.tone}
-                aria-hidden="true"
-              />
-              <span>
-                {entry.tone}: {entry.label}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }

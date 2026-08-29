@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 
+import { PageDivider } from "../layout/PageLayout";
 import { DiagramViewportToolbar } from "./DiagramViewportToolbar";
 import {
   calculateFitTransform,
@@ -268,11 +269,14 @@ export function DiagramViewport({
       data-threeui-surface="diagram-viewport"
     >
       {extraControls === undefined ? null : (
-        <div className="diagram-viewport__meta">
-          <div className="diagram-viewport__extra-controls">
-            {extraControls}
+        <>
+          <div className="diagram-viewport__meta">
+            <div className="diagram-viewport__extra-controls">
+              {extraControls}
+            </div>
           </div>
-        </div>
+          <PageDivider boundaryId="architecture-controls" />
+        </>
       )}
       <div
         ref={viewportRef}
@@ -316,13 +320,16 @@ export function DiagramViewport({
         </div>
       </div>
       {description === undefined ? null : (
-        <div
-          className="diagram-viewport__description"
-          role="note"
-          aria-label="Figure caption"
-        >
-          {description}
-        </div>
+        <>
+          <PageDivider boundaryId="architecture-caption" />
+          <div
+            className="diagram-viewport__description"
+            role="note"
+            aria-label="Figure caption"
+          >
+            {description}
+          </div>
+        </>
       )}
     </section>
   );

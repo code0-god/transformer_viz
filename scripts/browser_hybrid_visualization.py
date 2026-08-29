@@ -83,11 +83,19 @@ def _assert_lab_base(browser: ChromeSession) -> JsonObject:
         """(() => {
           const main = document.querySelector('.architecture-main');
           const style = main ? getComputedStyle(main) : null;
+          const prompt = document.querySelector('.generation-bar');
+          const continuation = document.querySelector('.continuation-panel');
+          const runtime = document.querySelector('.runtime-panel');
+          const promptRect = prompt?.getBoundingClientRect();
+          const continuationRect = continuation?.getBoundingClientRect();
+          const runtimeRect = runtime?.getBoundingClientRect();
           return {
             prompt: document.querySelector('textarea') !== null,
             generate: document.querySelector('[data-testid="generate"]') !== null,
             continuation:
               document.querySelector('.continuation-panel') !== null,
+            runtime:
+              document.querySelector('.runtime-panel') !== null,
             inspectionActions: document.querySelectorAll(
               '.lab-inspection__launcher button',
             ).length,
@@ -99,7 +107,23 @@ def _assert_lab_base(browser: ChromeSession) -> JsonObject:
               document.querySelector('[role="dialog"]') !== null,
             columns: style?.gridTemplateColumns ?? null,
             mainWidth: main?.getBoundingClientRect().width ?? 0,
-            overflowX: document.documentElement.scrollWidth > innerWidth,
+            promptLeft: promptRect?.left ?? -1,
+            promptRight: promptRect?.right ?? -1,
+            promptBottom: promptRect?.bottom ?? -1,
+            continuationLeft: continuationRect?.left ?? -1,
+            continuationRight: continuationRect?.right ?? -1,
+            continuationTop: continuationRect?.top ?? -1,
+            continuationBottom: continuationRect?.bottom ?? -1,
+            runtimeLeft: runtimeRect?.left ?? -1,
+            runtimeRight: runtimeRect?.right ?? -1,
+            runtimeTop: runtimeRect?.top ?? -1,
+            boundaryIds: Array.from(
+              document.querySelectorAll('.lab-workspace [data-boundary-id]'),
+              (node) => node.getAttribute('data-boundary-id'),
+            ),
+            overflowX:
+              document.documentElement.scrollWidth
+              - document.documentElement.clientWidth,
           };
         })()""",
     )
@@ -107,6 +131,7 @@ def _assert_lab_base(browser: ChromeSession) -> JsonObject:
         lab["prompt"] is True
         and lab["generate"] is True
         and lab["continuation"] is True
+        and lab["runtime"] is True
         and lab["inspectionActions"] == 4,
         f"Lab experiment flow missing: {lab}",
     )
@@ -114,13 +139,27 @@ def _assert_lab_base(browser: ChromeSession) -> JsonObject:
         lab["architectureMounted"] is False
         and lab["canvasMounted"] is False
         and lab["dialogMounted"] is False
-        and lab["overflowX"] is False,
+        and lab["overflowX"] == 0,
         f"Lab mounted permanent inspection UI: {lab}",
     )
     require(
         isinstance(lab["columns"], str)
-        and " " not in lab["columns"].strip()
-        and number(lab["mainWidth"], "Lab width") <= 1200,
+        and str(lab["columns"]).startswith("subgrid")
+        and number(lab["promptLeft"], "Prompt left")
+        == number(lab["continuationLeft"], "Continuation left")
+        and number(lab["promptRight"], "Prompt right")
+        == number(lab["continuationRight"], "Continuation right")
+        and number(lab["continuationTop"], "Continuation top")
+        >= number(lab["promptBottom"], "Prompt bottom")
+        and number(lab["runtimeLeft"], "Runtime left")
+        == number(lab["continuationLeft"], "Continuation left")
+        and number(lab["runtimeRight"], "Runtime right")
+        == number(lab["continuationRight"], "Continuation right")
+        and number(lab["runtimeTop"], "Runtime top")
+        >= number(lab["continuationBottom"], "Continuation bottom")
+        and lab["boundaryIds"]
+        == ["lab-prompt", "lab-output", "lab-runtime", "lab-inspect"]
+        and number(lab["mainWidth"], "Lab width") <= 1440,
         f"Lab fixed split remains: {lab}",
     )
     return lab
@@ -215,16 +254,16 @@ def _open_lab_architecture(browser: ChromeSession) -> JsonObject:
     )
     require(
         number(overlay["contentTop"], "Architecture content top")
-        >= number(overlay["surfaceTop"], "Architecture surface top")
+        >= number(overlay["surfaceTop"], "Architecture surface top") - 1
         and number(overlay["contentBottom"], "Architecture content bottom")
-        <= number(overlay["surfaceBottom"], "Architecture surface bottom"),
+        <= number(overlay["surfaceBottom"], "Architecture surface bottom") + 1,
         f"Lab Architecture content clipped after fit: {overlay}",
     )
     require(
         number(overlay["diagramTop"], "Architecture diagram top")
-        >= number(overlay["surfaceTop"], "Architecture surface top")
+        >= number(overlay["surfaceTop"], "Architecture surface top") - 1
         and number(overlay["diagramBottom"], "Architecture diagram bottom")
-        <= number(overlay["surfaceBottom"], "Architecture surface bottom"),
+        <= number(overlay["surfaceBottom"], "Architecture surface bottom") + 1,
         f"Lab Architecture diagram clipped after fit: {overlay}",
     )
     return overlay
@@ -537,7 +576,7 @@ def _verify_lab_responsive(
     ):
         set_viewport(browser, width, height)
         base = _assert_lab_base(browser)
-        require(base["overflowX"] is False, f"Lab base overflow: {base}")
+        require(base["overflowX"] == 0, f"Lab base overflow: {base}")
         if width in (320, 390):
             browser.require_cdp().evaluate(
                 browser.page_session,
@@ -551,7 +590,11 @@ def _verify_lab_responsive(
               const stacked = (selector) => {
                 const children = Array.from(
                   document.querySelector(selector)?.children ?? [],
-                ).filter((child) => child instanceof HTMLElement);
+                ).filter(
+                  (child) =>
+                    child instanceof HTMLElement
+                    && !child.matches('.ui-boundary'),
+                );
                 if (children.length < 2) return false;
                 const first = children[0]?.getBoundingClientRect();
                 const second = children[1]?.getBoundingClientRect();

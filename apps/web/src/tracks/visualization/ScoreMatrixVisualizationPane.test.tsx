@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
@@ -187,6 +189,18 @@ describe("ScoreMatrixVisualizationPane", () => {
     expect(
       container.querySelector(".score-matrix-zero-plane"),
     ).toHaveTextContent("0 plane");
+    expect(
+      container.querySelector('[data-boundary-id="score-renderer"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-boundary-id="score-selected-column"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-boundary-id="score-legend"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(".score-matrix-legend-region"),
+    ).toHaveTextContent("negative");
 
     await screen.findByRole("table");
     const modeButton = screen.getByRole("button", { name: "2D Matrix" });
@@ -214,6 +228,23 @@ describe("ScoreMatrixVisualizationPane", () => {
         '.score-matrix-selection--primary [data-selected-axis="query"]',
       ),
     ).toHaveTextContent('0 · "the"');
+  });
+
+  test("uses one continuous wide detail column and stacks at 1024", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "src/tracks/visualization/visualization.css"),
+      "utf8",
+    );
+
+    expect(css).toMatch(
+      /\.score-matrix-main\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+var\(--boundary-width\)\s+minmax\(16rem,\s*20rem\);/s,
+    );
+    expect(css).toMatch(
+      /\.score-matrix-main__divider\s*\{[^}]*block-size:\s*100%;[^}]*inline-size:\s*var\(--boundary-width\);/s,
+    );
+    expect(css).toMatch(
+      /@media \(max-width:\s*64rem\)[\s\S]*\.score-matrix-main\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);/s,
+    );
   });
 
   test("resets local selection when trace provenance changes", async () => {

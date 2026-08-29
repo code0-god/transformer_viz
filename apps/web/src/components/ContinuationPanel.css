@@ -4,26 +4,28 @@
   gap: var(--s4);
   padding: clamp(var(--s4), 2.5vw, var(--s5));
   border: 0;
-  border-block-end: 1px solid var(--hairline);
   border-radius: 0;
   background: transparent;
 }
 
-.continuation-panel__header {
+.continuation-panel__header,
+.runtime-panel__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--s4);
 }
 
-.continuation-panel__header h2 {
+.continuation-panel__header h2,
+.runtime-panel__header h2 {
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
-.continuation-panel__header > span {
+.continuation-panel__header > span,
+.runtime-panel__header > span {
   color: var(--ui-text-soft);
   font-size: 0.68rem;
   font-variant-numeric: tabular-nums;
@@ -41,14 +43,11 @@
   align-content: start;
   gap: var(--s2);
   min-block-size: 6.5rem;
-  padding: var(--s3);
-  border: 1px solid var(--ui-border);
-  border-radius: 6px;
-  background: color-mix(
-    in srgb,
-    var(--ui-surface-subtle) 46%,
-    var(--ui-surface)
-  );
+  padding: var(--s3) 0;
+  border: 0;
+  border-block-start: var(--boundary-width) solid var(--boundary-internal);
+  border-radius: 0;
+  background: transparent;
 }
 
 .continuation-panel .decoded-text dt {
@@ -108,25 +107,32 @@
   font-size: 0.65rem;
 }
 
-.continuation-panel .token-details {
+.runtime-panel {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--s4);
+  padding: clamp(var(--s4), 2.5vw, var(--s5));
+}
+
+.runtime-panel .token-details {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--s2) var(--s4);
   padding-block-start: var(--s3);
-  border-block-start: 1px solid var(--hairline);
+  border-block-start: var(--boundary-width) solid var(--boundary-internal);
 }
 
-.continuation-panel .token-details div {
+.runtime-panel .token-details div {
   min-inline-size: 0;
 }
 
-.continuation-panel .token-details dt {
+.runtime-panel .token-details dt {
   color: var(--ink-muted);
   font-size: 0.68rem;
   font-weight: 750;
 }
 
-.continuation-panel .token-details dd {
+.runtime-panel .token-details dd {
   margin-block-start: var(--s1);
   overflow-wrap: anywhere;
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
@@ -134,7 +140,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.continuation-panel .generation-usage {
+.runtime-panel .generation-usage {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;

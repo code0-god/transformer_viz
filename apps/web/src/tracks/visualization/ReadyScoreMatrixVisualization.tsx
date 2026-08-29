@@ -1,5 +1,7 @@
 import { type ReactElement, useState } from "react";
 
+import { PageDivider } from "../../layout/PageLayout";
+import { ScoreMatrixLegend } from "./score-matrix/ScoreMatrixLegend";
 import type {
   ScoreMatrixCameraCommand,
   ScoreMatrixSceneProps,
@@ -137,73 +139,89 @@ export function ReadyScoreMatrixVisualization({
           ) : null}
         </div>
       </header>
-      <div className="score-matrix-stage" data-score-matrix-mode={viewMode}>
-        <div
-          className="score-matrix-mode-panel"
-          data-mode="3d"
-          hidden={viewMode !== "3d"}
-        >
-          <ThreeVisualizationSurface<ScoreMatrixRendererData>
-            title={definition.title}
-            loadRenderer={loadRenderer}
-            rendererProps={rendererProps}
-            fallback={
-              <ScoreMatrixTable
-                model={state.model}
-                selectedCellKey={selectedCellKey}
-                onSelect={setSelectedCellKey}
-                showSelectionSummary={false}
-              />
-            }
-            {...(isWebGLAvailable === undefined ? {} : { isWebGLAvailable })}
-          />
+      <PageDivider boundaryId="score-renderer" />
+      <div className="score-matrix-main" data-score-layout="renderer-detail">
+        <div className="score-matrix-stage" data-score-matrix-mode={viewMode}>
+          <div
+            className="score-matrix-mode-panel"
+            data-mode="3d"
+            hidden={viewMode !== "3d"}
+          >
+            <ThreeVisualizationSurface<ScoreMatrixRendererData>
+              title={definition.title}
+              loadRenderer={loadRenderer}
+              rendererProps={rendererProps}
+              fallback={
+                <ScoreMatrixTable
+                  model={state.model}
+                  selectedCellKey={selectedCellKey}
+                  onSelect={setSelectedCellKey}
+                  showSelectionSummary={false}
+                />
+              }
+              {...(isWebGLAvailable === undefined ? {} : { isWebGLAvailable })}
+            />
+          </div>
+          <div
+            className="score-matrix-mode-panel score-matrix-table-mode"
+            data-mode="2d"
+            hidden={viewMode !== "2d"}
+          >
+            <ScoreMatrixTable
+              model={state.model}
+              selectedCellKey={selectedCellKey}
+              onSelect={setSelectedCellKey}
+              showSelectionSummary={false}
+            />
+          </div>
+          {viewMode === "3d" ? (
+            <p className="score-matrix-zero-plane">
+              <span aria-hidden="true" />0 plane · positive above · negative
+              below
+            </p>
+          ) : null}
+          <div className="score-matrix-axes">
+            <section aria-label="Query axis">
+              <strong>Query axis</strong>
+              <ul>
+                {axisStops(state.model.queryTokenLabels).map(
+                  ({ index, label }) => (
+                    <li key={`query-${index}`}>
+                      q{index} · {JSON.stringify(label)}
+                    </li>
+                  ),
+                )}
+              </ul>
+            </section>
+            <section aria-label="Key axis">
+              <strong>Key axis</strong>
+              <ul>
+                {axisStops(state.model.keyTokenLabels).map(
+                  ({ index, label }) => (
+                    <li key={`key-${index}`}>
+                      k{index} · {JSON.stringify(label)}
+                    </li>
+                  ),
+                )}
+              </ul>
+            </section>
+          </div>
         </div>
-        <div
-          className="score-matrix-mode-panel score-matrix-table-mode"
-          data-mode="2d"
-          hidden={viewMode !== "2d"}
-        >
-          <ScoreMatrixTable
-            model={state.model}
-            selectedCellKey={selectedCellKey}
-            onSelect={setSelectedCellKey}
-            showSelectionSummary={false}
-          />
-        </div>
-        {viewMode === "3d" ? (
-          <p className="score-matrix-zero-plane">
-            <span aria-hidden="true" />0 plane · positive above · negative below
-          </p>
-        ) : null}
-        <div className="score-matrix-axes">
-          <section aria-label="Query axis">
-            <strong>Query axis</strong>
-            <ul>
-              {axisStops(state.model.queryTokenLabels).map(
-                ({ index, label }) => (
-                  <li key={`query-${index}`}>
-                    q{index} · {JSON.stringify(label)}
-                  </li>
-                ),
-              )}
-            </ul>
-          </section>
-          <section aria-label="Key axis">
-            <strong>Key axis</strong>
-            <ul>
-              {axisStops(state.model.keyTokenLabels).map(({ index, label }) => (
-                <li key={`key-${index}`}>
-                  k{index} · {JSON.stringify(label)}
-                </li>
-              ))}
-            </ul>
-          </section>
-        </div>
+        <PageDivider
+          boundaryId="score-selected-column"
+          kind="internal"
+          className="score-matrix-main__divider"
+        />
+        <ScoreMatrixSelection
+          model={state.model}
+          selectedCellKey={selectedCellKey}
+          className="score-matrix-selection score-matrix-selection--primary"
+        />
       </div>
-      <ScoreMatrixSelection
+      <PageDivider boundaryId="score-legend" />
+      <ScoreMatrixLegend
         model={state.model}
         selectedCellKey={selectedCellKey}
-        className="score-matrix-selection score-matrix-selection--primary"
       />
     </section>
   );

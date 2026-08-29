@@ -61,6 +61,52 @@ may tune tokens but must not recreate the old warm theme.
   and supplemental content in normal flow on mobile.
 - Home uses a constrained app-entry composition, not a marketing landing page.
 
+## Editorial composition
+
+- Home is one course-entry composition. Korean H1 words never split internally;
+  desktop uses two intentional lines and mobile wraps only between word units.
+- Learn places content directly on a lightly differentiated page tone. The
+  article itself has no white-card background, border, radius, or shadow.
+- Chapter metadata and ToC share one quiet row above H1 and abstract.
+- Editorial rhythm uses 14px H1-to-abstract spacing, 14px content inset,
+  16px paragraph spacing, 56px section spacing, and a 32px effective
+  paragraph-to-Figure transition.
+- Part 0 Figures are textbook compositions: 0.1 is a compact responsive
+  process, 0.2 remains a Token-boundary concept, 0.3 prioritizes
+  Token-to-ID-to-Embedding relationships, and 0.4 remains a comparison sheet.
+
+## Lab and viewer structure
+
+- Lab is one vertical instrument: MODEL LAB, Prompt, Output, Runtime, and
+  Inspect. Every transition uses the same FULL structural divider; each
+  instrument remains centered at 72rem.
+- Runtime evidence is separate from decoded Output. Inspection launchers use
+  internal row boundaries without an outer card.
+- Focused viewers keep one modal edge. Diagram and data surfaces do not add a
+  second framing card; viewer status and captions sit outside transformed
+  renderer geometry.
+- Architecture connectors remain semantic SVG strokes and are visually darker
+  than neutral UI boundaries.
+- Score Matrix uses Renderer/Data and Selected Cell columns above 1024px with
+  one full-height internal divider. At 1024px and below the same regions stack.
+  Legend and exact fallback remain a final structural region.
+
+## Coordinate and boundary system
+
+Every shipping page uses one named-line grid with three horizontal roles:
+
+- `FULL` spans the application viewport and owns structural dividers.
+- `WIDE` contains the shell, Home composition, Lab instruments, Figures, and
+  renderer surfaces.
+- `CONTENT` contains Chapter identity, prose, captions, and footer navigation.
+
+Structural, content, and internal boundaries use
+`--boundary-structural`, `--boundary-content`, and `--boundary-internal`.
+All are one pixel and neutral. Accent lines are reserved for current,
+selected, and focus states. Figure arrows and architecture connectors use
+renderer-owned classes and `--figure-connector`, never page boundary tokens.
+Full bleed comes from named grid lines, not `100vw` or negative margins.
+
 ## Spacing and shape
 
 - Base spacing: 4px.

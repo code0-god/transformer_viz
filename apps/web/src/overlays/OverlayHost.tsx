@@ -6,6 +6,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { PageDivider } from "../layout/PageLayout";
 import { ThreeUiIconAction } from "../threeui/ThreeUi";
 import { FocusedViewerContent } from "./focusedViewerRegistry";
 import type { FocusedViewerRequest } from "./focusedViewerTypes";
@@ -165,6 +166,7 @@ export function OverlayHost({
             />
           </div>
         </header>
+        <PageDivider boundaryId="overlay-header" />
         <div className="focused-viewer__body">
           <FocusedViewerContent request={request} />
         </div>

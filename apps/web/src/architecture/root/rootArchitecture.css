@@ -138,6 +138,10 @@
   border-block-start: 1px solid var(--border-subtle);
   background: transparent;
 }
+.architecture-root-screen[data-architecture-presentation="inspection"]
+  .architecture-svg-scroll {
+  border-block-start: 0;
+}
 .architecture-root-screen .architecture-diagram{
   display: block;
   inline-size: 100%;
@@ -205,7 +209,7 @@
 
 .architecture-root-screen .architecture-figure figcaption {
   padding-block-start: var(--s2, 0.5rem);
-  border-block-start: 1px solid var(--hairline, #d8cdb9);
+  border-block-start: var(--boundary-width) solid var(--boundary-internal);
   color: var(--ink-muted, #756b5d);
   font-size: 0.72rem;
   overflow-wrap: anywhere;

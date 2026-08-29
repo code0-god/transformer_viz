@@ -120,6 +120,16 @@ describe("DiagramViewport", () => {
       viewport.compareDocumentPosition(description) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).not.toBe(0);
+    const captionBoundary = document.querySelector(
+      '[data-boundary-id="architecture-caption"]',
+    );
+    expect(captionBoundary).not.toBeNull();
+    if (!(captionBoundary instanceof HTMLElement))
+      throw new Error("Architecture caption boundary is missing");
+    expect(
+      viewport.compareDocumentPosition(captionBoundary) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).not.toBe(0);
   });
 
   test("zooms with plus and minus without going below Fit", async () => {
@@ -389,6 +399,9 @@ describe("DiagramViewport", () => {
     const extraAction = within(region).getByRole("button", {
       name: "노드 찾기",
     });
+    expect(
+      region.querySelector('[data-boundary-id="architecture-controls"]'),
+    ).not.toBeNull();
     expect(extraAction).toBeVisible();
     expect(toolbar).not.toContainElement(extraAction);
     expect(screen.getByRole("img", { name: "Test diagram" })).toBeVisible();

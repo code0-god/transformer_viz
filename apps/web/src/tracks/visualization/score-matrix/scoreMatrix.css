@@ -47,14 +47,10 @@
 .score-matrix-legend-panel {
   display: grid;
   gap: var(--s2);
-  padding: var(--s2) var(--s3);
-  border: 1px solid var(--ui-border);
-  border-radius: 6px;
-  background: color-mix(
-    in srgb,
-    var(--ui-surface-subtle) 54%,
-    var(--ui-surface)
-  );
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .score-matrix-legend-scale {
@@ -208,7 +204,8 @@
   display: grid;
   gap: 0.2rem;
   padding: var(--s2) var(--s3);
-  border-inline-start: 2px solid var(--ui-border-strong);
+  border-block-start: var(--boundary-width) solid var(--boundary-internal);
+  border-inline-start: 0;
 }
 
 .score-matrix-selection dt {
