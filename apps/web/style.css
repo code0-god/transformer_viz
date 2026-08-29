@@ -109,22 +109,6 @@ body [hidden] { display: none; }
 h1, h2, h3, p, dl, dd, figure { margin: 0; }
 h1, h2, h3, h4 { font-weight: 750; }
 button, input, textarea, select, summary { min-block-size: 44px; }
-button, input, textarea, select {
-  border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--surface) 72%, transparent);
-}
-button { padding: var(--s2) var(--s4); font-weight: 650; }
-button.primary {
-  min-inline-size: 8.5rem;
-  border-color: var(--accent);
-  background: var(--accent);
-  color: #fff;
-}
-:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent) 68%, white);
-  outline-offset: 3px;
-}
 .skip-link {
   position: fixed;
   z-index: var(--z-tooltip);
@@ -160,8 +144,7 @@ button.primary {
   min-block-size: 100dvb;
   padding: var(--s4) clamp(var(--s4), 3vw, var(--s7));
 }
-.startup-shell__header,
-.architecture-header {
+.startup-shell__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -169,6 +152,28 @@ button.primary {
   min-inline-size: 0;
   padding-block-end: var(--s3);
   border-block-end: 1px solid var(--hairline);
+}
+.startup-shell__brand {
+  display: grid;
+  gap: var(--s1);
+}
+.startup-shell__brand-title {
+  color: var(--ink);
+  font-size: 1.2rem;
+  font-weight: 850;
+  letter-spacing: -.035em;
+}
+.startup-shell__brand p {
+  color: var(--ink-muted);
+  font-size: .78rem;
+}
+.startup-shell__status {
+  padding: .35rem .55rem;
+  border-radius: var(--radius);
+  background: var(--surface-strong);
+  color: var(--ink-muted);
+  font-size: .68rem;
+  font-weight: 700;
 }
 .startup-shell__main {
   display: grid;
@@ -203,8 +208,7 @@ button.primary {
 .startup-shell__ledger dd { margin-block-start: var(--s1); font-weight: 750; }
 .startup-shell__path ol { display: grid; gap: var(--s4); margin-block-start: var(--s5); padding-inline-start: 1.4rem; }
 .startup-shell__path li::marker { color: var(--accent); font-weight: 800; }
-.stage-position,
-.architecture-kicker {
+.startup-shell__stage {
   color: var(--accent);
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   font-size: .72rem;
@@ -212,98 +216,6 @@ button.primary {
   letter-spacing: .08em;
 }
 
-/* Course-first application shell */
-.architecture-app {
-  inline-size: min(100%, 90rem);
-  min-block-size: 100dvb;
-  margin-inline: auto;
-  padding: var(--s3) clamp(var(--s4), 2.5vw, var(--s6)) var(--s6);
-}
-.architecture-header {
-  display: grid;
-  grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
-  gap: var(--s4);
-  inline-size: 100%;
-  block-size: 3rem;
-  min-block-size: 3rem;
-  padding: 0;
-}
-.brand-lockup { min-inline-size: 0; }
-.brand-lockup__title {
-  flex: none;
-  color: var(--ink);
-  font-size: 1.2rem;
-  font-weight: 850;
-  letter-spacing: -.035em;
-  text-decoration: none;
-}
-.app-navigation {
-  display: flex;
-  align-items: center;
-  gap: var(--s1);
-}
-.app-navigation a {
-  display: inline-flex;
-  align-items: center;
-  min-block-size: 36px;
-  padding-inline: var(--s3);
-  border-radius: 6px;
-  color: var(--ink-muted);
-  font-size: .78rem;
-  font-weight: 650;
-  text-decoration: none;
-}
-.app-navigation a[aria-current="page"] {
-  color: var(--accent);
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: .35rem;
-}
-.lifecycle {
-  display: flex;
-  align-items: center;
-  justify-self: end;
-  min-inline-size: 0;
-}
-.status-badge {
-  flex: none;
-  padding: .35rem .55rem;
-  border-radius: 6px;
-  background: var(--surface-strong);
-  color: var(--ink-muted);
-  font-size: .68rem;
-  font-weight: 700;
-}
-.status-badge[data-status="ready"],
-.status-badge[data-status="complete"] { background: var(--ready-soft); color: var(--ready); }
-.status-badge[data-status="error"] { background: var(--error-soft); color: var(--error); }
-.lifecycle-detail {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.lifecycle-error .status-badge {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.lifecycle-error .lifecycle-detail {
-  position: static;
-  inline-size: auto;
-  block-size: auto;
-  overflow: visible;
-  clip-path: none;
-  color: var(--error);
-  font-size: .72rem;
-  font-weight: 800;
-  white-space: normal;
-}
 .architecture-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -319,260 +231,6 @@ button.primary {
   max-inline-size: 72rem;
   margin-inline: auto;
 }
-
-.course-home {
-  display: grid;
-  gap: clamp(var(--s5), 3vw, var(--s6));
-  inline-size: min(100%, 76rem);
-  min-inline-size: 0;
-  margin-inline: auto;
-  padding: clamp(var(--s4), 2.5vh, 2rem) 0 var(--s6);
-}
-.course-home__intro {
-  display: grid;
-  gap: var(--s2);
-  max-inline-size: 48rem;
-}
-.lab-introduction__eyebrow {
-  color: var(--accent);
-  font-size: .72rem;
-  font-weight: 850;
-  letter-spacing: .1em;
-}
-.course-home__intro h1 {
-  max-inline-size: 22ch;
-  font-size: clamp(2rem, 2.8vw, 2.5rem);
-  font-weight: 750;
-  line-height: 1.1;
-  letter-spacing: -.04em;
-  text-wrap: balance;
-  word-break: keep-all;
-}
-.course-home__intro > p:last-child {
-  max-inline-size: 48ch;
-  color: var(--ink-muted);
-  font-size: clamp(.98rem, 1.35vw, 1.075rem);
-  line-height: 1.65;
-  word-break: keep-all;
-}
-.course-home__course {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--s5) var(--s6);
-  align-items: start;
-  padding-block-start: var(--s5);
-  border-block-start: 1px solid var(--border-subtle);
-}
-.course-home__course-copy {
-  display: grid;
-  gap: var(--s1);
-  min-inline-size: 0;
-}
-.course-home__model {
-  color: var(--ink-muted);
-  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  font-size: .75rem;
-  letter-spacing: .02em;
-}
-.course-home__course-copy h2 {
-  max-inline-size: 28ch;
-  font-size: clamp(1.45rem, 2vw, 1.8rem);
-  line-height: 1.15;
-  letter-spacing: -.035em;
-  overflow-wrap: anywhere;
-  word-break: keep-all;
-}
-.course-home__course-copy > p:last-child {
-  max-inline-size: 52ch;
-  color: var(--ink-muted);
-  font-size: .92rem;
-  line-height: 1.55;
-  word-break: keep-all;
-}
-.course-home__journey {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  min-inline-size: 0;
-  padding: 0;
-  margin: 0;
-  border-block: 1px solid var(--border-subtle);
-  scroll-margin-block-start: var(--s4);
-  list-style: none;
-}
-.course-home__journey li {
-  display: grid;
-  align-content: start;
-  gap: var(--s2);
-  min-inline-size: 0;
-  padding: var(--s4) var(--s3);
-}
-.course-home__journey li + li {
-  border-inline-start: 1px solid var(--border-subtle);
-}
-.course-home__step-number {
-  color: var(--accent);
-  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  font-size: .72rem;
-  font-weight: 700;
-  letter-spacing: .04em;
-}
-.course-home__step-copy {
-  display: grid;
-  gap: var(--s1);
-  min-inline-size: 0;
-}
-.course-home__step-copy strong {
-  font-size: .86rem;
-  font-weight: 700;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-  word-break: keep-all;
-}
-.course-home__step-copy > span {
-  color: var(--text-tertiary);
-  font-size: .72rem;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-  word-break: keep-all;
-}
-.course-home__actions {
-  display: flex;
-  min-inline-size: 0;
-  flex-wrap: wrap;
-  gap: var(--s2);
-  align-self: center;
-  justify-content: flex-end;
-}
-.course-home__start,
-.course-home__lab,
-.course-home__contents {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-block-size: 48px;
-  padding-inline: var(--s5);
-  border-radius: 6px;
-  font-weight: 700;
-}
-.course-home__start {
-  border: 1px solid var(--accent);
-  background: var(--accent);
-  color: white;
-  text-decoration: none;
-}
-.course-home__lab {
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-secondary);
-  text-decoration: none;
-}
-.course-home__contents {
-  border-color: transparent;
-  background: transparent;
-  color: var(--text-secondary);
-}
-.course-home__start,
-.course-home__lab,
-.course-home__contents,
-.app-navigation a {
-  transition: color .16s ease, background-color .16s ease, transform .16s ease;
-}
-.course-home__start:hover { background: color-mix(in srgb, var(--accent) 88%, black); }
-.course-home__lab:hover {
-  border-color: transparent;
-  background: var(--surface-subtle);
-  color: var(--accent);
-}
-.course-home__contents:hover,
-.app-navigation a:hover { background: var(--accent-soft); }
-.course-home__start:active,
-.course-home__lab:active,
-.course-home__contents:active { transform: scale(.98); }
-.lab-introduction {
-  grid-column: 1 / -1;
-  display: grid;
-  gap: var(--s1);
-  padding: var(--s4) 0 var(--s2);
-}
-.lab-introduction h1 {
-  font-size: clamp(1.5rem, 3vw, 2.4rem);
-  letter-spacing: -.045em;
-}
-.lab-introduction > p:last-child { color: var(--ink-muted); }
-
-/* Compact generation */
-.generation-bar,
-.architecture-shell {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-.architecture-app[data-app-view="learn"] .architecture-shell {
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-.generation-bar {
-  display: grid;
-  gap: var(--s1);
-  align-self: start;
-  padding: var(--s1) var(--s3);
-  border-block: 1px solid var(--hairline);
-}
-.generation-primary {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  gap: var(--s3);
-}
-.prompt-field,
-.generation-settings-grid label {
-  display: grid;
-  gap: .35rem;
-  color: var(--ink-muted);
-  font-size: .72rem;
-  font-weight: 750;
-}
-.prompt-field textarea {
-  inline-size: 100%;
-  min-block-size: 44px;
-  max-block-size: 6rem;
-  padding: .75rem .9rem;
-  resize: vertical;
-  color: var(--ink);
-}
-.generation-primary-action { display: grid; }
-.generation-primary-action button { grid-area: 1 / 1; block-size: 44px; }
-.generation-settings { border-block-start: 1px solid var(--hairline); }
-.generation-settings > summary {
-  inline-size: max-content;
-  min-block-size: 44px;
-  padding: 0;
-  color: var(--ink-muted);
-  font-size: .78rem;
-  font-weight: 750;
-  list-style-position: inside;
-}
-.generation-settings-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--s3);
-  padding-block-start: var(--s3);
-}
-.generation-settings-grid input,
-.generation-settings-grid select { inline-size: 100%; padding-inline: var(--s3); }
-.generation-applied { display: flex; flex-wrap: wrap; gap: var(--s2); padding-block-start: var(--s2); }
-.generation-applied span {
-  padding: .2rem .55rem;
-  border-radius: 6px;
-  background: var(--surface-strong);
-  color: var(--ink-muted);
-  font-size: .7rem;
-}
-.generation-error { color: var(--error); font-size: .78rem; }
 
 /* Shared architecture shell; each view owns its SVG and detail styles. */
 .architecture-shell {
@@ -598,94 +256,50 @@ button.primary {
   border-radius: 50%;
   animation: architecture-spin 1s linear infinite;
 }
-
-.fatal-error {
-  display: grid;
-  place-content: center;
-  gap: var(--s3);
-  min-block-size: 100dvb;
-  padding: var(--s6);
-  background: var(--paper);
-  color: var(--error);
+.architecture-app[data-app-view="learn"] .architecture-shell {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 @keyframes architecture-spin { to { rotate: 360deg; } }
 
+@media (min-width: 1100px) {
+  html {
+    scrollbar-gutter: stable;
+  }
+}
+
 @media (max-width: 1099px) {
-  .architecture-app { padding-inline: var(--s4); }
-  .architecture-main { grid-template-columns: minmax(0, 1fr); }
-  .course-home__course { grid-template-columns: minmax(0, 1fr); }
-  .course-home__actions,
-  .course-home__journey { grid-column: 1; }
-  .course-home__journey {
-    grid-row: auto;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .architecture-main {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .course-home__journey li:nth-child(5) {
-    border-inline-start: 0;
-  }
-  .course-home__journey li:nth-child(n + 5) {
-    border-block-start: 1px solid var(--border-subtle);
-  }
-  .generation-settings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 767px) {
-  .architecture-app { padding: var(--s3); }
-  .startup-shell { gap: var(--s5); padding: var(--s3); }
-  .startup-shell__header { align-items: flex-start; flex-direction: column; gap: var(--s3); }
-  .architecture-header {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: 2.25rem 2.25rem;
-    gap: var(--s1) var(--s3);
-    block-size: 4.75rem;
-    min-block-size: 4.75rem;
+  .startup-shell {
+    gap: var(--s5);
+    padding: var(--s3);
   }
-  .startup-shell__main { grid-template-columns: minmax(0, 1fr); align-self: start; }
+  .startup-shell__header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--s3);
+  }
+  .startup-shell__main {
+    grid-template-columns: minmax(0, 1fr);
+    align-self: start;
+  }
   .startup-shell__surface {
     border-inline-end: 0;
   }
-  .startup-shell__ledger { grid-template-columns: minmax(0, 1fr); }
-  .brand-lockup { grid-column: 1; grid-row: 1; align-self: center; }
-  .lifecycle { grid-column: 2; grid-row: 1; align-self: center; }
-  .app-navigation {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    min-inline-size: 0;
-    justify-content: center;
-    border-block-start: 1px solid var(--hairline);
-  }
-  .app-navigation a { flex: 1; justify-content: center; text-align: center; }
-  .course-home { gap: var(--s5); padding-block: var(--s4) var(--s6); }
-  .course-home__intro h1 { font-size: clamp(1.9rem, 9vw, 2.2rem); }
-  .course-home__actions {
-    display: flex;
-    inline-size: 100%;
-    justify-content: flex-start;
-  }
-  .course-home__start,
-  .course-home__lab,
-  .course-home__contents {
-    padding-inline: var(--s3);
-  }
-  .course-home__journey {
+  .startup-shell__ledger {
     grid-template-columns: minmax(0, 1fr);
-    gap: 0;
   }
-  .course-home__journey li {
-    grid-template-columns: 2.25rem minmax(0, 1fr);
-    gap: var(--s2);
-    padding: var(--s3) 0;
+  .architecture-app[data-app-view="lab"] .architecture-shell {
+    padding: var(--s3);
   }
-  .course-home__journey li + li,
-  .course-home__journey li:nth-child(5) {
-    border-inline-start: 0;
-    border-block-start: 1px solid var(--border-subtle);
-  }
-  .generation-primary { grid-template-columns: minmax(0, 1fr); }
-  .generation-primary-action button { inline-size: 100%; }
-  .generation-settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .architecture-shell { padding: var(--s3); }
 }
 
 @media (prefers-reduced-motion: reduce) {

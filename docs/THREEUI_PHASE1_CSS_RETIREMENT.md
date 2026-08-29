@@ -3,6 +3,21 @@
 Phase 1 retires product UI rules only after their migrated consumers and
 browser evidence are green. Semantic renderer CSS remains.
 
+Status: Complete (2026-08-29)
+
+## Completion record
+
+- `apps/web/style.css`: 698 -> 312 lines.
+- Global class selectors: 47 -> 17.
+- Unreferenced global class selectors: 0.
+- Migrated Header, navigation, lifecycle, Home, Lab-intro, Prompt, generation,
+  and settings selectors: 0 remaining in `style.css`.
+- Generic native-control presentation moved to
+  `src/threeui/threeUi.css`; semantic minimum-size and disabled behavior remain
+  in the global reset.
+- Static pre-WASM startup markup now uses only `startup-shell__*` classes and
+  no longer borrows product Header/status aliases.
+
 ## Ownership after migration
 
 | Owner | Styles |
@@ -15,7 +30,7 @@ browser evidence are green. Semantic renderer CSS remains.
 
 ### Shell and Home milestone
 
-Move then remove these global groups from `style.css`:
+Removed these global groups from `style.css`:
 
 - `.architecture-app`, `.architecture-header`, `.brand-lockup`
 - `.app-navigation`, `.lifecycle`, `.status-badge`
@@ -37,7 +52,7 @@ KaTeX rules, and chapter focus/navigation behavior.
 
 ### Lab and overlay milestone
 
-Move then remove these global groups from `style.css`:
+Removed these global groups from `style.css`:
 
 - `.lab-introduction*`
 - `.generation-*`, `.prompt-field`
@@ -63,6 +78,20 @@ Do not classify these as legacy UI:
 - Score Matrix table, actual-data R3F scene, and lazy-loading boundary;
 - reduced-motion, focus, visually-hidden, skip-link, and error-state rules.
 
+## Retained live global owners
+
+| Selector group | Live owner and reason |
+| --- | --- |
+| `.startup-shell*` | Static `index.html` pre-React loading surface |
+| `.skip-link` | `App.tsx` keyboard skip target |
+| `.architecture-app[...]` | Route background/layout context selectors only; no global direct presentation rule |
+| `.architecture-main` | Shared Home/Learn/Lab route-flow layout |
+| `.architecture-shell` | Shared semantic architecture host layout |
+| `.architecture-loading*`, `.architecture-error` | Worker-backed architecture loading and failure states |
+
+No compatibility alias remains. Every global class selector has a live DOM
+consumer and an owner above.
+
 ## Removal gates
 
 A selector group is removable only when:
@@ -76,3 +105,7 @@ A selector group is removable only when:
 
 No compatibility alias survives final Phase 1 unless a live consumer and
 removal owner are recorded.
+
+The removal gates are enforced by
+`src/threeui/cssRetirement.test.ts`; production browser comparison remains the
+final visual gate.

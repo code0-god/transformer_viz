@@ -6,6 +6,7 @@
   gap: clamp(2rem, 6vw, 6rem);
   inline-size: min(100%, 76rem);
   min-block-size: calc(100dvb - 3.5rem);
+  margin-inline: auto;
   padding-block: clamp(3rem, 7dvb, 5rem);
 }
 
@@ -159,6 +160,12 @@
   > span {
   color: var(--ui-text-soft);
   font-size: 0.75rem;
+}
+
+@media (min-width: 68.75rem) {
+  .course-home[data-threeui-surface="course-home"] {
+    translate: -0.5rem 0;
+  }
 }
 
 @media (max-width: 67.999rem) {

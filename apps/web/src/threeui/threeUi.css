@@ -28,6 +28,36 @@
     system-ui, sans-serif;
 }
 
+.threeui-root :where(button, input, textarea, select) {
+  min-block-size: 44px;
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+}
+
+.threeui-root :where(input, textarea, select) {
+  padding: 0.7rem 0.8rem;
+}
+
+.threeui-root :where(button) {
+  padding-inline: 0.9rem;
+  cursor: pointer;
+}
+
+.threeui-root :where(button.primary) {
+  border-color: var(--ui-text);
+  background: var(--ui-text);
+  color: var(--ui-surface);
+  font-weight: 700;
+}
+
+.threeui-root :where(:focus-visible) {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 3px;
+}
+
 .threeui-action.lumen-cta {
   display: inline-grid;
   inline-size: fit-content;

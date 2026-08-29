@@ -2,6 +2,13 @@
   scroll-padding-block-start: calc(3.5rem + var(--s3));
 }
 
+.architecture-app {
+  inline-size: min(100%, 90rem);
+  min-block-size: 100dvb;
+  margin-inline: auto;
+  padding: var(--s3) clamp(var(--s4), 2.5vw, var(--s6)) var(--s6);
+}
+
 .architecture-app:has(> .architecture-header[data-threeui-surface="shell"]) {
   padding-block-start: 0;
 }
@@ -25,6 +32,10 @@
   background: var(--ui-reading);
 }
 
+.architecture-header[data-threeui-surface="shell"] .brand-lockup {
+  min-inline-size: 0;
+}
+
 .architecture-header[data-threeui-surface="shell"] .brand-lockup__title {
   color: var(--ui-text);
   font-size: 1rem;
@@ -33,6 +44,8 @@
 }
 
 .architecture-header[data-threeui-surface="shell"] .app-navigation {
+  display: flex;
+  align-items: center;
   gap: 2px;
   padding: 3px;
   border: 1px solid var(--ui-border);
@@ -41,6 +54,8 @@
 }
 
 .architecture-header[data-threeui-surface="shell"] .app-navigation a {
+  display: inline-flex;
+  align-items: center;
   min-block-size: 32px;
   padding-inline: var(--s3);
   border: 1px solid transparent;
@@ -70,6 +85,8 @@
 }
 
 .architecture-header[data-threeui-surface="shell"] .lifecycle {
+  display: flex;
+  align-items: center;
   justify-self: end;
 }
 
@@ -132,9 +149,19 @@
   white-space: nowrap;
 }
 
+@media (max-width: 68.6875rem) {
+  .architecture-app {
+    padding-inline: var(--s4);
+  }
+}
+
 @media (max-width: 47.999rem) {
   :root {
     scroll-padding-block-start: calc(5.5rem + var(--s3));
+  }
+
+  .architecture-app {
+    padding: var(--s3);
   }
 
   .architecture-header[data-threeui-surface="shell"] {

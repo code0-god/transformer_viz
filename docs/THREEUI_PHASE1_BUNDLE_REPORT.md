@@ -35,10 +35,10 @@ JavaScript. Product R3F continues to resolve `three@0.185.1`.
 
 | Artifact | Baseline raw | Final raw | Raw delta | Baseline gzip | Final gzip | Gzip delta |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Product CSS | 78,696 B | 101,174 B | +22,478 B | 13,114 B | 15,866 B | +2,752 B |
-| Eager app JS | 285,938 B | 290,650 B | +4,712 B | 74,675 B | 75,979 B | +1,304 B |
-| Eager CSS + app JS | 364,634 B | 391,824 B | +27,190 B (+7.46%) | 87,789 B | 91,845 B | +4,056 B (+4.62%) |
-| Lazy Score Matrix | 901,491 B | 901,491 B | 0 B | 234,815 B | 234,817 B | +2 B |
+| Product CSS | 78,696 B | 94,063 B | +15,367 B | 13,114 B | 14,690 B | +1,576 B |
+| Eager app JS | 285,938 B | 290,650 B | +4,712 B | 74,675 B | 75,981 B | +1,306 B |
+| Eager CSS + app JS | 364,634 B | 384,713 B | +20,079 B (+5.51%) | 87,789 B | 90,671 B | +2,882 B (+3.28%) |
+| Lazy Score Matrix | 901,491 B | 901,491 B | 0 B | 234,815 B | 234,816 B | +1 B |
 | Worker WASM | 1,945,143 B | 1,945,143 B | 0 B | 476,405 B | 476,405 B | 0 B |
 
 ## Shipping and exclusion proof
@@ -66,7 +66,7 @@ exact-value table opens as the static product surface instead.
 
 ## Evaluation
 
-Phase 1 adds 4,056 gzip bytes to the eager CSS + application JavaScript
+Phase 1 adds 2,882 gzip bytes to the eager CSS + application JavaScript
 boundary while migrating every visible product surface. Lazy renderer and
 Worker payloads remain unchanged. This is accepted:
 
@@ -79,8 +79,8 @@ Worker payloads remain unchanged. This is accepted:
 
 The raw CSS increase is intentionally larger than the JavaScript increase
 because Phase 1 replaces the complete product chrome while retaining semantic
-Figure geometry. Legacy selector retirement is tracked separately and must
-not delete renderer CSS to improve this number artificially.
+Figure geometry. Retirement removed 392 global lines without deleting
+renderer CSS; the final numbers above are post-retirement.
 
 ## Commands
 

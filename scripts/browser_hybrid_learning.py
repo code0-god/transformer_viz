@@ -120,6 +120,37 @@ def _go_learning_home(browser: ChromeSession) -> None:
     )
 
 
+def _course_home_geometry(browser: ChromeSession) -> JsonObject:
+    return evaluate_dict(
+        browser,
+        """(() => {
+          const app = document.querySelector('.architecture-app');
+          const home = document.querySelector('.course-home');
+          const intro = document.querySelector('.course-home__intro');
+          const course = document.querySelector('.course-home__course');
+          const appStyle = app ? getComputedStyle(app) : null;
+          const rect = (element) => {
+            const box = element?.getBoundingClientRect();
+            return {
+              left: box?.left ?? -1,
+              right: box?.right ?? -1,
+              width: box?.width ?? -1,
+            };
+          };
+          return {
+            innerWidth,
+            clientWidth: document.documentElement.clientWidth,
+            app: rect(app),
+            home: rect(home),
+            intro: rect(intro),
+            course: rect(course),
+            appPaddingStart: appStyle?.paddingInlineStart ?? '',
+            appPaddingEnd: appStyle?.paddingInlineEnd ?? '',
+          };
+        })()""",
+    )
+
+
 def _open_chapter(browser: ChromeSession, slug: str) -> None:
     chapter_id = f"decoder.chapter.{slug.replace('-', '.')}"
     navigate_hash(
@@ -894,6 +925,7 @@ def capture_learning_phase(
 ) -> None:
     set_viewport(browser, 1440, 900)
     _go_learning_home(browser)
+    course_home_desktop = _course_home_geometry(browser)
     shots["courseHomeDesktop"] = capture(
         browser,
         screenshots / "course-home-1440x900.png",
@@ -911,6 +943,7 @@ def capture_learning_phase(
 
     set_viewport(browser, 390, 844)
     _go_learning_home(browser)
+    course_home_mobile = _course_home_geometry(browser)
     shots["courseHomeMobile"] = capture(
         browser,
         screenshots / "course-home-390x844.png",
@@ -930,6 +963,10 @@ def capture_learning_phase(
     require(canvas_count == 0, f"Learn mounted canvas: {canvas_count}")
     evidence["learning"] = {
         "product": "article-inline-figure",
+        "courseHome": {
+            "desktop": course_home_desktop,
+            "mobile": course_home_mobile,
+        },
         "partZero": part_zero,
         "gpt": gpt,
         "responsive": responsive,
