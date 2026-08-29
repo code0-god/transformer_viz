@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 
@@ -70,6 +70,7 @@ function renderPane(state: ScoreMatrixInspectionState, replayAvailable = true) {
       replayAvailable={replayAvailable}
       selectedLayer={1}
       selectedHead={2}
+      selectedStep={3}
       onInspect={onInspect}
       isWebGLAvailable={() => false}
     />,
@@ -152,8 +153,70 @@ describe("ScoreMatrixVisualizationPane", () => {
     ).toBeVisible();
   });
 
-  test("resets local selection when trace provenance changes", async () => {
+  test("presents one viewer title, clear axes, and selectable 3D or 2D data", async () => {
     const user = userEvent.setup();
+    const { container } = render(
+      <ScoreMatrixVisualizationPane
+        visualizationId={SCORE_MATRIX_VISUALIZATION_ID}
+        state={{ status: "ready", provenance, model }}
+        replayAvailable
+        selectedLayer={1}
+        selectedHead={2}
+        selectedStep={3}
+        onInspect={vi.fn()}
+        isWebGLAvailable={() => false}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("heading", { name: "Attention Score Matrix" }),
+    ).not.toBeInTheDocument();
+    expect(
+      container.querySelector(".score-matrix-visualization__context p"),
+    ).toHaveTextContent("Layer 2 · Head 3 · Step 4");
+    expect(screen.getByRole("button", { name: "3D Surface" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(
+      container.querySelector('[aria-label="Query axis"]'),
+    ).toHaveTextContent('q0 · "the"');
+    expect(
+      container.querySelector('[aria-label="Key axis"]'),
+    ).toHaveTextContent('k1 · "cat"');
+    expect(
+      container.querySelector(".score-matrix-zero-plane"),
+    ).toHaveTextContent("0 plane");
+
+    await screen.findByRole("table");
+    const modeButton = screen.getByRole("button", { name: "2D Matrix" });
+    expect(modeButton).toBeInTheDocument();
+    fireEvent.click(modeButton);
+    expect(
+      await screen.findByRole("button", {
+        name: "2D Matrix",
+        pressed: true,
+      }),
+    ).toBeInTheDocument();
+    expect(container.querySelector("[data-score-matrix-mode]")).toHaveAttribute(
+      "data-score-matrix-mode",
+      "2d",
+    );
+    expect(screen.getByRole("table")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: /질의 0 the, 키 0 the:/,
+      }),
+    );
+    expect(
+      container.querySelector(
+        '.score-matrix-selection--primary [data-selected-axis="query"]',
+      ),
+    ).toHaveTextContent('0 · "the"');
+  });
+
+  test("resets local selection when trace provenance changes", async () => {
     const { rerender } = render(
       <ScoreMatrixVisualizationPane
         visualizationId={SCORE_MATRIX_VISUALIZATION_ID}
@@ -165,14 +228,17 @@ describe("ScoreMatrixVisualizationPane", () => {
         isWebGLAvailable={() => false}
       />,
     );
-    await user.click(
+    await screen.findByRole("table");
+    fireEvent.click(
       screen.getByRole("button", {
         name: /질의 0 the, 키 1 cat: -0.5/,
       }),
     );
-    expect(screen.getAllByText(/선택: 질의 0 the, 키 1 cat/)).not.toHaveLength(
-      0,
-    );
+    expect(
+      document.querySelector(
+        '.score-matrix-selection--primary [data-selected-axis="query"]',
+      ),
+    ).toHaveTextContent('0 · "the"');
 
     rerender(
       <ScoreMatrixVisualizationPane
@@ -190,7 +256,13 @@ describe("ScoreMatrixVisualizationPane", () => {
       />,
     );
 
-    expect(screen.queryByText(/선택: 질의 0 the, 키 1 cat/)).toBeNull();
-    expect(screen.getAllByText("선택된 셀 없음")).not.toHaveLength(0);
+    expect(
+      document.querySelector(
+        '.score-matrix-selection--primary [data-selected-axis="query"]',
+      ),
+    ).toBeNull();
+    expect(
+      document.querySelector(".score-matrix-selection--primary"),
+    ).toHaveAttribute("data-selected", "false");
   });
 });

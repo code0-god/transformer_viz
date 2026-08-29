@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import { type ReactElement, useState } from "react";
 
 import { ReadyScoreMatrixVisualization } from "./ReadyScoreMatrixVisualization";
 import type { ScoreMatrixInspectionState } from "./scoreMatrixState";
@@ -11,6 +11,7 @@ type ScoreMatrixVisualizationPaneProps = Readonly<{
   replayAvailable: boolean;
   selectedLayer: number;
   selectedHead: number;
+  selectedStep?: number | null;
   onInspect: () => void;
   isWebGLAvailable?: () => boolean;
 }>;
@@ -21,10 +22,12 @@ export function ScoreMatrixVisualizationPane({
   replayAvailable,
   selectedLayer,
   selectedHead,
+  selectedStep = null,
   onInspect,
   isWebGLAvailable,
 }: ScoreMatrixVisualizationPaneProps): ReactElement {
   const definition = resolveVisualizationDefinition(visualizationId);
+  const [viewMode, setViewMode] = useState<"3d" | "2d">("3d");
 
   if (definition === null)
     return (
@@ -90,6 +93,9 @@ export function ScoreMatrixVisualizationPane({
           key={`${provenance.requestId}:${provenance.runId}:${provenance.layer}:${provenance.head}`}
           definition={definition}
           state={state}
+          selectedStep={selectedStep}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
           {...(isWebGLAvailable === undefined ? {} : { isWebGLAvailable })}
         />
       );

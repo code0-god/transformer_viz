@@ -83,7 +83,9 @@ describe("Score Matrix cell geometry", () => {
 
     // Then: the shared domain is symmetric and bars preserve side of the zero plane.
     expect(geometry.maxAbsoluteValue).toBe(4);
-    expect(geometry.legend.map(({ value }) => value)).toEqual([-4, 0, 4]);
+    expect(geometry.minimumValue).toBe(-4);
+    expect(geometry.maximumValue).toBe(2);
+    expect(geometry.legend.map(({ value }) => value)).toEqual([-4, 0, 2]);
     expect(geometry.cells[0]?.signedHeight).toBe(-1);
     expect(geometry.cells[0]?.centerY).toBeLessThan(0);
     expect(geometry.cells[2]?.signedHeight).toBe(0.5);
@@ -103,7 +105,7 @@ describe("Score Matrix cell geometry", () => {
     expect(geometry.cells[1]?.semanticTone).toBe("neutral");
     expect(geometry.cells[2]?.semanticTone).toBe("positive");
     expect(geometry.legend.map(({ color }) => color)).toEqual([
-      0x526f78, 0x756d61, 0xa8432d,
+      0x4b9dc2, 0x7d898c, 0xe58f3f,
     ]);
     expect(geometry.cells[2]?.scaleXZ).toBeGreaterThan(
       geometry.cells[0]?.scaleXZ ?? 1,

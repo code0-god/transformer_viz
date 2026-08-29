@@ -6,7 +6,6 @@ import {
   type ReactElement,
   type ReactNode,
   Suspense,
-  useId,
   useState,
 } from "react";
 
@@ -100,7 +99,6 @@ export function ThreeVisualizationSurface<Props extends object>({
   isWebGLAvailable = browserSupportsWebGL,
   prefersReducedMotion = browserPrefersReducedMotion,
 }: ThreeVisualizationSurfaceProps<Props>): ReactElement {
-  const titleId = useId();
   const [contextLost, setContextLost] = useState(false);
   const [rendererFailed, setRendererFailed] = useState(false);
   const [rendererAttempt, setRendererAttempt] = useState(0);
@@ -118,11 +116,10 @@ export function ThreeVisualizationSurface<Props extends object>({
   return (
     <section
       className="three-visualization-surface"
-      aria-labelledby={titleId}
+      aria-label={title}
       data-webgl-available={available}
       data-reduced-motion={reducedMotion}
     >
-      <h3 id={titleId}>{title}</h3>
       {!available ? (
         <p role="status" data-visualization-state="unavailable">
           이 환경에서는 3D 시각화를 사용할 수 없습니다.

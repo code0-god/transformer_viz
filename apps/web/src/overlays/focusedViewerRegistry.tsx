@@ -81,6 +81,7 @@ function VisualizationViewer({
       replayAvailable={state.generation.replaySummary !== null}
       selectedLayer={state.architecture.selectedLayer}
       selectedHead={state.architecture.selectedHead}
+      selectedStep={state.generation.selectedStep}
       onInspect={commands.inspectScoreMatrix}
     />
   );

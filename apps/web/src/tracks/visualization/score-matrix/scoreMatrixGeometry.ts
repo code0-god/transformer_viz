@@ -32,13 +32,15 @@ export type ScoreMatrixLegendEntry = Readonly<{
 export type ScoreMatrixGeometry = Readonly<{
   cells: readonly ScoreMatrixRenderCell[];
   maxAbsoluteValue: number;
+  minimumValue: number;
+  maximumValue: number;
   legend: readonly ScoreMatrixLegendEntry[];
 }>;
 
 const SCORE_COLORS = {
-  negative: 0x526f78,
-  neutral: 0x756d61,
-  positive: 0xa8432d,
+  negative: 0x4b9dc2,
+  neutral: 0x7d898c,
+  positive: 0xe58f3f,
 } as const;
 
 const CELL_SPACING = 1.08;
@@ -71,6 +73,14 @@ export function buildScoreMatrixGeometry(
   const maxAbsoluteValue = model.cells.reduce(
     (maximum, cell) => Math.max(maximum, Math.abs(cell.value)),
     0,
+  );
+  const minimumValue = model.cells.reduce(
+    (minimum, cell) => Math.min(minimum, cell.value),
+    Number.POSITIVE_INFINITY,
+  );
+  const maximumValue = model.cells.reduce(
+    (maximum, cell) => Math.max(maximum, cell.value),
+    Number.NEGATIVE_INFINITY,
   );
   const normalizationScale = maxAbsoluteValue === 0 ? 1 : maxAbsoluteValue;
   const centerOffset = (model.size - 1) / 2;
@@ -112,8 +122,8 @@ export function buildScoreMatrixGeometry(
   const legend = [
     {
       tone: "negative",
-      value: -maxAbsoluteValue,
-      label: formatScoreMatrixValue(-maxAbsoluteValue),
+      value: minimumValue,
+      label: formatScoreMatrixValue(minimumValue),
       color: SCORE_COLORS.negative,
     },
     {
@@ -124,11 +134,17 @@ export function buildScoreMatrixGeometry(
     },
     {
       tone: "positive",
-      value: maxAbsoluteValue,
-      label: formatScoreMatrixValue(maxAbsoluteValue),
+      value: maximumValue,
+      label: formatScoreMatrixValue(maximumValue),
       color: SCORE_COLORS.positive,
     },
   ] as const;
 
-  return { cells, maxAbsoluteValue, legend };
+  return {
+    cells,
+    maxAbsoluteValue,
+    minimumValue,
+    maximumValue,
+    legend,
+  };
 }
