@@ -264,3 +264,30 @@ copy, and arbitrary runtime strings never enter KaTeX.
 React renders only validated model metadata and typed Worker responses. Unknown payloads fail
 closed. Missing traces display pending/unknown values rather than inferred tensors or dimensions.
 Generation replay selects stored Worker evidence without resampling.
+
+## ThreeUI-first visual integration
+
+ThreeUI-first means preserving the library's visual and interaction
+character, not flattening package components into legacy custom controls.
+
+- Lumen primary and secondary actions retain gradient depth, face/rim
+  highlights, status ring, hover lift, and pressed response.
+- Circle viewer actions retain atmosphere, aura, rim, face, and detail layers.
+- Product adapters may tune Korean font, hue, saturation, brightness, focus,
+  compact size, and reduced motion.
+- Primary, secondary, and tertiary tiers connect product meaning to visual
+  weight. Rich inspection launchers stay semantic native buttons because
+  package Rectangle variants hard-code content and omit required state APIs.
+- Motion is short and input-driven. Loading may pulse; idle decorative RAF,
+  floating controls, and continuously animated article surfaces are forbidden.
+
+The shell is a compact instrument dock. Learn uses a brighter reading plane
+inside the neutral application plane. Lab is one vertical instrument stack:
+Prompt, generation settings, Output, run evidence, then Inspect. Focused
+viewers share neutral ThreeUI chrome; Architecture SVG and Score Matrix R3F
+retain renderer-owned semantics.
+
+Score Matrix uses a dark renderer plane, visible zero reference, actual
+Query/Key token labels, colorblind-safe signed colors, persistent cell
+selection, exact detail, and user-visible 3D/2D modes. Its HTML table remains
+the keyboard and failure fallback. R3F stays lazy and demand-rendered.

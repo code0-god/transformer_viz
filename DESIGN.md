@@ -80,9 +80,12 @@ controls.
 
 ## Controls
 
-Primary actions use the allowlisted ThreeUI `LumenCta` through a typed adapter.
-The adapter preserves package rendering while enforcing product labels,
+Primary and secondary actions use the allowlisted ThreeUI `LumenCta` through
+a typed adapter. The adapter preserves gradient, ring, face/rim depth,
+hover/pressed response, and loading state while enforcing product labels,
 disabled state, Korean typography, compact dimensions, and reduced motion.
+Focused viewer close uses `CircleButtons` with atmosphere, aura, rim, face,
+and detail layers intact.
 
 Navigation remains semantic links. Native fields, range inputs, buttons, and
 dialogs keep their semantics and adopt the same tokens. No package component is
@@ -109,14 +112,15 @@ forced into a role its public API cannot represent.
 Order:
 
 1. product tokens and reset;
-2. component-scoped ThreeUI package CSS from subpath imports;
-3. `threeUiBridge.css` adapter layer;
+2. audited Lumen and Circle rules in the scoped `threeUi.css` adapter;
+3. ThreeUI product tokens and control tiers;
 4. application shell and route styles;
 5. component-local Learn, Figure, overlay, architecture, and R3F styles.
 
-Global `@designcodeio/threeui/style.css` is denied. Component-local package CSS
-is allowed only when selectors stay scoped and production bundle inspection
-confirms no global reset.
+Global `@designcodeio/threeui/style.css` is denied. Published 1.1.0 component
+JavaScript contains `/* empty css */`, so only audited component rules are
+ported into scoped adapters. Production bundle inspection must confirm no
+global reset.
 
 ## Accessibility
 
@@ -126,14 +130,16 @@ and non-color state cues. Canvas is supplementary.
 
 ## Preservation boundary
 
-Phase 1 does not rewrite NLP, Token, Vocabulary, tokenization, Language Model,
-Embedding, GPT, Transformer Block, or Self-Attention Figure geometry. It does
-not replace the R3F Score Matrix scene. Surrounding product surfaces may
-change.
+The visual integration pass does not rewrite NLP, Token, Vocabulary,
+tokenization, Language Model, Embedding, GPT, Transformer Block, or
+Self-Attention semantics. Architecture keeps its exact root flow. Score Matrix
+keeps Worker `raw_scores`, Query/Key orientation, signed height, lazy R3F,
+demand rendering, and exact HTML parity while its renderer skin and controls
+may change.
 
 ## Review standard
 
-Phase 1 passes only when Home, Learn, and Lab visibly belong to one ThreeUI
-product system, Korean reading remains comfortable, real controls still drive
-the Worker, renderer boundaries remain intact, and no old global button/panel
-language remains visible.
+The product passes only when Home, Learn, Lab, Architecture Viewer, and Score
+Matrix visibly belong to one restrained ThreeUI system; Korean reading remains
+comfortable; real controls still drive the Worker; renderer boundaries remain
+intact; and no flat legacy control language remains visible.

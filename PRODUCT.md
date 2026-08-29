@@ -118,8 +118,8 @@ allowed, and semantic Figures never become package demos.
 ## Brand Commitments
 
 Keep the name `Transformer Viz`, Korean instructional voice, factual model language, and the
-existing warm scientific-notebook identity. Explanation must remain precise rather than magical,
-competitive, or promotional.
+restrained ThreeUI neutral-instrument identity with a brighter reading plane. Explanation must
+remain precise rather than magical, competitive, or promotional.
 
 ## Evidence on Hand
 
@@ -150,6 +150,10 @@ available and none may be fabricated.
 11. Store Home, Chapter, and Lab location in a static-host-safe hash route.
 12. Let SVG explain where computation happens; use Three.js only when real tensor values benefit
     from a spatial encoding.
+13. Preserve ThreeUI depth, surface, motion, and interaction character instead of flattening
+    package controls into legacy native-button styling.
+14. Treat Lab as one runtime-aware instrument stack and focused viewers as renderer surfaces, not
+    generic dashboard cards or Three.js demos.
 
 ## Accessibility & Inclusion
 

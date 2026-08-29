@@ -16,6 +16,9 @@ across the product.
 
 Adopt `@designcodeio/threeui` as the production visual layer.
 
+ThreeUI-first means preserving the library's visual and interaction character
+rather than flattening it into legacy custom controls.
+
 - ThreeUI owns shell, navigation language, controls, status, surfaces, Course
   Home, Learn chrome, and Lab UI.
 - DOM, SVG, and KaTeX continue to own educational semantics.
@@ -52,18 +55,20 @@ Do not import `@designcodeio/threeui/style.css` globally. Its broad element,
 body, typography, control, and overflow rules cannot be made safe merely by a
 lower cascade layer.
 
-Phase 1 uses component-subpath imports so Vite emits only each component's
-scoped stylesheet. The adapter stylesheet lives in an explicit ThreeUI bridge
-layer; the application layer follows it. Korean fonts and semantic Figure CSS
-remain application-owned.
+The published 1.1.0 component subpaths preserve package DOM and behavior, but
+their JavaScript contains `/* empty css */`; the only published runtime CSS is
+the package-global stylesheet. The application therefore ports only audited
+Lumen and Circle rules into the scoped adapter bridge. Korean fonts, focus,
+size, theme tuning, reduced motion, and semantic Figure CSS remain
+application-owned.
 
 ## Theme
 
-The canonical product language follows ThreeUI's neutral light palette:
-graphite text, quiet gray page and wall surfaces, precise borders, low radii,
-minimal shadow, compact controls, and renderer-first hierarchy. Learn keeps a
-light reading plane with the existing Korean font stack and readable body
-size.
+The canonical product language follows ThreeUI's restrained neutral palette:
+graphite text, quiet application planes, precise borders, low radii, compact
+controls, visible but bounded face/rim depth, purposeful hover/pressed motion,
+and renderer-first hierarchy. Learn keeps a bright reading plane with the
+existing Korean font stack and readable body size.
 
 Transformer-specific input, output, attention, mask, selection, and tensor
 colors remain semantic tokens rather than product-shell colors.

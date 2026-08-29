@@ -5,10 +5,10 @@ Source: `@designcodeio/threeui@1.1.0`, upstream commit
 
 ## Allowlist
 
-| Component | Class | Phase 1 usage | WebGL / RAF | Wrapper obligations |
+| Component | Class | Production usage | WebGL / RAF | Wrapper obligations |
 | --- | --- | --- | --- | --- |
-| `LumenCta` | WRAP | Lab Stop action | No WebGL; CSS transition only | Product label, compact dimensions, Korean font, reduced motion |
-| `CircleButtons` | WRAP | Focused viewer close action | No WebGL; CSS transition only | Product aria-label, 44px target, neutral treatment, reduced motion |
+| `LumenCta` | WRAP | Primary Generate; secondary Stop; selected action states | No WebGL or RAF; CSS transitions and loading-only ring pulse | Product label/state, tier, compact dimensions, Korean font, native button semantics, reduced motion |
+| `CircleButtons` | WRAP | Focused viewer close action | No WebGL or RAF; CSS transitions only | Product aria-label, 44px target, retained atmosphere/aura/rim/face/details, reduced motion |
 
 Import only through:
 
@@ -19,13 +19,24 @@ import { CircleButtons } from
   "@designcodeio/threeui/components/CircleButtons";
 ```
 
-The subpath imports the component's scoped `lumen-cta.css`. It must not pull
-the package-global reset.
+The published 1.1.0 subpath JavaScript keeps component DOM and state behavior,
+but its built CSS import is emitted as `/* empty css */`. The only published
+runtime stylesheet is `lib-dist/style.css`, which combines the entire package.
+Production therefore copies only the audited Lumen and Circle visual rules
+into the scoped adapter layer. It does not import the package-global reset.
 
-Course Home route actions remain semantic anchors and its table-of-contents
-button retains `aria-controls`; `LumenCta` cannot express either contract.
-Generate remains native because the package component does not forward
-`aria-busy`. These are deliberate semantic boundaries, not migration gaps.
+Control tiers:
+
+- Primary: Lumen gradient, depth shadow, hover lift, and status ring.
+- Secondary: Lumen ghost face, inset highlight, restrained depth, no ring.
+- Tertiary: lower-shadow ghost treatment or a semantic project-owned control
+  when `href`, `aria-controls`, or rich children are required.
+
+Course Home actions remain semantic anchors and its table-of-contents button
+retains `aria-controls`; `LumenCta` cannot express either contract. Structured
+inspection launchers remain native buttons because package Rectangle variants
+hard-code English labels and do not expose disabled, click, or rich-content
+state contracts. These are deliberate semantic boundaries, not visual gaps.
 
 ## Denylist
 
@@ -36,6 +47,7 @@ Generate remains native because the package component does not forward
 | `UplinkLoader` | REJECT | Iframe with authored progress; no real model-status API |
 | `SkeuomorphicToggle` | REJECT | No checked/onChange contract |
 | `PredictiveArcCanvas` | REJECT | Continuous decorative RAF and no semantic data binding |
+| `RectangleButtons` content variants | REJECT | Hard-coded English labels; most variants do not forward click, disabled, type, or accessible rich-content state |
 | Neuform button aliases | REJECT | Generic or iframe effects without complete product-state contracts |
 | Full scenes and landing pages | REJECT | Hard-coded content/assets and legacy runtime coupling |
 | Particle/field/background exports | VISUAL REFERENCE ONLY | Decorative Canvas/WebGL, often continuous and data-agnostic |
@@ -43,9 +55,12 @@ Generate remains native because the package component does not forward
 ## CSS policy
 
 - Never import `@designcodeio/threeui/style.css` globally.
-- Permit component-local CSS emitted by allowlisted subpath imports.
-- Keep adapter overrides small and scoped under `.threeui-action` or
+- Keep audited component rules scoped under `.threeui-action` or
   `.threeui-icon-action`.
+- Preserve Lumen filter/gradient/shadow/ring and Circle
+  atmosphere/aura/rim/face/details instead of flattening them.
+- Product overrides may own Korean font, size, focus, hue, saturation,
+  brightness, reduced motion, and neutral theme integration.
 - Reject a component if integration requires hundreds of override lines.
 
 ## Runtime policy
