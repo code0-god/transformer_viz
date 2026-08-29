@@ -145,13 +145,14 @@ export function SceneFigure<State extends object>({
     webgl === "available" &&
     loadState === "ready" &&
     SceneRenderer !== undefined;
+  const sceneReady = canRender && readyViewport === viewport;
   const status = contextLost
     ? "context-lost"
     : webgl === "unavailable"
       ? "unavailable"
       : loadState === "error"
         ? "error"
-        : canRender && readyViewport === viewport
+        : sceneReady
           ? "ready"
           : canRender
             ? "initializing"
@@ -170,6 +171,7 @@ export function SceneFigure<State extends object>({
       aria-labelledby={`${figureId}-scene-title`}
       aria-describedby={`${figureId}-scene-description`}
       data-scene-id={figureId}
+      data-scene-motion={reducedMotion ? "reduced" : "full"}
       data-scene-status={status}
       data-scene-viewport={viewport}
       data-scene-visible={visible ? "true" : "false"}
@@ -215,9 +217,11 @@ export function SceneFigure<State extends object>({
         ) : null}
         <div
           className={
-            canRender && !contextLost
+            sceneReady && !contextLost
               ? "scene-figure__fallback scene-figure__fallback--semantic"
-              : "scene-figure__fallback"
+              : canRender
+                ? "scene-figure__fallback scene-figure__fallback--overlay"
+                : "scene-figure__fallback"
           }
         >
           {fallback}

@@ -1,6 +1,11 @@
+.learning-figure[data-figure-renderer="scene"] .learning-figure__content {
+  overflow: clip;
+}
+
 .scene-figure {
   --scene-aspect-ratio: 1.55;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--s3);
   min-inline-size: 0;
 }
@@ -12,6 +17,7 @@
 
 .scene-figure__status {
   position: absolute;
+  z-index: 2;
   inset: auto var(--s3) var(--s3);
   padding: var(--s2) var(--s3);
   border: 1px solid rgb(255 255 255 / 12%);
@@ -37,7 +43,6 @@
 
 .scene-figure__plane {
   position: relative;
-  min-block-size: min(62vw, 38rem);
   overflow: clip;
   border: 1px solid var(--boundary-content);
   border-radius: 0.65rem;
@@ -61,6 +66,13 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+.scene-figure__fallback--overlay {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: auto;
 }
 
 .scene-figure__header > h3 {

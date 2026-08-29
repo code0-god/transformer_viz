@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
 
 import { curriculumLearningFigures } from "../../decoder-only-fundamentals/curriculum/learningFigureRegistry";
@@ -50,6 +51,19 @@ describe("TokenEmbeddingSceneFigure", () => {
     expect(state).toHaveAttribute("data-selected-token", "cat");
     expect(state).toHaveAttribute("data-phase", "id");
     expect(state.getAttribute("data-replay")).not.toBe(replayBefore);
+  });
+
+  test("operates token selection from the keyboard", async () => {
+    const user = userEvent.setup();
+    render(<TokenEmbeddingSceneFigure />);
+    screen.getByRole("button", { name: "cat · ID 42" }).focus();
+
+    await user.keyboard("{Enter}");
+
+    expect(screen.getByTestId("token-scene-state")).toHaveAttribute(
+      "data-selected-token",
+      "cat",
+    );
   });
 
   test("resolves as canonical Part 2 scene with static learning fallback", () => {

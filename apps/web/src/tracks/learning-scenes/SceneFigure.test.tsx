@@ -263,6 +263,11 @@ describe("SceneFigure lifecycle foundation", () => {
       "data-viewport",
       "mobile",
     );
+    expect(
+      screen.getByRole("region", {
+        name: "Token ID는 어떻게 vector가 될까요?",
+      }),
+    ).toHaveAttribute("data-scene-motion", "reduced");
   });
 
   test("isolates scene loading errors behind fallback", async () => {
@@ -297,6 +302,9 @@ describe("SceneFigure lifecycle foundation", () => {
     await waitFor(() =>
       expect(screen.getByTestId("semantic-fallback")).toBeVisible(),
     );
+    expect(screen.getByTestId("semantic-fallback").parentElement).toHaveClass(
+      "scene-figure__fallback--overlay",
+    );
     expect(
       screen.getByText("WebGL context를 복구하고 있습니다."),
     ).toBeVisible();
@@ -307,5 +315,50 @@ describe("SceneFigure lifecycle foundation", () => {
       contextLostCount: 1,
       contextRestoredCount: 1,
     });
+  });
+
+  test("releases Canvas state through twenty visibility cycles", async () => {
+    const view = render(<SceneFigure {...sceneProps()} />);
+    act(() => observer("480px 0px").emit(true));
+
+    for (let cycle = 0; cycle < 20; cycle += 1) {
+      act(() => observer("0px").emit(true));
+      expect(await screen.findByTestId("mock-scene")).toBeVisible();
+      expect(readLearningSceneMetrics()).toMatchObject({
+        activeCanvasCount: 1,
+        peakCanvasCount: 1,
+        webglContextCount: 1,
+      });
+
+      act(() => observer("0px").emit(false));
+      await waitFor(() =>
+        expect(screen.queryByTestId("mock-scene")).toBeNull(),
+      );
+      expect(readLearningSceneMetrics()).toMatchObject({
+        activeCanvasCount: 0,
+        webglContextCount: 0,
+      });
+    }
+
+    expect(readLearningSceneMetrics()).toMatchObject({
+      activeCanvasCount: 0,
+      animationFrameCount: 0,
+      mountCount: 20,
+      observerCount: 2,
+      peakCanvasCount: 1,
+      unmountCount: 20,
+      webglContextCount: 0,
+    });
+
+    view.unmount();
+    expect(readLearningSceneMetrics()).toMatchObject({
+      observerCount: 0,
+      visibleSceneIds: [],
+    });
+    expect(
+      ObserverMock.instances.every(
+        (instance) => instance.disconnect.mock.calls.length === 1,
+      ),
+    ).toBe(true);
   });
 });

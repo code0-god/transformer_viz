@@ -28,6 +28,27 @@ TOKEN_ID = "decoder.diagram.representation.embedding"
 POSITION_ID = "decoder.diagram.representation.position"
 HIDDEN_ID = "decoder.diagram.representation.hidden-state"
 
+RESPONSIVE_SCENES = (
+    (
+        "2-1",
+        "decoder.chapter.2.1",
+        TOKEN_ID,
+        "Token",
+    ),
+    (
+        "2-2",
+        "decoder.chapter.2.2",
+        POSITION_ID,
+        "Position",
+    ),
+    (
+        "2-3",
+        "decoder.chapter.2.3",
+        HIDDEN_ID,
+        "Hidden",
+    ),
+)
+
 
 def _evaluate(browser: ChromeSession, expression: str) -> object:
     return browser.require_cdp().evaluate(
@@ -409,6 +430,8 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             home_scene_requests == [],
             f"Home eagerly loaded Learning Scene runtime: {home_scene_requests}",
         )
+        home_idle_delta = _verify_idle(browser)
+        require(home_idle_delta == 0, f"Home scene RAF leaked: {home_idle_delta}")
 
         _open_token_scene(browser)
         initial = _probe(browser)
@@ -798,6 +821,320 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             f"Hidden offscreen context leaked: {hidden_offscreen}",
         )
 
+        lifecycle_before = dict(hidden_offscreen_metrics)
+        for cycle in range(20):
+            before_frame = _evaluate(
+                browser,
+                "window.__learningSceneMetrics?.animationFrameCount ?? 0",
+            )
+            if not isinstance(before_frame, int):
+                raise TypeError(
+                    f"Scene frame count must be integer: {before_frame!r}",
+                )
+            _evaluate(
+                browser,
+                f"""document.querySelector(
+                  '[data-figure-id="{HIDDEN_ID}"]',
+                )?.scrollIntoView({{ block: 'start', inline: 'nearest' }})""",
+            )
+            wait_for(
+                browser,
+                (
+                    f"document.querySelector('[data-figure-id=\"{HIDDEN_ID}\"] "
+                    "[data-scene-visible=\"true\"]"
+                    "[data-scene-status=\"ready\"] canvas') !== null"
+                ),
+                f"Lifecycle mount {cycle + 1}",
+            )
+            _settle_scene(browser, after_frame=before_frame)
+            mounted_cycle = _hidden_probe(browser)
+            require(
+                mounted_cycle["canvasCount"] == 1,
+                f"Lifecycle Canvas count {cycle + 1}: {mounted_cycle}",
+            )
+
+            _evaluate(
+                browser,
+                """window.scrollTo({
+                  top: document.documentElement.scrollHeight,
+                  left: 0,
+                })""",
+            )
+            wait_for(
+                browser,
+                (
+                    f"document.querySelector('[data-figure-id=\"{HIDDEN_ID}\"] "
+                    "[data-scene-visible=\"false\"]') !== null"
+                    f" && document.querySelector('[data-figure-id=\"{HIDDEN_ID}\"] "
+                    "canvas') === null"
+                ),
+                f"Lifecycle unmount {cycle + 1}",
+            )
+
+        lifecycle_after = _hidden_probe(browser)
+        lifecycle_metrics = lifecycle_after.get("metrics", {})
+        require(
+            isinstance(lifecycle_metrics, dict)
+            and lifecycle_metrics.get("mountCount", 0)
+            - lifecycle_before.get("mountCount", 0)
+            == 20
+            and lifecycle_metrics.get("unmountCount", 0)
+            - lifecycle_before.get("unmountCount", 0)
+            == 20
+            and lifecycle_metrics.get("activeCanvasCount") == 0
+            and lifecycle_metrics.get("webglContextCount") == 0
+            and lifecycle_metrics.get("peakCanvasCount") == 1
+            and lifecycle_metrics.get("observerCount") == 2,
+            f"Twenty-cycle lifecycle leaked: {lifecycle_after}",
+        )
+        lifecycle_idle_delta = _verify_idle(browser)
+        require(
+            lifecycle_idle_delta == 0,
+            f"Offscreen lifecycle RAF leaked: {lifecycle_idle_delta}",
+        )
+
+        context_before_frame = _evaluate(
+            browser,
+            "window.__learningSceneMetrics?.animationFrameCount ?? 0",
+        )
+        if not isinstance(context_before_frame, int):
+            raise TypeError(
+                f"Scene frame count must be integer: {context_before_frame!r}",
+            )
+        _evaluate(
+            browser,
+            f"""document.querySelector(
+              '[data-figure-id="{HIDDEN_ID}"]',
+            )?.scrollIntoView({{ block: 'start', inline: 'nearest' }})""",
+        )
+        wait_for(
+            browser,
+            (
+                f"document.querySelector('[data-figure-id=\"{HIDDEN_ID}\"] "
+                "[data-scene-status=\"ready\"] canvas') !== null"
+            ),
+            "Context test scene ready",
+        )
+        _settle_scene(browser, after_frame=context_before_frame)
+        wait_for(
+            browser,
+            (
+                f"document.querySelector('[data-figure-id=\"{HIDDEN_ID}\"] "
+                "[data-scene-status=\"context-lost\"]') !== null"
+            ),
+            "Learning Scene context loss",
+            f"""(() => {{
+              const canvas = document.querySelector(
+                '[data-figure-id="{HIDDEN_ID}"] canvas',
+              );
+              const gl = canvas?.getContext('webgl2')
+                ?? canvas?.getContext('webgl');
+              const extension = gl?.getExtension('WEBGL_lose_context');
+              if (!extension)
+                throw new Error('WEBGL_lose_context unavailable');
+              window.__learningSceneLoseContext = extension;
+              extension.loseContext();
+            }})();""",
+        )
+        context_lost = _hidden_probe(browser)
+        require(
+            context_lost["status"] == "context-lost"
+            and context_lost["canvasCount"] == 1,
+            f"Context fallback failed: {context_lost}",
+        )
+        _evaluate(
+            browser,
+            """document.querySelector('.scene-figure__plane')
+              ?.scrollIntoView({ block: 'center', inline: 'nearest' })""",
+        )
+        shots["webglFallback"] = capture(
+            browser,
+            screenshots / "webgl-context-fallback-390x844.png",
+        )
+        wait_for(
+            browser,
+            (
+                f"document.querySelector('[data-figure-id=\"{HIDDEN_ID}\"] "
+                "[data-scene-status=\"ready\"]') !== null"
+            ),
+            "Learning Scene context restore",
+            "window.__learningSceneLoseContext.restoreContext();",
+        )
+        context_restored = _hidden_probe(browser)
+
+        browser.require_cdp().send(
+            "Emulation.setEmulatedMedia",
+            {
+                "media": "screen",
+                "features": [
+                    {
+                        "name": "prefers-reduced-motion",
+                        "value": "reduce",
+                    },
+                ],
+            },
+            browser.page_session,
+        )
+        wait_for(
+            browser,
+            (
+                f"document.querySelector('[data-figure-id=\"{HIDDEN_ID}\"] "
+                "[data-scene-motion=\"reduced\"]') !== null"
+            ),
+            "Learning Scene reduced motion",
+        )
+        reduced_before = _evaluate(
+            browser,
+            "window.__learningSceneMetrics?.animationFrameCount ?? 0",
+        )
+        if not isinstance(reduced_before, int):
+            raise TypeError(
+                f"Scene frame count must be integer: {reduced_before!r}",
+            )
+        pointer_click(
+            browser,
+            button_with_text("X_0"),
+            condition=(
+                "document.querySelector('[data-testid=\"hidden-scene-state\"]')"
+                "?.getAttribute('data-stage') === 'x0'"
+            ),
+            label="Reduced-motion final state",
+        )
+        _settle_scene(browser)
+        reduced_after = _evaluate(
+            browser,
+            "window.__learningSceneMetrics?.animationFrameCount ?? 0",
+        )
+        require(
+            isinstance(reduced_after, int) and reduced_after == reduced_before,
+            "Reduced-motion transition scheduled scene frames: "
+            f"{reduced_before} -> {reduced_after}",
+        )
+        _evaluate(
+            browser,
+            """document.querySelector('.scene-figure__plane')
+              ?.scrollIntoView({ block: 'center', inline: 'nearest' })""",
+        )
+        shots["reducedMotion"] = capture(
+            browser,
+            screenshots / "reduced-motion-final-390x844.png",
+        )
+
+        browser.require_cdp().send(
+            "Emulation.setEmulatedMedia",
+            {"media": "screen", "features": []},
+            browser.page_session,
+        )
+        responsive_matrix: list[JsonObject] = []
+        for width, height in (
+            (1440, 900),
+            (1366, 768),
+            (1024, 768),
+            (768, 1024),
+            (390, 844),
+            (320, 568),
+        ):
+            set_viewport(browser, width, height)
+            for slug, chapter_id, figure_id, label in RESPONSIVE_SCENES:
+                before_frame = _evaluate(
+                    browser,
+                    "window.__learningSceneMetrics?.animationFrameCount ?? 0",
+                )
+                if not isinstance(before_frame, int):
+                    raise TypeError(
+                        "Scene frame count must be integer: "
+                        f"{before_frame!r}",
+                    )
+                navigate_hash(
+                    browser,
+                    f"#/learn/decoder-only-fundamentals/{slug}",
+                    (
+                        "document.querySelector("
+                        f"'[data-curriculum-chapter-id=\"{chapter_id}\"]'"
+                        ") !== null"
+                    ),
+                    f"{label} responsive Chapter {width}",
+                )
+                _evaluate(
+                    browser,
+                    f"""document.querySelector(
+                      '[data-figure-id="{figure_id}"]',
+                    )?.scrollIntoView({{
+                      block: 'start',
+                      inline: 'nearest',
+                    }})""",
+                )
+                wait_for(
+                    browser,
+                    (
+                        f"document.querySelector('[data-figure-id=\"{figure_id}\"] "
+                        "[data-scene-status=\"ready\"] canvas') !== null"
+                    ),
+                    f"{label} responsive scene {width}",
+                )
+                _settle_scene(browser, after_frame=before_frame)
+                probe = (
+                    _probe(browser)
+                    if figure_id == TOKEN_ID
+                    else _position_probe(browser)
+                    if figure_id == POSITION_ID
+                    else _hidden_probe(browser)
+                )
+                expected_mode = "mobile" if width <= 600 else "desktop"
+                metrics = probe.get("metrics", {})
+                require(
+                    probe["status"] == "ready"
+                    and probe["viewport"] == expected_mode
+                    and probe["canvasCount"] == 1
+                    and isinstance(probe["canvasWidth"], int | float)
+                    and probe["canvasWidth"] <= width
+                    and probe["overflow"] == 0
+                    and isinstance(probe["controlMinHeight"], int | float)
+                    and probe["controlMinHeight"] >= 44
+                    and isinstance(metrics, dict)
+                    and metrics.get("peakCanvasCount") == 1,
+                    f"{label} responsive contract {width}: {probe}",
+                )
+                responsive_matrix.append(
+                    {
+                        "scene": label,
+                        "width": width,
+                        "height": height,
+                        "viewport": probe["viewport"],
+                        "canvasWidth": probe["canvasWidth"],
+                        "canvasHeight": probe["canvasHeight"],
+                        "overflow": probe["overflow"],
+                        "controlMinHeight": probe["controlMinHeight"],
+                    },
+                )
+
+        navigate_hash(
+            browser,
+            "#/learn/decoder-only-fundamentals/1-1",
+            (
+                "document.querySelector("
+                "'[data-curriculum-chapter-id=\"decoder.chapter.1.1\"]'"
+                ") !== null"
+            ),
+            "Part 1 idle control",
+        )
+        wait_for(
+            browser,
+            "document.querySelector('.scene-figure') === null",
+            "Part 1 has no Learning Scene",
+        )
+        part1_idle_delta = _verify_idle(browser)
+        part1_canvas_count = _evaluate(
+            browser,
+            "document.querySelectorAll('canvas').length",
+        )
+        require(
+            part1_idle_delta == 0
+            and part1_canvas_count == 0,
+            "Part 1 scene activity leaked: "
+            f"frames={part1_idle_delta}, canvas={part1_canvas_count}",
+        )
+
         errors = browser_errors(browser)
         require(not errors["network"], f"Network errors: {errors['network']}")
         require(not errors["runtime"], f"Runtime errors: {errors['runtime']}")
@@ -825,6 +1162,20 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             "mobile": hidden_mobile,
             "offscreen": hidden_offscreen,
             "idleFrameDelta": hidden_idle_delta,
+        }
+        evidence["lifecycle"] = {
+            "before": lifecycle_before,
+            "after": lifecycle_metrics,
+            "cycles": 20,
+            "offscreenIdleFrameDelta": lifecycle_idle_delta,
+            "contextLost": context_lost,
+            "contextRestored": context_restored,
+            "reducedMotionFrameDelta": reduced_after - reduced_before,
+        }
+        evidence["responsiveMatrix"] = responsive_matrix
+        evidence["routeIdleFrames"] = {
+            "home": home_idle_delta,
+            "part1": part1_idle_delta,
         }
         evidence["requests"] = request_urls(browser)
         evidence["errors"] = errors
