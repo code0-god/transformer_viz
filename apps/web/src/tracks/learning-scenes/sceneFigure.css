@@ -75,7 +75,7 @@
   overflow: auto;
 }
 
-.scene-figure__header > h3 {
+.scene-figure__header > h2 {
   margin: 0;
   color: var(--ink);
   font-size: clamp(1rem, 1.4vw, 1.2rem);

@@ -178,7 +178,7 @@ export function SceneFigure<State extends object>({
       style={style}
     >
       <header className="scene-figure__header">
-        <h3 id={`${figureId}-scene-title`}>{title}</h3>
+        <h2 id={`${figureId}-scene-title`}>{title}</h2>
         <span id={`${figureId}-scene-description`}>{description}</span>
       </header>
       <fieldset

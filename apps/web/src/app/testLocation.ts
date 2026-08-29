@@ -137,7 +137,7 @@ export function registerAppRouteTests({
       );
       expect(document.querySelector(".lab-inspection__actions")).toBeNull();
       expect(
-        screen.getByRole("button", { name: "실제 Score Matrix 확인하기" }),
+        screen.getByRole("button", { name: /Score Matrix Actual trace/ }),
       ).toBeDisabled();
       expect(screen.queryByTestId("architecture-root")).toBeNull();
       expect(
@@ -161,7 +161,7 @@ export function registerAppRouteTests({
       readyWorker(worker);
       const user = userEvent.setup();
       const root = screen.getByRole("button", {
-        name: "전체 모델 구조 보기",
+        name: /Model 전체 구조/,
       });
 
       root.focus();
@@ -173,7 +173,7 @@ export function registerAppRouteTests({
       expect(screen.queryByRole("dialog")).toBeNull();
 
       const attention = screen.getByRole("button", {
-        name: "Self-Attention 보기",
+        name: /Attention Self-Attention/,
       });
       attention.focus();
       await user.keyboard(" ");
@@ -183,7 +183,7 @@ export function registerAppRouteTests({
       await user.keyboard("{Escape}");
 
       expect(
-        screen.getByRole("button", { name: "실제 Score Matrix 확인하기" }),
+        screen.getByRole("button", { name: /Score Matrix Actual trace/ }),
       ).toBeDisabled();
     });
 

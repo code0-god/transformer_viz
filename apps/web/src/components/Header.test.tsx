@@ -17,9 +17,9 @@ describe("global Header", () => {
     expect(
       screen.getByRole("navigation", { name: "주요 탐색" }),
     ).toHaveAttribute("data-threeui-control", "mode-navigation");
-    expect(
-      screen.getByRole("link", { name: "Transformer Viz" }),
-    ).toHaveAttribute("data-threeui-control", "brand");
+    const brand = screen.getByRole("link", { name: "Transformer Viz" });
+    expect(brand).toHaveAttribute("data-threeui-control", "brand");
+    expect(brand).not.toHaveAttribute("aria-label");
     const learn = screen.getByRole("link", { name: "학습" });
     expect(learn).toHaveAttribute("aria-current", "page");
     expect(learn).toHaveAttribute("data-control-state", "selected");

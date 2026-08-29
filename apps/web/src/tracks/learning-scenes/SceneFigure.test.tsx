@@ -163,6 +163,12 @@ describe("SceneFigure lifecycle foundation", () => {
     const loadScene = vi.fn(async () => ({ default: MockScene }));
     render(<SceneFigure {...sceneProps(loadScene)} />);
 
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "Token ID는 어떻게 vector가 될까요?",
+      }),
+    ).toBeVisible();
     expect(screen.getByTestId("semantic-fallback")).toBeVisible();
     expect(loadScene).not.toHaveBeenCalled();
 

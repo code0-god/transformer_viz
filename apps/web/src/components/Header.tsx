@@ -38,9 +38,8 @@ export function Header({ status, activeView }: HeaderProps) {
             className="brand-lockup__title"
             data-threeui-control="brand"
             href="#/"
-            aria-label="Transformer Viz"
           >
-            <span>Transformer</span>
+            <span>Transformer</span>{" "}
             <span className="brand-lockup__viz">Viz</span>
           </a>
         </div>
