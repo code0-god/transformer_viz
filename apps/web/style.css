@@ -1,24 +1,24 @@
 :root {
   color-scheme: light;
-  --bg-page: #f2ede5;
-  --bg-article: #f6f1e9;
-  --bg-overlay: #faf7f1;
-  --surface-subtle: #ebe5dc;
-  --text-primary: #292521;
-  --text-secondary: #655f58;
-  --text-tertiary: #857c72;
-  --border-subtle: rgb(104 94 83 / 0.2);
-  --border-strong: rgb(86 76 65 / 0.38);
-  --accent: #ad482f;
-  --accent-hover: #8f3522;
-  --accent-soft: rgb(173 72 47 / 0.11);
+  --bg-page: var(--ui-page);
+  --bg-article: var(--ui-reading);
+  --bg-overlay: var(--ui-surface);
+  --surface-subtle: var(--ui-surface-subtle);
+  --text-primary: var(--ui-text);
+  --text-secondary: var(--ui-text-muted);
+  --text-tertiary: var(--ui-text-soft);
+  --border-subtle: var(--ui-border);
+  --border-strong: var(--ui-border-strong);
+  --accent: var(--ui-accent);
+  --accent-hover: var(--ui-accent-hover);
+  --accent-soft: rgb(46 95 86 / 0.11);
   --figure-input: #e9e5de;
   --figure-representation: #dfe8e1;
   --figure-operation: #dfe7ea;
   --figure-output: #e8e1ed;
   --figure-highlight: #ad482f;
   --paper: var(--bg-page);
-  --surface: rgb(250 247 241 / 0.82);
+  --surface: rgb(255 255 255 / 0.88);
   --surface-strong: var(--surface-subtle);
   --ink: var(--text-primary);
   --ink-muted: var(--text-secondary);
@@ -33,11 +33,11 @@
   --mesh-sage-wash: rgb(120 144 126 / 0.2);
   --mesh-slate-wash: rgb(116 140 149 / 0.18);
   --mesh-surface: rgb(255 253 249 / 0.48);
-  --overlay-backdrop: rgb(55 47 40 / 0.3);
+  --overlay-backdrop: rgb(16 20 24 / 0.58);
   --overlay-surface: var(--bg-overlay);
   --overlay-border: var(--border-strong);
   --overlay-radius: 6px;
-  --overlay-shadow: 0 18px 48px rgb(64 48 36 / 0.12);
+  --overlay-shadow: var(--ui-shadow-overlay);
   --z-toc: 20;
   --z-focused-viewer-backdrop: 40;
   --z-focused-viewer: 50;
@@ -45,12 +45,12 @@
   --page-mesh: none;
   --route-mesh: var(--page-mesh);
   --route-background: var(--bg-page);
-  --shadow: 0 12px 34px rgb(80 57 39 / 0.06);
-  --shadow-soft: 0 2px 8px rgb(80 57 39 / 0.06);
-  --ready: #2f6f55;
-  --ready-soft: #e1eee6;
-  --error: #a73c31;
-  --error-soft: #f4e5e0;
+  --shadow: 0 16px 40px rgb(16 20 24 / 0.08);
+  --shadow-soft: 0 2px 10px rgb(16 20 24 / 0.08);
+  --ready: var(--ui-ready);
+  --ready-soft: #e8f3ed;
+  --error: var(--ui-error);
+  --error-soft: #f8eaea;
   --embedding-soft: rgb(120 144 126 / 0.3);
   --embedding-border: #66806e;
   --block-soft: rgb(116 140 149 / 0.24);
@@ -91,17 +91,7 @@ body {
 }
 body:has(.architecture-app[data-app-view="home"]) {
   --route-background: var(--bg-page);
-  --route-mesh:
-    radial-gradient(
-      ellipse 46% 48% at 2% 2%,
-      rgb(199 91 63 / 0.09),
-      transparent 72%
-    ),
-    radial-gradient(
-      ellipse 48% 54% at 98% 96%,
-      rgb(120 144 126 / 0.1),
-      transparent 74%
-    );
+  --route-mesh: none;
 }
 body:has(.architecture-app[data-app-view="learn"]) {
   --route-background: var(--bg-article);
@@ -109,12 +99,7 @@ body:has(.architecture-app[data-app-view="learn"]) {
 }
 body:has(.architecture-app[data-app-view="lab"]) {
   --route-background: var(--bg-page);
-  --route-mesh:
-    radial-gradient(
-      ellipse 52% 62% at 96% 8%,
-      rgb(116 140 149 / 0.08),
-      transparent 72%
-    );
+  --route-mesh: none;
 }
 ::selection { background: var(--accent-soft); color: var(--ink); }
 button, input, textarea, select { color: inherit; font: inherit; }

@@ -82,7 +82,7 @@ describe("controlled generation UI", () => {
     );
 
     const stop = screen.getByRole("button", { name: "Stop" });
-    expect(stop).toHaveStyle({ minHeight: "44px" });
+    expect(stop.closest(".lumen-cta")).toBeInTheDocument();
     await user.click(stop);
     expect(onStop).toHaveBeenCalledOnce();
   });

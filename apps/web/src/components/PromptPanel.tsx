@@ -5,6 +5,7 @@ import {
   parseGenerationForm,
 } from "../app/generationState";
 import type { GenerationConfig, SamplingMode } from "../generated/schema";
+import { ThreeUiAction } from "../threeui/ThreeUi";
 
 export type PromptPanelProps = Readonly<{
   prompt: string;
@@ -85,15 +86,7 @@ export function PromptPanel(props: PromptPanelProps) {
           />
         </label>
         {running ? (
-          <button
-            type="button"
-            data-testid="generate"
-            className="primary"
-            style={{ minHeight: 44 }}
-            onClick={props.onStop}
-          >
-            Stop
-          </button>
+          <ThreeUiAction type="button" label="Stop" onClick={props.onStop} />
         ) : (
           <button
             type="button"

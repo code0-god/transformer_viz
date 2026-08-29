@@ -34,9 +34,17 @@ Versions and licenses are verified from the frozen pnpm installation:
 | React DOM | 19.2.8 | MIT | <https://react.dev/> |
 | Scheduler | 0.27.0 | MIT | <https://github.com/facebook/react> |
 | KaTeX | 0.18.4 | MIT | <https://katex.org/> |
+| `@designcodeio/threeui` | 1.1.0 | MIT | <https://threeui.com/> |
+| `three128` (`three`) | 0.128.0 | MIT | <https://threejs.org/> |
+| `three165` (`three`) | 0.165.0 | MIT | <https://threejs.org/> |
 
 KaTeX's bundled font files are emitted as same-origin static assets and remain under the KaTeX
 distribution terms.
+
+ThreeUI is the canonical product UI dependency. Production imports are limited
+to the component allowlist in `docs/THREEUI_COMPONENT_POLICY.md`; legacy Three
+aliases remain visible in the dependency graph even when allowlisted
+components do not bundle them.
 
 ## JavaScript build and verification tools
 
