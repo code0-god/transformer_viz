@@ -13,18 +13,25 @@ describe("global Header", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("navigation", { name: "주요 탐색" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "학습" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    ).toHaveAttribute("data-threeui-control", "mode-navigation");
     expect(
-      screen.getByRole("link", { name: "모델 실험실" }),
-    ).not.toHaveAttribute("aria-current");
-    expect(screen.getByRole("status")).toHaveTextContent("Model Ready");
+      screen.getByRole("link", { name: "Transformer Viz" }),
+    ).toHaveAttribute("data-threeui-control", "brand");
+    const learn = screen.getByRole("link", { name: "학습" });
+    expect(learn).toHaveAttribute("aria-current", "page");
+    expect(learn).toHaveAttribute("data-control-state", "selected");
+    expect(screen.getByRole("link", { name: "모델 실험실" })).toHaveAttribute(
+      "data-control-state",
+      "idle",
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("Ready");
     expect(screen.getByRole("status")).toHaveAttribute(
       "data-threeui-status",
       "ready",
+    );
+    expect(screen.getByRole("status")).toHaveAttribute(
+      "data-threeui-control",
+      "status",
     );
   });
 

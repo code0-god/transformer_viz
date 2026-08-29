@@ -1,35 +1,69 @@
 import { CircleButtons } from "@designcodeio/threeui/components/CircleButtons";
 import { LumenCta } from "@designcodeio/threeui/components/LumenCta";
-import type { MouseEventHandler, ReactElement, ReactNode, Ref } from "react";
+import {
+  type MouseEventHandler,
+  type ReactElement,
+  type ReactNode,
+  type Ref,
+  useLayoutEffect,
+  useRef,
+} from "react";
 
 import "./threeUi.css";
 
 export type ThreeUiActionProps = Readonly<{
+  busy?: boolean;
   disabled?: boolean;
   label: string;
   onClick?: MouseEventHandler<HTMLButtonElement>;
+  state?: "idle" | "working" | "stopping" | "error";
+  testId?: string;
+  tier?: "primary" | "secondary" | "tertiary";
   type?: "button" | "submit" | "reset";
-  variant?: "primary" | "quiet";
 }>;
 
 export function ThreeUiAction({
+  busy = false,
   disabled = false,
   label,
   onClick,
+  state = "idle",
+  testId,
+  tier = "primary",
   type = "button",
-  variant = "primary",
 }: ThreeUiActionProps): ReactElement {
+  const hostRef = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    const action = hostRef.current?.querySelector("button");
+    if (action === undefined || action === null) return;
+    action.setAttribute("aria-busy", String(busy));
+    if (testId === undefined) action.removeAttribute("data-testid");
+    else action.setAttribute("data-testid", testId);
+  }, [busy, testId]);
+
   return (
-    <LumenCta
-      className="threeui-action"
-      disabled={disabled}
-      label={label}
-      mode="light"
-      ring={false}
-      type={type}
-      variant={variant === "quiet" ? "ghost" : "primary"}
-      {...(onClick === undefined ? {} : { onClick })}
-    />
+    <span
+      ref={hostRef}
+      className="threeui-action-host"
+      data-control-state={state}
+      data-control-tier={tier}
+      aria-busy={busy}
+    >
+      <LumenCta
+        brightness={0.84}
+        className="threeui-action"
+        disabled={disabled}
+        hue={-106}
+        label={label}
+        mode="light"
+        ring={tier === "primary"}
+        saturation={0.58}
+        type={type}
+        variant={tier === "primary" ? "primary" : "ghost"}
+        {...(onClick === undefined ? {} : { onClick })}
+      />
+    </span>
   );
 }
 

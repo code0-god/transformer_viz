@@ -29,23 +29,39 @@ export function Header({ status, activeView }: HeaderProps) {
   return (
     <header className="architecture-header" data-threeui-surface="shell">
       <div className="brand-lockup">
-        <a className="brand-lockup__title" href="#/">
-          Transformer Viz
+        <a
+          className="brand-lockup__title"
+          data-threeui-control="brand"
+          href="#/"
+          aria-label="Transformer Viz"
+        >
+          <span>Transformer</span>
+          <span className="brand-lockup__viz">Viz</span>
         </a>
       </div>
-      <nav className="app-navigation" aria-label="주요 탐색">
-        <a href="#/" aria-current={activeView === "learn" ? "page" : undefined}>
+      <nav
+        className="app-navigation"
+        aria-label="주요 탐색"
+        data-threeui-control="mode-navigation"
+      >
+        <a
+          href="#/"
+          aria-current={activeView === "learn" ? "page" : undefined}
+          data-control-state={activeView === "learn" ? "selected" : "idle"}
+        >
           학습
         </a>
         <a
           href="#/lab"
           aria-current={activeView === "lab" ? "page" : undefined}
+          data-control-state={activeView === "lab" ? "selected" : "idle"}
         >
           모델 실험실
         </a>
       </nav>
       <div
         className={isError ? "lifecycle lifecycle-error" : "lifecycle"}
+        data-threeui-control="status"
         data-threeui-status={status.type}
         role={isError ? "alert" : "status"}
         aria-live={isError ? "assertive" : "polite"}

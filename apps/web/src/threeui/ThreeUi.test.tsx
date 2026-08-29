@@ -86,7 +86,7 @@ describe("ThreeUI product adapters", () => {
         label="생성 중"
         onClick={onClick}
         type="submit"
-        variant="quiet"
+        tier="secondary"
       />,
     );
 
@@ -97,6 +97,29 @@ describe("ThreeUI product adapters", () => {
     await user.click(action);
 
     expect(onClick).not.toHaveBeenCalled();
+  });
+
+  test("maps product control tiers and runtime state onto Lumen actions", () => {
+    render(
+      <ThreeUiAction
+        busy
+        label="Generate"
+        state="working"
+        testId="generate"
+        tier="primary"
+      />,
+    );
+
+    const action = screen.getByRole("button", { name: "Generate" });
+    const host = action.closest(".threeui-action-host");
+
+    expect(host).toHaveAttribute("data-control-tier", "primary");
+    expect(host).toHaveAttribute("data-control-state", "working");
+    expect(host).toHaveAttribute("aria-busy", "true");
+    expect(action).toHaveAttribute("data-testid", "generate");
+    expect(action).toHaveAttribute("aria-busy", "true");
+    expect(action.closest(".lumen-cta")).toBeInTheDocument();
+    expect(action.querySelector(".lumen-cta__ring")).toBeInTheDocument();
   });
 
   test("ships overlay close chrome through the package icon boundary", async () => {
@@ -130,6 +153,25 @@ describe("ThreeUI product adapters", () => {
     );
     expect(css).toMatch(
       /\.threeui-icon-action \.circle-button\s*\{[^}]*min-block-size:\s*44px/s,
+    );
+  });
+
+  test("keeps characteristic ThreeUI depth layers visible", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "src/threeui/threeUi.css"),
+      "utf8",
+    );
+
+    expect(css).toContain("filter: hue-rotate(");
+    expect(css).toMatch(
+      /\.threeui-action \.lumen-cta__button\s*\{[^}]*box-shadow:(?!\s*none)/s,
+    );
+    expect(css).toMatch(/\.circle-button__aura\s*\{/);
+    expect(css).toMatch(/\.circle-button__rim\s*\{/);
+    expect(css).toMatch(/\.circle-button__face\s*\{/);
+    expect(css).toMatch(/\.circle-button__details\s*\{/);
+    expect(css).not.toMatch(
+      /\.threeui-icon-action[\s\S]*?:is\([\s\S]*?circle-button__face[\s\S]*?\)\s*\{\s*display:\s*none/s,
     );
   });
 
