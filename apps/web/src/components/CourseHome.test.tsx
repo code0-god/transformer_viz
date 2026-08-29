@@ -45,6 +45,10 @@ describe("Course Home frontispiece", () => {
       "href",
       "#/lab",
     );
+    expect(screen.getByRole("link", { name: "언어 모델" })).toHaveAttribute(
+      "href",
+      "#/learn/decoder-only-fundamentals/1-1",
+    );
   });
 
   test("scrolls 목차 to the journey without changing the route hash", async () => {
