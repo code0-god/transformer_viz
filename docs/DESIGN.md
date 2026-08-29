@@ -29,6 +29,11 @@ Learn is `Article + Inline Figure`.
   measure without negative-margin breakout.
 - Learn SVG/DOM Figures have no modal, backdrop, close, Fit, zoom, or pan
   chrome.
+- Registered Learn scenes retain the same inline Figure and semantic fallback
+  contract. They add no modal, runtime inspection, or independent scrolling.
+- Learning scenes lazy-load per Figure, mount Canvas only while visible, use
+  `frameloop="demand"`, stop at zero idle scene frames, and render a final
+  static state under reduced motion.
 - A Figure link uses ordinary Chapter hash navigation.
 
 Lab is `Experiment + Floating Inspection Overlay`.
@@ -263,8 +268,9 @@ No breakpoint changes model state or Worker ownership.
 
 - Semantic SVG/DOM/KaTeX explains architecture, operation order, labels, connectors, curriculum,
   and formulas.
-- Three.js and React Three Fiber render only validated numerical tensors. They never replace
-  Course Home, GPT, Block, Self-Attention, or curriculum architecture diagrams.
+- Three.js and React Three Fiber render validated numerical tensors in Lab and
+  selected Learn concepts where depth or a short state transition materially
+  improves understanding. They never replace semantic fallback content.
 - Lab Architecture inspection is wrapped by the generic `DiagramViewport`.
   Learn static Figures render directly in the article.
 - In Lab, Fit contains the complete SVG on both axes and is the semantic `100%`
@@ -278,6 +284,8 @@ No breakpoint changes model state or Worker ownership.
 - Three.js and Fiber load through a literal dynamic import only after the Visualization viewer
   opens and requests trace data.
   Canvas uses `frameloop="demand"` and a 1–2 DPR clamp.
+- Learn scenes use separate literal dynamic imports, two visibility margins
+  (nearby preload and active viewport), and no Worker data.
 - WebGL capability failure, lazy-load failure, renderer failure, and context loss stay inside the
   visualization boundary. An exact HTML matrix table remains available throughout.
 
