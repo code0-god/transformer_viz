@@ -29,7 +29,7 @@ const wait = (test, action, label) => new Promise((resolve, reject) => {
   function finish(error) {
     clearTimeout(timeout);
     observer.disconnect();
-    error ? reject(error) : requestAnimationFrame(() => requestAnimationFrame(resolve));
+    error ? reject(error) : resolve();
   }
   function check() {
     try {
@@ -65,12 +65,28 @@ LARGE_SEED_PROBE = (
 set('#generation-prompt', 'cat');
 set('#max-new-tokens', '1');
 set('#seed', '{U64_MAX}');
-const generate = document.querySelector('.generation-primary button');
+const currentGenerate = () => document.querySelector('[data-testid="generate"]');
+const trigger = currentGenerate();
 await wait(
-  () => ['complete', 'error'].includes(document.querySelector('#status')?.dataset.status),
-  () => generate.click(),
+  () => {{
+    const status = document.querySelector('#status')?.dataset.status;
+    const generate = currentGenerate();
+    if (!(generate instanceof HTMLButtonElement)) return false;
+    const released =
+      generate.disabled === false
+      && generate.getAttribute('aria-busy') === 'false';
+    if (status === 'error') return released;
+    return status === 'complete'
+      && released
+      && document.querySelector('#seed').value === '{MAX_SAFE_SEED}'
+      && document.querySelector('.generation-usage span')?.textContent
+        .includes('max_new_tokens')
+      && document.querySelectorAll('.generation-steps li').length === 1;
+  }},
+  () => trigger.click(),
   'large seed terminal state',
 );
+const generate = currentGenerate();
 return {{
   seed: document.querySelector('#seed').value,
   status: document.querySelector('#status').dataset.status,
@@ -92,17 +108,30 @@ POST_FAILURE_PROBE = (
 set('#generation-prompt', 'cat');
 set('#max-new-tokens', '1');
 set('#seed', '42');
-const generate = document.querySelector('.generation-primary button');
+const currentGenerate = () => document.querySelector('[data-testid="generate"]');
+const trigger = currentGenerate();
 const originalPostMessage = Worker.prototype.postMessage;
 Worker.prototype.postMessage = function () {
   throw new Error('POST_SENTINEL');
 };
 try {
   await wait(
-    () => document.querySelector('#status')?.dataset.status === 'error',
-    () => generate.click(),
+    () => {
+      const generate = currentGenerate();
+      return generate instanceof HTMLButtonElement
+      && document.querySelector('#status')?.dataset.status === 'error'
+      && generate.disabled === false
+      && generate.getAttribute('aria-busy') === 'false'
+      && (
+        document.querySelector('.generation-error')?.textContent
+        ?? document.querySelector('.lifecycle-detail')?.textContent
+        ?? ''
+      ).includes('POST_SENTINEL');
+    },
+    () => trigger.click(),
     'forced post failure',
   );
+  const generate = currentGenerate();
   return {
     status: document.querySelector('#status').dataset.status,
     disabled: generate.disabled,

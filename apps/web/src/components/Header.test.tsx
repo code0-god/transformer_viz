@@ -28,7 +28,7 @@ describe("global Header", () => {
     );
   });
 
-  test("announces a worker error without expanding the global copy", () => {
+  test("announces and renders the worker error detail", () => {
     render(
       <Header
         status={{ type: "error", message: "WORKER_ERROR_SENTINEL" }}
@@ -40,6 +40,7 @@ describe("global Header", () => {
     expect(screen.getByRole("alert")).toHaveAccessibleDescription(
       "WORKER_ERROR_SENTINEL",
     );
+    expect(screen.getByText("WORKER_ERROR_SENTINEL")).toBeVisible();
     expect(screen.getByRole("link", { name: "모델 실험실" })).toHaveAttribute(
       "aria-current",
       "page",

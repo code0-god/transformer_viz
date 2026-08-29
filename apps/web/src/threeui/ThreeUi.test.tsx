@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { globSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -6,10 +6,9 @@ import userEvent from "@testing-library/user-event";
 import { ThreeUiAction, ThreeUiIconAction, ThreeUiProvider } from "./ThreeUi";
 
 function sourceFiles(directory: string): string[] {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = resolve(directory, entry.name);
-    return entry.isDirectory() ? sourceFiles(path) : [path];
-  });
+  return globSync(["**/*.css", "**/*.ts", "**/*.tsx"], {
+    cwd: directory,
+  }).map((path) => resolve(directory, path));
 }
 
 function hexToken(css: string, name: string): string {
@@ -217,6 +216,8 @@ describe("ThreeUI product adapters", () => {
       ["ui-text", "ui-page", bridge],
       ["ui-text-muted", "ui-page", bridge],
       ["ui-text-muted", "ui-surface", bridge],
+      ["ui-text-soft", "ui-page", bridge],
+      ["ui-text-soft", "ui-surface", bridge],
       ["ui-accent", "ui-surface", bridge],
       ["ui-ready", "ready-soft", `${bridge}\n${globalCss}`],
       ["ui-error", "error-soft", `${bridge}\n${globalCss}`],

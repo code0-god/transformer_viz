@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import re
 import selectors
+import signal
 import shutil
 import subprocess
 import tempfile
@@ -76,6 +77,7 @@ class ChromeSession:
                 stderr=subprocess.PIPE,
                 text=True,
                 bufsize=1,
+                start_new_session=True,
             )
             endpoint = self._read_endpoint()
             self.cdp = Cdp(endpoint, self.timeout)
@@ -246,7 +248,7 @@ class ChromeSession:
                 self.cdp.send("Target.closeTarget", {"targetId": self.target_id})
         except (CdpError, OSError):
             if self.process is not None and self.process.poll() is None:
-                self.process.terminate()
+                os.killpg(self.process.pid, signal.SIGTERM)
         finally:
             self.cdp.close()
             self.cdp = None
@@ -257,11 +259,11 @@ class ChromeSession:
         process = self.process
         self.process = None
         if process.poll() is None:
-            process.terminate()
+            os.killpg(process.pid, signal.SIGTERM)
         try:
             process.wait(timeout=10)
         except subprocess.TimeoutExpired:
-            process.kill()
+            os.killpg(process.pid, signal.SIGKILL)
             process.wait(timeout=10)
         if process.stderr is not None:
             process.stderr.close()
