@@ -16,7 +16,7 @@ const PREFERRED_WIDTHS = {
   "decoder.diagram.tokenization.vocabulary": 760,
   "decoder.diagram.tokenization.methods": 840,
   "decoder.diagram.language-model.definition": 760,
-  "decoder.diagram.language-model.next-token": 600,
+  "decoder.diagram.language-model.next-token": 720,
   "decoder.diagram.language-model.conditional-probability": 780,
   "decoder.diagram.language-model.autoregressive": 760,
   "decoder.diagram.representation.embedding": 760,

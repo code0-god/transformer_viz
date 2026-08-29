@@ -67,18 +67,22 @@ const PART1_PRODUCTION_CHAPTERS = [
   [
     "언어 모델이란?",
     "decoder.curriculum.guide.1.1",
-    "언어 모델의 위치별 다음-token 점수",
+    "Context에서 다음 token 후보로 이어지는 언어 모델의 역할",
   ],
-  ["다음 Token 예측", "decoder.curriculum.guide.1.2", "다음 Token 선택 단계"],
+  [
+    "다음 Token 예측",
+    "decoder.curriculum.guide.1.2",
+    "Vocabulary logit에서 다음 token 선택까지의 한 단계",
+  ],
   [
     "조건부 확률",
     "decoder.curriculum.guide.1.3",
-    "Prefix 조건부 확률과 chain rule",
+    "세 token sequence의 조건부 확률 연쇄",
   ],
   [
     "Autoregressive Generation",
     "decoder.curriculum.guide.1.4",
-    "Autoregressive predict append repeat loop",
+    "생성한 token을 context에 추가하는 반복 과정",
   ],
 ] as const;
 
@@ -195,8 +199,18 @@ describe("Decoder curriculum production integration", () => {
       );
       expect(article).not.toHaveTextContent("구현 노트");
       expect(article.textContent).not.toMatch(
-        /\b(?:Rust|exporter|fixture|provenance|current runtime|KV cache|Replay cache)\b|runtime 사실|교육용 runtime/i,
+        /\b(?:Rust|exporter|fixture|provenance|current runtime|Replay cache)\b|runtime 사실|교육용 runtime/i,
       );
+      if (slug === "1-4") {
+        expect(article).toHaveTextContent(
+          "현재 nanoGPT Edu는 KV cache를 사용하지 않습니다.",
+        );
+        expect(article).toHaveTextContent(
+          "다른 GPT 구현은 KV cache를 사용할 수 있으므로",
+        );
+      } else {
+        expect(article.textContent).not.toMatch(/\bKV cache\b/i);
+      }
     },
   );
 

@@ -7,10 +7,10 @@ import { App } from "../../../../../App";
 import { model, TestWorker } from "../../../../../test/workerFixtures";
 
 const CHAPTERS = [
-  ["언어 모델이란?", "언어 모델의 위치별 다음-token 점수"],
-  ["다음 Token 예측", "다음 Token 선택 단계"],
-  ["조건부 확률", "Prefix 조건부 확률과 chain rule"],
-  ["Autoregressive Generation", "Autoregressive predict append repeat loop"],
+  ["언어 모델이란?", "Context에서 다음 token 후보로 이어지는 언어 모델의 역할"],
+  ["다음 Token 예측", "Vocabulary logit에서 다음 token 선택까지의 한 단계"],
+  ["조건부 확률", "세 token sequence의 조건부 확률 연쇄"],
+  ["Autoregressive Generation", "생성한 token을 context에 추가하는 반복 과정"],
 ] as const;
 
 function readyCurriculum(): TestWorker {
@@ -59,6 +59,8 @@ describe("Part 1 curriculum Diagrams", () => {
       expect(
         pane?.querySelector(`fieldset[aria-label='${chapterTitle} 의미 설명']`),
       ).not.toBeNull();
+      expect(image).toHaveAttribute("data-figure-layout", "desktop");
+      expect(image).toHaveAttribute("data-figure-question");
       const focus = pane?.querySelector("button.part1-diagram__focus");
       expect(focus).toBeNull();
       expect(
@@ -70,7 +72,7 @@ describe("Part 1 curriculum Diagrams", () => {
     },
   );
 
-  test("uses one top-to-bottom flow for next-token prediction", async () => {
+  test("keeps one semantic stage order for next-token prediction", async () => {
     readyCurriculum();
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "목차 열기" }));
@@ -79,15 +81,13 @@ describe("Part 1 curriculum Diagrams", () => {
         screen.getByRole("navigation", { name: "Chapter 목차" }),
       ).getByRole("link", { name: "다음 Token 예측" }),
     );
-    const stages = Array.from(
-      document.querySelectorAll(
-        "[data-guide-page-id='decoder.curriculum.guide.1.2'] [data-stage] > rect",
-      ),
+    expect(
+      screen.getByRole("img", {
+        name: "Vocabulary logit에서 다음 token 선택까지의 한 단계",
+      }),
+    ).toHaveAttribute(
+      "data-stage-order",
+      "context vocabulary-logits selection-distribution sampler next-token",
     );
-    const xCoordinates = stages.map((stage) => stage.getAttribute("x"));
-    const yCoordinates = stages.map((stage) => Number(stage.getAttribute("y")));
-
-    expect(new Set(xCoordinates).size).toBe(1);
-    expect(yCoordinates).toEqual([...yCoordinates].sort((a, b) => a - b));
   });
 });

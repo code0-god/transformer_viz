@@ -1,24 +1,33 @@
 import type { ReactElement } from "react";
 
+import { usePart1MobileLayout } from "./part1DiagramLayout";
+
+const FIGURE_QUESTION = "Sequence 확률은 어떤 next-token 확률의 연쇄인가?";
 const FACTORS = [
-  ["A", "P(w₁)"],
-  ["B | A", "P(w₂ | w₁)"],
-  ["C | A,B", "P(w₃ | w₁,w₂)"],
+  ["w₁", "시작 조건", "P(w₁)"],
+  ["w₂", "w₁이 주어짐", "P(w₂ | w₁)"],
+  ["w₃", "w₁, w₂가 주어짐", "P(w₃ | w₁,w₂)"],
 ] as const;
 
 export function ConditionalProbabilityDiagram(): ReactElement {
+  const mobile = usePart1MobileLayout();
+  const desktopX = [110, 390, 670] as const;
+  const mobileY = [84, 234, 384] as const;
+
   return (
-    <div className="part1-diagram">
+    <div className="part1-diagram" data-figure-question={FIGURE_QUESTION}>
       <svg
-        viewBox="0 0 760 450"
+        viewBox={mobile ? "0 0 360 650" : "0 0 780 430"}
         role="img"
-        aria-label="Prefix 조건부 확률과 chain rule"
+        aria-label="세 token sequence의 조건부 확률 연쇄"
         aria-describedby="conditional-desc"
+        data-figure-layout={mobile ? "mobile" : "desktop"}
+        data-figure-question={FIGURE_QUESTION}
       >
-        <title>Prefix 조건부 확률과 chain rule</title>
+        <title>세 token sequence의 조건부 확률 연쇄</title>
         <desc id="conditional-desc">
-          A에서 B, C로 이어질 때 각 token이 이전 prefix만 조건으로 가지며 세
-          조건부 확률을 곱해 joint probability를 구성하는 도식
+          w1, w2, w3가 이어질 때 시작 확률과 점점 길어지는 prefix가 주어진
+          next-token 확률 세 항을 곱해 sequence 확률을 구성하는 도식
         </desc>
         <defs>
           <marker
@@ -33,61 +42,90 @@ export function ConditionalProbabilityDiagram(): ReactElement {
             <path d="M0 0 10 5 0 10Z" />
           </marker>
         </defs>
-        <text className="part1-diagram__heading" x="30" y="42">
-          Causal prefix branches
+        <text className="part1-diagram__heading" x="30" y="38">
+          앞선 token이 다음 조건이 됩니다
         </text>
-        {FACTORS.map(([label, probability], index) => {
-          const x = 44 + index * 240;
+        {FACTORS.map(([token, condition, probability], index) => {
+          const x = mobile ? 64 : desktopX[index];
+          const y = mobile ? mobileY[index] : 100;
+          if (x === undefined || y === undefined) return null;
+          const nextDesktopX = desktopX[index + 1] ?? x;
+          const nextMobileY = mobileY[index + 1] ?? y;
           return (
-            <g key={label} className="part1-diagram__stage">
-              <rect x={x} y="78" width="190" height="92" rx="14" />
-              <text x={x + 95} y="116" textAnchor="middle">
-                {label}
+            <g key={token} className="part1-diagram__factor">
+              <circle cx={x} cy={y} r="34" />
+              <text x={x} y={y + 7} textAnchor="middle">
+                {token}
               </text>
               <text
                 className="part1-diagram__note"
-                x={x + 95}
-                y="145"
-                textAnchor="middle"
+                x={mobile ? 124 : x}
+                y={mobile ? y - 10 : y + 66}
+                textAnchor={mobile ? "start" : "middle"}
+              >
+                {condition}
+              </text>
+              <text
+                className="part1-diagram__probability"
+                x={mobile ? 124 : x}
+                y={mobile ? y + 22 : y + 94}
+                textAnchor={mobile ? "start" : "middle"}
               >
                 {probability}
               </text>
-              {index < 2 ? (
+              {index < 2 && (
                 <path
                   className="part1-diagram__path"
                   markerEnd="url(#conditional-arrow)"
-                  d={`M${x + 190} 124H${x + 226}`}
+                  d={
+                    mobile
+                      ? `M${x} ${y + 34}V${nextMobileY - 40}`
+                      : `M${x + 34} ${y}H${nextDesktopX - 42}`
+                  }
                 />
-              ) : null}
+              )}
             </g>
           );
         })}
-        <path className="part1-diagram__path" d="M139 188V260H619V188" />
-        <path className="part1-diagram__path" d="M379 188V260" />
-        <g className="part1-diagram__product">
-          <rect x="110" y="284" width="540" height="104" rx="14" />
-          <text x="380" y="326" textAnchor="middle">
-            Joint probability = prefix factors multiplied
+        <path
+          className="part1-diagram__equation-rule"
+          d={mobile ? "M32 474H328" : "M50 242H730"}
+        />
+        <g className="part1-diagram__equation">
+          <text
+            x={mobile ? 30 : 390}
+            y={mobile ? 520 : 290}
+            textAnchor={mobile ? "start" : "middle"}
+          >
+            Sequence probability
           </text>
           <text
             className="part1-diagram__note"
-            x="380"
-            y="356"
-            textAnchor="middle"
+            x={mobile ? 30 : 390}
+            y={mobile ? 562 : 330}
+            textAnchor={mobile ? "start" : "middle"}
           >
-            현재 조건에는 미래 token이 들어가지 않음
+            P(w₁) × P(w₂ | w₁)
+          </text>
+          <text
+            className="part1-diagram__note"
+            x={mobile ? 30 : 390}
+            y={mobile ? 598 : 362}
+            textAnchor={mobile ? "start" : "middle"}
+          >
+            × P(w₃ | w₁,w₂)
           </text>
         </g>
       </svg>
       <div className="part1-diagram__fallback">
         <fieldset aria-label="조건부 확률 의미 설명">
           <ol>
-            {FACTORS.map(([label, probability]) => (
-              <li key={label}>
-                {label}: {probability}
+            {FACTORS.map(([token, condition, probability]) => (
+              <li key={token}>
+                {token}: {condition}, {probability}
               </li>
             ))}
-            <li>Joint probability: 세 prefix factor의 곱</li>
+            <li>Sequence probability: 세 항의 곱</li>
           </ol>
         </fieldset>
       </div>

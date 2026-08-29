@@ -47,7 +47,7 @@ EXPECTED_PREFERRED_WIDTHS = {
     "decoder.diagram.tokenization.vocabulary": 760,
     "decoder.diagram.tokenization.methods": 840,
     "decoder.diagram.language-model.definition": 760,
-    "decoder.diagram.language-model.next-token": 600,
+    "decoder.diagram.language-model.next-token": 720,
     "decoder.diagram.language-model.conditional-probability": 780,
     "decoder.diagram.language-model.autoregressive": 760,
     "decoder.diagram.representation.embedding": 760,
@@ -503,7 +503,10 @@ def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
                 'fixture',
                 'provenance',
                 'current runtime',
-                'kv cache',
+                ...(figure?.getAttribute('data-figure-id')
+                  === 'decoder.diagram.language-model.autoregressive'
+                    ? []
+                    : ['kv cache']),
                 'replay cache',
                 'runtime 사실',
                 '교육용 runtime',
