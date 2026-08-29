@@ -169,12 +169,17 @@ def select_canvas_cell(browser: ChromeSession) -> dict[str, object]:
             settle(browser)
             selected = cdp.evaluate(
                 session,
-                """document.querySelector(
-                  '.score-matrix-selection--primary',
-                )?.textContent?.trim() ?? ''""",
+                """(() => {
+                  const selection = document.querySelector(
+                    '.score-matrix-selection--primary',
+                  );
+                  return selection?.getAttribute('data-selected') === 'true'
+                    ? selection.textContent?.trim() ?? ''
+                    : '';
+                })()""",
                 True,
             )
-            if not isinstance(selected, str) or not selected.startswith("선택:"):
+            if not isinstance(selected, str) or selected == "":
                 continue
             cdp.send(
                 "Input.dispatchMouseEvent",
@@ -189,9 +194,14 @@ def select_canvas_cell(browser: ChromeSession) -> dict[str, object]:
             settle(browser)
             persisted = cdp.evaluate(
                 session,
-                """document.querySelector(
-                  '.score-matrix-selection--primary',
-                )?.textContent?.trim() ?? ''""",
+                """(() => {
+                  const selection = document.querySelector(
+                    '.score-matrix-selection--primary',
+                  );
+                  return selection?.getAttribute('data-selected') === 'true'
+                    ? selection.textContent?.trim() ?? ''
+                    : '';
+                })()""",
                 True,
             )
             if persisted != selected:

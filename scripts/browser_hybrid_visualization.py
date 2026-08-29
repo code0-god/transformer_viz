@@ -43,7 +43,7 @@ def _close_viewer(browser: ChromeSession) -> None:
 def _open_score_viewer(browser: ChromeSession) -> None:
     pointer_click(
         browser,
-        button_with_text("실제 Score Matrix 확인하기"),
+        "document.querySelector('[data-inspection-kind=\"score-matrix\"]')",
         condition=(
             "document.querySelector('#focused-viewer"
             "[data-viewer-kind=\"visualization\"]') !== null"
@@ -89,7 +89,7 @@ def _assert_lab_base(browser: ChromeSession) -> JsonObject:
             continuation:
               document.querySelector('.continuation-panel') !== null,
             inspectionActions: document.querySelectorAll(
-              '.lab-inspection__actions button',
+              '.lab-inspection__launcher button',
             ).length,
             architectureMounted:
               document.querySelector('[data-testid="architecture-root"]')
@@ -379,10 +379,29 @@ def capture_visualization_phase(
     shots["labBase"] = capture(
         browser, screenshots / "lab-base-1440x900.png"
     )
+    shots["requiredLabDesktop"] = capture(
+        browser,
+        screenshots / "04-lab-1440.png",
+    )
+    browser.require_cdp().evaluate(
+        browser.page_session,
+        """document.querySelector('.lab-inspection')
+          ?.scrollIntoView({ block: 'center', behavior: 'auto' })""",
+        True,
+    )
+    settle(browser)
+    shots["labInspection"] = capture(
+        browser,
+        screenshots / "lab-inspection-1440x900.png",
+    )
 
     evidence["labArchitectureViewer"] = _open_lab_architecture(browser)
     shots["labArchitectureViewer"] = capture(
         browser, screenshots / "lab-architecture-viewer-1440x900.png"
+    )
+    shots["requiredArchitectureDesktop"] = capture(
+        browser,
+        screenshots / "05-lab-architecture-viewer-1440.png",
     )
     _select_attention_head_two(browser)
     _close_viewer(browser)
@@ -398,6 +417,74 @@ def capture_visualization_phase(
     evidence["cellInteraction"] = cell_interaction
     shots["scoreMatrixViewer"] = capture(
         browser, screenshots / "viewer-score-matrix-3d-1440x900.png"
+    )
+    shots["requiredScoreMatrixDesktop"] = capture(
+        browser,
+        screenshots / "06-lab-score-matrix-1440.png",
+    )
+    pointer_click(
+        browser,
+        button_with_text("2D Matrix", "document.querySelector('#focused-viewer')"),
+        condition=(
+            "document.querySelector('[data-score-matrix-mode=\"2d\"]') !== null"
+            " && document.querySelector('.score-matrix-table-mode:not([hidden])"
+            " .score-matrix-table') !== null"
+        ),
+        label="Score Matrix 2D mode",
+    )
+    mode_evidence = evaluate_dict(
+        browser,
+        """(() => {
+          const selectedTableCell = document.querySelector(
+            '.score-matrix-table-mode:not([hidden]) td[data-selected="true"]',
+          );
+          const selectedScore = document.querySelector(
+            '.score-matrix-selection--primary [data-selected-value="score"]',
+          );
+          const canvas = document.querySelector('.score-matrix-canvas');
+          return {
+            mode: document.querySelector('.score-matrix-visualization')
+              ?.getAttribute('data-score-matrix-mode') ?? '',
+            tableVisible: selectedTableCell instanceof HTMLElement
+              && selectedTableCell.getBoundingClientRect().height > 0,
+            canvasVisible: canvas instanceof HTMLElement
+              && canvas.getBoundingClientRect().height > 0,
+            selectedTableValue:
+              selectedTableCell?.querySelector(
+                '.score-matrix-cell-button > span:not(.score-matrix-visually-hidden)',
+              )?.textContent?.trim() ?? '',
+            selectedDetailValue: selectedScore?.textContent?.trim() ?? '',
+            inspectRequests: window.__learningWorkerRequests.filter(
+              item => item?.type === 'inspect_attention_head',
+            ).length,
+          };
+        })()""",
+    )
+    require(
+        mode_evidence["mode"] == "2d"
+        and mode_evidence["tableVisible"] is True
+        and mode_evidence["canvasVisible"] is False
+        and mode_evidence["selectedTableValue"]
+        == mode_evidence["selectedDetailValue"],
+        f"Score Matrix 2D mode failed: {mode_evidence}",
+    )
+    require(
+        mode_evidence["inspectRequests"] == matrix["inspectRequests"],
+        f"2D mode changed Worker requests: {mode_evidence}",
+    )
+    evidence["viewModes"] = mode_evidence
+    shots["scoreMatrixTable"] = capture(
+        browser, screenshots / "viewer-score-matrix-2d-1440x900.png"
+    )
+    pointer_click(
+        browser,
+        button_with_text("3D Surface", "document.querySelector('#focused-viewer')"),
+        condition=(
+            "document.querySelector('[data-score-matrix-mode=\"3d\"]') !== null"
+            " && document.querySelector('.score-matrix-canvas')"
+            "?.getBoundingClientRect().height > 0"
+        ),
+        label="Score Matrix 3D mode restore",
     )
     evidence["camera"] = _exercise_camera(browser)
     context = lose_context(browser)
@@ -451,13 +538,13 @@ def _verify_lab_responsive(
         set_viewport(browser, width, height)
         base = _assert_lab_base(browser)
         require(base["overflowX"] is False, f"Lab base overflow: {base}")
-        if width == 320:
+        if width in (320, 390):
             browser.require_cdp().evaluate(
                 browser.page_session,
                 "window.scrollTo({ top: 0, left: 0, behavior: 'auto' })",
                 True,
             )
-            wait_for(browser, "scrollY === 0", "Lab narrow top")
+            wait_for(browser, "scrollY === 0", f"Lab {width} top")
         layout = evaluate_dict(
             browser,
             """(() => {
@@ -517,7 +604,27 @@ def _verify_lab_responsive(
             and number(layout["controlMinHeight"], "Lab control height") >= 44,
             f"Lab controls exceed mobile surface at {width}: {layout}",
         )
-        if width == 320:
+        if width == 390:
+            shots["labBaseMobile"] = capture(
+                browser,
+                screenshots / "lab-base-390x844.png",
+            )
+            shots["requiredLabMobile"] = capture(
+                browser,
+                screenshots / "09-lab-390.png",
+            )
+            browser.require_cdp().evaluate(
+                browser.page_session,
+                """document.querySelector('.lab-inspection')
+                  ?.scrollIntoView({ block: 'center', behavior: 'auto' })""",
+                True,
+            )
+            settle(browser)
+            shots["labInspectionMobile"] = capture(
+                browser,
+                screenshots / "lab-inspection-390x844.png",
+            )
+        elif width == 320:
             shots["labBaseNarrow"] = capture(
                 browser,
                 screenshots / "lab-base-320x568.png",
@@ -598,7 +705,12 @@ def _verify_lab_responsive(
             and number(probe["closeHeight"], "close height") >= 44,
             f"Lab close target too small: {probe}",
         )
-        if width == 320:
+        if width == 390:
+            shots["labArchitectureMobile"] = capture(
+                browser,
+                screenshots / "lab-architecture-viewer-390x844.png",
+            )
+        elif width == 320:
             shots["labArchitectureNarrow"] = capture(
                 browser,
                 screenshots / "lab-architecture-viewer-320x568.png",
@@ -634,6 +746,24 @@ def _verify_lab_responsive(
             },
             f"Lab close restoration failed: {focus}",
         )
+        if width == 390:
+            _open_score_viewer(browser)
+            wait_for(
+                browser,
+                "document.querySelector('.score-matrix-canvas canvas')"
+                "?.dataset.renderState === 'ready'",
+                "Score Matrix mobile renderer",
+            )
+            settle(browser)
+            shots["scoreMatrixMobile"] = capture(
+                browser,
+                screenshots / "viewer-score-matrix-3d-390x844.png",
+            )
+            shots["requiredScoreMatrixMobile"] = capture(
+                browser,
+                screenshots / "10-score-matrix-390.png",
+            )
+            _close_viewer(browser)
     browser.require_cdp().evaluate(
         browser.page_session,
         """

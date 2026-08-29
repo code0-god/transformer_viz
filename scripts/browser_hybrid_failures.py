@@ -62,7 +62,7 @@ def _prepare_score_request(browser: ChromeSession, url: str) -> None:
     prepare_runtime_evidence(browser)
     pointer_click(
         browser,
-        button_with_text("Self-Attention 보기"),
+        "document.querySelector('[data-inspection-kind=\"attention\"]')",
         condition=(
             "document.querySelector('#focused-viewer "
             "[data-testid=\"attention-detail\"]') !== null"
@@ -93,7 +93,7 @@ def _prepare_score_request(browser: ChromeSession, url: str) -> None:
     )
     pointer_click(
         browser,
-        button_with_text("실제 Score Matrix 확인하기"),
+        "document.querySelector('[data-inspection-kind=\"score-matrix\"]')",
         condition=(
             "document.querySelector('#focused-viewer"
             "[data-viewer-kind=\"visualization\"]') !== null"
@@ -333,6 +333,9 @@ def _verify_css_unavailable(url: str) -> JsonObject:
               heading:
                 document.querySelector('.lab-introduction h1')
                 ?.textContent?.trim() ?? '',
+              headingLabel:
+                document.querySelector('.lab-introduction h1')
+                ?.getAttribute('aria-label') ?? '',
               prompt: document.querySelector('textarea') !== null,
               generate:
                 document.querySelector('[data-testid="generate"]')
@@ -343,7 +346,8 @@ def _verify_css_unavailable(url: str) -> JsonObject:
             }))()""",
         )
         require(
-            lab["heading"] == "모델 실험실"
+            lab["heading"] == "MODEL LAB"
+            and lab["headingLabel"] == "모델 실험실"
             and lab["prompt"] is True
             and lab["generate"] is True
             and lab["settings"] is True,

@@ -162,6 +162,7 @@ def _verify_product_responsive(
         (390, 844),
         (768, 1024),
         (1024, 768),
+        (1366, 768),
         (1440, 900),
     ):
         set_viewport(browser, width, height)
@@ -637,6 +638,15 @@ def _capture_part_zero(
             _assert_inline_figure(browser, figure_id, expected_sizes[figure_id]),
         )
         shots[f"inline-{slug}"] = capture(browser, screenshots / filename)
+        required_filename = {
+            "0-3": "02-learn-vocabulary-1440.png",
+            "0-4": "03-learn-tokenization-1440.png",
+        }.get(slug)
+        if required_filename is not None:
+            shots[f"required-{slug}"] = capture(
+                browser,
+                screenshots / required_filename,
+            )
     return evidence
 
 
@@ -791,6 +801,11 @@ def _capture_responsive(
         _scroll_figure(browser, figure_id)
         responsive.append(_assert_inline_figure(browser, figure_id, "wide"))
         shots[f"inline-{slug}-mobile"] = capture(browser, screenshots / filename)
+        if slug == "0-3":
+            shots["required-vocabulary-mobile"] = capture(
+                browser,
+                screenshots / "08-learn-vocabulary-390.png",
+            )
 
     _open_chapter(browser, "3-1")
     _wait_for_article(browser)
@@ -1093,6 +1108,10 @@ def capture_learning_phase(
         browser,
         screenshots / "course-home-1440x900.png",
     )
+    shots["requiredHomeDesktop"] = capture(
+        browser,
+        screenshots / "01-home-1440.png",
+    )
 
     product_responsive = _verify_product_responsive(
         browser,
@@ -1115,6 +1134,10 @@ def capture_learning_phase(
     shots["courseHomeMobile"] = capture(
         browser,
         screenshots / "course-home-390x844.png",
+    )
+    shots["requiredHomeMobile"] = capture(
+        browser,
+        screenshots / "07-home-390.png",
     )
     learn_requests = request_urls(browser)
     webgl_requests = [
