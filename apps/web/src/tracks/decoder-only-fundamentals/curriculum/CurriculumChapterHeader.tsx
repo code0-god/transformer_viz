@@ -22,12 +22,15 @@ export function CurriculumChapterHeader({
   headingRef,
 }: CurriculumChapterHeaderProps): ReactElement {
   return (
-    <header className="curriculum-workspace__header">
+    <header
+      className="curriculum-workspace__header"
+      data-threeui-surface="chapter-header"
+    >
       <div className="curriculum-workspace__chapter-copy">
-        <p className="curriculum-workspace__eyebrow">{eyebrow}</p>
         <h1 id="curriculum-chapter-title" ref={headingRef} tabIndex={-1}>
           {title}
         </h1>
+        <p className="curriculum-workspace__eyebrow">{eyebrow}</p>
         <p>{learningGoal}</p>
       </div>
       <CurriculumNavigation

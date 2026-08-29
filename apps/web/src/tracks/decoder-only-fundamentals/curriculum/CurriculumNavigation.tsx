@@ -21,7 +21,11 @@ export function CurriculumNavigation({
   };
 
   return (
-    <section className="curriculum-navigation" aria-label="Chapter navigation">
+    <section
+      className="curriculum-navigation"
+      aria-label="Chapter navigation"
+      data-threeui-surface="chapter-navigation"
+    >
       <div className="curriculum-navigation__header">
         <button
           type="button"

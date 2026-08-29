@@ -16,7 +16,11 @@ export function CurriculumChapterFooter({
   onNavigate,
 }: CurriculumChapterFooterProps): ReactElement {
   return (
-    <nav className="curriculum-chapter-footer" aria-label="Chapter 이동">
+    <nav
+      className="curriculum-chapter-footer"
+      aria-label="Chapter 이동"
+      data-threeui-surface="chapter-footer"
+    >
       <span>
         {previous === undefined ? null : (
           <a

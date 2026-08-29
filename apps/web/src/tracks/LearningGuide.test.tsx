@@ -52,6 +52,7 @@ describe("LearningGuide", () => {
     );
 
     const figure = screen.getByRole("figure", { name: "FIGURE_ALT" });
+    expect(figure).toHaveAttribute("data-threeui-surface", "figure");
     expect(figure).toHaveAttribute("data-figure-id", "fixture.figure");
     expect(figure).toHaveAttribute("data-figure-size", "wide");
     expect(figure).toHaveAttribute("data-figure-preferred-width", "720");
@@ -130,6 +131,10 @@ describe("LearningGuide", () => {
       />,
     );
 
+    expect(screen.getByRole("article")).toHaveAttribute(
+      "data-threeui-surface",
+      "article",
+    );
     expect(screen.getByRole("article")).toHaveAttribute(
       "aria-labelledby",
       "fixture-guide-title",

@@ -84,6 +84,7 @@ export function LearningGuide<Id extends string>({
     <article
       className={classes.join(" ")}
       data-guide-page-id={page.id}
+      data-threeui-surface="article"
       aria-labelledby={labelledBy ?? `${page.id}-title`}
     >
       {presentation === "route" ? (

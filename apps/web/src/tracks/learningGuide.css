@@ -9,7 +9,7 @@
   max-inline-size: var(--learning-figure-full);
   margin-inline: auto;
   padding: 0 var(--s5, 1.5rem) var(--s5, 1.5rem);
-  color: var(--ink, #24231f);
+  color: var(--ui-text, #17191c);
   font-size: 1.0625rem;
   font-weight: 400;
   line-height: 1.75;
@@ -138,11 +138,7 @@
 }
 
 .learning-guide-section[data-active="true"] {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--accent-soft, #f1d4c8) 62%, transparent),
-    transparent 34%
-  );
+  background: color-mix(in srgb, var(--ui-accent) 5%, transparent);
 }
 
 .learning-guide-section[data-active="true"]::before {
@@ -160,11 +156,15 @@
   gap: var(--s3, 0.75rem);
 }
 
-.learning-figure {
+.learning-figure[data-threeui-surface="figure"] {
   display: grid;
-  gap: .65rem;
+  gap: var(--s3);
   min-inline-size: 0;
   margin-block: clamp(2rem, 5vw, 3rem) clamp(2.4rem, 5vw, 3.5rem);
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
 }
 
 .learning-figure[data-figure-size="prose"] {
@@ -198,7 +198,7 @@
 
 .learning-figure:not([data-figure-size="prose"]) .learning-figure__content {
   padding-block: clamp(.8rem, 2vw, 1.25rem);
-  border-block: 1px solid var(--hairline, #d3ccbd);
+  border-block: 0;
 }
 
 .learning-figure > figcaption {
@@ -207,6 +207,8 @@
   color: var(--ink-muted, #68645c);
   font-size: .875rem;
   line-height: 1.58;
+  padding-block-start: var(--s3);
+  border-block-start: 1px solid var(--ui-border);
 }
 
 .learning-figure
@@ -295,23 +297,15 @@
   padding: var(--s3, 0.75rem) var(--s4, 1rem);
   border: 0;
   border-block-start: 1px solid var(--hairline, #d3ccbd);
-  border-radius: 0;
-  background: color-mix(
-    in srgb,
-    var(--surface, #fbfaf6) 42%,
-    transparent
-  );
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface);
 }
 
 .learning-guide-callout {
   padding: var(--s3, 0.75rem) var(--s4, 1rem);
   border-block-start: 0;
   border-inline-start: 2px solid var(--border-strong, #887d71);
-  background: color-mix(
-    in srgb,
-    var(--surface-subtle, #ebe5dc) 58%,
-    transparent
-  );
+  background: var(--ui-surface-subtle);
 }
 
 .learning-guide-callout strong {

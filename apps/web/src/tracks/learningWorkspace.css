@@ -1,17 +1,17 @@
 .learning-workspace {
   display: grid;
-  gap: var(--s4);
+  gap: 0;
   min-inline-size: 0;
 }
 
-.learning-route-header {
+.learning-route-header[data-threeui-surface="learning-route-header"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--s4);
   inline-size: 100%;
-  padding-block-end: var(--s3);
-  border-block-end: 1px solid var(--hairline);
+  padding-block: var(--s5);
+  border-block-end: 1px solid var(--ui-border);
 }
 
 .learning-route-header__copy {
@@ -20,12 +20,12 @@
   min-inline-size: 0;
 }
 
-.learning-route-header h2 {
+.learning-route-header[data-threeui-surface="learning-route-header"] h2 {
   font-size: clamp(1.25rem, 2vw, 1.65rem);
   letter-spacing: -.035em;
 }
 
-.learning-route-header p {
+.learning-route-header[data-threeui-surface="learning-route-header"] p {
   color: var(--ink-muted);
   overflow-wrap: anywhere;
 }

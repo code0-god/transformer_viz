@@ -31,6 +31,7 @@ import {
 } from "./navigation";
 import type { ChapterId } from "./types";
 import "./curriculum.css";
+import "./curriculumChrome.css";
 
 type DecoderTrackWorkspaceProps = {
   readonly context: ArchitectureRenderContext;

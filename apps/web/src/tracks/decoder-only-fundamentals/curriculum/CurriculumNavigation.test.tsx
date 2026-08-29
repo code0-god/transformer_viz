@@ -46,6 +46,9 @@ describe("Curriculum Navigation disclosure", () => {
 
     // When: the native header disclosure button is activated by keyboard.
     const opener = screen.getByRole("button", { name: "목차 열기" });
+    expect(
+      opener.closest('[data-threeui-surface="chapter-navigation"]'),
+    ).toBeInTheDocument();
     opener.focus();
     await user.keyboard("{Enter}");
 
@@ -118,9 +121,11 @@ describe("Curriculum Navigation disclosure", () => {
 
     // Then: previous is absent and no disabled placeholder exists.
     expect(screen.queryByRole("link", { name: /^이전:/ })).toBeNull();
+    const next = screen.getByRole("link", { name: "다음: Token이란?" });
     expect(
-      screen.getByRole("link", { name: "다음: Token이란?" }),
-    ).toHaveAttribute("href", "#/test/decoder.chapter.0.2");
+      next.closest('[data-threeui-surface="chapter-footer"]'),
+    ).toBeInTheDocument();
+    expect(next).toHaveAttribute("href", "#/test/decoder.chapter.0.2");
     expect(
       screen.queryByRole("button", { name: "이전 Chapter 없음" }),
     ).toBeNull();
