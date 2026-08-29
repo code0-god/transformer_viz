@@ -26,6 +26,7 @@ export function CurriculumChapterFooter({
           <a
             href={chapterHref(previous.id)}
             aria-label={`이전: ${previous.title}`}
+            data-control-tier="secondary"
             onClick={(event) => {
               event.preventDefault();
               onNavigate(previous.id);
@@ -40,6 +41,7 @@ export function CurriculumChapterFooter({
           <a
             href={chapterHref(next.id)}
             aria-label={`다음: ${next.title}`}
+            data-control-tier="secondary"
             onClick={(event) => {
               event.preventDefault();
               onNavigate(next.id);

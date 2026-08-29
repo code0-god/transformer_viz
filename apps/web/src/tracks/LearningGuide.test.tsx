@@ -85,6 +85,17 @@ describe("LearningGuide", () => {
     );
   });
 
+  test("integrates Figures as renderer planes instead of white cards", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "src/tracks/learningGuide.css"),
+      "utf8",
+    );
+
+    expect(css).toMatch(
+      /\.learning-figure\[data-threeui-surface="figure"\]\s*\{[^}]*border-inline:\s*0;[^}]*border-radius:\s*0;[^}]*background:\s*transparent;/s,
+    );
+  });
+
   test("does not ship an implementation-note GuideBlock surface", () => {
     const guideTypes = readFileSync(
       resolve(process.cwd(), "src/tracks/guideTypes.ts"),

@@ -106,6 +106,8 @@
   max-inline-size: 72rem;
   min-inline-size: 0;
   margin-inline: auto;
+  border-inline: 1px solid var(--ui-border);
+  background: var(--ui-reading);
 }
 
 .learning-workspace__guide {
@@ -141,4 +143,7 @@
     inline-size: 100%;
   }
 
+  .learning-workspace__article {
+    border-inline: 0;
+  }
 }

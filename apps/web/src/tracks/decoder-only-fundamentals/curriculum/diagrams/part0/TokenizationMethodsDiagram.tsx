@@ -77,7 +77,7 @@ export function TokenizationMethodsDiagram(): ReactElement {
               data-tokenization-example={method.id}
               data-current-runtime={method.id === "byte" ? "true" : undefined}
             >
-              <rect x="24" y={y} width="712" height="68" rx="14" />
+              <rect x="24" y={y} width="712" height="68" rx="6" />
               <text x="48" y={y + 28}>
                 {method.label}
               </text>

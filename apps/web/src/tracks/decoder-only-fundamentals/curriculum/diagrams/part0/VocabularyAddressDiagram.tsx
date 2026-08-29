@@ -25,7 +25,7 @@ export function VocabularyAddressDiagram(): ReactElement {
           Vocabulary lookup · token과 숫자 주소
         </text>
         <g className="part0-diagram__address-board">
-          <rect x="24" y="62" width="294" height="244" rx="18" />
+          <rect x="24" y="62" width="294" height="244" rx="8" />
           <text x="50" y="102">
             Vocabulary
           </text>
@@ -36,7 +36,7 @@ export function VocabularyAddressDiagram(): ReactElement {
                 y={132 + index * 72}
                 width="242"
                 height="48"
-                rx="8"
+                rx="6"
               />
               <text x="66" y={162 + index * 72}>
                 {token}
@@ -59,7 +59,7 @@ export function VocabularyAddressDiagram(): ReactElement {
                 y="132"
                 width="132"
                 height="54"
-                rx="8"
+                rx="6"
               />
               <text x={422 + index * 150} y="165" textAnchor="middle">
                 {token} · {id}
@@ -77,7 +77,7 @@ export function VocabularyAddressDiagram(): ReactElement {
                 y="276"
                 width="132"
                 height="54"
-                rx="8"
+                rx="6"
               />
               <text x={422 + index * 150} y="309" textAnchor="middle">
                 {id} · {row}
@@ -86,7 +86,7 @@ export function VocabularyAddressDiagram(): ReactElement {
           ))}
         </g>
         <g className="part0-diagram__reserved-legend">
-          <rect x="24" y="348" width="712" height="48" rx="12" />
+          <rect x="24" y="348" width="712" height="48" rx="6" />
           <text className="part0-diagram__note" x="48" y="379">
             같은 Token ID는 같은 embedding table row를 가리킵니다.
           </text>

@@ -337,7 +337,7 @@
 }
 
 .part0-diagram__example {
-  font-weight: 750;
+  font-weight: 650;
 }
 
 .part0-diagram__lens line {
@@ -362,14 +362,40 @@
 .part0-diagram__badge {
   fill: var(--accent);
   font-size: 12px;
-  font-weight: 850;
+  font-weight: 720;
   letter-spacing: .08em;
 }
 
-.part0-diagram__method-row[data-current-runtime="true"] > rect {
-  fill: var(--accent-soft);
+.part0-diagram__address-board > rect {
+  fill: color-mix(in srgb, var(--ui-surface-subtle) 72%, transparent);
+  stroke: var(--ui-border);
+}
+
+.part0-diagram--vocabulary .part0-diagram__reserved-legend > rect {
+  fill: transparent;
+  stroke: transparent;
+}
+
+.part0-diagram__reserved-legend .part0-diagram__note {
+  fill: var(--ui-text-muted);
+  font-size: 13px;
+  font-weight: 560;
+}
+
+.part0-diagram.part0-diagram--methods
+  .part0-diagram__method-row
+  > rect {
+  fill: transparent;
+  stroke: var(--ui-border);
+  stroke-width: 1;
+}
+
+.part0-diagram.part0-diagram--methods
+  .part0-diagram__method-row[data-current-runtime="true"]
+  > rect {
+  fill: color-mix(in srgb, var(--ui-accent) 7%, transparent);
   stroke: var(--accent);
-  stroke-width: 2;
+  stroke-width: 1.5;
 }
 
 .part0-diagram__fallback {

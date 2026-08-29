@@ -94,7 +94,7 @@ body:has(.architecture-app[data-app-view="home"]) {
   --route-mesh: none;
 }
 body:has(.architecture-app[data-app-view="learn"]) {
-  --route-background: var(--bg-article);
+  --route-background: var(--ui-page);
   --route-mesh: none;
 }
 body:has(.architecture-app[data-app-view="lab"]) {

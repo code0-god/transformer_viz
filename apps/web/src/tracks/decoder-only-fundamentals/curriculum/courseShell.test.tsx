@@ -13,6 +13,7 @@ const learningWorkspaceCss = readFileSync(
   resolve(process.cwd(), "src/tracks/learningWorkspace.css"),
   "utf8",
 );
+const globalCss = readFileSync(resolve(process.cwd(), "style.css"), "utf8");
 
 describe("decoder curriculum shell", () => {
   test("uses one centered article instead of a desktop split workspace", () => {
@@ -39,5 +40,17 @@ describe("decoder curriculum shell", () => {
       /@media \(max-width:\s*40rem\)[\s\S]*\.curriculum-toc\s*{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s,
     );
     expect(learningWorkspaceCss).not.toMatch(/learning-workspace__pane/);
+  });
+
+  test("separates the reading plane without a giant rounded card", () => {
+    expect(globalCss).toMatch(
+      /body:has\(\.architecture-app\[data-app-view="learn"\]\)\s*\{[^}]*--route-background:\s*var\(--ui-page\);/s,
+    );
+    expect(learningWorkspaceCss).toMatch(
+      /\.learning-workspace__article\s*\{[^}]*border-inline:\s*1px solid var\(--ui-border\);[^}]*background:\s*var\(--ui-reading\);/s,
+    );
+    expect(learningWorkspaceCss).not.toMatch(
+      /\.learning-workspace__article\s*\{[^}]*border-radius:/s,
+    );
   });
 });

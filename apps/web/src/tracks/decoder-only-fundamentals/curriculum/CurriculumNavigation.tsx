@@ -30,6 +30,7 @@ export function CurriculumNavigation({
         <button
           type="button"
           className="curriculum-navigation__opener"
+          data-control-tier="tertiary"
           aria-expanded={open}
           aria-controls="curriculum-toc"
           aria-label={open ? "목차 닫기" : "목차 열기"}

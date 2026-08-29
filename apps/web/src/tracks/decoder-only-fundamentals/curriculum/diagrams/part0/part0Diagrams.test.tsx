@@ -79,6 +79,32 @@ function readyCurriculum(): TestWorker {
 }
 
 describe("Part 0 curriculum Diagrams", () => {
+  test("orders chapter context before the title and keeps precise corners", () => {
+    readyCurriculum();
+
+    const header = document.querySelector(
+      ".curriculum-workspace__chapter-copy",
+    );
+    const eyebrow = header?.querySelector(".curriculum-workspace__eyebrow");
+    const title = header?.querySelector("h1");
+    if (
+      !(eyebrow instanceof HTMLElement) ||
+      !(title instanceof HTMLHeadingElement)
+    )
+      throw new Error("Curriculum heading hierarchy is missing");
+
+    expect(
+      eyebrow.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    const methodRows = document.querySelectorAll(
+      ".part0-diagram__method-row > rect",
+    );
+    for (const row of methodRows) {
+      expect(Number(row.getAttribute("rx"))).toBeLessThanOrEqual(8);
+    }
+  });
+
   test.each(INLINE_CHAPTERS)(
     "renders %s Figure inline without a Learn overlay trigger",
     async (chapterTitle, figureId, imageName, caption) => {

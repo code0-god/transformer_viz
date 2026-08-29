@@ -27,10 +27,10 @@ export function CurriculumChapterHeader({
       data-threeui-surface="chapter-header"
     >
       <div className="curriculum-workspace__chapter-copy">
+        <p className="curriculum-workspace__eyebrow">{eyebrow}</p>
         <h1 id="curriculum-chapter-title" ref={headingRef} tabIndex={-1}>
           {title}
         </h1>
-        <p className="curriculum-workspace__eyebrow">{eyebrow}</p>
         <p>{learningGoal}</p>
       </div>
       <CurriculumNavigation

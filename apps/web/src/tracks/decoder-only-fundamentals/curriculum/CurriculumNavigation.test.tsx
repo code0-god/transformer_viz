@@ -49,6 +49,7 @@ describe("Curriculum Navigation disclosure", () => {
     expect(
       opener.closest('[data-threeui-surface="chapter-navigation"]'),
     ).toBeInTheDocument();
+    expect(opener).toHaveAttribute("data-control-tier", "tertiary");
     opener.focus();
     await user.keyboard("{Enter}");
 
@@ -111,7 +112,7 @@ describe("Curriculum Navigation disclosure", () => {
     // Then: ordered navigation emits that destination Chapter.
     expect(
       screen.getByRole("link", { name: "이전: 다음 Token 예측" }),
-    ).toBeInTheDocument();
+    ).toHaveAttribute("data-control-tier", "secondary");
     expect(onNavigate).toHaveBeenCalledWith(CHAPTER_IDS[7]);
   });
 

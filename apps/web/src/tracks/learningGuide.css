@@ -161,10 +161,11 @@
   gap: var(--s3);
   min-inline-size: 0;
   margin-block: clamp(2rem, 5vw, 3rem) clamp(2.4rem, 5vw, 3.5rem);
-  padding: clamp(1rem, 3vw, 2rem);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--ui-radius-md);
-  background: var(--ui-surface);
+  padding: clamp(1rem, 3vw, 1.75rem) 0;
+  border-block: 1px solid var(--ui-border);
+  border-inline: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .learning-figure[data-figure-size="prose"] {
@@ -496,8 +497,12 @@
     clip: auto;
     white-space: normal;
     border: 1px solid var(--hairline, #d3ccbd);
-    border-radius: 6px;
-    background: var(--surface-subtle, #f4efe6);
+    border-radius: 4px;
+    background: color-mix(
+      in srgb,
+      var(--ui-surface-subtle) 72%,
+      var(--ui-reading)
+    );
   }
 
   .learning-guide-runtime dl > div,
