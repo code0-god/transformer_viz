@@ -25,6 +25,7 @@ from browser_probes import READY_PROBE
 from browser_session import ChromeSession
 
 TOKEN_ID = "decoder.diagram.representation.embedding"
+POSITION_ID = "decoder.diagram.representation.position"
 
 
 def _evaluate(browser: ChromeSession, expression: str) -> object:
@@ -141,6 +142,78 @@ def _open_token_scene(browser: ChromeSession) -> None:
     _settle_scene(browser, after_frame=0)
 
 
+def _position_probe(browser: ChromeSession) -> JsonObject:
+    return evaluate_dict(
+        browser,
+        f"""(() => {{
+          const figure = document.querySelector(
+            '[data-figure-id="{POSITION_ID}"]',
+          );
+          const scene = figure?.querySelector('.scene-figure');
+          const state = figure?.querySelector(
+            '[data-testid="position-scene-state"]',
+          );
+          const canvas = figure?.querySelector('canvas');
+          const controls = Array.from(figure?.querySelectorAll('button') ?? []);
+          const box = canvas?.getBoundingClientRect();
+          return {{
+            status: scene?.getAttribute('data-scene-status') ?? '',
+            viewport: scene?.getAttribute('data-scene-viewport') ?? '',
+            visible: scene?.getAttribute('data-scene-visible') ?? '',
+            phase: state?.getAttribute('data-phase') ?? '',
+            position: state?.getAttribute('data-position') ?? '',
+            stateText: state?.textContent?.trim() ?? '',
+            canvasCount: figure?.querySelectorAll('canvas').length ?? -1,
+            canvasWidth: box?.width ?? 0,
+            canvasHeight: box?.height ?? 0,
+            controlCount: controls.length,
+            controlMinHeight: Math.min(
+              ...controls.map(control => control.getBoundingClientRect().height),
+            ),
+            overflow:
+              document.documentElement.scrollWidth
+              - document.documentElement.clientWidth,
+            metrics: {{ ...(window.__learningSceneMetrics ?? {{}}) }},
+          }};
+        }})()""",
+    )
+
+
+def _open_position_scene(browser: ChromeSession) -> None:
+    before = _evaluate(
+        browser,
+        "window.__learningSceneMetrics?.animationFrameCount ?? 0",
+    )
+    if not isinstance(before, int):
+        raise TypeError(f"Scene frame count must be integer: {before!r}")
+    set_viewport(browser, 1440, 900)
+    navigate_hash(
+        browser,
+        "#/learn/decoder-only-fundamentals/2-2",
+        (
+            "document.querySelector("
+            "'[data-curriculum-chapter-id=\"decoder.chapter.2.2\"]'"
+            ") !== null"
+        ),
+        "Position Embedding Chapter",
+    )
+    _evaluate(
+        browser,
+        f"""document.querySelector(
+          '[data-figure-id="{POSITION_ID}"]',
+        )?.scrollIntoView({{ block: 'start', inline: 'nearest' }})""",
+    )
+    wait_for(
+        browser,
+        (
+            f"document.querySelector('[data-figure-id=\"{POSITION_ID}\"] "
+            "[data-scene-status=\"ready\"]') !== null"
+        ),
+        "Position Scene ready",
+    )
+    _settle_scene(browser, after_frame=before)
+
+
 def _click_phase(browser: ChromeSession, label: str, phase: str) -> None:
     before = _probe(browser).get("metrics", {})
     before_frame = (
@@ -158,6 +231,31 @@ def _click_phase(browser: ChromeSession, label: str, phase: str) -> None:
             f"?.getAttribute('data-phase') === {json.dumps(phase)}"
         ),
         label=f"Token phase {phase}",
+    )
+    _settle_scene(browser, after_frame=before_frame)
+
+
+def _click_position_phase(
+    browser: ChromeSession,
+    label: str,
+    phase: str,
+) -> None:
+    before = _position_probe(browser).get("metrics", {})
+    before_frame = (
+        before.get("animationFrameCount", 0)
+        if isinstance(before, dict)
+        else 0
+    )
+    if not isinstance(before_frame, int):
+        raise TypeError(f"Scene frame count must be integer: {before_frame!r}")
+    pointer_click(
+        browser,
+        button_with_text(label),
+        condition=(
+            "document.querySelector('[data-testid=\"position-scene-state\"]')"
+            f"?.getAttribute('data-phase') === {json.dumps(phase)}"
+        ),
+        label=f"Position phase {phase}",
     )
     _settle_scene(browser, after_frame=before_frame)
 
@@ -201,6 +299,7 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             request
             for request in home_requests
             if "TokenEmbeddingScene" in request
+            or "PositionEmbeddingScene" in request
             or "react-three-fiber" in request
         ]
         require(
@@ -355,6 +454,133 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             f"Token offscreen context leaked: {offscreen}",
         )
 
+        _open_position_scene(browser)
+        position_before = _position_probe(browser)
+        require(
+            position_before["status"] == "ready"
+            and position_before["phase"] == "before"
+            and position_before["position"] == "0"
+            and position_before["canvasCount"] == 1
+            and position_before["controlCount"] == 4
+            and isinstance(position_before["controlMinHeight"], int | float)
+            and position_before["controlMinHeight"] >= 44
+            and position_before["overflow"] == 0,
+            f"Position initial contract failed: {position_before}",
+        )
+        require(
+            "cat · E_tok [C]" in str(position_before["stateText"])
+            and "[C] + [C] → [C]" in str(position_before["stateText"])
+            and "concatenation 아님" in str(position_before["stateText"]),
+            f"Position semantics missing: {position_before}",
+        )
+        shots["positionBeforeDesktop"] = capture(
+            browser,
+            screenshots / "position-before-add-1440x900.png",
+        )
+
+        _click_position_phase(browser, "원소별 더하기", "sum")
+        position_sum = _position_probe(browser)
+        _evaluate(
+            browser,
+            """document.querySelector('.scene-figure__plane')
+              ?.scrollIntoView({ block: 'center', inline: 'nearest' })""",
+        )
+        _settle_scene(browser)
+        shots["positionAfterDesktop"] = capture(
+            browser,
+            screenshots / "position-after-add-1440x900.png",
+        )
+        position_idle_delta = _verify_idle(browser)
+        require(
+            position_idle_delta == 0,
+            f"Position idle RAF leaked: {position_idle_delta}",
+        )
+
+        position_frame = position_sum.get("metrics", {})
+        previous_position_frame = (
+            position_frame.get("animationFrameCount", 0)
+            if isinstance(position_frame, dict)
+            else 0
+        )
+        if not isinstance(previous_position_frame, int):
+            raise TypeError(
+                "Scene frame count must be integer: "
+                f"{previous_position_frame!r}",
+            )
+        pointer_click(
+            browser,
+            button_with_text("position 1"),
+            condition=(
+                "document.querySelector("
+                "'[data-testid=\"position-scene-state\"]'"
+                ")?.getAttribute('data-position') === '1'"
+            ),
+            label="Position 1 comparison",
+        )
+        _settle_scene(browser, after_frame=previous_position_frame)
+        _click_position_phase(browser, "원소별 더하기", "sum")
+        position_compare = _position_probe(browser)
+        require(
+            position_compare["position"] == "1"
+            and "cat · E_tok [C]" in str(position_compare["stateText"]),
+            f"Position comparison changed token: {position_compare}",
+        )
+        _evaluate(
+            browser,
+            """document.querySelector('.scene-figure__plane')
+              ?.scrollIntoView({ block: 'center', inline: 'nearest' })""",
+        )
+        _settle_scene(browser)
+        shots["positionCompareDesktop"] = capture(
+            browser,
+            screenshots / "position-compare-1440x900.png",
+        )
+
+        position_mobile_frame = position_compare.get("metrics", {})
+        previous_position_mobile_frame = (
+            position_mobile_frame.get("animationFrameCount", 0)
+            if isinstance(position_mobile_frame, dict)
+            else 0
+        )
+        if not isinstance(previous_position_mobile_frame, int):
+            raise TypeError(
+                "Scene frame count must be integer: "
+                f"{previous_position_mobile_frame!r}",
+            )
+        set_viewport(browser, 390, 844)
+        wait_for(
+            browser,
+            (
+                f"document.querySelector('[data-figure-id=\"{POSITION_ID}\"] "
+                "[data-scene-viewport=\"mobile\"]"
+                "[data-scene-status=\"ready\"]') !== null"
+            ),
+            "Position mobile scene mode",
+        )
+        _settle_scene(
+            browser,
+            after_frame=previous_position_mobile_frame,
+        )
+        _evaluate(
+            browser,
+            """document.querySelector('.scene-figure__plane')
+              ?.scrollIntoView({ block: 'center', inline: 'nearest' })""",
+        )
+        _settle_scene(browser)
+        position_mobile = _position_probe(browser)
+        require(
+            position_mobile["viewport"] == "mobile"
+            and position_mobile["status"] == "ready"
+            and isinstance(position_mobile["canvasWidth"], int | float)
+            and position_mobile["canvasWidth"] <= 390
+            and position_mobile["overflow"] == 0,
+            f"Position mobile contract failed: {position_mobile}",
+        )
+        shots["positionMobile"] = capture(
+            browser,
+            screenshots / "position-sum-390x844.png",
+        )
+
         errors = browser_errors(browser)
         require(not errors["network"], f"Network errors: {errors['network']}")
         require(not errors["runtime"], f"Runtime errors: {errors['runtime']}")
@@ -367,6 +593,13 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             "offscreen": offscreen,
             "idleFrameDelta": idle_frame_delta,
             "framesBefore": frames_before,
+        }
+        evidence["position"] = {
+            "before": position_before,
+            "sum": position_sum,
+            "compare": position_compare,
+            "mobile": position_mobile,
+            "idleFrameDelta": position_idle_delta,
         }
         evidence["requests"] = request_urls(browser)
         evidence["errors"] = errors

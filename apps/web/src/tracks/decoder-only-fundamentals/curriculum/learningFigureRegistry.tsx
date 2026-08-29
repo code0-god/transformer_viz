@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 
+import { PositionEmbeddingSceneFigure } from "../../learning-scenes/position/PositionEmbeddingSceneFigure";
 import { TokenEmbeddingSceneFigure } from "../../learning-scenes/token/TokenEmbeddingSceneFigure";
 import type {
   LearningFigureMetadata,
@@ -86,6 +87,9 @@ function renderFigure(figureId: string): ReactElement {
   if (!isDiagramId(figureId)) throw new CurriculumFigureRegistryError(figureId);
   if (figureId === "decoder.diagram.representation.embedding") {
     return <TokenEmbeddingSceneFigure />;
+  }
+  if (figureId === "decoder.diagram.representation.position") {
+    return <PositionEmbeddingSceneFigure />;
   }
   const Figure = curriculumDiagramComponent(figureId);
   if (Figure === undefined) throw new CurriculumFigureRegistryError(figureId);
