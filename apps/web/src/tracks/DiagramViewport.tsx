@@ -262,7 +262,11 @@ export function DiagramViewport({
   }
 
   return (
-    <section className="diagram-viewport" aria-label={label}>
+    <section
+      className="diagram-viewport"
+      aria-label={label}
+      data-threeui-surface="diagram-viewport"
+    >
       {extraControls === undefined ? null : (
         <div className="diagram-viewport__meta">
           <div className="diagram-viewport__extra-controls">

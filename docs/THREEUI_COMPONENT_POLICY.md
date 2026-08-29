@@ -8,12 +8,15 @@ Source: `@designcodeio/threeui@1.1.0`, upstream commit
 | Component | Class | Phase 1 usage | WebGL / RAF | Wrapper obligations |
 | --- | --- | --- | --- | --- |
 | `LumenCta` | WRAP | Lab Stop action | No WebGL; CSS transition only | Product label, compact dimensions, Korean font, reduced motion |
+| `CircleButtons` | WRAP | Focused viewer close action | No WebGL; CSS transition only | Product aria-label, 44px target, neutral treatment, reduced motion |
 
 Import only through:
 
 ```ts
 import { LumenCta } from
   "@designcodeio/threeui/components/LumenCta";
+import { CircleButtons } from
+  "@designcodeio/threeui/components/CircleButtons";
 ```
 
 The subpath imports the component's scoped `lumen-cta.css`. It must not pull
@@ -41,7 +44,8 @@ Generate remains native because the package component does not forward
 
 - Never import `@designcodeio/threeui/style.css` globally.
 - Permit component-local CSS emitted by allowlisted subpath imports.
-- Keep adapter overrides small and scoped under `.threeui-action`.
+- Keep adapter overrides small and scoped under `.threeui-action` or
+  `.threeui-icon-action`.
 - Reject a component if integration requires hundreds of override lines.
 
 ## Runtime policy
@@ -49,6 +53,7 @@ Generate remains native because the package component does not forward
 - Lightweight allowlisted controls may load eagerly.
 - Canvas, WebGL, iframe, and legacy-Three exports require a new allowlist
   review and lazy loading.
-- Reduced motion must prevent animated renderer mounting.
+- Reduced motion prevents animated renderer requests and mounting; the exact
+  HTML data surface opens instead.
 - Product state, Worker requests, Korean copy, and accessibility remain
   application-owned.

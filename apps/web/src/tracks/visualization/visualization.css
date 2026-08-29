@@ -8,11 +8,19 @@
 
 .score-matrix-empty {
   align-content: start;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
 }
 
 .score-matrix-empty p,
 .score-matrix-visualization__header p {
-  color: var(--ink-muted);
+  color: var(--ui-text-muted);
+}
+
+.score-matrix-empty h3,
+.score-matrix-visualization__header h3 {
+  color: var(--ui-text);
 }
 
 .score-matrix-empty a,
@@ -37,6 +45,29 @@
 
 .score-matrix-camera-controls button {
   min-block-size: 44px;
+  padding-inline: var(--s3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface);
+  color: var(--ui-text-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition:
+    border-color 160ms ease-out,
+    background-color 160ms ease-out,
+    color 160ms ease-out;
+}
+
+.score-matrix-camera-controls button:hover {
+  border-color: var(--ui-border-strong);
+  background: var(--ui-surface-subtle);
+  color: var(--ui-text);
+}
+
+.score-matrix-camera-controls button:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 2px;
 }
 
 .three-visualization-surface {
@@ -56,18 +87,18 @@
 .three-visualization-surface [data-visualization-state] {
   padding: var(--s3);
   border-block-start: 1px solid
-    color-mix(in srgb, var(--accent) 52%, var(--hairline));
-  background: color-mix(in srgb, var(--accent-soft) 56%, transparent);
+    color-mix(in srgb, var(--ui-accent) 40%, var(--ui-border));
+  background: color-mix(in srgb, var(--ui-accent) 6%, var(--ui-surface));
 }
 
 .three-visualization-surface__fallback {
-  border-block-start: 1px solid var(--hairline);
+  border-block-start: 1px solid var(--ui-border);
 }
 
 .three-visualization-surface__fallback summary {
   min-block-size: 44px;
   padding-block: var(--s3);
-  color: var(--accent);
+  color: var(--ui-accent);
   font-weight: 760;
   cursor: pointer;
 }
@@ -79,7 +110,7 @@
 
 .score-matrix-selection--primary {
   padding-inline: var(--s4);
-  color: var(--ink);
+  color: var(--ui-text);
 }
 
 @media (max-width: 40rem) {
@@ -91,5 +122,11 @@
   .score-matrix-camera-controls,
   .score-matrix-camera-controls button {
     inline-size: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .score-matrix-camera-controls button {
+    transition: none;
   }
 }

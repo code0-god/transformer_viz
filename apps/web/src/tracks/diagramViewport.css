@@ -15,7 +15,7 @@
   min-inline-size: 0;
   padding: var(--s2) 0 var(--s3);
   border: 0;
-  border-block-end: 1px solid var(--hairline);
+  border-block-end: 1px solid var(--ui-border);
   border-radius: 0;
   background: transparent;
 }
@@ -24,8 +24,8 @@
   grid-row: 3;
   min-inline-size: 0;
   padding-block-start: var(--s2);
-  border-block-start: 1px solid var(--border-subtle);
-  color: var(--ink-muted);
+  border-block-start: 1px solid var(--ui-border);
+  color: var(--ui-text-muted);
   font-size: 0.78rem;
   line-height: 1.55;
   overflow-wrap: anywhere;
@@ -40,11 +40,11 @@
   display: flex;
   align-items: center;
   padding: 2px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--bg-overlay) 82%, transparent);
-  box-shadow: none;
-  backdrop-filter: blur(8px);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: color-mix(in srgb, var(--ui-surface) 92%, transparent);
+  box-shadow: 0 1px 2px rgb(16 20 24 / 0.05);
+  backdrop-filter: blur(6px);
 }
 
 .diagram-viewport__extra-controls {
@@ -64,19 +64,34 @@
 .diagram-viewport__toolbar button {
   min-inline-size: 44px;
   min-block-size: 44px;
-  padding: 0 .4rem;
+  padding: 0 0.4rem;
   border: 0;
+  border-radius: calc(var(--ui-radius-sm) - 2px);
   background: transparent;
+  color: var(--ui-text-muted);
   font-size: 0.78rem;
+  transition:
+    background-color 160ms ease-out,
+    color 160ms ease-out;
 }
 
 .diagram-viewport__toolbar button:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent-soft) 68%, transparent);
+  background: var(--ui-surface-subtle);
+  color: var(--ui-text);
+}
+
+.diagram-viewport__toolbar button:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: -2px;
+}
+
+.diagram-viewport__toolbar button:disabled {
+  opacity: 0.42;
 }
 
 .diagram-viewport__toolbar output {
   min-inline-size: 2.7rem;
-  color: var(--ink-muted);
+  color: var(--ui-text-muted);
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
   text-align: center;
@@ -90,9 +105,9 @@
   min-block-size: 28rem;
   min-inline-size: 0;
   overflow: clip;
-  border: 1px solid var(--border-subtle);
-  border-radius: 2px;
-  background: var(--bg-overlay);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-reading);
   cursor: default;
   overscroll-behavior: contain;
 }
@@ -143,5 +158,11 @@
 
   .diagram-viewport__extra-controls {
     justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diagram-viewport__toolbar button {
+    transition: none;
   }
 }

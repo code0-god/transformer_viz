@@ -101,14 +101,34 @@ export function registerAppRouteTests({
         screen.getByText("Prompt", { selector: "#prompt-label" }),
       ).toBeInTheDocument();
       expect(
+        screen
+          .getByRole("heading", { name: "모델 실험실" })
+          .closest('[data-threeui-surface="lab"]'),
+      ).toBeInTheDocument();
+      expect(
         screen.getByText("Generate", { selector: "[data-testid='generate']" }),
+      ).toBeInTheDocument();
+      expect(
+        screen
+          .getByTestId("generate")
+          .closest('[data-threeui-surface="generation-controls"]'),
       ).toBeInTheDocument();
       expect(
         screen.getByText("Decoded continuation", { selector: "h2" }),
       ).toBeInTheDocument();
+      expect(
+        screen
+          .getByRole("heading", { name: "Decoded continuation" })
+          .closest('[data-threeui-surface="generation-output"]'),
+      ).toBeInTheDocument();
       expect(screen.queryByTestId("architecture-root")).toBeNull();
       expect(
         screen.getByTestId("lab-open-architecture-root"),
+      ).toBeInTheDocument();
+      expect(
+        screen
+          .getByTestId("lab-open-architecture-root")
+          .closest('[data-threeui-surface="inspection-launchers"]'),
       ).toBeInTheDocument();
       expect(worker.posted).toEqual([
         {
@@ -182,7 +202,14 @@ export function registerAppRouteTests({
       await user.click(trigger);
 
       // Then
-      expect(screen.getByRole("dialog")).toBeVisible();
+      const dialog = screen.getByRole("dialog");
+      expect(dialog).toBeVisible();
+      expect(dialog).toHaveAttribute("data-threeui-surface", "focused-viewer");
+      expect(
+        within(dialog)
+          .getByRole("button", { name: "집중 보기 닫기" })
+          .closest(".circle-buttons"),
+      ).toBeInTheDocument();
       expect(screen.getByTestId("architecture-root")).toBeVisible();
 
       await user.keyboard("{Escape}");

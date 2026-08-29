@@ -376,6 +376,8 @@ describe("DiagramViewport", () => {
     const toolbar = within(region).getByRole("toolbar", {
       name: "다이어그램 보기 도구",
     });
+    expect(region).toHaveAttribute("data-threeui-surface", "diagram-viewport");
+    expect(toolbar).toHaveAttribute("data-threeui-surface", "diagram-toolbar");
     expect(viewport).toContainElement(toolbar);
     expect(
       within(toolbar).getByRole("button", { name: "축소" }),

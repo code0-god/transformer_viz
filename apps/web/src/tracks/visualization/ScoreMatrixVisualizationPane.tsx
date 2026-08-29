@@ -34,7 +34,11 @@ export function ScoreMatrixVisualizationPane({
     );
   if (!replayAvailable)
     return (
-      <section className="score-matrix-empty" data-score-matrix-state="idle">
+      <section
+        className="score-matrix-empty"
+        data-score-matrix-state="idle"
+        data-threeui-surface="score-matrix-state"
+      >
         <h3>{definition.title}</h3>
         <p>
           실제 Attention Score를 보려면 모델 실험실에서 텍스트를 생성하고
@@ -47,7 +51,11 @@ export function ScoreMatrixVisualizationPane({
   switch (state.status) {
     case "idle":
       return (
-        <section className="score-matrix-empty" data-score-matrix-state="idle">
+        <section
+          className="score-matrix-empty"
+          data-score-matrix-state="idle"
+          data-threeui-surface="score-matrix-state"
+        >
           <h3>{definition.title}</h3>
           <p>{definition.description}</p>
           <button type="button" onClick={onInspect}>
@@ -63,7 +71,10 @@ export function ScoreMatrixVisualizationPane({
       );
     case "error":
       return (
-        <section className="score-matrix-empty">
+        <section
+          className="score-matrix-empty"
+          data-threeui-surface="score-matrix-state"
+        >
           <p role="alert" data-score-matrix-state="error">
             {state.message}
           </p>

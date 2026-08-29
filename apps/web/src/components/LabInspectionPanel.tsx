@@ -69,7 +69,11 @@ export function LabInspectionPanel(): ReactElement {
   };
 
   return (
-    <section className="lab-inspection" aria-labelledby="lab-inspection-title">
+    <section
+      className="lab-inspection"
+      aria-labelledby="lab-inspection-title"
+      data-threeui-surface="inspection-launchers"
+    >
       <header>
         <div>
           <h2 id="lab-inspection-title">현재 실행 검사</h2>

@@ -11,6 +11,8 @@ import { ContinuationPanel } from "./components/ContinuationPanel";
 import { CourseHome } from "./components/CourseHome";
 import { Header } from "./components/Header";
 import { LabInspectionPanel } from "./components/LabInspectionPanel";
+import "./components/LabResults.css";
+import "./components/LabWorkspace.css";
 import { PromptPanel } from "./components/PromptPanel";
 import { FocusedViewerProvider } from "./overlays/FocusedViewerContext";
 import { createInferenceWorker } from "./worker/createWorker";
@@ -52,34 +54,43 @@ function AppSurface(): ReactElement {
         <main id="architecture-main" className="architecture-main">
           {route.view === "home" ? <CourseHome /> : null}
           {route.view === "lab" ? (
-            <>
-              <section className="lab-introduction">
+            <section
+              className="lab-workspace"
+              data-threeui-surface="lab"
+              aria-labelledby="lab-title"
+            >
+              <header
+                className="lab-introduction"
+                data-threeui-surface="lab-header"
+              >
+                <h1 id="lab-title">모델 실험실</h1>
                 <p className="lab-introduction__eyebrow">LAB / NANO GPT</p>
-                <h1>모델 실험실</h1>
                 <p>
                   Prompt와 생성 설정을 바꾸며 기존 추론·재생 흐름을 확인합니다.
                 </p>
-              </section>
-              <PromptPanel
-                prompt={prompt}
-                form={form}
-                limits={{
-                  blockSize: config?.block_size ?? 1,
-                  vocabSize: config?.vocab_size ?? 1,
-                }}
-                generation={state.generation}
-                disabled={state.worker.model === null}
-                onPromptChange={setPrompt}
-                onFormChange={setForm}
-                onGenerate={commands.generate}
-                onStop={commands.stop}
-              />
-              <ContinuationPanel
-                generation={state.generation}
-                onSelectStep={commands.replayStep}
-              />
+              </header>
+              <div className="lab-experiment-grid">
+                <PromptPanel
+                  prompt={prompt}
+                  form={form}
+                  limits={{
+                    blockSize: config?.block_size ?? 1,
+                    vocabSize: config?.vocab_size ?? 1,
+                  }}
+                  generation={state.generation}
+                  disabled={state.worker.model === null}
+                  onPromptChange={setPrompt}
+                  onFormChange={setForm}
+                  onGenerate={commands.generate}
+                  onStop={commands.stop}
+                />
+                <ContinuationPanel
+                  generation={state.generation}
+                  onSelectStep={commands.replayStep}
+                />
+              </div>
               <LabInspectionPanel />
-            </>
+            </section>
           ) : null}
           {route.view === "chapter" ? (
             <ArchitectureExplorer

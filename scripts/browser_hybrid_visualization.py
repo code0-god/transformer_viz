@@ -141,17 +141,59 @@ def _open_lab_architecture(browser: ChromeSession) -> JsonObject:
         "[data-viewer-backdrop]",
         "Lab Architecture viewer animation",
     )
+    pointer_click(
+        browser,
+        (
+            "document.querySelector('#focused-viewer "
+            "button[aria-label=\"확대\"]')"
+        ),
+        condition=(
+            "document.querySelector('#focused-viewer "
+            "[data-testid=\"diagram-viewport-surface\"]')"
+            "?.dataset.viewportMode === 'zoomed'"
+        ),
+        label="Architecture viewer zoom before refit",
+    )
+    pointer_click(
+        browser,
+        (
+            "document.querySelector('#focused-viewer "
+            "button[aria-label=\"전체 보기\"]')"
+        ),
+        condition=(
+            "document.querySelector('#focused-viewer "
+            "[data-testid=\"diagram-viewport-surface\"]')"
+            "?.dataset.viewportMode === 'fit'"
+        ),
+        label="Architecture viewer stable fit",
+    )
+    settle(browser)
     overlay = evaluate_dict(
         browser,
         """(() => {
           const viewer = document.querySelector('#focused-viewer');
           const rect = viewer?.getBoundingClientRect();
+          const surface = viewer?.querySelector(
+            '[data-testid="diagram-viewport-surface"]',
+          )?.getBoundingClientRect();
+          const content = viewer?.querySelector(
+            '.diagram-viewport__content',
+          )?.getBoundingClientRect();
+          const diagram = viewer?.querySelector(
+            '.architecture-diagram',
+          )?.getBoundingClientRect();
           return {
             dialogCount: document.querySelectorAll('[role="dialog"]').length,
             kind: viewer?.dataset.viewerKind ?? null,
             source: viewer?.dataset.viewerSource ?? null,
             widthRatio: (rect?.width ?? 0) / innerWidth,
             heightRatio: (rect?.height ?? 0) / innerHeight,
+            contentTop: content?.top ?? -1,
+            contentBottom: content?.bottom ?? -1,
+            diagramTop: diagram?.top ?? -1,
+            diagramBottom: diagram?.bottom ?? -1,
+            surfaceTop: surface?.top ?? -1,
+            surfaceBottom: surface?.bottom ?? -1,
             pageInert:
               document.querySelector('.architecture-app')?.hasAttribute(
                 'inert',
@@ -170,6 +212,20 @@ def _open_lab_architecture(browser: ChromeSession) -> JsonObject:
         number(overlay["widthRatio"], "Architecture viewer width") >= 0.8
         and number(overlay["heightRatio"], "Architecture viewer height") >= 0.78,
         f"Lab Architecture viewer too small: {overlay}",
+    )
+    require(
+        number(overlay["contentTop"], "Architecture content top")
+        >= number(overlay["surfaceTop"], "Architecture surface top")
+        and number(overlay["contentBottom"], "Architecture content bottom")
+        <= number(overlay["surfaceBottom"], "Architecture surface bottom"),
+        f"Lab Architecture content clipped after fit: {overlay}",
+    )
+    require(
+        number(overlay["diagramTop"], "Architecture diagram top")
+        >= number(overlay["surfaceTop"], "Architecture surface top")
+        and number(overlay["diagramBottom"], "Architecture diagram bottom")
+        <= number(overlay["surfaceBottom"], "Architecture surface bottom"),
+        f"Lab Architecture diagram clipped after fit: {overlay}",
     )
     return overlay
 

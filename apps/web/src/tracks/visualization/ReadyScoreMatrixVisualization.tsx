@@ -65,7 +65,10 @@ export function ReadyScoreMatrixVisualization({
     cameraCommand,
   };
   return (
-    <section className="score-matrix-visualization">
+    <section
+      className="score-matrix-visualization"
+      data-threeui-surface="score-matrix"
+    >
       <header className="score-matrix-visualization__header">
         <div>
           <h3>{definition.title}</h3>
@@ -78,6 +81,7 @@ export function ReadyScoreMatrixVisualization({
           className="score-matrix-camera-controls"
           role="toolbar"
           aria-label="3D 보기 도구"
+          data-threeui-surface="score-matrix-controls"
         >
           <button type="button" onClick={() => nextCommand("zoom", "out")}>
             축소

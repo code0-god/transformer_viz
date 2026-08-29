@@ -78,8 +78,72 @@
   background: var(--ui-surface-subtle);
 }
 
+.threeui-icon-action-host,
+.threeui-icon-action.circle-buttons {
+  display: inline-grid;
+  inline-size: 44px;
+  block-size: 44px;
+}
+
+.threeui-icon-action.circle-buttons {
+  position: relative;
+}
+
+.threeui-icon-action
+  :is(
+    .circle-buttons__atmosphere,
+    .circle-button__aura,
+    .circle-button__rim,
+    .circle-button__face,
+    .circle-button__details
+  ) {
+  display: none;
+}
+
+.threeui-icon-action .circle-button {
+  display: grid;
+  inline-size: 44px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ui-text);
+  place-items: center;
+  transition:
+    border-color 160ms ease-out,
+    background-color 160ms ease-out;
+}
+
+.threeui-icon-action .circle-button:hover:not(:disabled) {
+  border-color: var(--ui-border);
+  background: var(--ui-surface-subtle);
+}
+
+.threeui-icon-action .circle-button:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+.threeui-icon-action .circle-button__icon {
+  display: grid;
+  transform: rotate(45deg);
+  place-items: center;
+}
+
+.threeui-icon-action .circle-button__icon svg {
+  inline-size: 18px;
+  block-size: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.7;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .threeui-action .lumen-cta__button {
+  .threeui-action .lumen-cta__button,
+  .threeui-icon-action .circle-button {
     transition: none;
   }
 }

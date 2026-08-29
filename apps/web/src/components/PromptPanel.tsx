@@ -72,7 +72,11 @@ export function PromptPanel(props: PromptPanelProps) {
   };
 
   return (
-    <section className="generation-bar" aria-labelledby="prompt-label">
+    <section
+      className="generation-bar"
+      aria-labelledby="prompt-label"
+      data-threeui-surface="generation-controls"
+    >
       <div className="generation-primary">
         <label className="prompt-field" htmlFor="generation-prompt">
           <span id="prompt-label">Prompt</span>

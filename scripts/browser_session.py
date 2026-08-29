@@ -186,7 +186,16 @@ class ChromeSession:
 
     def navigate(self, url: str) -> None:
         cdp = self.require_cdp()
-        cdp.send("Page.navigate", {"url": url}, self.page_session)
+        navigation = cdp.send(
+            "Page.navigate",
+            {"url": url},
+            self.page_session,
+        )
+        if "loaderId" in navigation:
+            cdp.wait_for_event(
+                "Page.domContentEventFired",
+                session_id=self.page_session,
+            )
         cdp.send("Browser.getVersion")
 
     def session_barrier(self) -> None:

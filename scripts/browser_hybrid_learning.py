@@ -231,10 +231,44 @@ def _scroll_figure(browser: ChromeSession, figure_id: str) -> None:
           if (!(figure instanceof HTMLElement)) return false;
           if (document.activeElement instanceof HTMLElement)
             document.activeElement.blur();
-          figure.scrollIntoView({{ block: 'center', behavior: 'auto' }});
+          const header = document.querySelector('.architecture-header');
+          const headerBottom = header?.getBoundingClientRect().bottom ?? 0;
+          const figureTop = figure.getBoundingClientRect().top;
+          const maxScroll = Math.max(
+            0,
+            document.documentElement.scrollHeight - innerHeight,
+          );
+          const target = Math.min(
+            maxScroll,
+            Math.max(0, scrollY + figureTop - headerBottom - 16),
+          );
+          window.scrollTo({{
+            top: target,
+            left: 0,
+            behavior: 'auto',
+          }});
           return true;
         }})()
         """,
+    )
+    wait_for(
+        browser,
+        f"""
+        (() => {{
+          const figure = document.querySelector({json.dumps(selector)});
+          const header = document.querySelector('.architecture-header');
+          if (!(figure instanceof HTMLElement)) return false;
+          const top = figure.getBoundingClientRect().top;
+          const boundary = (header?.getBoundingClientRect().bottom ?? 0) + 16;
+          const maxScroll = Math.max(
+            0,
+            document.documentElement.scrollHeight - innerHeight,
+          );
+          return Math.abs(top - boundary) <= 1
+            || (Math.abs(scrollY - maxScroll) <= 1 && top >= boundary - 1);
+        }})()
+        """,
+        f"Inline Figure stable start: {figure_id}",
     )
 
 

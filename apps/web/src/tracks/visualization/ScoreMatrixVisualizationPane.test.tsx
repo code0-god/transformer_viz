@@ -131,6 +131,14 @@ describe("ScoreMatrixVisualizationPane", () => {
   test("keeps exact HTML data open when WebGL is unavailable", () => {
     renderPane({ status: "ready", provenance, model });
 
+    const toolbar = screen.getByRole("toolbar", { name: "3D 보기 도구" });
+    expect(toolbar).toHaveAttribute(
+      "data-threeui-surface",
+      "score-matrix-controls",
+    );
+    expect(
+      toolbar.closest('[data-threeui-surface="score-matrix"]'),
+    ).toBeInTheDocument();
     expect(
       document.querySelector('[data-visualization-state="unavailable"]'),
     ).toBeVisible();

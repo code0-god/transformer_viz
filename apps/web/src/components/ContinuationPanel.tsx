@@ -33,6 +33,7 @@ export function ContinuationPanel({
     <section
       className="continuation-panel"
       aria-labelledby="continuation-title"
+      data-threeui-surface="generation-output"
     >
       <h2 id="continuation-title">Decoded continuation</h2>
       <dl className="decoded-text">

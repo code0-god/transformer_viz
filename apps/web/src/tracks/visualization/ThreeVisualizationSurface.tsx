@@ -106,6 +106,7 @@ export function ThreeVisualizationSurface<Props extends object>({
   const [rendererAttempt, setRendererAttempt] = useState(0);
   const [Renderer, setRenderer] = useState(() => lazy(loadRenderer));
   const [available] = useState(() => isWebGLAvailable());
+  const [reducedMotion] = useState(() => prefersReducedMotion());
   const restartRenderer = (): void => {
     setContextLost(false);
     setRendererFailed(false);
@@ -119,9 +120,18 @@ export function ThreeVisualizationSurface<Props extends object>({
       className="three-visualization-surface"
       aria-labelledby={titleId}
       data-webgl-available={available}
+      data-reduced-motion={reducedMotion}
     >
       <h3 id={titleId}>{title}</h3>
-      {available ? (
+      {!available ? (
+        <p role="status" data-visualization-state="unavailable">
+          이 환경에서는 3D 시각화를 사용할 수 없습니다.
+        </p>
+      ) : reducedMotion ? (
+        <p role="status" data-visualization-state="reduced-motion">
+          움직임 줄이기 설정에 따라 정적 데이터를 표시합니다.
+        </p>
+      ) : (
         <LocalErrorBoundary
           key={rendererAttempt}
           onError={() => setRendererFailed(true)}
@@ -142,14 +152,10 @@ export function ThreeVisualizationSurface<Props extends object>({
               {...rendererProps}
               onContextLost={() => setContextLost(true)}
               onContextRestored={() => setContextLost(false)}
-              reducedMotion={prefersReducedMotion()}
+              reducedMotion={reducedMotion}
             />
           </Suspense>
         </LocalErrorBoundary>
-      ) : (
-        <p role="status" data-visualization-state="unavailable">
-          이 환경에서는 3D 시각화를 사용할 수 없습니다.
-        </p>
       )}
       {contextLost ? (
         <p role="alert" data-visualization-state="context-lost">
@@ -167,7 +173,7 @@ export function ThreeVisualizationSurface<Props extends object>({
       ) : null}
       <details
         className="three-visualization-surface__fallback"
-        open={!available || requiresRecovery || undefined}
+        open={!available || reducedMotion || requiresRecovery || undefined}
       >
         <summary>{fallbackLabel}</summary>
         {fallback}

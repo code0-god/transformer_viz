@@ -1,5 +1,6 @@
+import { CircleButtons } from "@designcodeio/threeui/components/CircleButtons";
 import { LumenCta } from "@designcodeio/threeui/components/LumenCta";
-import type { MouseEventHandler, ReactElement, ReactNode } from "react";
+import type { MouseEventHandler, ReactElement, ReactNode, Ref } from "react";
 
 import "./threeUi.css";
 
@@ -29,6 +30,36 @@ export function ThreeUiAction({
       variant={variant === "quiet" ? "ghost" : "primary"}
       {...(onClick === undefined ? {} : { onClick })}
     />
+  );
+}
+
+export type ThreeUiIconActionProps = Readonly<{
+  ariaLabel: string;
+  containerRef?: Ref<HTMLSpanElement>;
+  disabled?: boolean;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
+  type?: "button" | "submit" | "reset";
+}>;
+
+export function ThreeUiIconAction({
+  ariaLabel,
+  containerRef,
+  disabled = false,
+  onClick,
+  type = "button",
+}: ThreeUiIconActionProps): ReactElement {
+  return (
+    <span ref={containerRef} className="threeui-icon-action-host">
+      <CircleButtons
+        ariaLabel={ariaLabel}
+        className="threeui-icon-action"
+        disabled={disabled}
+        mode="light"
+        type={type}
+        variant="plus"
+        {...(onClick === undefined ? {} : { onClick })}
+      />
+    </span>
   );
 }
 

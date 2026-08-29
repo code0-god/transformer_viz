@@ -38,9 +38,11 @@ DISABLE_WEBGL = r"""
 
 def verify_failure_modes(url: str) -> JsonObject:
     unavailable = _verify_unavailable(url)
+    reduced_motion = _verify_reduced_motion(url)
     renderer_error = _verify_renderer_error(url)
     return {
         "webglUnavailable": unavailable,
+        "reducedMotion": reduced_motion,
         "rendererImportError": renderer_error,
     }
 
@@ -164,6 +166,56 @@ def _verify_unavailable(url: str) -> JsonObject:
                 for request in request_urls(browser)
             ),
             "Unavailable WebGL requested renderer chunk",
+        )
+        return probe
+
+
+def _verify_reduced_motion(url: str) -> JsonObject:
+    with ChromeSession(enable_gpu=True) as browser:
+        browser.require_cdp().send(
+            "Emulation.setEmulatedMedia",
+            {
+                "media": "",
+                "features": [
+                    {
+                        "name": "prefers-reduced-motion",
+                        "value": "reduce",
+                    },
+                ],
+            },
+            browser.page_session,
+        )
+        _prepare_score_request(browser, url)
+        wait_for(
+            browser,
+            (
+                "document.querySelector("
+                "'[data-visualization-state=\"reduced-motion\"]'"
+                ") !== null"
+            ),
+            "Reduced-motion static fallback",
+        )
+        probe = {
+            **_fallback_probe(browser),
+            "mediaMatches": browser.require_cdp().evaluate(
+                browser.page_session,
+                "matchMedia('(prefers-reduced-motion: reduce)').matches",
+            ),
+        }
+        require(
+            probe["mediaMatches"] is True
+            and probe["fallbackOpen"] is True
+            and probe["tableVisible"] is True
+            and probe["viewerPresent"] is True
+            and probe["canvasCount"] == 0,
+            f"Reduced-motion boundary failed: {probe}",
+        )
+        require(
+            not any(
+                "ScoreMatrixScene" in request
+                for request in request_urls(browser)
+            ),
+            "Reduced-motion route requested renderer chunk",
         )
         return probe
 

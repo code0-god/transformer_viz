@@ -1,0 +1,95 @@
+.continuation-panel[data-threeui-surface="generation-output"] {
+  align-content: start;
+  gap: var(--s4);
+  padding: var(--s4);
+}
+
+.continuation-panel[data-threeui-surface="generation-output"] > h2 {
+  color: var(--ui-text);
+  font-size: 0.82rem;
+  font-weight: 740;
+}
+
+.continuation-panel[data-threeui-surface="generation-output"]
+  .decoded-text
+  > div {
+  grid-template-columns: minmax(7.5rem, 0.36fr) minmax(0, 1fr);
+}
+
+.continuation-panel[data-threeui-surface="generation-output"]
+  .generation-steps {
+  padding: var(--s2) 0;
+}
+
+.continuation-panel[data-threeui-surface="generation-output"]
+  .generation-steps
+  button {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-reading);
+}
+
+.continuation-panel[data-threeui-surface="generation-output"]
+  .generation-steps
+  button[aria-current="step"] {
+  border-color: var(--ui-accent);
+  background: color-mix(in srgb, var(--ui-accent) 9%, var(--ui-surface));
+  box-shadow: none;
+}
+
+.continuation-panel[data-threeui-surface="generation-output"]
+  .token-details {
+  padding: var(--s3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-reading);
+}
+
+.lab-inspection[data-threeui-surface="inspection-launchers"] {
+  gap: var(--s4);
+  padding: var(--s4);
+}
+
+.lab-inspection[data-threeui-surface="inspection-launchers"]
+  .lab-inspection__actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s2);
+}
+
+.lab-inspection[data-threeui-surface="inspection-launchers"]
+  .lab-inspection__actions
+  button {
+  min-block-size: 56px;
+  padding: var(--s3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-reading);
+  color: var(--ui-text-muted);
+  font-size: 0.78rem;
+  font-weight: 680;
+  line-height: 1.35;
+  text-align: start;
+}
+
+.lab-inspection[data-threeui-surface="inspection-launchers"]
+  .lab-inspection__actions
+  button:not(:disabled):hover {
+  border-color: var(--ui-border-strong);
+  background: var(--ui-surface-subtle);
+  color: var(--ui-text);
+}
+
+@media (max-width: 55rem) {
+  .lab-inspection[data-threeui-surface="inspection-launchers"]
+    .lab-inspection__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .lab-inspection[data-threeui-surface="inspection-launchers"]
+    .lab-inspection__actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,171 @@
+.lab-workspace[data-threeui-surface="lab"] {
+  display: grid;
+  gap: var(--s4);
+  inline-size: min(100%, 72rem);
+  margin-inline: auto;
+  padding-block: clamp(2rem, 5dvb, 3.5rem) var(--s6);
+}
+
+.lab-introduction[data-threeui-surface="lab-header"] {
+  display: grid;
+  gap: var(--s2);
+  padding-block-end: var(--s5);
+  border-block-end: 1px solid var(--ui-border);
+}
+
+.lab-introduction[data-threeui-surface="lab-header"] h1 {
+  color: var(--ui-text);
+  font-size: clamp(2.4rem, 4.8vw, 4rem);
+  font-weight: 760;
+  line-height: 1.03;
+  letter-spacing: -0.04em;
+}
+
+.lab-introduction[data-threeui-surface="lab-header"]
+  .lab-introduction__eyebrow {
+  color: var(--ui-accent);
+  font-size: 0.68rem;
+  font-weight: 740;
+  letter-spacing: 0.05em;
+}
+
+.lab-introduction[data-threeui-surface="lab-header"] > p:last-child {
+  max-inline-size: 58ch;
+  color: var(--ui-text-muted);
+  line-height: 1.65;
+}
+
+.lab-experiment-grid {
+  display: grid;
+  grid-template-columns: minmax(20rem, 0.85fr) minmax(0, 1.15fr);
+  gap: var(--s4);
+  align-items: stretch;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"],
+.continuation-panel[data-threeui-surface="generation-output"],
+.lab-inspection[data-threeui-surface="inspection-launchers"] {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+}
+
+.generation-bar[data-threeui-surface="generation-controls"] {
+  display: grid;
+  align-content: start;
+  gap: var(--s3);
+  min-inline-size: 0;
+  padding: var(--s4);
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-primary {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--s2);
+  padding: 0;
+  border: 0;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"] .prompt-field {
+  gap: var(--s2);
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .prompt-field
+  > span,
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-settings-grid
+  label
+  > span {
+  color: var(--ui-text-muted);
+  font-size: 0.7rem;
+  font-weight: 720;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"] textarea,
+.generation-bar[data-threeui-surface="generation-controls"]
+  :is(input, select) {
+  min-block-size: 44px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-reading);
+  color: var(--ui-text);
+  font: inherit;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"] textarea {
+  resize: vertical;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-primary
+  > button.primary {
+  min-inline-size: 7rem;
+  border-color: var(--ui-text);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-text);
+  color: var(--ui-surface);
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-settings {
+  padding-block-start: var(--s2);
+  border-block-start: 1px solid var(--ui-border);
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-settings
+  summary {
+  min-block-size: 44px;
+  padding-block: 0.7rem;
+  color: var(--ui-text-muted);
+  font-size: 0.75rem;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-settings-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s3);
+  padding-block-start: var(--s2);
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-settings-grid
+  label {
+  gap: var(--s1);
+}
+
+@media (max-width: 55rem) {
+  .lab-experiment-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 40rem) {
+  .lab-workspace[data-threeui-surface="lab"] {
+    padding-block-start: var(--s5);
+  }
+
+  .lab-introduction[data-threeui-surface="lab-header"] h1 {
+    font-size: clamp(2.2rem, 11vw, 3rem);
+  }
+
+  .generation-bar[data-threeui-surface="generation-controls"]
+    .generation-primary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .generation-bar[data-threeui-surface="generation-controls"]
+    .generation-primary
+    > :is(button, .threeui-action) {
+    inline-size: 100%;
+  }
+
+  .generation-bar[data-threeui-surface="generation-controls"]
+    .generation-settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
