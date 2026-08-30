@@ -230,6 +230,7 @@
 .threeui-root .scene-step-rail li > button {
   position: relative;
   z-index: 1;
+  overflow-wrap: anywhere;
   display: grid;
   inline-size: 100%;
   min-inline-size: 0;
