@@ -163,6 +163,45 @@
   white-space: nowrap;
 }
 
+.scene-choice-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-inline-size: 0;
+  padding: 0;
+  margin: 0 0 var(--s2);
+  border: 0;
+}
+
+.scene-choice-group > legend {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.threeui-root .scene-choice-group > button {
+  min-block-size: 44px;
+  padding-inline: 0.75rem;
+  border-color: rgb(38 51 55 / 18%);
+  background: rgb(248 250 249 / 74%);
+  box-shadow: none;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  font-weight: 680;
+}
+
+.threeui-root .scene-choice-group > button[aria-pressed="true"] {
+  border-color: #1f685c;
+  background: #e5f1ee;
+  color: #174e45;
+  box-shadow: inset 0 -2px #1f685c;
+}
+
 .scene-step-rail ol {
   display: flex;
   flex: 1;
@@ -256,6 +295,8 @@
   }
 
   .scene-stage-label {
+    inset-block-start: var(--scene-label-mobile-y);
+    inset-inline-start: var(--scene-label-mobile-x);
     max-inline-size: 42%;
   }
 }

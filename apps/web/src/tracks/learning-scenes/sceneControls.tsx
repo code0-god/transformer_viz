@@ -7,6 +7,37 @@ type SceneStep<Id extends string> = Readonly<{
   label: string;
 }>;
 
+export function SceneChoiceGroup<Id extends string>({
+  choices,
+  label,
+  onSelect,
+  selected,
+}: Readonly<{
+  choices: readonly SceneStep<Id>[];
+  label: string;
+  onSelect: (choice: Id) => void;
+  selected: Id;
+}>): ReactElement {
+  return (
+    <fieldset
+      className="scene-choice-group"
+      data-threeui-control="scene-choice-group"
+    >
+      <legend>{label}</legend>
+      {choices.map((choice) => (
+        <button
+          key={choice.id}
+          type="button"
+          aria-pressed={choice.id === selected}
+          onClick={() => onSelect(choice.id)}
+        >
+          {choice.label}
+        </button>
+      ))}
+    </fieldset>
+  );
+}
+
 export function SceneStepRail<Id extends string>({
   activeStep,
   label,
@@ -56,27 +87,41 @@ export function SceneStepRail<Id extends string>({
 }
 
 type SceneStageLabelStyle = CSSProperties & {
+  readonly "--scene-label-mobile-x": `${number}%`;
+  readonly "--scene-label-mobile-y": `${number}%`;
   readonly "--scene-label-x": `${number}%`;
   readonly "--scene-label-y": `${number}%`;
 };
 
 export function SceneStageLabel({
   children,
-  tone = "neutral",
+  className,
   x,
   y,
+  mobileX = x,
+  mobileY = y,
+  tone = "neutral",
 }: Readonly<{
   children: ReactNode;
+  className?: string;
+  mobileX?: number;
+  mobileY?: number;
   tone?: "neutral" | "selected" | "output";
   x: number;
   y: number;
 }>): ReactElement {
   const style: SceneStageLabelStyle = {
+    "--scene-label-mobile-x": `${mobileX}%`,
+    "--scene-label-mobile-y": `${mobileY}%`,
     "--scene-label-x": `${x}%`,
     "--scene-label-y": `${y}%`,
   };
   return (
-    <span className="scene-stage-label" data-tone={tone} style={style}>
+    <span
+      className={["scene-stage-label", className].filter(Boolean).join(" ")}
+      data-tone={tone}
+      style={style}
+    >
       {children}
     </span>
   );

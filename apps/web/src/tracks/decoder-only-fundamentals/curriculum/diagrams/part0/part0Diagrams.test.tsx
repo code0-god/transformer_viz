@@ -348,11 +348,12 @@ describe("Part 0 curriculum Diagrams", () => {
     expect(
       within(pane).getByRole("img", { name: "자연어 처리 추론 경로" }),
     ).toBeInTheDocument();
+    const fallback = within(pane).getByRole("group", {
+      name: "자연어 처리란? 의미 설명",
+    });
+    expect(fallback).toBeInTheDocument();
     expect(
-      within(pane).getByRole("group", { name: "자연어 처리란? 의미 설명" }),
-    ).toBeInTheDocument();
-    expect(
-      within(pane)
+      within(fallback)
         .getAllByRole("listitem")
         .map((item) => item.textContent ?? ""),
     ).toEqual(BEGINNER_STAGE_LABELS);

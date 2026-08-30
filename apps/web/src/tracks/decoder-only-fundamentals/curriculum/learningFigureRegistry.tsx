@@ -1,6 +1,11 @@
 import type { ReactElement } from "react";
-
 import { HiddenStateSceneFigure } from "../../learning-scenes/hidden/HiddenStateSceneFigure";
+import {
+  NlpTransformationSceneFigure,
+  TokenizationMethodsSceneFigure,
+  TokenSegmentationSceneFigure,
+  VocabularyAddressSceneFigure,
+} from "../../learning-scenes/part0/Part0SceneFigures";
 import { PositionEmbeddingSceneFigure } from "../../learning-scenes/position/PositionEmbeddingSceneFigure";
 import { TokenEmbeddingSceneFigure } from "../../learning-scenes/token/TokenEmbeddingSceneFigure";
 import type {
@@ -18,20 +23,36 @@ type CurriculumFigureId = (typeof CURRICULUM_DIAGRAM_IDS)[number];
 
 const FIGURE_METADATA = {
   "decoder.diagram.intro.nlp": {
-    preferredWidth: 720,
-    renderer: "static",
+    fallbackFigureId: "decoder.diagram.intro.nlp.static",
+    loadingStrategy: "visible",
+    preferredAspectRatio: 2.05,
+    preferredWidth: 960,
+    reducedMotion: "static-final-state",
+    renderer: "scene",
   },
   "decoder.diagram.tokenization.token": {
-    preferredWidth: 800,
-    renderer: "static",
+    fallbackFigureId: "decoder.diagram.tokenization.token.static",
+    loadingStrategy: "visible",
+    preferredAspectRatio: 2.4,
+    preferredWidth: 960,
+    reducedMotion: "static-final-state",
+    renderer: "scene",
   },
   "decoder.diagram.tokenization.vocabulary": {
-    preferredWidth: 760,
-    renderer: "static",
+    fallbackFigureId: "decoder.diagram.tokenization.vocabulary.static",
+    loadingStrategy: "visible",
+    preferredAspectRatio: 1.9,
+    preferredWidth: 920,
+    reducedMotion: "static-final-state",
+    renderer: "scene",
   },
   "decoder.diagram.tokenization.methods": {
-    preferredWidth: 840,
-    renderer: "static",
+    fallbackFigureId: "decoder.diagram.tokenization.methods.static",
+    loadingStrategy: "visible",
+    preferredAspectRatio: 2.55,
+    preferredWidth: 980,
+    reducedMotion: "static-final-state",
+    renderer: "scene",
   },
   "decoder.diagram.language-model.definition": {
     preferredWidth: 760,
@@ -86,6 +107,18 @@ class CurriculumFigureRegistryError extends Error {
 
 function renderFigure(figureId: string): ReactElement {
   if (!isDiagramId(figureId)) throw new CurriculumFigureRegistryError(figureId);
+  if (figureId === "decoder.diagram.intro.nlp") {
+    return <NlpTransformationSceneFigure />;
+  }
+  if (figureId === "decoder.diagram.tokenization.token") {
+    return <TokenSegmentationSceneFigure />;
+  }
+  if (figureId === "decoder.diagram.tokenization.vocabulary") {
+    return <VocabularyAddressSceneFigure />;
+  }
+  if (figureId === "decoder.diagram.tokenization.methods") {
+    return <TokenizationMethodsSceneFigure />;
+  }
   if (figureId === "decoder.diagram.representation.embedding") {
     return <TokenEmbeddingSceneFigure />;
   }

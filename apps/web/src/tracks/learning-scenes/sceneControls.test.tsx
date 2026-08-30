@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 
-import { SceneStepRail } from "./sceneControls";
+import { SceneChoiceGroup, SceneStepRail } from "./sceneControls";
 
 describe("SceneStepRail", () => {
   test("exposes compact native step and replay controls", async () => {
@@ -38,5 +38,32 @@ describe("SceneStepRail", () => {
 
     await user.click(screen.getByRole("button", { name: "다시 보기" }));
     expect(onReplay).toHaveBeenCalledOnce();
+  });
+
+  test("exposes compact native scene choices", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+
+    render(
+      <SceneChoiceGroup
+        label="Tokenizer mode"
+        onSelect={onSelect}
+        selected="byte"
+        choices={[
+          { id: "word", label: "Word" },
+          { id: "byte", label: "Current Byte" },
+        ]}
+      />,
+    );
+
+    expect(
+      screen.getByRole("group", { name: "Tokenizer mode" }),
+    ).toHaveAttribute("data-threeui-control", "scene-choice-group");
+    expect(
+      screen.getByRole("button", { name: "Current Byte" }),
+    ).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(screen.getByRole("button", { name: "Word" }));
+    expect(onSelect).toHaveBeenCalledWith("word");
   });
 });
