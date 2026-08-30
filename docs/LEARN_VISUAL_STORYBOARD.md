@@ -9,6 +9,8 @@
   `.omo/evidence/learn-visual-reboot/baseline/`
 - Product mode: Read
 - Visual direction: Calibrated Computation Atlas
+- Priority-0 reading model:
+  `docs/LEARN_VISUAL_NARRATIVE.md`
 
 This storyboard is the implementation gate for Learn Visual Reboot. It keeps
 the existing article, SceneFigure lifecycle, Worker, architecture, and Score
@@ -16,7 +18,9 @@ Matrix contracts. It replaces the incumbent static-first visual language and
 the prototype Part 2 composition.
 
 The fourteen-Chapter spine is `4 + 4 + 3 + 1 + 1 + 1`: Part 0, Part 1,
-Part 2, GPT, Transformer Block, and Self-Attention.
+Part 2, GPT, Transformer Block, and Self-Attention. Priority-0 supersedes the
+visible Figure composition only for 0.2, 2.1, and 5.1. The other eleven
+Chapter compositions remain frozen.
 
 ## Product decision
 
@@ -244,15 +248,16 @@ Controls never sit as a large button wall above the stage.
 ### 0.2 Token이란?
 
 - Learning question: 문장은 어떻게 token 단위로 나뉘는가?
-- Visual type: Scene.
+- Visual type: Inline visual narrative.
 - Primary renderer: R3F segmentation strip with DOM token text.
 - Spatial grammar: SEGMENTATION.
 - Scene sketch: one continuous sentence strip physically separates into
   token pieces with stable order.
-- Interaction: compare word-like explanation and current byte mode.
+- Interaction: prose-driven Source, Boundaries, Token stages plus compact
+  word-like/current-byte selector.
 - Transition: register, split boundaries, settle with gaps.
 - Mobile: wrapped strip; labels never shrink below reading size.
-- Fallback: current token-boundary SVG/DOM Figure.
+- Fallback: current token-boundary semantic SVG/DOM visualization.
 - Why 3D: physical separation makes boundary creation visible.
 - Secondary visual: byte-mode truth note tied to current tokenizer.
 - Conclusion: Token 경계는 tokenizer가 정하며 단어 경계와 항상 같지
@@ -368,12 +373,13 @@ Controls never sit as a large button wall above the stage.
 ### 2.1 Token Embedding
 
 - Learning question: Token ID는 어떻게 embedding row를 찾는가?
-- Visual type: Scene redesign.
+- Visual type: Text + visual split narrative.
 - Primary renderer: R3F table with DOM row labels.
 - Spatial grammar: INDEXED EXTRACTION.
 - Scene sketch: ID badge, dominant embedding table, nearby rows, selected row,
   extracted vector.
-- Interaction: token selector and ID, Row, Vector step rail.
+- Interaction: prose-driven ID, Row, Lift, Vector stages plus compact token
+  selector.
 - Transition: selected row receives rim, lifts, separates, and aligns as a
   vector.
 - Mobile: ID above, table center, vector below.
@@ -461,15 +467,15 @@ Controls never sit as a large button wall above the stage.
 
 - Learning question: 각 token은 다른 token을 얼마나 참고하고 어떻게
   새로운 표현으로 합치는가?
-- Visual type: Flagship Scene.
+- Visual type: bounded sticky visual narrative.
 - Primary renderer: progressive R3F attention explorer.
 - Spatial grammar: PROJECTION, MATRIX INTERACTION, NORMALIZATION,
   AGGREGATION.
 - Scene sketch: Input; per-head Q/K/V projections; head-local
   `QK^T / sqrt(d_head)` scores; causal mask before Softmax; positive attention
   weights; head-local weighted V; head concatenation; output projection.
-- Interaction: Overview, QKV, Scores, Mask, Softmax, Value. Layer/head
-  selectors use metadata but values remain illustrative.
+- Interaction: prose-driven Overview, QKV, Scores, Mask, Softmax, Value with
+  compact direct-access navigation. Values remain illustrative.
 - Transition: project, interact, mask, normalize, aggregate.
 - Mobile: one focused stage at a time with persistent miniature pipeline.
 - Fallback: existing AttentionDetail SVG/DOM plus exact KaTeX equations.
