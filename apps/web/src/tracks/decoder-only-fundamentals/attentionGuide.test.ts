@@ -3,6 +3,7 @@ import { createElement } from "react";
 
 import { formulaCatalog } from "../../math/formulaCatalog";
 import { LearningGuide } from "../LearningGuide";
+import type { LearningFigureRegistry } from "../learningFigureTypes";
 import type { SelectedOperationPresentation } from "../types";
 import { validateLearningProfile } from "../validation";
 import { attentionGuide, attentionGuideGlossary } from "./attentionGuide";
@@ -51,6 +52,17 @@ const selectedOperation: SelectedOperationPresentation = {
   summary: "",
   formulaIds: ["attention-softmax"],
   facts: [],
+};
+const figures: LearningFigureRegistry = {
+  figureIds: new Set(["self-attention"]),
+  metadata: () => ({ preferredWidth: 1000, renderer: "static" }),
+  preferredWidth: () => 1000,
+  render: () =>
+    createElement(
+      "svg",
+      { "aria-label": "Attention Figure", role: "img", viewBox: "0 0 1 1" },
+      createElement("title", null, "Attention Figure"),
+    ),
 };
 
 describe("decoder Attention learning guide", () => {
@@ -145,6 +157,7 @@ describe("decoder Attention learning guide", () => {
         page: attentionGuide,
         glossary: attentionGuideGlossary,
         formulas: formulaCatalog,
+        figures,
         selectedNodeId: "decoder.attention.softmax",
         selectedOperations: {
           "decoder.runtime.selected-operation": selectedOperation,
