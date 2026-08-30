@@ -152,12 +152,21 @@ describe("Part 0 curriculum Diagrams", () => {
     );
 
     expect(tokenUnit?.blocks.map(({ id }) => id)).toEqual([
-      "p.why-split",
-      "p.token-definition",
-      "p.boundary",
-      "figure.token-boundary",
+      "narrative.token-boundary",
       "p.token-not-word",
     ]);
+    const narrative = tokenUnit?.blocks[0];
+    expect(
+      narrative?.kind === "visual-narrative"
+        ? {
+            beats: narrative.beats.map(({ id }) => id),
+            figureId: narrative.figure.figureId,
+          }
+        : null,
+    ).toEqual({
+      beats: ["source", "boundaries", "split"],
+      figureId: "decoder.diagram.tokenization.token",
+    });
   });
 
   test("renders Vocabulary as lookup relationships without a board", () => {

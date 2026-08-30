@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import type { Group } from "three";
 
 import { LearningSceneCanvas } from "../LearningSceneCanvas";
@@ -80,7 +80,10 @@ function AttentionPipeline({
   const scores = useRef<Group>(null);
   const weights = useRef<Group>(null);
   const value = useRef<Group>(null);
-  const groups = [input, qkv, scores, weights, value] as const;
+  const groups = useMemo(
+    () => [input, qkv, scores, weights, value] as const,
+    [],
+  );
   const focus = FOCUS_INDEX[state.stage];
   const apply = useCallback(
     (progress: number) => {

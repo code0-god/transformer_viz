@@ -1,5 +1,6 @@
 import { type ReactElement, type ReactNode, useState } from "react";
 
+import { useVisualNarrative } from "../../VisualNarrative";
 import { SceneFigure } from "../SceneFigure";
 import { SceneStageLabel, SceneStepRail } from "../sceneControls";
 
@@ -48,61 +49,73 @@ export function SelfAttentionSceneFigure({
     replay: 0,
     stage: "overview",
   });
-  const overview = state.stage === "overview";
-  const showQkv = overview || state.stage === "qkv" || state.stage === "scores";
+  const narrative = useVisualNarrative();
+  const stage =
+    narrative !== null &&
+    ["overview", "qkv", "scores", "mask", "softmax", "value"].includes(
+      narrative.activeStage,
+    )
+      ? (narrative.activeStage as SelfAttentionStage)
+      : state.stage;
+  const sceneState = { ...state, stage };
+  const overview = sceneState.stage === "overview";
+  const showQkv =
+    overview || sceneState.stage === "qkv" || sceneState.stage === "scores";
   const showScores =
     overview ||
-    state.stage === "scores" ||
-    state.stage === "mask" ||
-    state.stage === "softmax";
+    sceneState.stage === "scores" ||
+    sceneState.stage === "mask" ||
+    sceneState.stage === "softmax";
   const showMask =
-    overview || state.stage === "mask" || state.stage === "softmax";
+    overview || sceneState.stage === "mask" || sceneState.stage === "softmax";
   const showWeights =
-    overview || state.stage === "softmax" || state.stage === "value";
-  const showValue = overview || state.stage === "value";
+    overview || sceneState.stage === "softmax" || sceneState.stage === "value";
+  const showValue = overview || sceneState.stage === "value";
   return (
     <SceneFigure
       annotations={
         <div
           className="attention-scene__state"
-          data-stage={state.stage}
+          data-stage={sceneState.stage}
           data-testid="attention-scene-state"
         >
           <strong>Layer 1 · Head 1 · Illustrative</strong>
-          {STAGE_COPY[state.stage].map((line) => (
+          {STAGE_COPY[sceneState.stage].map((line) => (
             <span key={line}>{line}</span>
           ))}
         </div>
       }
       aspectRatio={1.48}
       controls={
-        <SceneStepRail
-          activeStep={state.stage}
-          label="Self-Attention computation stages"
-          onReplay={() =>
-            setState((current) => ({
-              ...current,
-              replay: current.replay + 1,
-              stage: "overview",
-            }))
-          }
-          onSelect={(stage) =>
-            setState((current) => ({
-              ...current,
-              replay: current.replay + 1,
-              stage,
-            }))
-          }
-          replayLabel="Attention 다시 보기"
-          steps={[
-            { id: "overview", label: "Overview" },
-            { id: "qkv", label: "Q/K/V" },
-            { id: "scores", label: "Scores" },
-            { id: "mask", label: "Mask" },
-            { id: "softmax", label: "Softmax" },
-            { id: "value", label: "Value" },
-          ]}
-        />
+        narrative === null ? (
+          <SceneStepRail
+            activeStep={sceneState.stage}
+            label="Self-Attention computation stages"
+            onReplay={() =>
+              setState((current) => ({
+                ...current,
+                replay: current.replay + 1,
+                stage: "overview",
+              }))
+            }
+            onSelect={(stage) =>
+              setState((current) => ({
+                ...current,
+                replay: current.replay + 1,
+                stage,
+              }))
+            }
+            replayLabel="Attention 다시 보기"
+            steps={[
+              { id: "overview", label: "Overview" },
+              { id: "qkv", label: "Q/K/V" },
+              { id: "scores", label: "Scores" },
+              { id: "mask", label: "Mask" },
+              { id: "softmax", label: "Softmax" },
+              { id: "value", label: "Value" },
+            ]}
+          />
+        ) : undefined
       }
       description="하나의 combined projection에서 head별 Q/K/V를 만들고 score, scale, causal mask, Softmax, weighted V, head merge, output projection으로 이어지는 causal attention"
       fallback={fallback}
@@ -123,7 +136,7 @@ export function SelfAttentionSceneFigure({
                   key={label}
                   mobileX={25}
                   mobileY={Number(mobileY)}
-                  tone={state.stage === "qkv" ? "selected" : "neutral"}
+                  tone={sceneState.stage === "qkv" ? "selected" : "neutral"}
                   x={Number(x)}
                   y={Number(y)}
                 >
@@ -135,7 +148,7 @@ export function SelfAttentionSceneFigure({
             <SceneStageLabel
               mobileX={34}
               mobileY={43}
-              tone={state.stage === "scores" ? "selected" : "neutral"}
+              tone={sceneState.stage === "scores" ? "selected" : "neutral"}
               x={42}
               y={12}
             >
@@ -146,7 +159,7 @@ export function SelfAttentionSceneFigure({
             <SceneStageLabel
               mobileX={72}
               mobileY={51}
-              tone={state.stage === "mask" ? "selected" : "neutral"}
+              tone={sceneState.stage === "mask" ? "selected" : "neutral"}
               x={50}
               y={72}
             >
@@ -157,7 +170,7 @@ export function SelfAttentionSceneFigure({
             <SceneStageLabel
               mobileX={50}
               mobileY={62}
-              tone={state.stage === "softmax" ? "selected" : "neutral"}
+              tone={sceneState.stage === "softmax" ? "selected" : "neutral"}
               x={64}
               y={12}
             >
@@ -169,7 +182,7 @@ export function SelfAttentionSceneFigure({
               <SceneStageLabel
                 mobileX={50}
                 mobileY={78}
-                tone={state.stage === "value" ? "selected" : "neutral"}
+                tone={sceneState.stage === "value" ? "selected" : "neutral"}
                 x={80}
                 y={12}
               >
@@ -178,7 +191,7 @@ export function SelfAttentionSceneFigure({
               <SceneStageLabel
                 mobileX={50}
                 mobileY={93}
-                tone={state.stage === "value" ? "output" : "neutral"}
+                tone={sceneState.stage === "value" ? "output" : "neutral"}
                 x={93}
                 y={12}
               >
@@ -189,7 +202,7 @@ export function SelfAttentionSceneFigure({
         </>
       }
       loadScene={loadSelfAttentionScene}
-      state={state}
+      state={sceneState}
       title="각 token은 무엇을 참고해 새 표현을 만들까요?"
     />
   );

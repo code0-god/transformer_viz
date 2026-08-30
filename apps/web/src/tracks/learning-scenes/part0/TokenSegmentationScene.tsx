@@ -32,14 +32,17 @@ export default function TokenSegmentationScene({
       sceneId={sceneId}
       viewport={viewport}
     >
-      <LayerPlane
-        color={LEARNING_SCENE_COLORS.stageDepth}
-        opacity={0.46}
-        position={[0, 0, -0.28]}
-        size={[mobile ? 7.3 : 8.4, 2.35]}
-      />
+      {state.narrative === true ? null : (
+        <LayerPlane
+          color={LEARNING_SCENE_COLORS.stageDepth}
+          opacity={0.46}
+          position={[0, 0, -0.28]}
+          size={[mobile ? 7.3 : 8.4, 2.35]}
+        />
+      )}
       <SegmentationStrip
         mobile={mobile}
+        narrative={state.narrative === true}
         onFrame={onFrame}
         reducedMotion={reducedMotion}
         segments={example.segments}

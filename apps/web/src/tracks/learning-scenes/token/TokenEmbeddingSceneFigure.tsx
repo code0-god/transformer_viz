@@ -1,6 +1,7 @@
 import { type ReactElement, useState } from "react";
 
 import { TokenEmbeddingDiagram } from "../../decoder-only-fundamentals/curriculum/diagrams/part2/TokenEmbeddingDiagram";
+import { useVisualNarrative } from "../../VisualNarrative";
 import { SceneFigure } from "../SceneFigure";
 import {
   SceneChoiceGroup,
@@ -11,7 +12,7 @@ import {
 import "./tokenEmbeddingScene.css";
 
 export type TokenEmbeddingState = Readonly<{
-  phase: "id" | "lookup" | "vector";
+  phase: "id" | "lift" | "lookup" | "vector";
   replay: number;
   token: "cat" | "the";
 }>;
@@ -31,7 +32,16 @@ export function TokenEmbeddingSceneFigure(): ReactElement {
     replay: 0,
     token: "the",
   });
-  const selected = TOKEN_SPEC[state.token];
+  const narrative = useVisualNarrative();
+  const phase =
+    narrative?.activeStage === "id" ||
+    narrative?.activeStage === "lookup" ||
+    narrative?.activeStage === "lift" ||
+    narrative?.activeStage === "vector"
+      ? narrative.activeStage
+      : state.phase;
+  const sceneState = { ...state, phase };
+  const selected = TOKEN_SPEC[sceneState.token];
   const nearbyRows = Array.from(
     { length: 5 },
     (_, index) => selected.id - 2 + index,
@@ -41,16 +51,16 @@ export function TokenEmbeddingSceneFigure(): ReactElement {
       annotations={
         <div
           className="token-scene__state"
-          data-phase={state.phase}
-          data-replay={state.replay}
-          data-selected-token={state.token}
+          data-phase={sceneState.phase}
+          data-replay={sceneState.replay}
+          data-selected-token={sceneState.token}
           data-testid="token-scene-state"
         >
           <strong>ID {selected.id}</strong>
           <span>
-            {state.phase === "vector"
+            {sceneState.phase === "vector"
               ? `선택한 row ${selected.id}이 vector로 이동합니다.`
-              : state.phase === "lookup"
+              : sceneState.phase === "lookup"
                 ? `row ${selected.id}을 선택했습니다.`
                 : "Token ID와 같은 번호의 row를 찾습니다."}
           </span>
@@ -73,32 +83,35 @@ export function TokenEmbeddingSceneFigure(): ReactElement {
                 token,
               }))
             }
-            selected={state.token}
+            selected={sceneState.token}
           />
-          <SceneStepRail
-            activeStep={state.phase}
-            label="Embedding row extraction 단계"
-            onReplay={() =>
-              setState((current) => ({
-                ...current,
-                phase: "id",
-                replay: current.replay + 1,
-              }))
-            }
-            onSelect={(phase) =>
-              setState((current) => ({
-                ...current,
-                phase,
-                replay: current.replay + 1,
-              }))
-            }
-            replayLabel="다시 보기"
-            steps={[
-              { id: "id", label: "ID" },
-              { id: "lookup", label: "Row 선택" },
-              { id: "vector", label: "Vector 추출" },
-            ]}
-          />
+          {narrative === null ? (
+            <SceneStepRail
+              activeStep={sceneState.phase}
+              label="Embedding row extraction 단계"
+              onReplay={() =>
+                setState((current) => ({
+                  ...current,
+                  phase: "id",
+                  replay: current.replay + 1,
+                }))
+              }
+              onSelect={(phase) =>
+                setState((current) => ({
+                  ...current,
+                  phase,
+                  replay: current.replay + 1,
+                }))
+              }
+              replayLabel="다시 보기"
+              steps={[
+                { id: "id", label: "ID" },
+                { id: "lookup", label: "Row 선택" },
+                { id: "lift", label: "Row 분리" },
+                { id: "vector", label: "Vector 추출" },
+              ]}
+            />
+          ) : null}
         </div>
       }
       description="Token ID와 같은 번호의 embedding row가 선택되어 독립된 vector로 추출되는 과정"
@@ -110,7 +123,7 @@ export function TokenEmbeddingSceneFigure(): ReactElement {
           <SceneStageLabel
             mobileX={50}
             mobileY={12}
-            tone={state.phase === "id" ? "selected" : "neutral"}
+            tone={sceneState.phase === "id" ? "selected" : "neutral"}
             x={13}
             y={16}
           >
@@ -122,7 +135,7 @@ export function TokenEmbeddingSceneFigure(): ReactElement {
               mobileX={18}
               mobileY={29 + index * 11}
               tone={
-                row === selected.id && state.phase !== "id"
+                row === selected.id && sceneState.phase !== "id"
                   ? "selected"
                   : "neutral"
               }
@@ -135,7 +148,7 @@ export function TokenEmbeddingSceneFigure(): ReactElement {
           <SceneStageLabel
             mobileX={50}
             mobileY={88}
-            tone={state.phase === "vector" ? "output" : "neutral"}
+            tone={sceneState.phase === "vector" ? "output" : "neutral"}
             x={84}
             y={16}
           >
@@ -144,7 +157,7 @@ export function TokenEmbeddingSceneFigure(): ReactElement {
         </>
       }
       loadScene={loadTokenEmbeddingScene}
-      state={state}
+      state={sceneState}
       title="Token ID는 어떻게 하나의 vector를 찾을까요?"
     />
   );

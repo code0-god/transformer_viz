@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import type { Group } from "three";
 
 import { LEARNING_SCENE_COLORS } from "../scenePalette";
@@ -26,6 +26,7 @@ function segmentEntries(
 export function SegmentationStrip({
   color = LEARNING_SCENE_COLORS.token,
   mobile,
+  narrative = false,
   onFrame,
   reducedMotion,
   segments,
@@ -34,14 +35,15 @@ export function SegmentationStrip({
 }: Readonly<{
   color?: string;
   mobile: boolean;
+  narrative?: boolean;
   onFrame: () => void;
   reducedMotion: boolean;
   segments: readonly string[];
   split: boolean;
   transitionKey: string | number;
 }>): ReactElement {
-  const entries = segmentEntries(segments);
-  const widths = entries.map(({ width }) => width);
+  const entries = useMemo(() => segmentEntries(segments), [segments]);
+  const widths = useMemo(() => entries.map(({ width }) => width), [entries]);
   const groups = useRef<(Group | null)[]>([]);
   const apply = useCallback(
     (progress: number) => {
@@ -82,13 +84,23 @@ export function SegmentationStrip({
             }}
           >
             <mesh>
-              <boxGeometry args={[entry.width, 0.82, 0.16]} />
+              <boxGeometry
+                args={[
+                  entry.width,
+                  narrative ? 0.46 : 0.82,
+                  narrative ? 0.09 : 0.16,
+                ]}
+              />
               <meshStandardMaterial
-                color={color}
+                color={
+                  narrative && !split ? LEARNING_SCENE_COLORS.stageDepth : color
+                }
                 emissive={color}
-                emissiveIntensity={split ? 0.04 : 0.01}
+                emissiveIntensity={split ? 0.03 : 0}
                 metalness={0.01}
+                opacity={narrative && !split ? 0.14 : 0.82}
                 roughness={0.86}
+                transparent={narrative}
               />
             </mesh>
           </group>

@@ -35,7 +35,7 @@ import "./sceneFigure.css";
 type SceneFigureProps<State extends object> = Readonly<{
   aspectRatio: number;
   annotations?: ReactNode;
-  controls: ReactNode;
+  controls?: ReactNode;
   description: string;
   fallback: ReactNode;
   figureId: string;
@@ -249,12 +249,14 @@ export function SceneFigure<State extends object>({
           <div className="scene-figure__labels">{labels}</div>
         )}
       </div>
-      <fieldset
-        className="scene-figure__controls"
-        aria-label={`${title} controls`}
-      >
-        {controls}
-      </fieldset>
+      {controls === undefined ? null : (
+        <fieldset
+          className="scene-figure__controls"
+          aria-label={`${title} controls`}
+        >
+          {controls}
+        </fieldset>
+      )}
       {annotations === undefined ? null : (
         <div className="scene-figure__annotations">{annotations}</div>
       )}

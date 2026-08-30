@@ -110,6 +110,13 @@ export function scanGuideBlock<Id extends string>(
       }
       scan.explained = true;
       return;
+    case "visual-narrative":
+      block.beats.forEach((beat, index) => {
+        registerId(beat.id, `${path}.beats[${index}].id`, scan);
+      });
+      scanGuideBlock(block.figure, `${path}.figure`, scan);
+      scan.explained = true;
+      return;
     case "rich-paragraph":
       block.content.forEach((inline, index) => {
         scanInline(inline, `${path}.content[${index}]`, scan);

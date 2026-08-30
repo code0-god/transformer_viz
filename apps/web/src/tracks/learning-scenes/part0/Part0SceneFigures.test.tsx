@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { curriculumLearningFigures } from "../../decoder-only-fundamentals/curriculum/learningFigureRegistry";
+import type { GuideVisualNarrativeBlock } from "../../guideTypes";
+import { VisualNarrative } from "../../VisualNarrative";
 import {
   NlpTransformationSceneFigure,
   TokenizationMethodsSceneFigure,
@@ -9,6 +11,51 @@ import {
 } from "./Part0SceneFigures";
 
 describe("Part 0 Learning Scenes", () => {
+  test("lets inline prose drive token segmentation without a replay rail", () => {
+    const narrative = {
+      id: "token-narrative",
+      kind: "visual-narrative",
+      layout: "inline",
+      label: "Token split",
+      beats: [
+        { id: "source", label: "문장", stage: "source", text: "SOURCE_BEAT" },
+        {
+          id: "boundaries",
+          label: "경계",
+          stage: "boundaries",
+          text: "BOUNDARY_BEAT",
+        },
+        { id: "split", label: "Token", stage: "split", text: "SPLIT_BEAT" },
+      ],
+      figure: {
+        id: "token-figure",
+        kind: "figure",
+        figureId: "decoder.diagram.tokenization.token",
+        caption: "TOKEN_CAPTION",
+        alt: "TOKEN_ALT",
+      },
+    } as const satisfies GuideVisualNarrativeBlock;
+
+    render(
+      <VisualNarrative
+        block={narrative}
+        registry={curriculumLearningFigures}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Token" }));
+
+    expect(screen.getByTestId("tokenization-unit-scene-state")).toHaveAttribute(
+      "data-phase",
+      "split",
+    );
+    expect(screen.getByTestId("tokenization-unit-scene-state")).toHaveAttribute(
+      "data-narrative",
+      "true",
+    );
+    expect(screen.queryByRole("button", { name: "다시 나누기" })).toBeNull();
+    expect(screen.getByRole("button", { name: "현재 byte" })).toBeVisible();
+  });
+
   test("moves NLP through four representation states", () => {
     render(<NlpTransformationSceneFigure />);
 

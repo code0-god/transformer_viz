@@ -1,8 +1,80 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 
+import type { GuideVisualNarrativeBlock } from "../../guideTypes";
+import type { LearningFigureRegistry } from "../../learningFigureTypes";
+import { VisualNarrative } from "../../VisualNarrative";
 import { SelfAttentionSceneFigure } from "./SelfAttentionSceneFigure";
 
 describe("SelfAttentionSceneFigure", () => {
+  test("lets sticky prose drive one continuous Attention stage", () => {
+    const narrative = {
+      id: "attention-narrative",
+      kind: "visual-narrative",
+      layout: "sticky",
+      label: "Attention flow",
+      beats: [
+        {
+          id: "overview",
+          label: "Overview",
+          stage: "overview",
+          text: "OVERVIEW_BEAT",
+        },
+        { id: "qkv", label: "Q/K/V", stage: "qkv", text: "QKV_BEAT" },
+        { id: "scores", label: "Scores", stage: "scores", text: "SCORE_BEAT" },
+        { id: "mask", label: "Mask", stage: "mask", text: "MASK_BEAT" },
+        {
+          id: "softmax",
+          label: "Softmax",
+          stage: "softmax",
+          text: "SOFTMAX_BEAT",
+        },
+        { id: "value", label: "Value", stage: "value", text: "VALUE_BEAT" },
+      ],
+      figure: {
+        id: "attention-figure",
+        kind: "figure",
+        figureId: "self-attention",
+        caption: "ATTENTION_CAPTION",
+        alt: "ATTENTION_ALT",
+      },
+    } as const satisfies GuideVisualNarrativeBlock;
+    const registry: LearningFigureRegistry = {
+      figureIds: new Set(["self-attention"]),
+      metadata: () => ({
+        fallbackFigureId: "self-attention.static",
+        loadingStrategy: "visible",
+        preferredAspectRatio: 1.48,
+        preferredWidth: 1000,
+        reducedMotion: "static-final-state",
+        renderer: "scene",
+      }),
+      preferredWidth: () => 1000,
+      render: () => (
+        <SelfAttentionSceneFigure
+          fallback={<div role="img" aria-label="Attention static fallback" />}
+          headCount={4}
+          layerCount={2}
+        />
+      ),
+    };
+
+    render(<VisualNarrative block={narrative} registry={registry} />);
+    fireEvent.click(
+      within(
+        screen.getByRole("navigation", { name: "Attention flow 단계" }),
+      ).getByRole("button", { name: "Mask" }),
+    );
+
+    expect(screen.getByTestId("attention-scene-state")).toHaveAttribute(
+      "data-stage",
+      "mask",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Attention 다시 보기" }),
+    ).toBeNull();
+    expect(screen.getAllByTestId("attention-scene-state")).toHaveLength(1);
+  });
+
   test("progresses through exact causal attention semantics", () => {
     const { container } = render(
       <SelfAttentionSceneFigure

@@ -92,8 +92,12 @@ describe("Part 2 curriculum content", () => {
     expect(contracts).toEqual(CHAPTERS);
     for (const page of part2Pages()) {
       const blocks = page.sections.flatMap(({ blocks }) => blocks);
+      const explanatoryBeatCount = blocks.flatMap((block) =>
+        block.kind === "visual-narrative" ? block.beats : [],
+      ).length;
       expect(
-        blocks.filter(({ kind }) => kind === "paragraph").length,
+        blocks.filter(({ kind }) => kind === "paragraph").length +
+          explanatoryBeatCount,
       ).toBeGreaterThanOrEqual(6);
       expect(
         blocks.filter(({ kind }) => kind === "runtime-facts"),
@@ -122,7 +126,9 @@ describe("Part 2 curriculum content", () => {
           blocks.flatMap((block) =>
             block.kind === "paragraph" || block.kind === "callout"
               ? [block.text]
-              : [],
+              : block.kind === "visual-narrative"
+                ? block.beats.map(({ text }) => text)
+                : [],
           ),
         ),
       ])

@@ -139,8 +139,24 @@ describe("decoder Attention learning guide", () => {
       ),
     );
 
-    // Then: each formula follows content and the summary closes the final section.
-    expect(formulaPositions.every(({ index }) => index > 0)).toBe(true);
+    const narrative = attentionGuide.introduction.find(
+      (block) => block.kind === "visual-narrative",
+    );
+    const narrativeStages = new Set(
+      narrative?.kind === "visual-narrative"
+        ? narrative.beats.map(({ stage }) => stage)
+        : [],
+    );
+
+    // Then: local prose or the preceding narrative explains every formula.
+    expect(
+      formulaPositions.every(
+        ({ index, sectionId }) =>
+          index > 0 ||
+          (sectionId === "scale" && narrativeStages.has("scores")) ||
+          (sectionId === "merge" && narrativeStages.has("value")),
+      ),
+    ).toBe(true);
     const finalSection = sections.at(-1);
     expect(finalSection).toBeDefined();
     expect(formulaPositions.at(-1)).toEqual({

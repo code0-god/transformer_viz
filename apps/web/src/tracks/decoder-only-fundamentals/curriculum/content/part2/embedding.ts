@@ -16,15 +16,6 @@ export const embeddingChapterContent = {
         kind: "paragraph",
         text: "Part 2의 도식과 본문에서는 읽기 편하도록 batch가 하나인 B=1 축을 한 번 생략합니다. 실제 모델 경계는 batch 축을 보존합니다.",
       },
-      {
-        id: "figure.token-embedding",
-        kind: "figure",
-        figureId: "decoder.diagram.representation.embedding",
-        size: "wide",
-        caption:
-          "Token ID는 embedding table의 행을 찾고, 조회된 row가 각 token의 초기 vector가 됩니다.",
-        alt: "Token ID sequence가 embedding table row를 조회해 vector가 되는 흐름",
-      },
     ],
     sections: [
       {
@@ -33,24 +24,45 @@ export const embeddingChapterContent = {
         primaryNodeId: "decoder.root.token-embedding",
         blocks: [
           {
-            id: "p.address",
-            kind: "paragraph",
-            text: "Token ID는 vocabulary 안에서 한 행을 지정하는 주소입니다. 주소 숫자 자체가 언어적 특징을 계산하는 vector는 아닙니다.",
-          },
-          {
-            id: "p.table",
-            kind: "paragraph",
-            text: "Token embedding은 학습 과정에서 값이 정해진 lookup table입니다. Vocabulary의 각 token 주소마다 channel C 길이의 행 하나가 있습니다.",
-          },
-          {
-            id: "p.example",
-            kind: "paragraph",
-            text: "예시 ‘the cat’을 token ID sequence [T]로 두면, 각 ID는 W_E에서 서로 대응하는 행을 symbolic하게 조회합니다.",
-          },
-          {
-            id: "p.sequence",
-            kind: "paragraph",
-            text: "조회한 행을 원래 token 순서대로 놓으면 sequence vectors [T,C]가 됩니다. Table 전체와 이번 sequence의 출력은 서로 다른 대상입니다.",
+            id: "narrative.token-embedding",
+            kind: "visual-narrative",
+            layout: "split",
+            label: "Token ID에서 embedding vector를 찾는 과정",
+            beats: [
+              {
+                id: "id",
+                label: "ID",
+                stage: "id",
+                text: "Token ID는 vocabulary 안에서 한 행을 지정하는 주소입니다. 주소 숫자 자체가 언어적 특징을 계산하는 vector는 아닙니다.",
+              },
+              {
+                id: "lookup",
+                label: "Row",
+                stage: "lookup",
+                text: "Token embedding은 학습 과정에서 값이 정해진 lookup table입니다. Vocabulary의 각 token 주소마다 channel C 길이의 행 하나가 있습니다.",
+              },
+              {
+                id: "lift",
+                label: "선택",
+                stage: "lift",
+                text: "예시 ‘the cat’을 token ID sequence [T]로 두면, 각 ID는 W_E에서 서로 대응하는 행을 symbolic하게 조회합니다.",
+              },
+              {
+                id: "vector",
+                label: "Vector",
+                stage: "vector",
+                text: "조회한 행을 원래 token 순서대로 놓으면 sequence vectors [T,C]가 됩니다. Table 전체와 이번 sequence의 출력은 서로 다른 대상입니다.",
+              },
+            ],
+            figure: {
+              id: "figure.token-embedding",
+              kind: "figure",
+              figureId: "decoder.diagram.representation.embedding",
+              size: "wide",
+              caption:
+                "Token ID는 embedding table의 행을 찾고, 조회된 row가 각 token의 초기 vector가 됩니다.",
+              alt: "Token ID sequence가 embedding table row를 조회해 vector가 되는 흐름",
+            },
           },
           {
             id: "p.shape-explanation",

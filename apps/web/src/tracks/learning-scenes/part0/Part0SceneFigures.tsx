@@ -4,6 +4,7 @@ import { NlpPipelineDiagram } from "../../decoder-only-fundamentals/curriculum/d
 import { TokenComparisonDiagram } from "../../decoder-only-fundamentals/curriculum/diagrams/part0/TokenComparisonDiagram";
 import { TokenizationMethodsDiagram } from "../../decoder-only-fundamentals/curriculum/diagrams/part0/TokenizationMethodsDiagram";
 import { VocabularyAddressDiagram } from "../../decoder-only-fundamentals/curriculum/diagrams/part0/VocabularyAddressDiagram";
+import { useVisualNarrative } from "../../VisualNarrative";
 import { SceneFigure } from "../SceneFigure";
 import {
   SceneChoiceGroup,
@@ -26,7 +27,8 @@ export type NlpTransformationState = Readonly<{
 
 export type TokenSegmentationState = Readonly<{
   mode: TokenUnitMode;
-  phase: "source" | "split";
+  narrative?: boolean;
+  phase: "boundaries" | "source" | "split";
   replay: number;
 }>;
 
@@ -156,17 +158,26 @@ export function TokenSegmentationSceneFigure(): ReactElement {
     phase: "source",
     replay: 0,
   });
-  const example = TOKEN_UNIT_EXAMPLES[state.mode];
+  const narrative = useVisualNarrative();
+  const phase =
+    narrative?.activeStage === "source" ||
+    narrative?.activeStage === "boundaries" ||
+    narrative?.activeStage === "split"
+      ? narrative.activeStage
+      : state.phase;
+  const sceneState = { ...state, narrative: narrative !== null, phase };
+  const example = TOKEN_UNIT_EXAMPLES[sceneState.mode];
   return (
     <SceneFigure
       annotations={
         <p
           className="part0-scene__note"
-          data-mode={state.mode}
-          data-phase={state.phase}
+          data-mode={sceneState.mode}
+          data-narrative={sceneState.narrative ? "true" : "false"}
+          data-phase={sceneState.phase}
           data-testid="tokenization-unit-scene-state"
         >
-          {state.mode === "byte"
+          {sceneState.mode === "byte"
             ? "실제 byte tokenizer 예시"
             : "설명용 token 경계 예시"}
         </p>
@@ -187,31 +198,34 @@ export function TokenSegmentationSceneFigure(): ReactElement {
                 replay: current.replay + 1,
               }))
             }
-            selected={state.mode}
+            selected={sceneState.mode}
           />
-          <SceneStepRail
-            activeStep={state.phase}
-            label="Token 경계 단계"
-            onReplay={() =>
-              setState((current) => ({
-                ...current,
-                phase: "source",
-                replay: current.replay + 1,
-              }))
-            }
-            onSelect={(phase) =>
-              setState((current) => ({
-                ...current,
-                phase,
-                replay: current.replay + 1,
-              }))
-            }
-            replayLabel="다시 나누기"
-            steps={[
-              { id: "source", label: "원문" },
-              { id: "split", label: "경계 나누기" },
-            ]}
-          />
+          {narrative === null ? (
+            <SceneStepRail
+              activeStep={sceneState.phase}
+              label="Token 경계 단계"
+              onReplay={() =>
+                setState((current) => ({
+                  ...current,
+                  phase: "source",
+                  replay: current.replay + 1,
+                }))
+              }
+              onSelect={(phase) =>
+                setState((current) => ({
+                  ...current,
+                  phase,
+                  replay: current.replay + 1,
+                }))
+              }
+              replayLabel="다시 나누기"
+              steps={[
+                { id: "source", label: "원문" },
+                { id: "boundaries", label: "경계" },
+                { id: "split", label: "경계 나누기" },
+              ]}
+            />
+          ) : null}
         </div>
       }
       description="하나의 text strip에 tokenizer가 경계를 만들고 순서를 가진 token 단위로 분리하는 과정"
@@ -222,13 +236,13 @@ export function TokenSegmentationSceneFigure(): ReactElement {
           <SceneStageLabel x={50} y={17} mobileX={50} mobileY={16}>
             {example.source}
           </SceneStageLabel>
-          {state.phase === "split" ? (
+          {sceneState.phase === "boundaries" || sceneState.phase === "split" ? (
             <SegmentLabels segments={example.segments} />
           ) : null}
         </>
       }
       loadScene={loadTokenSegmentationScene}
-      state={state}
+      state={sceneState}
       title="문장은 어디에서 token으로 나뉠까요?"
     />
   );

@@ -107,8 +107,8 @@
     minmax(0, 1fr);
 }
 
-.learning-guide-introduction > *,
-.learning-guide-section > * {
+.learning-guide-introduction > :not(.visual-narrative),
+.learning-guide-section > :not(.visual-narrative) {
   grid-column: 2;
 }
 
@@ -431,8 +431,8 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .learning-guide-introduction > *,
-  .learning-guide-section > *,
+  .learning-guide-introduction > :not(.visual-narrative),
+  .learning-guide-section > :not(.visual-narrative),
   .learning-figure[data-figure-size] {
     grid-column: 1;
   }

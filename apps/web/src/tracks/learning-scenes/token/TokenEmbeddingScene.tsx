@@ -46,8 +46,9 @@ function EmbeddingGeometry({
   const apply = useCallback(
     (progress: number) => {
       if (selectedRow.current !== null) {
-        selectedRow.current.position.z =
-          state.phase === "id" ? 0 : 0.52 * progress;
+        const lift =
+          state.phase === "id" ? 0 : state.phase === "lookup" ? 0.2 : 0.52;
+        selectedRow.current.position.z = lift * progress;
       }
       if (extracted.current !== null) {
         const visible = state.phase === "vector";

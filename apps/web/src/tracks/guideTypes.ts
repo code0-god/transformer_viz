@@ -45,6 +45,29 @@ export type ComparisonColumn = {
 export const learningFigureSizes = ["prose", "wide", "full"] as const;
 export type LearningFigureSize = (typeof learningFigureSizes)[number];
 
+export type GuideFigureBlock = {
+  readonly id: string;
+  readonly kind: "figure";
+  readonly figureId: string;
+  readonly size?: LearningFigureSize;
+  readonly caption: string;
+  readonly alt?: string;
+};
+
+export type GuideVisualNarrativeBlock = {
+  readonly id: string;
+  readonly kind: "visual-narrative";
+  readonly layout: "inline" | "split" | "sticky";
+  readonly label: string;
+  readonly beats: readonly {
+    readonly id: string;
+    readonly label: string;
+    readonly stage: string;
+    readonly text: string;
+  }[];
+  readonly figure: GuideFigureBlock;
+};
+
 export type GuideBlock<Id extends string = FormulaId> =
   | {
       readonly id: string;
@@ -105,14 +128,8 @@ export type GuideBlock<Id extends string = FormulaId> =
       readonly kind: "selected-operation";
       readonly adapterId: string;
     }
-  | {
-      readonly id: string;
-      readonly kind: "figure";
-      readonly figureId: string;
-      readonly size?: LearningFigureSize;
-      readonly caption: string;
-      readonly alt?: string;
-    };
+  | GuideFigureBlock
+  | GuideVisualNarrativeBlock;
 
 export type LearningGuideSection<Id extends string = FormulaId> = {
   readonly id: string;

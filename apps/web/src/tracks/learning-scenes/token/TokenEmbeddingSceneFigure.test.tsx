@@ -3,9 +3,53 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
 
 import { curriculumLearningFigures } from "../../decoder-only-fundamentals/curriculum/learningFigureRegistry";
+import type { GuideVisualNarrativeBlock } from "../../guideTypes";
+import { VisualNarrative } from "../../VisualNarrative";
 import { TokenEmbeddingSceneFigure } from "./TokenEmbeddingSceneFigure";
 
 describe("TokenEmbeddingSceneFigure", () => {
+  test("lets split prose drive row extraction without a replay rail", () => {
+    const narrative = {
+      id: "embedding-narrative",
+      kind: "visual-narrative",
+      layout: "split",
+      label: "Embedding lookup",
+      beats: [
+        { id: "id", label: "ID", stage: "id", text: "ID_BEAT" },
+        { id: "lookup", label: "Row", stage: "lookup", text: "ROW_BEAT" },
+        { id: "lift", label: "선택", stage: "lift", text: "LIFT_BEAT" },
+        {
+          id: "vector",
+          label: "Vector",
+          stage: "vector",
+          text: "VECTOR_BEAT",
+        },
+      ],
+      figure: {
+        id: "embedding-figure",
+        kind: "figure",
+        figureId: "decoder.diagram.representation.embedding",
+        caption: "EMBEDDING_CAPTION",
+        alt: "EMBEDDING_ALT",
+      },
+    } as const satisfies GuideVisualNarrativeBlock;
+
+    render(
+      <VisualNarrative
+        block={narrative}
+        registry={curriculumLearningFigures}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Vector" }));
+
+    expect(screen.getByTestId("token-scene-state")).toHaveAttribute(
+      "data-phase",
+      "vector",
+    );
+    expect(screen.queryByRole("button", { name: "다시 보기" })).toBeNull();
+    expect(screen.getByRole("button", { name: "cat · ID 42" })).toBeVisible();
+  });
+
   test("synchronizes token ID, selected row, and vector semantics", () => {
     render(<TokenEmbeddingSceneFigure />);
 

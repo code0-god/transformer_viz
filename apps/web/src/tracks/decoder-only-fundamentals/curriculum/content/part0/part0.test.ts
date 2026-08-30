@@ -100,8 +100,12 @@ describe("Part 0 curriculum content", () => {
           "term.token-id",
         ]);
       } else {
+        const explanatoryBeatCount = blocks.flatMap((block) =>
+          block.kind === "visual-narrative" ? block.beats : [],
+        ).length;
         expect(
-          blocks.filter(({ kind }) => kind === "paragraph").length,
+          blocks.filter(({ kind }) => kind === "paragraph").length +
+            explanatoryBeatCount,
         ).toBeGreaterThanOrEqual(6);
         expect(
           blocks.filter(({ kind }) => kind === "term").length,
@@ -173,8 +177,10 @@ describe("Part 0 curriculum content", () => {
       tokenPage.sections.some((section) =>
         section.blocks.some(
           (block) =>
-            block.kind === "figure" &&
-            block.figureId === "decoder.diagram.tokenization.token",
+            (block.kind === "figure" &&
+              block.figureId === "decoder.diagram.tokenization.token") ||
+            (block.kind === "visual-narrative" &&
+              block.figure.figureId === "decoder.diagram.tokenization.token"),
         ),
       ),
     ).toBe(true);
