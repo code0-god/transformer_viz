@@ -19,7 +19,12 @@ from pathlib import Path
 from browser_hybrid_foundation import QuietHandler, run_contract
 
 
-def verify_entry(root: Path, entry: str, evidence: Path) -> None:
+def verify_entry(
+    root: Path,
+    entry: str,
+    evidence: Path,
+    scenario: str = "all",
+) -> None:
     """Run shared Learn, Lab, overlay, SVG, and R3F production checks."""
     server = ThreadingHTTPServer(
         ("127.0.0.1", 0),
@@ -33,6 +38,7 @@ def verify_entry(root: Path, entry: str, evidence: Path) -> None:
             f"http://127.0.0.1:{server.server_port}{base}",
             evidence / "screenshots",
             evidence / "evidence.json",
+            scenario,
         )
     finally:
         server.shutdown()
@@ -53,7 +59,7 @@ def main() -> int:
     parser.add_argument("--viewports", default="1440x900,1024x768,390x844")
     parser.add_argument("--evidence", type=Path, required=True)
     args = parser.parse_args()
-    verify_entry(args.root, args.entry, args.evidence)
+    verify_entry(args.root, args.entry, args.evidence, args.scenario)
     print(f"{args.entry} Learning Workspace: PASS")
     return 0
 

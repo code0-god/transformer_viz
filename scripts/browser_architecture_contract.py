@@ -563,10 +563,7 @@ def _capture_one(origin: str, chapter: Chapter | None, viewport: tuple[int, int]
 def _verify_curriculum_capture(state: BrowserState, chapter_id: str, width: int) -> list[JsonValue]:
     failures = [control for control in state["controls"] if control["width"] < 44 or control["height"] < 44]
     local_ranges: list[JsonValue] = [owner["range"] for owner in state["localOwners"]]
-    figure_required = chapter_id not in {
-        "decoder.chapter.4.1",
-        "decoder.chapter.5.1",
-    }
+    figure_required = True
     invalid = (
         state["documentOverflow"] != 0 or any(local_ranges) or failures
         or state["visualizationUiCount"] != 0 or state["workerActionDelta"] != 0

@@ -17,6 +17,7 @@ from browser_hybrid_helpers import (
     pointer_click,
     wait_for,
 )
+from browser_learning_workspace_probes import browser_errors
 from browser_session import ChromeSession
 
 INLINE_FIGURES = (
@@ -42,18 +43,18 @@ INLINE_FIGURES = (
     ),
 )
 EXPECTED_PREFERRED_WIDTHS = {
-    "decoder.diagram.intro.nlp": 720,
-    "decoder.diagram.tokenization.token": 800,
-    "decoder.diagram.tokenization.vocabulary": 760,
-    "decoder.diagram.tokenization.methods": 840,
-    "decoder.diagram.language-model.definition": 760,
-    "decoder.diagram.language-model.next-token": 720,
-    "decoder.diagram.language-model.conditional-probability": 780,
-    "decoder.diagram.language-model.autoregressive": 760,
+    "decoder.diagram.intro.nlp": 960,
+    "decoder.diagram.tokenization.token": 960,
+    "decoder.diagram.tokenization.vocabulary": 920,
+    "decoder.diagram.tokenization.methods": 980,
+    "decoder.diagram.language-model.definition": 960,
+    "decoder.diagram.language-model.next-token": 920,
+    "decoder.diagram.language-model.conditional-probability": 900,
+    "decoder.diagram.language-model.autoregressive": 960,
     "decoder.diagram.representation.embedding": 960,
     "decoder.diagram.representation.position": 960,
     "decoder.diagram.representation.hidden-state": 1000,
-    "root": 832,
+    "root": 1000,
 }
 ALL_LEARNING_FIGURES = (
     ("0-1", "decoder.diagram.intro.nlp", "prose"),
@@ -355,27 +356,31 @@ def _wait_for_figure(browser: ChromeSession, figure_id: str) -> None:
 
 
 def _scroll_to_bottom(browser: ChromeSession, minimum: int = 1) -> int:
-    _evaluate(
+    scroll = evaluate_dict(
         browser,
         """
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          left: 0,
-          behavior: 'auto',
-        })
+        (() => {
+          const root = document.documentElement;
+          const previousBehavior = root.style.scrollBehavior;
+          root.style.scrollBehavior = 'auto';
+          window.scrollTo({
+            top: root.scrollHeight,
+            left: 0,
+            behavior: 'auto',
+          });
+          const result = {
+            maxScroll: Math.max(0, root.scrollHeight - innerHeight),
+            scrollY: Math.round(scrollY),
+          };
+          root.style.scrollBehavior = previousBehavior;
+          return result;
+        })()
         """,
     )
-    wait_for(
-        browser,
-        (
-            "Math.abs(scrollY - Math.max(0, "
-            "document.documentElement.scrollHeight - innerHeight)) <= 1"
-        ),
-        "Chapter bottom scroll",
-    )
-    scroll_y = _integer(
-        evaluate_dict(browser, "({ scrollY: Math.round(scrollY) })"),
-        "scrollY",
+    scroll_y = _integer(scroll, "scrollY")
+    require(
+        abs(scroll_y - _number(scroll, "maxScroll")) <= 1,
+        f"Chapter bottom scroll missed target: {scroll}",
     )
     require(
         scroll_y >= minimum,
@@ -478,12 +483,18 @@ def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
                 ? Array.from(content.querySelectorAll('*'))
                     .map((element) => {{
                       const box = element.getBoundingClientRect();
+                      const style = getComputedStyle(element);
                       return {{
                         tag: element.tagName,
                         className:
                           typeof element.className === 'string'
                             ? element.className
                             : element.getAttribute('class') ?? '',
+                        boxSizing: style.boxSizing,
+                        overflowWrap: style.overflowWrap,
+                        paddingInline:
+                          `${{style.paddingInlineStart}} ${{style.paddingInlineEnd}}`,
+                        whiteSpace: style.whiteSpace,
                         width: box.width,
                         right: box.right,
                         scrollWidth:
@@ -614,6 +625,99 @@ def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
     )
 
 
+def _probe_step_controls(
+    browser: ChromeSession,
+    figure_id: str,
+) -> JsonObject:
+    selector = _figure_selector(figure_id)
+    return evaluate_dict(
+        browser,
+        f"""
+        (() => {{
+          const figure = document.querySelector({json.dumps(selector)});
+          const buttons = Array.from(
+            figure?.querySelectorAll('.scene-step-rail li > button') ?? [],
+          );
+          const metrics = buttons.map((button) => {{
+            const rect = button.getBoundingClientRect();
+            const labelNode = Array.from(button.childNodes).find(
+              (node) =>
+                node.nodeType === Node.TEXT_NODE
+                && (node.textContent?.trim() ?? '') !== '',
+            );
+            const range = document.createRange();
+            if (labelNode !== undefined) range.selectNodeContents(labelNode);
+            const lineTops = labelNode === undefined
+              ? []
+              : Array.from(range.getClientRects(), (line) =>
+                  Math.round(line.top * 2) / 2
+                );
+            return {{
+              height: rect.height,
+              label: labelNode?.textContent?.trim() ?? '',
+              lines: new Set(lineTops).size,
+              width: rect.width,
+            }};
+          }});
+          let overlapCount = 0;
+          for (let left = 0; left < buttons.length; left += 1) {{
+            const a = buttons[left].getBoundingClientRect();
+            for (let right = left + 1; right < buttons.length; right += 1) {{
+              const b = buttons[right].getBoundingClientRect();
+              if (
+                Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0.5
+                && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0.5
+              ) {{
+                overlapCount += 1;
+              }}
+            }}
+          }}
+          return {{
+            buttons: metrics,
+            count: metrics.length,
+            maxLines: Math.max(0, ...metrics.map((item) => item.lines)),
+            minHeight: Math.min(Infinity, ...metrics.map((item) => item.height)),
+            minWidth: Math.min(Infinity, ...metrics.map((item) => item.width)),
+            overlapCount,
+            wrappedLabels: metrics
+              .filter((item) => item.lines > 1)
+              .map((item) => item.label),
+          }};
+        }})()
+        """,
+    )
+
+
+def _assert_step_controls(
+    browser: ChromeSession,
+    figure_id: str,
+    *,
+    mobile: bool,
+) -> JsonObject:
+    probe = _probe_step_controls(browser, figure_id)
+    require(_integer(probe, "count") > 0, f"Scene controls missing: {probe}")
+    require(
+        _number(probe, "minWidth") >= 44
+        and _number(probe, "minHeight") >= 44,
+        f"Scene control target below 44px: {probe}",
+    )
+    require(
+        _integer(probe, "overlapCount") == 0,
+        f"Scene controls overlap: {probe}",
+    )
+    if mobile:
+        require(
+            _integer(probe, "maxLines") <= 2,
+            f"Mobile scene label exceeds two lines: {probe}",
+        )
+    else:
+        require(
+            probe.get("wrappedLabels") == [],
+            f"Desktop scene label wrapped: {probe}",
+        )
+    return probe
+
+
 def _assert_inline_figure(
     browser: ChromeSession,
     figure_id: str,
@@ -635,6 +739,20 @@ def _assert_inline_figure(
                 "?.getAttribute('data-scene-status') ?? '')"
             ),
             f"Scene Figure settled: {figure_id}",
+        )
+        probe = _probe_figure(browser, figure_id)
+    if (
+        probe.get("renderer") == "scene"
+        and probe.get("sceneStatus") == "ready"
+    ):
+        ready_canvas = json.dumps(
+            f"{_figure_selector(figure_id)} "
+            f"canvas[data-learning-scene-canvas={json.dumps(figure_id)}]",
+        )
+        wait_for(
+            browser,
+            f"Boolean(document.querySelector({ready_canvas}))",
+            f"Scene Canvas ownership ready: {figure_id}",
         )
         probe = _probe_figure(browser, figure_id)
     require(_string(probe, "figureId") == figure_id, "Wrong Figure")
@@ -727,11 +845,11 @@ def _capture_gpt(
     _wait_for_figure(browser, "root")
     _scroll_figure(browser, "root")
     probe = _assert_inline_figure(browser, "root", "full")
-    require(_integer(probe, "buttonCount") == 0, "GPT Learn Figure is interactive")
-    require(_string(probe, "visualMode") == "svg", "Desktop GPT SVG hidden")
+    require(_integer(probe, "buttonCount") == 6, "GPT scene controls changed")
+    require(_string(probe, "visualMode") == "scene", "Desktop GPT scene hidden")
     require(
         not _boolean(probe, "mobileFlowVisible"),
-        "Desktop GPT mobile flow visible",
+        "Desktop GPT static fallback visible",
     )
     shots["inline-gpt"] = capture(
         browser,
@@ -879,55 +997,105 @@ def _capture_responsive(
     _wait_for_figure(browser, "root")
     _scroll_figure(browser, "root")
     gpt = _assert_inline_figure(browser, "root", "full")
-    mobile_flow = evaluate_dict(
+    mobile_scene = evaluate_dict(
             browser,
             """
             (() => {
-              const flow = document.querySelector(
-                '.decoder-learning-architecture__mobile',
+              const figure = document.querySelector('[data-figure-id="root"]');
+              const canvas = figure?.querySelector('.scene-figure canvas');
+              const labels = Array.from(
+                figure?.querySelectorAll('.scene-stage-label') ?? [],
               );
-              const desktop = document.querySelector(
-                '.architecture-root-screen[data-architecture-presentation="learn"]',
+              const fallback = figure?.querySelector(
+                '.decoder-learning-architecture',
               );
+              const visible = (element) => {
+                if (!(element instanceof Element)) return false;
+                const rect = element.getBoundingClientRect();
+                const style = getComputedStyle(element);
+                return rect.width > 1 && rect.height > 1
+                  && style.display !== 'none'
+                  && style.visibility !== 'hidden';
+              };
               return {
-                visible: flow instanceof HTMLElement
-                  && getComputedStyle(flow).display !== 'none',
-                stages: flow?.querySelectorAll('li').length ?? 0,
-                labels: Array.from(
-                  flow?.querySelectorAll('li') ?? [],
-                  (item) => item.textContent?.trim() ?? '',
-                ),
-                desktopVisible: desktop instanceof HTMLElement
-                  && getComputedStyle(desktop).display !== 'none',
+                canvasVisible: visible(canvas),
+                fallbackVisible: visible(fallback),
+                stages: labels.length,
+                labels: labels.map((item) => item.textContent?.trim() ?? ''),
               };
             })()
             """,
     )
-    require(_boolean(mobile_flow, "visible"), "Mobile GPT flow hidden")
-    require(_integer(mobile_flow, "stages") == 9, "Mobile GPT stage count")
+    require(_boolean(mobile_scene, "canvasVisible"), "Mobile GPT scene hidden")
+    require(_integer(mobile_scene, "stages") == 8, "Mobile GPT stage count")
     require(
-        mobile_flow.get("labels")
+        mobile_scene.get("labels")
         == [
             "Input Context",
-            "Token + Position Embedding",
-            "Transformer Block × N",
-            "Final LayerNorm",
-            "LM Head",
-            "Logits",
-            "Token Selection",
-            "Generated Token",
-            "Context Update ↺",
+            "Token lookup",
+            "Learned position lookup",
+            "X₀ · element-wise add",
+            "Block stack × 2",
+            "Final Norm · Head · Logits",
+            "Selected Token",
+            "Updated Context",
         ],
-        f"Mobile GPT stage order: {mobile_flow}",
+        f"Mobile GPT stage order: {mobile_scene}",
     )
     require(
-        not _boolean(mobile_flow, "desktopVisible"),
-        "Desktop GPT SVG remained visible on mobile",
+        not _boolean(mobile_scene, "fallbackVisible"),
+        "Static GPT fallback remained visible on mobile",
     )
-    responsive.append({**gpt, "mobileStages": mobile_flow["stages"]})
+    controls_390 = _assert_step_controls(browser, "root", mobile=True)
+    responsive.append(
+        {
+            **gpt,
+            "controlLayout": controls_390,
+            "mobileStages": mobile_scene["stages"],
+        },
+    )
     shots["inline-gpt-mobile"] = capture(
         browser,
         screenshots / "learn-gpt-inline-mobile-390x844.png",
+    )
+    _evaluate(
+        browser,
+        """
+        document.querySelector('[data-figure-id="root"] .scene-step-rail')
+          ?.scrollIntoView({ block: 'center' })
+        """,
+    )
+    shots["gpt-controls-mobile-390"] = capture(
+        browser,
+        screenshots / "learn-gpt-controls-mobile-390x844.png",
+    )
+
+    set_viewport(browser, 320, 568)
+    _open_chapter(browser, "3-1")
+    _wait_for_article(browser)
+    _wait_for_figure(browser, "root")
+    _scroll_figure(browser, "root")
+    gpt_320 = _assert_inline_figure(browser, "root", "full")
+    responsive.append(
+        {
+            **gpt_320,
+            "controlLayout": _assert_step_controls(
+                browser,
+                "root",
+                mobile=True,
+            ),
+        },
+    )
+    _evaluate(
+        browser,
+        """
+        document.querySelector('[data-figure-id="root"] .scene-step-rail')
+          ?.scrollIntoView({ block: 'center' })
+        """,
+    )
+    shots["gpt-controls-mobile-320"] = capture(
+        browser,
+        screenshots / "learn-gpt-controls-mobile-320x568.png",
     )
     return responsive
 
@@ -952,6 +1120,15 @@ def _verify_learn_matrix(browser: ChromeSession) -> list[JsonObject]:
                 figure_id,
                 expected_size,
             )
+            controls = (
+                _assert_step_controls(
+                    browser,
+                    figure_id,
+                    mobile=width <= 390,
+                )
+                if figure_id == "root"
+                else None
+            )
             evidence.append(
                 {
                     "width": width,
@@ -960,6 +1137,7 @@ def _verify_learn_matrix(browser: ChromeSession) -> list[JsonObject]:
                     "figureWidth": probe["width"],
                     "graphicWidth": probe["graphicWidth"],
                     "preferredWidth": probe["preferredWidth"],
+                    "controls": controls,
                 },
             )
     return evidence
@@ -973,6 +1151,13 @@ def _capture_navigation(
     set_viewport(browser, 1440, 900)
 
     _open_chapter(browser, "0-2")
+    _wait_for_figure(browser, "decoder.diagram.tokenization.token")
+    _scroll_figure(browser, "decoder.diagram.tokenization.token")
+    _assert_inline_figure(
+        browser,
+        "decoder.diagram.tokenization.token",
+        "wide",
+    )
     before_next = _scroll_to_bottom(browser, 1001)
     shots["navigation-0-2-bottom"] = capture(
         browser,
@@ -989,6 +1174,13 @@ def _capture_navigation(
         label="Next Chapter 0.3",
     )
     after_next = _wait_for_chapter_top(browser, "decoder.chapter.0.3")
+    _wait_for_figure(browser, "decoder.diagram.tokenization.vocabulary")
+    _scroll_figure(browser, "decoder.diagram.tokenization.vocabulary")
+    _assert_inline_figure(
+        browser,
+        "decoder.diagram.tokenization.vocabulary",
+        "wide",
+    )
     require(
         _string(after_next, "activeId") == "curriculum-chapter-title",
         f"Next Chapter H1 not focused: {after_next}",
@@ -1012,6 +1204,13 @@ def _capture_navigation(
     after_previous = _wait_for_chapter_top(browser, "decoder.chapter.0.2")
 
     _open_chapter(browser, "0-4")
+    _wait_for_figure(browser, "decoder.diagram.tokenization.methods")
+    _scroll_figure(browser, "decoder.diagram.tokenization.methods")
+    _assert_inline_figure(
+        browser,
+        "decoder.diagram.tokenization.methods",
+        "wide",
+    )
     before_toc = _scroll_to_bottom(browser)
     pointer_click(
         browser,
@@ -1036,7 +1235,41 @@ def _capture_navigation(
     after_toc = _wait_for_chapter_top(browser, "decoder.chapter.1.2")
 
     _open_chapter(browser, "3-1")
+    _wait_for_figure(browser, "root")
+    _scroll_figure(browser, "root")
+    _assert_inline_figure(browser, "root", "full")
     before_figure_link = _scroll_to_bottom(browser)
+    figure_link_hit = evaluate_dict(
+        browser,
+        """
+        (() => {
+          const link = document.querySelector(
+            'a[aria-label="Transformer Block 설명으로 이동"]',
+          );
+          if (!(link instanceof HTMLAnchorElement)) {
+            return { hit: false, href: '', target: '' };
+          }
+          link.scrollIntoView({ block: 'center', inline: 'nearest' });
+          const rect = link.getBoundingClientRect();
+          const target = document.elementFromPoint(
+            rect.left + rect.width / 2,
+            rect.top + rect.height / 2,
+          );
+          return {
+            hit: target === link || link.contains(target),
+            href: link.getAttribute('href') ?? '',
+            target:
+              target instanceof Element
+                ? `${target.tagName}.${target.className}`
+                : '',
+          };
+        })()
+        """,
+    )
+    require(
+        _boolean(figure_link_hit, "hit"),
+        f"GPT Figure link is obscured: {figure_link_hit}",
+    )
     pointer_click(
         browser,
         (
@@ -1061,6 +1294,13 @@ def _capture_navigation(
     )
 
     _open_chapter(browser, "0-2")
+    _wait_for_figure(browser, "decoder.diagram.tokenization.token")
+    _scroll_figure(browser, "decoder.diagram.tokenization.token")
+    _assert_inline_figure(
+        browser,
+        "decoder.diagram.tokenization.token",
+        "wide",
+    )
     before_back = _scroll_to_bottom(browser, 1001)
     pointer_click(
         browser,
@@ -1153,6 +1393,7 @@ def _capture_navigation(
         "toc": {"before": before_toc, "after": after_toc},
         "figureChapterLink": {
             "before": before_figure_link,
+            "hit": figure_link_hit,
             "after": after_figure_link,
         },
         "back": {"before": before_back, "after": after_back},
@@ -1185,10 +1426,30 @@ def capture_learning_phase(
         screenshots,
         shots,
     )
+    require(
+        not browser_errors(browser)["runtime"],
+        "Runtime error during product responsive checks",
+    )
     part_zero = _capture_part_zero(browser, screenshots, shots)
+    require(
+        not browser_errors(browser)["runtime"],
+        "Runtime error during Part 0 capture",
+    )
     gpt = _capture_gpt(browser, screenshots, shots)
+    require(
+        not browser_errors(browser)["runtime"],
+        "Runtime error during GPT capture",
+    )
     responsive = _capture_responsive(browser, screenshots, shots)
+    require(
+        not browser_errors(browser)["runtime"],
+        "Runtime error during Learn responsive capture",
+    )
     viewport_matrix = _verify_learn_matrix(browser)
+    require(
+        not browser_errors(browser)["runtime"],
+        "Runtime error during Learn viewport matrix",
+    )
     navigation = _capture_navigation(browser, screenshots, shots)
     observed_triggers = max(
         _integer(probe, "triggerCount")
