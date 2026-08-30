@@ -142,16 +142,21 @@ def _probe(browser: ChromeSession, spec: SceneSpec) -> JsonObject:
           const figure = document.querySelector(
             '[data-figure-id="{spec.figure_id}"]',
           );
+          const narrative = figure?.closest('.visual-narrative');
           const scene = figure?.querySelector('.scene-figure');
           const plane = figure?.querySelector('.scene-figure__plane');
-          const controls = figure?.querySelector('.scene-figure__controls');
+          const controls =
+            narrative?.querySelector('.visual-narrative__steps')
+            ?? figure?.querySelector('.scene-figure__controls');
           const state = figure?.querySelector(
             '[data-testid="{spec.state_test_id}"]',
           );
           const canvas = figure?.querySelector('canvas');
           const canvasBox = canvas?.getBoundingClientRect();
           const stageBox = plane?.getBoundingClientRect();
-          const buttons = Array.from(figure?.querySelectorAll('button') ?? []);
+          const buttons = Array.from(
+            (narrative ?? figure)?.querySelectorAll('button') ?? [],
+          );
           return {{
             status: scene?.getAttribute('data-scene-status') ?? '',
             viewport: scene?.getAttribute('data-scene-viewport') ?? '',
@@ -287,7 +292,7 @@ def _finish_part0(browser: ChromeSession, spec: SceneSpec) -> None:
         )
         _click_button(
             browser,
-            "경계 나누기",
+            "Token",
             condition=(
                 "document.querySelector("
                 "'[data-testid=\"tokenization-unit-scene-state\"]'"
@@ -402,7 +407,7 @@ def _finish_part2(browser: ChromeSession, spec: SceneSpec) -> None:
     if spec.name == "embedding":
         _click_button(
             browser,
-            "Vector 추출",
+            "Vector",
             condition=(
                 "document.querySelector('[data-testid=\"token-scene-state\"]')"
                 "?.getAttribute('data-phase') === 'vector'"

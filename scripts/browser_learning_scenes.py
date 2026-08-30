@@ -118,10 +118,13 @@ def _probe(browser: ChromeSession) -> JsonObject:
           const figure = document.querySelector(
             '[data-figure-id="{TOKEN_ID}"]',
           );
+          const narrative = figure?.closest('.visual-narrative');
           const scene = figure?.querySelector('.scene-figure');
           const state = figure?.querySelector('[data-testid="token-scene-state"]');
           const canvas = figure?.querySelector('canvas');
-          const controls = Array.from(figure?.querySelectorAll('button') ?? []);
+          const controls = Array.from(
+            (narrative ?? figure)?.querySelectorAll('button') ?? [],
+          );
           const semantic = figure?.querySelector(
             '.scene-figure__fallback--semantic',
           );
@@ -477,14 +480,14 @@ def run_contract(url: str, evidence_dir: Path) -> None:
         )
 
         frames_before = initial.get("metrics", {})
-        _click_phase(browser, "Row 선택", "lookup")
+        _click_phase(browser, "Row", "lookup")
         lookup = _probe(browser)
         shots["tokenLookupDesktop"] = capture(
             browser,
             screenshots / "token-lookup-1440x900.png",
         )
 
-        _click_phase(browser, "Vector 추출", "vector")
+        _click_phase(browser, "Vector", "vector")
         vector = _probe(browser)
         shots["tokenVectorDesktop"] = capture(
             browser,
@@ -558,8 +561,8 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             and mobile["metrics"].get("activeCanvasCount") == 1,
             f"Token mobile contract failed: {mobile}",
         )
-        _click_phase(browser, "Row 선택", "lookup")
-        _click_phase(browser, "Vector 추출", "vector")
+        _click_phase(browser, "Row", "lookup")
+        _click_phase(browser, "Vector", "vector")
         _evaluate(
             browser,
             """document.querySelector('.scene-figure__plane')
