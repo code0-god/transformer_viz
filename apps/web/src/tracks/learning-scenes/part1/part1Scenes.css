@@ -1,0 +1,69 @@
+.part1-scene__note,
+.part1-scene__candidate-state,
+.part1-scene__formula,
+.part1-scene__autoregressive-state {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.part1-scene__candidate-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+
+.part1-scene__candidate-state ol {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.part1-scene__candidate-state li {
+  display: grid;
+  inline-size: 1.7rem;
+  block-size: 1.7rem;
+  border: 1px solid var(--boundary-content);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 750;
+  place-items: center;
+}
+
+.part1-scene__candidate-state p,
+.part1-scene__autoregressive-state p {
+  margin: 0;
+}
+
+.part1-scene__formula {
+  color: var(--ink);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.part1-scene__autoregressive-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+
+.part1-scene__autoregressive-state [data-testid="updated-context"] {
+  color: var(--ink);
+  font-weight: 740;
+}
+
+@media (max-width: 40rem) {
+  .part1-scene__candidate-state,
+  .part1-scene__autoregressive-state {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--s1);
+  }
+}

@@ -104,19 +104,21 @@ export function TensorGrid({
 
 export function FlowLine({
   color = LEARNING_SCENE_COLORS.selected,
+  length = 1,
   position,
   rotation = [0, 0, -Math.PI / 2],
   scale = 1,
 }: Readonly<{
   color?: string;
+  length?: number;
   position: readonly [number, number, number];
   rotation?: readonly [number, number, number];
   scale?: number;
 }>): ReactElement {
   return (
     <group position={[...position]} rotation={[...rotation]} scale={scale}>
-      <mesh position={[0, 0.34, 0]}>
-        <cylinderGeometry args={[0.035, 0.035, 0.68, 12]} />
+      <mesh position={[0, 0.34 * length, 0]}>
+        <cylinderGeometry args={[0.035, 0.035, 0.68 * length, 12]} />
         <meshStandardMaterial color={color} emissive={color} />
       </mesh>
       <mesh position={[0, -0.08, 0]} rotation={[0, 0, Math.PI]}>
@@ -187,5 +189,38 @@ export function LayerPlane({
         transparent
       />
     </mesh>
+  );
+}
+
+export function ComputationCore({
+  active,
+  position,
+  scale = 1,
+}: Readonly<{
+  active: boolean;
+  position: readonly [number, number, number];
+  scale?: number;
+}>): ReactElement {
+  return (
+    <group position={[...position]} scale={scale}>
+      {[-0.58, 0, 0.58].map((z, index) => (
+        <mesh key={z} position={[0, 0, z]}>
+          <boxGeometry args={[1.55 - index * 0.12, 1.2, 0.12]} />
+          <meshStandardMaterial
+            color={
+              active
+                ? LEARNING_SCENE_COLORS.selected
+                : LEARNING_SCENE_COLORS.graphite
+            }
+            emissive={LEARNING_SCENE_COLORS.selected}
+            emissiveIntensity={active ? 0.06 : 0}
+            metalness={0.02}
+            roughness={0.82}
+            transparent
+            opacity={0.72 + index * 0.08}
+          />
+        </mesh>
+      ))}
+    </group>
   );
 }

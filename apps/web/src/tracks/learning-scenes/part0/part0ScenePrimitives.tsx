@@ -97,34 +97,3 @@ export function SegmentationStrip({
     </group>
   );
 }
-
-export function ComputationCore({
-  active,
-  position,
-}: Readonly<{
-  active: boolean;
-  position: readonly [number, number, number];
-}>): ReactElement {
-  return (
-    <group position={[...position]}>
-      {[-0.58, 0, 0.58].map((z, index) => (
-        <mesh key={z} position={[0, 0, z]}>
-          <boxGeometry args={[1.55 - index * 0.12, 1.2, 0.12]} />
-          <meshStandardMaterial
-            color={
-              active
-                ? LEARNING_SCENE_COLORS.selected
-                : LEARNING_SCENE_COLORS.graphite
-            }
-            emissive={LEARNING_SCENE_COLORS.selected}
-            emissiveIntensity={active ? 0.06 : 0}
-            metalness={0.02}
-            roughness={0.82}
-            transparent
-            opacity={0.72 + index * 0.08}
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}

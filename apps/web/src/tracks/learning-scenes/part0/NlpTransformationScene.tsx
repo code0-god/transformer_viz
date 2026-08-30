@@ -4,6 +4,7 @@ import type { Group } from "three";
 import { LearningSceneCanvas } from "../LearningSceneCanvas";
 import { LEARNING_SCENE_COLORS } from "../scenePalette";
 import {
+  ComputationCore,
   FlowLine,
   LayerPlane,
   TokenChip,
@@ -12,7 +13,6 @@ import {
 import type { LearningSceneRendererProps } from "../sceneTypes";
 import { useDemandTransition } from "../useDemandTransition";
 import type { NlpTransformationState } from "./Part0SceneFigures";
-import { ComputationCore } from "./part0ScenePrimitives";
 
 const REPRESENTATION_VALUES = [
   { id: "representation-0", value: -0.4 },

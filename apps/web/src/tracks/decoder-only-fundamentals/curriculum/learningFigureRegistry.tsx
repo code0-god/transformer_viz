@@ -6,6 +6,12 @@ import {
   TokenSegmentationSceneFigure,
   VocabularyAddressSceneFigure,
 } from "../../learning-scenes/part0/Part0SceneFigures";
+import {
+  AutoregressiveSceneFigure,
+  ConditionalProbabilitySceneFigure,
+  LanguageModelSceneFigure,
+  NextTokenSceneFigure,
+} from "../../learning-scenes/part1/Part1SceneFigures";
 import { PositionEmbeddingSceneFigure } from "../../learning-scenes/position/PositionEmbeddingSceneFigure";
 import { TokenEmbeddingSceneFigure } from "../../learning-scenes/token/TokenEmbeddingSceneFigure";
 import type {
@@ -55,20 +61,37 @@ const FIGURE_METADATA = {
     renderer: "scene",
   },
   "decoder.diagram.language-model.definition": {
-    preferredWidth: 760,
-    renderer: "static",
+    fallbackFigureId: "decoder.diagram.language-model.definition.static",
+    loadingStrategy: "visible",
+    preferredAspectRatio: 2,
+    preferredWidth: 960,
+    reducedMotion: "static-final-state",
+    renderer: "scene",
   },
   "decoder.diagram.language-model.next-token": {
-    preferredWidth: 720,
-    renderer: "static",
+    fallbackFigureId: "decoder.diagram.language-model.next-token.static",
+    loadingStrategy: "visible",
+    preferredAspectRatio: 1.85,
+    preferredWidth: 920,
+    reducedMotion: "static-final-state",
+    renderer: "scene",
   },
   "decoder.diagram.language-model.conditional-probability": {
-    preferredWidth: 780,
-    renderer: "static",
+    fallbackFigureId:
+      "decoder.diagram.language-model.conditional-probability.static",
+    loadingStrategy: "visible",
+    preferredAspectRatio: 2.15,
+    preferredWidth: 900,
+    reducedMotion: "static-final-state",
+    renderer: "scene",
   },
   "decoder.diagram.language-model.autoregressive": {
-    preferredWidth: 760,
-    renderer: "static",
+    fallbackFigureId: "decoder.diagram.language-model.autoregressive.static",
+    loadingStrategy: "visible",
+    preferredAspectRatio: 1.9,
+    preferredWidth: 960,
+    reducedMotion: "static-final-state",
+    renderer: "scene",
   },
   "decoder.diagram.representation.embedding": {
     fallbackFigureId: "decoder.diagram.representation.embedding.static",
@@ -118,6 +141,18 @@ function renderFigure(figureId: string): ReactElement {
   }
   if (figureId === "decoder.diagram.tokenization.methods") {
     return <TokenizationMethodsSceneFigure />;
+  }
+  if (figureId === "decoder.diagram.language-model.definition") {
+    return <LanguageModelSceneFigure />;
+  }
+  if (figureId === "decoder.diagram.language-model.next-token") {
+    return <NextTokenSceneFigure />;
+  }
+  if (figureId === "decoder.diagram.language-model.conditional-probability") {
+    return <ConditionalProbabilitySceneFigure />;
+  }
+  if (figureId === "decoder.diagram.language-model.autoregressive") {
+    return <AutoregressiveSceneFigure />;
   }
   if (figureId === "decoder.diagram.representation.embedding") {
     return <TokenEmbeddingSceneFigure />;
