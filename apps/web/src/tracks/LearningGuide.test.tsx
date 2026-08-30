@@ -27,6 +27,23 @@ const figures: LearningFigureRegistry = {
 };
 
 describe("LearningGuide", () => {
+  test("exposes sequential route heading levels without changing native tags", () => {
+    const { container } = render(
+      <LearningGuide page={page} glossary={glossary} formulas={formulas} />,
+    );
+
+    const title = container.querySelector("#fixture-guide-title");
+    const section = container.querySelector(
+      "#fixture-guide-fixture-section-one-title",
+    );
+    expect(title?.tagName).toBe("H3");
+    expect(title).toHaveAttribute("aria-level", "2");
+    expect(title).not.toHaveAttribute("role");
+    expect(section?.tagName).toBe("H4");
+    expect(section).toHaveAttribute("aria-level", "3");
+    expect(section).not.toHaveAttribute("role");
+  });
+
   test("renders a content-owned semantic Figure with its size and caption", () => {
     const figurePage = {
       ...page,
@@ -238,7 +255,7 @@ describe("LearningGuide", () => {
     await user.click(targetLink);
 
     expect(
-      screen.getByRole("heading", { name: "SECTION_TWO", level: 4 }),
+      screen.getByRole("heading", { name: "SECTION_TWO", level: 3 }),
     ).toHaveFocus();
     expect(window.location.hash).toBe("");
     window.history.replaceState(null, "", window.location.pathname);
