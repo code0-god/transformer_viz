@@ -3,7 +3,7 @@ import type { Group } from "three";
 
 import { LearningSceneCanvas } from "../LearningSceneCanvas";
 import { LEARNING_SCENE_COLORS } from "../scenePalette";
-import { SceneArrow, TensorGrid, VectorRow } from "../scenePrimitives";
+import { FlowLine, TensorGrid, VectorStrip } from "../scenePrimitives";
 import type { LearningSceneRendererProps } from "../sceneTypes";
 import { useDemandTransition } from "../useDemandTransition";
 import type { TokenEmbeddingState } from "./TokenEmbeddingSceneFigure";
@@ -127,7 +127,7 @@ function TokenLookupGeometry({
         values={TABLE_VALUES}
       />
       {state.phase === "id" ? null : (
-        <SceneArrow
+        <FlowLine
           color={LEARNING_SCENE_COLORS.token}
           position={mobile ? [0, 1.65, 0.1] : [-1.95, 0, 0.1]}
           rotation={mobile ? [0, 0, 0] : [0, 0, Math.PI / 2]}
@@ -135,14 +135,14 @@ function TokenLookupGeometry({
         />
       )}
       <group ref={connector}>
-        <SceneArrow
+        <FlowLine
           position={mobile ? [0, -1.7, 0.1] : [1.62, -0.05, 0.15]}
           rotation={mobile ? [0, 0, 0] : [0, 0, Math.PI / 2]}
           scale={mobile ? 1.15 : 1}
         />
       </group>
       <group ref={extracted} visible={state.phase === "vector"}>
-        <VectorRow
+        <VectorStrip
           color={LEARNING_SCENE_COLORS.selected}
           position={[0, 0, 0]}
           values={VECTOR_VALUES[state.token]}

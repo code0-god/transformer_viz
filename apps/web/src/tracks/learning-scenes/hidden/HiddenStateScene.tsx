@@ -3,7 +3,7 @@ import type { Group } from "three";
 
 import { LearningSceneCanvas } from "../LearningSceneCanvas";
 import { LEARNING_SCENE_COLORS } from "../scenePalette";
-import { SceneArrow, TensorGrid } from "../scenePrimitives";
+import { FlowLine, TensorGrid } from "../scenePrimitives";
 import type { LearningSceneRendererProps } from "../sceneTypes";
 import { useDemandTransition } from "../useDemandTransition";
 import type {
@@ -115,7 +115,7 @@ function HiddenEvolutionGeometry({
           />
         </group>
       </group>
-      <SceneArrow
+      <FlowLine
         position={mobile ? [0, 1.28, 0] : [-1.55, 0, 0]}
         rotation={mobile ? [0, 0, 0] : [0, 0, Math.PI / 2]}
       />
@@ -131,7 +131,7 @@ function HiddenEvolutionGeometry({
           />
         </group>
       </group>
-      <SceneArrow
+      <FlowLine
         position={mobile ? [0, -1.28, 0] : [1.55, 0, 0]}
         rotation={mobile ? [0, 0, 0] : [0, 0, Math.PI / 2]}
       />

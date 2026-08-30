@@ -96,9 +96,9 @@ export function LearningSceneCanvas({
       gl={GL_OPTIONS}
       shadows={false}
     >
-      <color attach="background" args={["#0b1113"]} />
-      <hemisphereLight args={["#e7efec", "#172126", 1.4]} />
-      <directionalLight color="#f0f6f2" intensity={2.2} position={[5, 8, 9]} />
+      <hemisphereLight args={["#ffffff", "#526560", 1.7]} />
+      <ambientLight color="#dce7e3" intensity={0.7} />
+      <directionalLight color="#ffffff" intensity={2.4} position={[5, 8, 9]} />
       <SceneLifecycle
         onContextCreated={onContextCreated}
         onContextDisposed={onContextDisposed}

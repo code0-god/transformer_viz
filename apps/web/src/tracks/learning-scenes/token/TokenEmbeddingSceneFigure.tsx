@@ -124,6 +124,7 @@ export function TokenEmbeddingSceneFigure(): ReactElement {
       description="Token ID가 embedding table에서 같은 번호의 row를 선택하고 독립된 vector로 추출되는 LOOKUP 과정"
       fallback={<TokenEmbeddingDiagram />}
       figureId="decoder.diagram.representation.embedding"
+      grid
       loadScene={loadTokenEmbeddingScene}
       state={state}
       title="Token ID는 어떻게 하나의 vector를 찾을까요?"

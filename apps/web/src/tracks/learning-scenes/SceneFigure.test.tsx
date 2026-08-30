@@ -110,6 +110,7 @@ function sceneProps(
     description: "Token ID selects one embedding row.",
     fallback: <div data-testid="semantic-fallback">ID, row, vector</div>,
     figureId: "decoder.diagram.representation.embedding",
+    labels: <span data-testid="scene-label">Embedding table</span>,
     loadScene,
     state: { step: "initial" },
     title: "Token ID는 어떻게 vector가 될까요?",
@@ -201,6 +202,22 @@ describe("SceneFigure lifecycle foundation", () => {
       activeCanvasCount: 0,
       observerCount: 2,
     });
+  });
+
+  test("keeps labels on the stage and controls after the scene", () => {
+    const { container } = render(<SceneFigure {...sceneProps()} />);
+    const stage = container.querySelector(".scene-figure__plane");
+    const controls = container.querySelector(".scene-figure__controls");
+    const label = screen.getByTestId("scene-label");
+
+    if (!(stage instanceof HTMLElement) || !(controls instanceof HTMLElement)) {
+      throw new Error("Scene stage structure missing");
+    }
+    expect(stage).toContainElement(label);
+    expect(
+      stage.compareDocumentPosition(controls) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   test("uses semantic fallback when WebGL is unavailable", async () => {

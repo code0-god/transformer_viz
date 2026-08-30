@@ -3,7 +3,7 @@ import type { Group } from "three";
 
 import { LearningSceneCanvas } from "../LearningSceneCanvas";
 import { LEARNING_SCENE_COLORS } from "../scenePalette";
-import { SceneArrow, VectorRow } from "../scenePrimitives";
+import { FlowLine, VectorStrip } from "../scenePrimitives";
 import type { LearningSceneRendererProps } from "../sceneTypes";
 import { useDemandTransition } from "../useDemandTransition";
 import type { PositionEmbeddingState } from "./PositionEmbeddingSceneFigure";
@@ -123,28 +123,24 @@ function PositionCompositionGeometry({
           />
         </mesh>
       ))}
-      <VectorRow
+      <VectorStrip
         color={LEARNING_SCENE_COLORS.token}
         position={[0, 1.75, 0]}
         values={TOKEN_VALUES}
       />
       <AdditionMark position={[-2.15, 0.9, 0]} />
       <group ref={positionRow}>
-        <VectorRow
+        <VectorStrip
           color={LEARNING_SCENE_COLORS.position}
           position={[0, 0.4, 0]}
           values={POSITION_VALUES[state.position]}
         />
       </group>
       <group ref={resultArrow}>
-        <SceneArrow
-          position={[0, -0.65, 0.1]}
-          rotation={[0, 0, 0]}
-          scale={0.9}
-        />
+        <FlowLine position={[0, -0.65, 0.1]} rotation={[0, 0, 0]} scale={0.9} />
       </group>
       <group ref={result} visible={state.phase === "sum"}>
-        <VectorRow
+        <VectorStrip
           color={LEARNING_SCENE_COLORS.selected}
           position={[0, 0, 0]}
           values={RESULT_VALUES[state.position]}

@@ -39,6 +39,8 @@ type SceneFigureProps<State extends object> = Readonly<{
   description: string;
   fallback: ReactNode;
   figureId: string;
+  grid?: boolean;
+  labels?: ReactNode;
   loadScene: () => Promise<LearningSceneModule<State>>;
   state: State;
   title: string;
@@ -76,6 +78,8 @@ export function SceneFigure<State extends object>({
   description,
   fallback,
   figureId,
+  grid = false,
+  labels,
   loadScene,
   state,
   title,
@@ -171,6 +175,7 @@ export function SceneFigure<State extends object>({
       aria-labelledby={`${figureId}-scene-title`}
       aria-describedby={`${figureId}-scene-description`}
       data-scene-id={figureId}
+      data-scene-grid={grid ? "true" : "false"}
       data-scene-motion={reducedMotion ? "reduced" : "full"}
       data-scene-status={status}
       data-scene-viewport={viewport}
@@ -181,15 +186,6 @@ export function SceneFigure<State extends object>({
         <h2 id={`${figureId}-scene-title`}>{title}</h2>
         <span id={`${figureId}-scene-description`}>{description}</span>
       </header>
-      <fieldset
-        className="scene-figure__controls"
-        aria-label={`${title} controls`}
-      >
-        {controls}
-      </fieldset>
-      {annotations === undefined ? null : (
-        <div className="scene-figure__annotations">{annotations}</div>
-      )}
       <div className="scene-figure__plane">
         {canRender && SceneRenderer !== undefined ? (
           <SceneBoundary
@@ -249,7 +245,19 @@ export function SceneFigure<State extends object>({
             WebGL context를 복구하고 있습니다.
           </p>
         ) : null}
+        {labels === undefined ? null : (
+          <div className="scene-figure__labels">{labels}</div>
+        )}
       </div>
+      <fieldset
+        className="scene-figure__controls"
+        aria-label={`${title} controls`}
+      >
+        {controls}
+      </fieldset>
+      {annotations === undefined ? null : (
+        <div className="scene-figure__annotations">{annotations}</div>
+      )}
     </section>
   );
 }

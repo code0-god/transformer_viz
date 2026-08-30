@@ -108,6 +108,7 @@ export function PositionEmbeddingSceneFigure(): ReactElement {
       description="같은 길이의 token embedding과 learned absolute position embedding을 channel별로 더해 X_0를 만드는 COMPOSITION 과정"
       fallback={<PositionEmbeddingDiagram />}
       figureId="decoder.diagram.representation.position"
+      grid
       loadScene={loadPositionEmbeddingScene}
       state={state}
       title="같은 token에 position을 어떻게 더할까요?"

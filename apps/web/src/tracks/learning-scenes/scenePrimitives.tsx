@@ -3,7 +3,7 @@ import type { Group } from "three";
 
 import { LEARNING_SCENE_COLORS } from "./scenePalette";
 
-type VectorRowProps = Readonly<{
+type VectorStripProps = Readonly<{
   color: string;
   position: readonly [number, number, number];
   values: readonly Readonly<{ id: string; value: number }>[];
@@ -21,24 +21,24 @@ type TensorGridProps = Readonly<{
   values: readonly Readonly<{ id: string; value: number }>[];
 }>;
 
-export function VectorRow({
+export function VectorStrip({
   color,
   position,
   values,
-}: VectorRowProps): ReactElement {
-  const gap = 0.62;
+}: VectorStripProps): ReactElement {
+  const gap = 0.68;
   const start = -((values.length - 1) * gap) / 2;
   return (
     <group position={[...position]}>
       {values.map(({ id, value }, index) => (
         <mesh key={id} position={[start + index * gap, 0, value * 0.16]}>
-          <boxGeometry args={[0.48, 0.48, 0.16 + Math.abs(value) * 0.22]} />
+          <boxGeometry args={[0.54, 0.5, 0.14 + Math.abs(value) * 0.2]} />
           <meshStandardMaterial
             color={color}
             emissive={color}
-            emissiveIntensity={0.08 + Math.abs(value) * 0.08}
-            metalness={0.08}
-            roughness={0.72}
+            emissiveIntensity={0.02 + Math.abs(value) * 0.04}
+            metalness={0.02}
+            roughness={0.82}
           />
         </mesh>
       ))}
@@ -57,7 +57,7 @@ export function TensorGrid({
   selectedRowRef,
   values,
 }: TensorGridProps): ReactElement {
-  const gap = 0.56;
+  const gap = 0.62;
   const xStart = -((cols - 1) * gap) / 2;
   const yStart = ((rows - 1) * gap) / 2;
   return (
@@ -81,14 +81,14 @@ export function TensorGrid({
               return (
                 <mesh key={id} position={[xStart + col * gap, 0, 0]}>
                   <boxGeometry
-                    args={[0.46, 0.46, 0.12 + Math.abs(value) * 0.2]}
+                    args={[0.52, 0.52, 0.1 + Math.abs(value) * 0.18]}
                   />
                   <meshStandardMaterial
                     color={cellColor}
                     emissive={cellColor}
-                    emissiveIntensity={selected ? 0.24 : 0.04}
-                    metalness={0.06}
-                    roughness={0.76}
+                    emissiveIntensity={selected ? 0.08 : 0.01}
+                    metalness={0.02}
+                    roughness={0.84}
                     transparent
                     opacity={selected ? 1 : 0.82}
                   />
@@ -102,7 +102,7 @@ export function TensorGrid({
   );
 }
 
-export function SceneArrow({
+export function FlowLine({
   color = LEARNING_SCENE_COLORS.selected,
   position,
   rotation = [0, 0, -Math.PI / 2],
@@ -124,5 +124,68 @@ export function SceneArrow({
         <meshStandardMaterial color={color} emissive={color} />
       </mesh>
     </group>
+  );
+}
+
+export function TokenChip({
+  color = LEARNING_SCENE_COLORS.token,
+  position,
+  scale = 1,
+  selected = false,
+}: Readonly<{
+  color?: string;
+  position: readonly [number, number, number];
+  scale?: number;
+  selected?: boolean;
+}>): ReactElement {
+  return (
+    <group position={[...position]} scale={scale}>
+      <mesh>
+        <boxGeometry args={[1.5, 0.66, 0.18]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={selected ? LEARNING_SCENE_COLORS.selected : color}
+          emissiveIntensity={selected ? 0.1 : 0.01}
+          metalness={0.02}
+          roughness={0.84}
+        />
+      </mesh>
+      {selected ? (
+        <mesh scale={[1.06, 1.14, 1.25]}>
+          <boxGeometry args={[1.5, 0.66, 0.18]} />
+          <meshBasicMaterial
+            color={LEARNING_SCENE_COLORS.selected}
+            transparent
+            opacity={0.72}
+            wireframe
+          />
+        </mesh>
+      ) : null}
+    </group>
+  );
+}
+
+export function LayerPlane({
+  color = LEARNING_SCENE_COLORS.stageDepth,
+  opacity = 0.5,
+  position,
+  size,
+}: Readonly<{
+  color?: string;
+  opacity?: number;
+  position: readonly [number, number, number];
+  size: readonly [number, number];
+}>): ReactElement {
+  return (
+    <mesh position={[...position]}>
+      <planeGeometry args={[...size]} />
+      <meshStandardMaterial
+        color={color}
+        metalness={0}
+        opacity={opacity}
+        roughness={0.9}
+        transparent
+      />
+    </mesh>
   );
 }

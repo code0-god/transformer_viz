@@ -100,6 +100,7 @@ export function HiddenStateSceneFigure(): ReactElement {
       description="동일한 token rows와 [T,C] shape를 유지하면서 X_0, X_1, X_N의 activation 값이 달라지는 EVOLUTION 과정"
       fallback={<HiddenStateDiagram />}
       figureId="decoder.diagram.representation.hidden-state"
+      grid
       loadScene={loadHiddenStateScene}
       state={state}
       title="같은 tensor가 Block을 지나면 무엇이 달라질까요?"
