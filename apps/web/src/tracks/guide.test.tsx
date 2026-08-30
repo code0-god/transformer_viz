@@ -5,7 +5,7 @@ import type { LearningFigureRegistry } from "./learningFigureTypes";
 import { validateLearningProfile } from "./validation";
 
 const figures: LearningFigureRegistry = {
-  figureIds: new Set(["root", "transformer-block"]),
+  figureIds: new Set(["root", "transformer-block", "self-attention"]),
   metadata: () => ({ preferredWidth: 832, renderer: "static" }),
   preferredWidth: () => 832,
   render: () => (

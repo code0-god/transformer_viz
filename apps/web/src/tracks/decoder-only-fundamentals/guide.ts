@@ -43,7 +43,7 @@ export const decoderGuideCatalog: LearningGuideCatalog = {
     decoderGuideRuntimeAdapterIds.attentionFacts,
   ],
   operationAdapterIds: [decoderGuideRuntimeAdapterIds.selectedOperation],
-  figureIds: ["root", "transformer-block"],
+  figureIds: ["root", "transformer-block", "self-attention"],
 };
 
 export function decoderGuidePage(routeId: LearningRouteId): LearningGuidePage {

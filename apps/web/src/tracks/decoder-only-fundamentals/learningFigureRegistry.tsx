@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import { RootArchitecture } from "../../architecture/root/RootArchitecture";
+import { SelfAttentionSceneFigure } from "../learning-scenes/attention/SelfAttentionSceneFigure";
 import { TransformerBlockSceneFigure } from "../learning-scenes/block/TransformerBlockSceneFigure";
 import { GptArchitectureSceneFigure } from "../learning-scenes/gpt/GptArchitectureSceneFigure";
 import type { LearningFigureRegistry } from "../learningFigureTypes";
@@ -8,6 +9,7 @@ import type { ArchitectureRenderContext } from "../types";
 
 const DECODER_FIGURE_IDS: ReadonlySet<string> = new Set([
   "root",
+  "self-attention",
   "transformer-block",
 ]);
 const ROOT_LEARNING_STAGES = [
@@ -30,6 +32,16 @@ const BLOCK_LEARNING_STAGES = [
   { id: "mlp", label: "MLP" },
   { id: "add-2", label: "Add" },
   { id: "x-out", label: "X_out" },
+] as const;
+const ATTENTION_LEARNING_STAGES = [
+  { id: "input", label: "Input X" },
+  { id: "qkv", label: "Q / K / V" },
+  { id: "scores", label: "QKᵀ / √D" },
+  { id: "mask", label: "Causal Mask" },
+  { id: "softmax", label: "Softmax" },
+  { id: "value", label: "Weighted V" },
+  { id: "merge", label: "Head Merge" },
+  { id: "projection", label: "Output Projection" },
 ] as const;
 
 class DecoderLearningFigureError extends Error {
@@ -65,6 +77,16 @@ export function createDecoderLearningFigureRegistry(
           renderer: "scene",
         };
       }
+      if (figureId === "self-attention") {
+        return {
+          fallbackFigureId: "self-attention.static",
+          loadingStrategy: "visible",
+          preferredAspectRatio: 1.48,
+          preferredWidth: 1000,
+          reducedMotion: "static-final-state",
+          renderer: "scene",
+        };
+      }
       throw new DecoderLearningFigureError(figureId);
     },
     preferredWidth: (figureId): number => {
@@ -74,6 +96,33 @@ export function createDecoderLearningFigureRegistry(
       return 1000;
     },
     render: (figureId): ReactElement => {
+      if (figureId === "self-attention") {
+        const fallback = (
+          <div
+            className="attention-scene__fallback"
+            role="img"
+            aria-label="Causal Self-Attention static flow"
+          >
+            <ol>
+              {ATTENTION_LEARNING_STAGES.map((stage) => (
+                <li key={stage.id}>{stage.label}</li>
+              ))}
+            </ol>
+            <div>
+              <code>S = QKᵀ / √D</code>
+              <code>A = softmax(mask(S))</code>
+              <code>Y = AV</code>
+            </div>
+          </div>
+        );
+        return (
+          <SelfAttentionSceneFigure
+            fallback={fallback}
+            headCount={context.model.config.n_head}
+            layerCount={context.model.config.n_layer}
+          />
+        );
+      }
       if (figureId === "transformer-block") {
         const fallback = (
           <div

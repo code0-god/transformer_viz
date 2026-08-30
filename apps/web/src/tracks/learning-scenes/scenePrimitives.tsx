@@ -265,3 +265,72 @@ export function SelectionFrame({
     </mesh>
   );
 }
+
+export function MatrixPlane({
+  cells,
+  cols,
+  mode,
+  position,
+}: Readonly<{
+  cells: readonly Readonly<{
+    col: number;
+    id: string;
+    masked?: boolean;
+    row: number;
+    value: number;
+  }>[];
+  cols: number;
+  mode: "score" | "weight";
+  position: readonly [number, number, number];
+}>): ReactElement {
+  const gap = 0.58;
+  const rows = Math.ceil(cells.length / cols);
+  const xStart = -((cols - 1) * gap) / 2;
+  const yStart = ((rows - 1) * gap) / 2;
+  return (
+    <group position={[...position]}>
+      {cells.map((cell) => {
+        const masked = cell.masked === true;
+        const magnitude = Math.abs(cell.value);
+        const depth = masked
+          ? 0.08
+          : mode === "score"
+            ? 0.12 + magnitude * 0.24
+            : 0.1 + Math.max(0, cell.value) * 0.3;
+        return (
+          <mesh
+            key={cell.id}
+            position={[
+              xStart + cell.col * gap,
+              yStart - cell.row * gap,
+              masked ? -0.16 : cell.value * 0.09,
+            ]}
+          >
+            <boxGeometry args={[0.48, 0.48, depth]} />
+            <meshStandardMaterial
+              color={
+                masked
+                  ? LEARNING_SCENE_COLORS.masked
+                  : mode === "weight"
+                    ? LEARNING_SCENE_COLORS.output
+                    : cell.value >= 0
+                      ? LEARNING_SCENE_COLORS.query
+                      : LEARNING_SCENE_COLORS.position
+              }
+              emissive={
+                mode === "weight"
+                  ? LEARNING_SCENE_COLORS.output
+                  : LEARNING_SCENE_COLORS.graphite
+              }
+              emissiveIntensity={masked ? 0 : 0.01 + magnitude * 0.04}
+              metalness={0.01}
+              opacity={masked ? 0.24 : 0.72 + magnitude * 0.22}
+              roughness={0.84}
+              transparent
+            />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}

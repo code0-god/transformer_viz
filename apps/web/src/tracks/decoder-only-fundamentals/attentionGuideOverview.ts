@@ -19,6 +19,15 @@ export const attentionGuideIntroduction: readonly GuideBlock[] = [
       },
     ],
   },
+  {
+    id: "figure.self-attention",
+    kind: "figure",
+    figureId: "self-attention",
+    size: "full",
+    caption:
+      "Causal Self-Attention은 Q와 K로 과거·현재 위치의 weights를 만들고, 그 weights로 V를 합쳐 새 token 표현을 만듭니다.",
+    alt: "Q/K/V projection, score matrix, causal mask, Softmax, weighted V, head merge, output projection 흐름",
+  },
 ];
 
 export const attentionOverviewSections: readonly LearningGuideSection[] = [
