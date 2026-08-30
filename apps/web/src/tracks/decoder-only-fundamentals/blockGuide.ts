@@ -39,6 +39,15 @@ export const decoderBlockGuide: LearningGuidePage = {
         { kind: "text", text: "를 담고, Block 안에서 계속 갱신됩니다." },
       ],
     },
+    {
+      id: "figure.transformer-block",
+      kind: "figure",
+      figureId: "transformer-block",
+      size: "full",
+      caption:
+        "Pre-LN Transformer Block은 Attention과 MLP를 차례로 계산하고, 각 결과를 residual stream에 더합니다.",
+      alt: "Pre-LN main path와 두 residual bypass가 Add에서 합쳐지는 Transformer Block 흐름",
+    },
   ],
   outlineSectionIds,
   sections: [
