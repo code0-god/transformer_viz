@@ -1,14 +1,18 @@
 import { type ReactElement, useState } from "react";
 
-import { ThreeUiAction } from "../../../threeui/ThreeUi";
 import { PositionEmbeddingDiagram } from "../../decoder-only-fundamentals/curriculum/diagrams/part2/PositionEmbeddingDiagram";
 import { SceneFigure } from "../SceneFigure";
+import {
+  SceneChoiceGroup,
+  SceneStageLabel,
+  SceneStepRail,
+} from "../sceneControls";
 
 import "./positionEmbeddingScene.css";
 
 export type PositionEmbeddingState = Readonly<{
-  phase: "before" | "sum";
-  position: 0 | 1;
+  phase: "align" | "separate" | "sum";
+  position: "0" | "3";
   replay: number;
 }>;
 
@@ -18,18 +22,10 @@ function loadPositionEmbeddingScene() {
 
 export function PositionEmbeddingSceneFigure(): ReactElement {
   const [state, setState] = useState<PositionEmbeddingState>({
-    phase: "before",
-    position: 0,
+    phase: "separate",
+    position: "0",
     replay: 0,
   });
-  const selectPosition = (position: PositionEmbeddingState["position"]) => {
-    setState((current) => ({
-      phase: "before",
-      position,
-      replay: current.replay + 1,
-    }));
-  };
-
   return (
     <SceneFigure
       annotations={
@@ -40,75 +36,96 @@ export function PositionEmbeddingSceneFigure(): ReactElement {
           data-replay={state.replay}
           data-testid="position-scene-state"
         >
-          <ol className="position-scene__flow">
-            <li>
-              <span>1 · TOKEN</span>
-              <strong>cat · E_tok [C]</strong>
-            </li>
-            <li data-active={state.phase === "before" ? "true" : undefined}>
-              <span>2 · LEARNED ABSOLUTE POSITION</span>
-              <strong>position {state.position} · E_pos [C]</strong>
-            </li>
-            <li data-active={state.phase === "sum" ? "true" : undefined}>
-              <span>3 · ELEMENT-WISE SUM</span>
-              <strong>
-                {state.phase === "sum"
-                  ? "X_0 = E_tok + E_pos · [C]"
-                  : "X_0 대기 · [C]"}
-              </strong>
-            </li>
-          </ol>
-          <div className="position-scene__equation">
-            <strong>[C] + [C] → [C]</strong>
-            <span>concatenation 아님</span>
-          </div>
-          <p>Position row와 channel 모양은 학습 개념을 위한 예시입니다.</p>
+          <span>cat · token vector [C]</span>
+          <span>position {state.position} · learned vector [C]</span>
+          <strong>
+            {state.phase === "sum"
+              ? "X₀ · result vector [C]"
+              : "[C] + [C] = [C]"}
+          </strong>
+          <small>Position channel 값은 학습을 위한 예시입니다.</small>
+          <em>concatenation 아님</em>
         </div>
       }
-      aspectRatio={1.55}
+      aspectRatio={1.9}
       controls={
-        <>
-          <ThreeUiAction
-            label="position 0"
-            onClick={() => selectPosition(0)}
-            pressed={state.position === 0}
-            tier={state.position === 0 ? "primary" : "secondary"}
-          />
-          <ThreeUiAction
-            label="position 1"
-            onClick={() => selectPosition(1)}
-            pressed={state.position === 1}
-            tier={state.position === 1 ? "primary" : "secondary"}
-          />
-          <ThreeUiAction
-            disabled={state.phase === "sum"}
-            label={state.phase === "sum" ? "더하기 완료" : "원소별 더하기"}
-            onClick={() =>
+        <div className="position-scene__controls">
+          <SceneChoiceGroup
+            choices={[
+              { id: "0", label: "position 0" },
+              { id: "3", label: "position 3" },
+            ]}
+            label="Position 비교"
+            onSelect={(position) =>
               setState((current) => ({
-                ...current,
-                phase: "sum",
+                phase: "separate",
+                position,
                 replay: current.replay + 1,
               }))
             }
-            tier="secondary"
+            selected={state.position}
           />
-          <ThreeUiAction
-            label="Composition 다시 보기"
-            onClick={() =>
+          <SceneStepRail
+            activeStep={state.phase}
+            label="Position vector addition 단계"
+            onReplay={() =>
               setState((current) => ({
                 ...current,
-                phase: "before",
+                phase: "separate",
                 replay: current.replay + 1,
               }))
             }
-            tier="tertiary"
+            onSelect={(phase) =>
+              setState((current) => ({
+                ...current,
+                phase,
+                replay: current.replay + 1,
+              }))
+            }
+            replayLabel="다시 보기"
+            steps={[
+              { id: "separate", label: "분리" },
+              { id: "align", label: "Channel 정렬" },
+              { id: "sum", label: "더하기" },
+            ]}
           />
-        </>
+        </div>
       }
-      description="같은 길이의 token embedding과 learned absolute position embedding을 channel별로 더해 X_0를 만드는 COMPOSITION 과정"
+      description="같은 token vector와 learned absolute position vector가 channel별로 정렬되어 같은 길이의 X₀로 합쳐지는 과정"
       fallback={<PositionEmbeddingDiagram />}
       figureId="decoder.diagram.representation.position"
       grid
+      labels={
+        <>
+          <SceneStageLabel
+            mobileX={50}
+            mobileY={13}
+            tone={state.phase === "separate" ? "selected" : "neutral"}
+            x={27}
+            y={15}
+          >
+            Token · cat · [C]
+          </SceneStageLabel>
+          <SceneStageLabel
+            mobileX={50}
+            mobileY={43}
+            tone={state.phase === "align" ? "selected" : "neutral"}
+            x={52}
+            y={15}
+          >
+            Position {state.position} · [C]
+          </SceneStageLabel>
+          <SceneStageLabel
+            mobileX={50}
+            mobileY={85}
+            tone={state.phase === "sum" ? "output" : "neutral"}
+            x={78}
+            y={15}
+          >
+            X₀ · [C]
+          </SceneStageLabel>
+        </>
+      }
       loadScene={loadPositionEmbeddingScene}
       state={state}
       title="같은 token에 position을 어떻게 더할까요?"

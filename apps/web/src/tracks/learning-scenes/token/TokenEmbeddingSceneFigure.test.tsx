@@ -15,20 +15,27 @@ describe("TokenEmbeddingSceneFigure", () => {
       }),
     ).toBeVisible();
     expect(screen.getByText("ID 91")).toBeVisible();
-    expect(screen.getByText("row 대기")).toBeVisible();
-    expect(screen.getByText("vector 대기")).toBeVisible();
+    for (const row of [89, 90, 91, 92, 93]) {
+      expect(screen.getByText(`row ${row}`)).toBeVisible();
+    }
 
-    fireEvent.click(screen.getByRole("button", { name: "Row 찾기" }));
-    expect(screen.getByText("row 91 선택")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Row 선택" }));
+    expect(screen.getByTestId("token-scene-state")).toHaveAttribute(
+      "data-phase",
+      "lookup",
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Vector 추출" }));
-    expect(screen.getByText("the vector")).toBeVisible();
+    expect(
+      screen.getByText("선택한 row 91이 vector로 이동합니다."),
+    ).toBeVisible();
 
     fireEvent.click(screen.getByRole("button", { name: "cat · ID 42" }));
 
     expect(screen.getByText("ID 42")).toBeVisible();
-    expect(screen.getByText("row 대기")).toBeVisible();
-    expect(screen.getByText("vector 대기")).toBeVisible();
+    for (const row of [40, 41, 42, 43, 44]) {
+      expect(screen.getByText(`row ${row}`)).toBeVisible();
+    }
     expect(screen.getByTestId("token-scene-state")).toHaveAttribute(
       "data-selected-token",
       "cat",
@@ -45,8 +52,8 @@ describe("TokenEmbeddingSceneFigure", () => {
 
     const state = screen.getByTestId("token-scene-state");
     const replayBefore = state.getAttribute("data-replay");
-    fireEvent.click(screen.getByRole("button", { name: "Row 찾기" }));
-    fireEvent.click(screen.getByRole("button", { name: "Lookup 다시 보기" }));
+    fireEvent.click(screen.getByRole("button", { name: "Row 선택" }));
+    fireEvent.click(screen.getByRole("button", { name: "다시 보기" }));
 
     expect(state).toHaveAttribute("data-selected-token", "cat");
     expect(state).toHaveAttribute("data-phase", "id");
@@ -84,7 +91,7 @@ describe("TokenEmbeddingSceneFigure", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("표시된 channel은 학습 개념을 위한 예시입니다."),
+      screen.getByText("Channel 값은 학습을 위한 예시입니다."),
     ).toBeVisible();
   });
 });

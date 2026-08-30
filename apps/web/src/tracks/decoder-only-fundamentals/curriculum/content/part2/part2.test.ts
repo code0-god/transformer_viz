@@ -52,7 +52,7 @@ describe("Part 2 curriculum content", () => {
       {
         fallbackFigureId: "decoder.diagram.representation.embedding.static",
         loadingStrategy: "visible",
-        preferredAspectRatio: 1.55,
+        preferredAspectRatio: 1.8,
         preferredWidth: 960,
         reducedMotion: "static-final-state",
         renderer: "scene",
@@ -60,7 +60,7 @@ describe("Part 2 curriculum content", () => {
       {
         fallbackFigureId: "decoder.diagram.representation.position.static",
         loadingStrategy: "visible",
-        preferredAspectRatio: 1.55,
+        preferredAspectRatio: 1.9,
         preferredWidth: 960,
         reducedMotion: "static-final-state",
         renderer: "scene",
@@ -68,7 +68,7 @@ describe("Part 2 curriculum content", () => {
       {
         fallbackFigureId: "decoder.diagram.representation.hidden-state.static",
         loadingStrategy: "visible",
-        preferredAspectRatio: 1.6,
+        preferredAspectRatio: 2,
         preferredWidth: 1000,
         reducedMotion: "static-final-state",
         renderer: "scene",

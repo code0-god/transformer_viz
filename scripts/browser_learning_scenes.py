@@ -11,7 +11,7 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 
 from browser_hybrid_capture import capture, request_urls
-from browser_hybrid_contract import button_with_text, require, set_viewport
+from browser_hybrid_contract import require, set_viewport
 from browser_hybrid_foundation import QuietHandler
 from browser_hybrid_helpers import (
     JsonObject,
@@ -55,6 +55,22 @@ def _evaluate(browser: ChromeSession, expression: str) -> object:
         browser.page_session,
         expression,
         True,
+    )
+
+
+def _button_with_fragment(label: str) -> str:
+    encoded = json.dumps(label, ensure_ascii=False)
+    return (
+        "Array.from(document.querySelectorAll('button'))"
+        f".find(button => button.textContent?.includes({encoded}))"
+    )
+
+
+def _scroll_button(browser: ChromeSession, label: str) -> None:
+    _evaluate(
+        browser,
+        f"""{_button_with_fragment(label)}
+          ?.scrollIntoView({{ block: 'center', inline: 'nearest' }})""",
     )
 
 
@@ -250,7 +266,9 @@ def _hidden_probe(browser: ChromeSession) -> JsonObject:
           const canvas = figure?.querySelector('canvas');
           const controls = Array.from(figure?.querySelectorAll('button') ?? []);
           const shapes = Array.from(
-            state?.querySelectorAll('.hidden-scene__flow em') ?? [],
+            state?.querySelectorAll(
+              '.hidden-scene__shape-invariant strong',
+            ) ?? [],
             shape => shape.textContent?.trim() ?? '',
           );
           const box = canvas?.getBoundingClientRect();
@@ -321,9 +339,10 @@ def _click_phase(browser: ChromeSession, label: str, phase: str) -> None:
     )
     if not isinstance(before_frame, int):
         raise TypeError(f"Scene frame count must be integer: {before_frame!r}")
+    _scroll_button(browser, label)
     pointer_click(
         browser,
-        button_with_text(label),
+        _button_with_fragment(label),
         condition=(
             "document.querySelector('[data-testid=\"token-scene-state\"]')"
             f"?.getAttribute('data-phase') === {json.dumps(phase)}"
@@ -346,9 +365,10 @@ def _click_position_phase(
     )
     if not isinstance(before_frame, int):
         raise TypeError(f"Scene frame count must be integer: {before_frame!r}")
+    _scroll_button(browser, label)
     pointer_click(
         browser,
-        button_with_text(label),
+        _button_with_fragment(label),
         condition=(
             "document.querySelector('[data-testid=\"position-scene-state\"]')"
             f"?.getAttribute('data-phase') === {json.dumps(phase)}"
@@ -371,9 +391,10 @@ def _click_hidden_stage(
     )
     if not isinstance(before_frame, int):
         raise TypeError(f"Scene frame count must be integer: {before_frame!r}")
+    _scroll_button(browser, label)
     pointer_click(
         browser,
-        button_with_text(label),
+        _button_with_fragment(label),
         condition=(
             "document.querySelector('[data-testid=\"hidden-scene-state\"]')"
             f"?.getAttribute('data-stage') === {json.dumps(stage)}"
@@ -440,7 +461,7 @@ def run_contract(url: str, evidence_dir: Path) -> None:
         require(initial["phase"] == "id", f"Token initial phase failed: {initial}")
         require(initial["overflow"] == 0, f"Token overflow: {initial}")
         require(
-            initial["controlCount"] == 4
+            initial["controlCount"] == 6
             and isinstance(initial["controlMinHeight"], int | float)
             and initial["controlMinHeight"] >= 44,
             f"Token control contract failed: {initial}",
@@ -456,7 +477,7 @@ def run_contract(url: str, evidence_dir: Path) -> None:
         )
 
         frames_before = initial.get("metrics", {})
-        _click_phase(browser, "Row 찾기", "lookup")
+        _click_phase(browser, "Row 선택", "lookup")
         lookup = _probe(browser)
         shots["tokenLookupDesktop"] = capture(
             browser,
@@ -472,9 +493,10 @@ def run_contract(url: str, evidence_dir: Path) -> None:
         idle_frame_delta = _verify_idle(browser)
         require(idle_frame_delta == 0, f"Token idle RAF leaked: {idle_frame_delta}")
 
+        _scroll_button(browser, "cat · ID 42")
         pointer_click(
             browser,
-            button_with_text("cat · ID 42"),
+            _button_with_fragment("cat · ID 42"),
             condition=(
                 "document.querySelector('[data-testid=\"token-scene-state\"]')"
                 "?.getAttribute('data-selected-token') === 'cat'"
@@ -536,7 +558,7 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             and mobile["metrics"].get("activeCanvasCount") == 1,
             f"Token mobile contract failed: {mobile}",
         )
-        _click_phase(browser, "Row 찾기", "lookup")
+        _click_phase(browser, "Row 선택", "lookup")
         _click_phase(browser, "Vector 추출", "vector")
         _evaluate(
             browser,
@@ -584,18 +606,18 @@ def run_contract(url: str, evidence_dir: Path) -> None:
         position_before = _position_probe(browser)
         require(
             position_before["status"] == "ready"
-            and position_before["phase"] == "before"
+            and position_before["phase"] == "separate"
             and position_before["position"] == "0"
             and position_before["canvasCount"] == 1
-            and position_before["controlCount"] == 4
+            and position_before["controlCount"] == 6
             and isinstance(position_before["controlMinHeight"], int | float)
             and position_before["controlMinHeight"] >= 44
             and position_before["overflow"] == 0,
             f"Position initial contract failed: {position_before}",
         )
         require(
-            "cat · E_tok [C]" in str(position_before["stateText"])
-            and "[C] + [C] → [C]" in str(position_before["stateText"])
+            "cat · token vector [C]" in str(position_before["stateText"])
+            and "[C] + [C] = [C]" in str(position_before["stateText"])
             and "concatenation 아님" in str(position_before["stateText"]),
             f"Position semantics missing: {position_before}",
         )
@@ -604,7 +626,7 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             screenshots / "position-before-add-1440x900.png",
         )
 
-        _click_position_phase(browser, "원소별 더하기", "sum")
+        _click_position_phase(browser, "더하기", "sum")
         position_sum = _position_probe(browser)
         _evaluate(
             browser,
@@ -633,22 +655,23 @@ def run_contract(url: str, evidence_dir: Path) -> None:
                 "Scene frame count must be integer: "
                 f"{previous_position_frame!r}",
             )
+        _scroll_button(browser, "position 3")
         pointer_click(
             browser,
-            button_with_text("position 1"),
+            _button_with_fragment("position 3"),
             condition=(
                 "document.querySelector("
                 "'[data-testid=\"position-scene-state\"]'"
-                ")?.getAttribute('data-position') === '1'"
+                ")?.getAttribute('data-position') === '3'"
             ),
-            label="Position 1 comparison",
+            label="Position 3 comparison",
         )
         _settle_scene(browser, after_frame=previous_position_frame)
-        _click_position_phase(browser, "원소별 더하기", "sum")
+        _click_position_phase(browser, "더하기", "sum")
         position_compare = _position_probe(browser)
         require(
-            position_compare["position"] == "1"
-            and "cat · E_tok [C]" in str(position_compare["stateText"]),
+            position_compare["position"] == "3"
+            and "cat · token vector [C]" in str(position_compare["stateText"]),
             f"Position comparison changed token: {position_compare}",
         )
         _evaluate(
@@ -991,9 +1014,10 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             raise TypeError(
                 f"Scene frame count must be integer: {reduced_before!r}",
             )
+        _scroll_button(browser, "X_0")
         pointer_click(
             browser,
-            button_with_text("X_0"),
+            _button_with_fragment("X_0"),
             condition=(
                 "document.querySelector('[data-testid=\"hidden-scene-state\"]')"
                 "?.getAttribute('data-stage') === 'x0'"
@@ -1118,11 +1142,21 @@ def run_contract(url: str, evidence_dir: Path) -> None:
             ),
             "Part 1 idle control",
         )
+        _evaluate(
+            browser,
+            """document.querySelector('.scene-figure')
+              ?.scrollIntoView({ block: 'center', inline: 'nearest' })""",
+        )
         wait_for(
             browser,
-            "document.querySelector('.scene-figure') === null",
-            "Part 1 has no Learning Scene",
+            (
+                "document.querySelector("
+                "'.scene-figure[data-scene-status=\"ready\"]'"
+                ") !== null"
+            ),
+            "Part 1 Learning Scene ready",
         )
+        _settle_scene(browser)
         part1_idle_delta = _verify_idle(browser)
         part1_canvas_count = _evaluate(
             browser,
@@ -1130,7 +1164,7 @@ def run_contract(url: str, evidence_dir: Path) -> None:
         )
         require(
             part1_idle_delta == 0
-            and part1_canvas_count == 0,
+            and part1_canvas_count == 1,
             "Part 1 scene activity leaked: "
             f"frames={part1_idle_delta}, canvas={part1_canvas_count}",
         )

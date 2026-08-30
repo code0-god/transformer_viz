@@ -12,6 +12,7 @@ type VectorStripProps = Readonly<{
 type TensorGridProps = Readonly<{
   color?: string;
   cols: number;
+  encoding?: "depth" | "intensity";
   position: readonly [number, number, number];
   rowLift?: number;
   rows: number;
@@ -49,6 +50,7 @@ export function VectorStrip({
 export function TensorGrid({
   color = LEARNING_SCENE_COLORS.neutral,
   cols,
+  encoding = "depth",
   position,
   rowLift = 0,
   rows,
@@ -77,20 +79,42 @@ export function TensorGrid({
             {rowCells.map(({ id, value }, col) => {
               const cellColor = selected
                 ? LEARNING_SCENE_COLORS.selected
-                : color;
+                : encoding === "intensity"
+                  ? value >= 0
+                    ? LEARNING_SCENE_COLORS.hidden
+                    : LEARNING_SCENE_COLORS.position
+                  : color;
               return (
                 <mesh key={id} position={[xStart + col * gap, 0, 0]}>
                   <boxGeometry
-                    args={[0.52, 0.52, 0.1 + Math.abs(value) * 0.18]}
+                    args={[
+                      0.52,
+                      0.52,
+                      encoding === "depth"
+                        ? 0.1 + Math.abs(value) * 0.18
+                        : 0.16,
+                    ]}
                   />
                   <meshStandardMaterial
                     color={cellColor}
                     emissive={cellColor}
-                    emissiveIntensity={selected ? 0.08 : 0.01}
+                    emissiveIntensity={
+                      selected
+                        ? 0.08
+                        : encoding === "intensity"
+                          ? 0.02 + Math.abs(value) * 0.06
+                          : 0.01
+                    }
                     metalness={0.02}
                     roughness={0.84}
                     transparent
-                    opacity={selected ? 1 : 0.82}
+                    opacity={
+                      selected
+                        ? 1
+                        : encoding === "intensity"
+                          ? 0.62 + Math.abs(value) * 0.3
+                          : 0.82
+                    }
                   />
                 </mesh>
               );
@@ -222,5 +246,22 @@ export function ComputationCore({
         </mesh>
       ))}
     </group>
+  );
+}
+
+export function SelectionFrame({
+  color = LEARNING_SCENE_COLORS.selected,
+  position,
+  size,
+}: Readonly<{
+  color?: string;
+  position: readonly [number, number, number];
+  size: readonly [number, number, number];
+}>): ReactElement {
+  return (
+    <mesh position={[...position]}>
+      <boxGeometry args={[...size]} />
+      <meshBasicMaterial color={color} transparent opacity={0.72} wireframe />
+    </mesh>
   );
 }
