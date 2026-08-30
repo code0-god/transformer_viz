@@ -92,6 +92,7 @@ export function LearningSceneCanvas({
         position: [...camera.position],
       }}
       dpr={[1, 1.5]}
+      eventSource={document.body}
       frameloop="demand"
       gl={GL_OPTIONS}
       shadows={false}
