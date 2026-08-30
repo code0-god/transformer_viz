@@ -2,7 +2,7 @@
 
 ## Status
 
-- Decision: approved for implementation
+- Decision: implemented and production-verified
 - Scope: fourteen canonical Chapters
 - Branch baseline: `76e16bf46dd9ae8684b276c515048ca55e9352a9`
 - Baseline evidence:
@@ -568,6 +568,18 @@ After the scene, a beginner can describe:
 - all 32 approval questions YES;
 - lifecycle, bundle, root/subpath, accessibility, Worker, Lab, and Score
   Matrix gates clean.
+
+## Implementation result
+
+- fourteen desktop and seven representative mobile final captures accepted;
+- every canonical Chapter owns one primary Figure;
+- all curriculum scenes use visible-only metadata and semantic fallbacks;
+- GPT, Transformer Block, and Self-Attention ship as flagship scenes;
+- 72 Figure/viewport geometry cases pass at 320–1440px;
+- settled and offscreen RAF deltas are zero;
+- twenty mount/unmount cycles end with zero active Canvas and WebGL contexts;
+- root and `/transformer_viz/` production browser contracts pass;
+- final architecture decision: ADR 0016.
 
 ## Deferred
 
