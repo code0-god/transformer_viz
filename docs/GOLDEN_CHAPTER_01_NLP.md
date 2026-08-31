@@ -3,9 +3,10 @@
 ## Status
 
 - Scope: Chapter 0.1 only
-- Implementation: complete
+- Refinement implementation: complete
 - Automated verification: pass
-- Independent visual critique: pass with no blocking findings
+- Independent visual critique: pass with no blocking findings on the final
+  25-image evidence set
 - User visual approval: pending
 - Expansion to Chapter 0.2 or later: prohibited before approval
 
@@ -50,14 +51,16 @@ Only the sentence is visually dominant.
 
 ### Numeric
 
-Conceptual cells appear directly beneath the same sentence. They contain no
-fabricated values. Their geometry communicates that a numerical
-representation contains many related values.
+One conceptual numerical field appears directly beneath the same sentence.
+It contains no fabricated values. Desktop shows two rows of eight cells;
+narrow layouts reveal two rows of six from the same sixteen mounted DOM
+cells. No phrase- or token-sized groups exist.
 
 ### Transform
 
-The same cells shift emphasis and relation. Thin SVG curves make changed
-relationships visible. No black model box or architecture preview appears.
+The same field keeps identical bounds, cell dimensions, row count, column
+count, and anchor. Only cell emphasis and thin SVG relationship curves
+change. No black model box or architecture preview appears.
 
 ### Result
 
@@ -81,13 +84,15 @@ becomes a generic chip.
 
 ### VectorCells
 
-Small aligned cells with no fake values. Groups correspond spatially to parts
-of the sentence.
+One aligned field of small cells with no fake values. It communicates only
+that several numbers form one calculable representation; it does not claim a
+token mapping, matrix type, tensor shape, or embedding.
 
 ### TransformationLayer
 
-The existing cells change position, emphasis, and relation. Thin SVG curves
-support the transformation without becoming a pipeline arrow diagram.
+The existing field keeps its geometry while cell emphasis and relation
+change. Thin SVG curves support the transformation without becoming a
+pipeline arrow diagram.
 
 ### SemanticResult
 
@@ -126,6 +131,7 @@ seamless reading plane.
 
 - Typical transitions: 520–720ms.
 - Only opacity, transform, filter, and SVG stroke appearance change.
+- Numeric-to-Transform motion never changes field or cell geometry.
 - No autoplay.
 - No idle animation.
 - No scroll lock, snap, wheel interception, or product `scrollTo`.
@@ -135,12 +141,17 @@ seamless reading plane.
 
 ## Layout
 
-The page uses normal document scrolling and a bounded `sticky-aside`
+The page uses normal document scrolling and one bounded `sticky-aside`
 relationship:
 
-- first beat enters at article measure;
-- one visual remains visible while later prose beats pass through the active
+- the narrative WIDE grid is capped at 1152px;
+- every beat uses the same 38/62 explanation-to-visual columns;
+- the column gap scales from 56px to 72px;
+- all five explanation and visual grid lines remain within 1px;
+- the first beat uses the same grid instead of spanning both columns;
+- one visual remains visible while prose beats pass through the active
   reading zone;
+- no accent divider or beat-local grid exists;
 - no internal scroll container exists;
 - Figure, caption, and keyboard stage navigation remain semantic but visual
   chrome stays hidden;
@@ -149,9 +160,11 @@ relationship:
 ## Mobile
 
 - The same DOM source order remains.
-- Visual height is 288px at 320px and about 304px at 390px.
-- Numerical cells reduce from six to four visible cells per phrase group
-  rather than shrinking into illegibility.
+- Visual height is 232px at 320px and about 281px at 390px.
+- The same sixteen cells remain mounted; one 2×6 field is visible on narrow
+  layouts.
+- Every non-Language active paragraph begins 15–40px below the visual.
+- At 320×568, complete active prose retains at least 32px below it.
 - No horizontal document or local narrative overflow is allowed.
 - The Header remains clear of the sticky visual.
 - The Chapter footer remains normal editorial navigation.
@@ -194,7 +207,7 @@ Chapter 0.2 implementation and content remain unchanged in this task.
 Fresh evidence lives at:
 
 ```text
-.omo/evidence/golden-chapter-01/browser/
+.omo/evidence/golden-chapter-01-refinement/browser/
 ```
 
 Required files:
@@ -207,22 +220,37 @@ Required files:
 05-token-preview.png
 06-full-chapter-desktop.png
 07-full-chapter-mobile.png
-08-before-after.png
 09-language-numeric-mid.png
 10-numeric-transform-mid.png
 11-keyboard-focus.png
 12-reduced-motion-token-preview.png
+13-before-after-numeric.png
+14-before-after-transform.png
+15-before-after-result.png
+desktop-1024-numeric.png
+desktop-1366-numeric.png
 mobile-01-language-state.png
 mobile-02-numeric-state.png
 mobile-03-transform-state.png
 mobile-04-result-state.png
 mobile-05-token-preview.png
+mobile-320-numeric.png
+mobile-320-transform.png
+mobile-320-result.png
 evidence.json
-before-after-diff.json
 ```
 
 Root and `/transformer_viz/` contracts use separate production builds and
 fresh Chrome sessions.
+
+Final geometry evidence:
+
+- 1024px: 342.69px explanation, 56px gap, 559.11px visual;
+- 1366px: 411.80px explanation, 68.30px gap, 671.91px visual;
+- 1440px: 410.39px explanation, 72px gap, 669.61px visual;
+- Numeric and Transform field: 508.89×78.78px;
+- each desktop cell: 56.61×35.38px;
+- grid drift across fifteen desktop records: 0px.
 
 ## Scope freeze
 
