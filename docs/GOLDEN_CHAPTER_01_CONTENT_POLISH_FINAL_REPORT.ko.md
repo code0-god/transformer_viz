@@ -102,14 +102,17 @@ Measured strip/result overlap은 여섯 viewport 모두 `0px`다.
 
 ### Progressive boundaries
 
-같은 sentence의 conceptual boundaries가 `0/70/140/210ms` delay로 왼쪽부터
+같은 sentence의 conceptual boundaries가 `0/160/320/480ms` delay로 왼쪽부터
 나타난다. Settled state에서는 네 경계가 같은 weight다. Idle loop는 없다.
 
 ### Token handoff
 
 `개념적 경계 · 실제 경계는 토크나이저에 따라 달라집니다.`를 유지했다.
 별도 CTA card 없이 작은 `Token이란? →` link만 사용한다. Link는 Chapter
-0.2 H1로 이동하고 focus하며, Back/Forward contract도 통과한다.
+0.2 H1로 이동하고 focus하며, Back/Forward contract도 통과한다. 중복되던
+페이지 하단 Chapter footer와 full-width final divider는 Chapter 0.1에서
+렌더링하지 않는다. 보조 문구와 link는 RIGHT_END에 맞춰 오른쪽 정렬하고
+deck-controls 경계 가까이에 배치했다.
 
 ## 7. Visual Scale / Whitespace
 
@@ -120,6 +123,7 @@ Measured strip/result overlap은 여섯 viewport 모두 `0px`다.
 - Visual center drift: `0px`
 - Stage height drift: `0px`
 - Card/Figure border: `0px`
+- 핵심 정리 boundary와 deck-controls boundary 좌우 끝 차이: `0px`
 
 Stage 자체를 다시 설계하거나 키우지 않았다. Sentence, numeric strip,
 result, token sentence가 고정 RIGHT zone을 의미 있게 사용한다.
@@ -145,7 +149,7 @@ discrete fade/translate하며, RIGHT는 opacity/transform/color transition으로
 
 | Viewport | Stage | Strip | Numeral |
 | ---: | ---: | ---: | ---: |
-| 768×1024 | 713.63×416.72px | 713.63×54px | 13.12px |
+| 768×1024 | 698.63×416.72px | 698.63×54px | 13.12px |
 | 390×844 | 358×411.59px | 358×54px | 12.09px |
 | 320×568 | 288×411.59px | 288×54px | 11.2px |
 
@@ -188,6 +192,9 @@ Evidence root:
 ```text
 .omo/evidence/golden-content-polish/browser/
 .omo/evidence/golden-content-polish/subpath-browser/
+.omo/evidence/golden-boundary-slow/browser/
+.omo/evidence/golden-handoff-cleanup/browser/
+.omo/evidence/golden-divider-alignment/browser/
 ```
 
 Coverage:

@@ -211,14 +211,16 @@ appear from left to right and settle at equal weight.
 
 #### Transition
 
-Boundary delays are `0ms`, `70ms`, `140ms`, and `210ms`; there is no idle
+Boundary delays are `0ms`, `160ms`, `320ms`, and `480ms`; there is no idle
 loop. Reduced motion shows the final four-boundary state immediately.
 
 #### Takeaway
 
 숫자 표현을 만들기 전에 문장을 작은 단위로 나누며, 실제 경계는
 토크나이저에 따라 달라진다. A quiet slide-scoped `Token이란? →` link opens
-Chapter 0.2.
+Chapter 0.2. Chapter 0.1 does not render a duplicate curriculum footer action
+or its final full-width divider. The qualifier and link share `RIGHT_END` and
+sit close to the deck-controls boundary.
 
 ## Object permanence
 
@@ -243,6 +245,8 @@ Desktop uses one CONTENT-to-WIDE asymmetric span:
 - LEFT / RIGHT = 38 / 62 after subtracting the gap;
 - gap = 56–72px;
 - controls remain below the stage and do not change its geometry.
+- Key-takeaway boundaries use the same `CONTENT_START → WIDE_END` span as the
+  deck-controls boundary while takeaway copy keeps its CONTENT measure.
 
 Final production measurements:
 
@@ -250,7 +254,7 @@ Final production measurements:
 | ---: | ---: | ---: | ---: | ---: |
 | 1440×900 | 992×518.39px | 349.59px | 72px | 570.41px |
 | 1366×768 | 992×491.75px | 351px | 68.30px | 572.70px |
-| 1024×768 | 902.41×480px | 321.63px | 56px | 524.78px |
+| 1024×768 | 894.91×480px | 318.78px | 56px | 520.13px |
 
 Across fifteen desktop state records, every stage, column, visual, and control
 coordinate drift is 0px.
@@ -270,7 +274,7 @@ accommodates the longest Korean paragraph without clipping or stage jump.
 
 | Viewport | Stage | Visual width |
 | ---: | ---: | ---: |
-| 768×1024 | 713.63×416.72px | 713.63px |
+| 768×1024 | 698.63×416.72px | 698.63px |
 | 390×844 | 358×411.59px | 358px |
 | 320×568 | 288×411.59px | 288px |
 
@@ -287,6 +291,8 @@ state geometry drift are all 0.
 - Wheel input remains uncanceled and does not change slides.
 - Slide changes do not write browser history.
 - Browser Back remounts Chapter 0.1 on Slide 1; Forward restores Chapter 0.2.
+- Chapter 0.1 exposes only the right-aligned Slide 5 inline handoff; its duplicate
+  Chapter footer action and final full-width divider are absent.
 - No autoplay, timer, scroll observer, scroll lock, or swipe dependency exists.
 
 ## Motion and reduced motion
@@ -328,6 +334,14 @@ Fresh project-subpath evidence:
 
 ```text
 .omo/evidence/golden-content-polish/subpath-browser/
+```
+
+Slower Token-boundary follow-up evidence:
+
+```text
+.omo/evidence/golden-boundary-slow/browser/
+.omo/evidence/golden-handoff-cleanup/browser/
+.omo/evidence/golden-divider-alignment/browser/
 ```
 
 Coverage:
