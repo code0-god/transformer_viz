@@ -19,7 +19,7 @@ the prototype Part 2 composition.
 
 The fourteen-Chapter spine is `4 + 4 + 3 + 1 + 1 + 1`: Part 0, Part 1,
 Part 2, GPT, Transformer Block, and Self-Attention. Priority-0 supersedes the
-visible Figure composition only for 0.2, 2.1, and 5.1. The other eleven
+visible Figure composition for 0.1, 0.2, 2.1, and 5.1. The other ten
 Chapter compositions remain frozen.
 
 ## Product decision
@@ -229,19 +229,23 @@ Controls never sit as a large button wall above the stage.
 
 - Learning question: 언어는 어떻게 계산 가능한 표현이 되어 결과로
   돌아오는가?
-- Visual type: Scene.
-- Primary renderer: R3F with DOM stage labels.
-- Spatial grammar: REPRESENTATION TRANSFORMATION.
-- Scene sketch: text ribbon, token/numeric plane, computation field, result
-  layer. Each representation uses a different form.
-- Interaction: select Text, Representation, Computation, Result.
-- Transition: focused representation expands while the previous layer remains
-  as context.
-- Mobile: vertical four-stage section; one stage focused at a time.
-- Fallback: existing ordered SVG pipeline, revised to match labels.
-- Why 3D: depth separates representation layers without implying four generic
-  boxes.
-- Secondary visual: none.
+- Visual type: Golden continuous visual narrative.
+- Primary renderer: DOM text and cells with restrained SVG relationships.
+- Spatial grammar: APPEAR, TRANSFORM, EMPHASIZE, REUSE.
+- Scene sketch: one Korean sentence persists while conceptual numeric cells
+  appear, transform in place, resolve to a semantic result, and return to a
+  conceptual Token-boundary question.
+- Interaction: normal prose scrolling; assistive stage controls appear only on
+  keyboard focus.
+- Transition: the same sentence and cell nodes remain mounted through all five
+  states.
+- Mobile: compact sticky visual, source-order prose, reduced visible cell
+  count, no horizontal overflow.
+- Fallback: semantic DOM image summary and five-state ordered description.
+- Why no 3D: Chapter 0.1 has no trace-backed values whose meaning benefits
+  from Canvas depth.
+- Secondary visual: classification, answer, translation, and generation
+  outcome range.
 - Conclusion: 모델은 텍스트를 직접 계산하지 않고 수치 표현을 거쳐
   결과를 만듭니다.
 

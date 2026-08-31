@@ -3,11 +3,11 @@
 ## Status
 
 - Priority: 0
-- Implementation: COMPLETE for three benchmark Chapters
+- Implementation: COMPLETE for Golden 0.1 and three benchmark Chapters
 - Automated gates: PASS
 - Independent visual critique: strengths and residual issues recorded
 - User visual approval: PENDING
-- Expansion to the remaining eleven Chapters: prohibited until approval
+- Expansion to the remaining ten Chapters: prohibited until approval
 
 ## Why Figure-first reading was rejected
 
@@ -80,6 +80,15 @@ Scenes retain standalone controls when rendered outside a narrative. Inside a
 narrative they remove duplicate rails and replay actions.
 
 ## Canonical layout types
+
+### Golden continuous narrative
+
+Used by NLP Introduction.
+
+One Korean sentence remains mounted through Language, Numeric, Transform,
+Result, and Token Preview. A bounded `sticky-aside` relation joins prose and
+one DOM/SVG visual without a SceneFigure or Canvas. Keyboard stage controls
+remain assistive-only and appear only on focus.
 
 ### Inline narrative
 
@@ -199,6 +208,12 @@ Narratives share the article background and coordinate system:
 - no horizontal overflow;
 - no scene occupies most of the mobile viewport.
 
+Golden 0.1 is the deliberate exception to the generic sticky rule. Its
+`golden` layout switches to source-order block flow but keeps one compact
+sticky DOM visual after the first beat so the same sentence remains visible
+through later prose. Browser contracts verify rendered order, Header
+clearance, and state geometry at 320px and 390px.
+
 ## Accessibility
 
 - article heading hierarchy remains unchanged;
@@ -238,11 +253,12 @@ stage.
 
 Changed Chapters:
 
-1. 0.2 Tokenization — Inline
-2. 2.1 Token Embedding — Split
-3. 5.1 Self-Attention — Bounded sticky
+1. 0.1 NLP Introduction — Golden continuous narrative
+2. 0.2 Tokenization — Inline
+3. 2.1 Token Embedding — Split
+4. 5.1 Self-Attention — Bounded sticky
 
-The remaining eleven Chapter visual structures are unchanged.
+The remaining ten Chapter visual structures are unchanged.
 
 ## Independent review policy
 
@@ -255,8 +271,9 @@ Implementation does not self-approve visual acceptance. Review must inspect:
 - text/visual dependence;
 - Canvas and control prominence.
 
-Current independent critique is recorded in the Priority-0 final report.
-User visual approval remains pending.
+Current independent critique is recorded in the Priority-0 and Golden Chapter
+final reports. Automated visual QA passes without blockers. User visual
+approval remains pending.
 
 ## Post-approval roadmap only
 
