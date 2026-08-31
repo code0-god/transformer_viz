@@ -21,7 +21,7 @@ export const nlpChapterContent = {
     sections: [
       {
         id: "everyday-question",
-        title: "언어로 해결할 수 있는 문제",
+        title: "",
         primaryNodeId: "decoder.root.input-context",
         blocks: [
           {
@@ -32,25 +32,25 @@ export const nlpChapterContent = {
             beats: [
               {
                 id: "language",
-                label: "사람의 언어",
+                label: "사람이 읽는 언어",
                 stage: "language",
-                text: "우리는 문장을 읽고 뜻을 이해할 수 있습니다.",
+                text: "사람은 문장을 읽고 뜻을 이해할 수 있습니다. 우리는 이 문장을 보고 자연스럽게 의미와 분위기를 받아들입니다.",
               },
               {
                 id: "numeric",
-                label: "숫자 표현",
+                label: "계산 가능한 표현",
                 stage: "numeric",
-                text: "하지만 모델이 계산하려면 언어를 숫자로 표현해야 합니다. 여러 숫자가 하나의 계산 가능한 표현을 이룬다는 점만 먼저 살펴봅니다.",
+                text: "하지만 컴퓨터는 문장의 뜻을 그대로 계산하지 않습니다. 모델이 계산하려면 언어를 숫자로 표현해야 합니다.",
               },
               {
                 id: "transform",
-                label: "표현 변화",
+                label: "모델 계산",
                 stage: "transform",
-                text: "이 숫자 표현은 모델 안에서 여러 계산을 거칩니다. 새로운 상자가 생기는 것이 아니라 같은 표현 안의 관계와 강조가 바뀝니다.",
+                text: "이 숫자 표현은 모델 안에서 여러 계산을 거칩니다. 중요한 것은 검은 상자를 통과한다는 그림이 아니라 숫자 표현 자체가 계산을 통해 달라진다는 점입니다.",
               },
               {
                 id: "result",
-                label: "활용 결과",
+                label: "결과",
                 stage: "result",
                 text: "계산 결과는 다시 사람이 사용할 수 있는 형태로 연결됩니다. 분류, 질문 답변, 번역, 글 생성처럼 문제에 따라 결과의 모습은 달라집니다.",
               },
@@ -58,7 +58,7 @@ export const nlpChapterContent = {
                 id: "token-preview",
                 label: "다음 질문",
                 stage: "token-preview",
-                text: "그렇다면 이 문장을 숫자로 바꾸는 첫 단계는 무엇일까요? 먼저 모델이 다룰 수 있는 작은 단위로 나눕니다. 다음 장에서 그 단위를 살펴봅니다.",
+                text: "그렇다면 이 문장을 숫자로 바꾸는 첫 단계는 무엇일까요? 먼저 모델이 다룰 수 있는 작은 단위로 나눠야 합니다. 그 단위를 다음 Chapter에서 살펴봅니다.",
               },
             ],
             figure: {
@@ -67,7 +67,7 @@ export const nlpChapterContent = {
               figureId: "decoder.diagram.intro.nlp",
               size: "full",
               caption:
-                "같은 문장이 숫자 표현과 계산 변화를 거쳐 사람이 활용하는 결과로 이어집니다.",
+                "문장이 숫자 표현으로 바뀌고 계산을 거쳐 사람이 활용하는 결과로 이어집니다.",
               alt: "자연어 처리 연속 설명",
             },
           },

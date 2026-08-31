@@ -131,43 +131,10 @@ describe("VisualNarrative observer geometry", () => {
     expect(next).toHaveAttribute("data-narrative-active", "true");
   });
 
-  test("rebuilds the Golden observer after crossing the narrow breakpoint", () => {
+  test("does not construct a scroll observer for the Golden deck", () => {
     vi.stubGlobal("IntersectionObserver", ObserverProbe);
-    let narrow = false;
-    const listeners = new Set<() => void>();
-    const removeListener = vi.fn((_type: string, listener: () => void) => {
-      listeners.delete(listener);
-    });
-    vi.stubGlobal("matchMedia", () => ({
-      matches: narrow,
-      media: "(max-width: 48rem)",
-      onchange: null,
-      addEventListener: (_type: string, listener: () => void) => {
-        listeners.add(listener);
-      },
-      removeEventListener: removeListener,
-      dispatchEvent: () => true,
-    }));
-    const { unmount } = render(
-      <VisualNarrative block={narrative("golden")} registry={registry} />,
-    );
-    const desktopObserver = ObserverProbe.current;
-    if (desktopObserver === undefined) throw new Error("Observer missing");
-    expect(desktopObserver.rootMargin).toBe("-34% 0px -46% 0px");
+    render(<VisualNarrative block={narrative("golden")} registry={registry} />);
 
-    narrow = true;
-    act(() => {
-      for (const listener of listeners) listener();
-    });
-    const mobileObserver = ObserverProbe.current;
-    if (mobileObserver === undefined) throw new Error("Observer missing");
-
-    expect(mobileObserver).not.toBe(desktopObserver);
-    expect(desktopObserver.disconnect).toHaveBeenCalledOnce();
-    expect(mobileObserver.rootMargin).toBe("-68% 0px -8% 0px");
-
-    unmount();
-    expect(mobileObserver.disconnect).toHaveBeenCalledOnce();
-    expect(removeListener).toHaveBeenCalledOnce();
+    expect(ObserverProbe.current).toBeUndefined();
   });
 });

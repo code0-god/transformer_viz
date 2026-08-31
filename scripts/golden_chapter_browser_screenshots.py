@@ -1,4 +1,4 @@
-"""Additional viewport captures for the Chapter 0.1 Golden Narrative."""
+"""Deterministic screenshot names for the Chapter 0.1 deck."""
 
 from __future__ import annotations
 
@@ -10,12 +10,26 @@ from browser_hybrid_contract import set_viewport
 from browser_hybrid_helpers import wait_for
 from browser_probes import READY_PROBE
 from browser_session import ChromeSession
-import golden_chapter_browser_capture as golden_capture
+from browser_visual_narrative import _capture_chapter
 import golden_chapter_browser_probes as golden
+
+_DESKTOP_NAMES = (
+    "01-slide-language.png",
+    "02-slide-numeric.png",
+    "03-slide-transform.png",
+    "04-slide-result.png",
+    "05-slide-token-preview.png",
+)
+_MOBILE_NAMES = (
+    "07-slide-language-390.png",
+    "08-slide-numeric-390.png",
+    "09-slide-transform-390.png",
+    "10-slide-result-390.png",
+    "11-slide-token-390.png",
+)
 
 
 def capture_baseline(url: str, evidence: Path) -> str:
-    """Capture the pre-refinement Chapter 0.1 Figure."""
     with ChromeSession(enable_gpu=True) as browser:
         set_viewport(browser, 1440, 900)
         browser.navigate(url)
@@ -28,65 +42,51 @@ def capture_baseline(url: str, evidence: Path) -> str:
         wait_for(
             browser,
             f"document.querySelector('{golden.CHAPTER_SELECTOR}') !== null",
-            "Baseline Chapter",
+            "Golden baseline Chapter",
         )
         wait_for(
             browser,
-            "document.querySelector("
-            "'[data-figure-id=\"decoder.diagram.intro.nlp\"]'"
-            ") !== null",
-            "Baseline Figure",
-            "document.querySelector("
-            "'[data-figure-id=\"decoder.diagram.intro.nlp\"]'"
-            ")?.scrollIntoView({block:'center'});",
+            "document.querySelector('[data-figure-id=\"decoder.diagram.intro.nlp\"]') !== null",
+            "Golden baseline Figure",
+            "document.querySelector('[data-figure-id=\"decoder.diagram.intro.nlp\"]')?.scrollIntoView({block:'center'});",
         )
         return capture(browser, evidence / "00-before-figure.png")
 
 
-def capture_additional_desktop(
+def capture_matrix(
     browser: ChromeSession,
     url: str,
     evidence: Path,
 ) -> dict[str, str]:
-    """Capture the Numeric split layout at intermediate desktop widths."""
     shots: dict[str, str] = {}
-    states = (
-        (1024, 768, "숫자 표현", "numeric", "desktop-1024-numeric.png"),
-        (1366, 768, "숫자 표현", "numeric", "desktop-1366-numeric.png"),
-        (2000, 1284, "사람의 언어", "language", "desktop-2000-language.png"),
-    )
-    for width, height, label, stage, filename in states:
+    for width, height in golden.VIEWPORTS:
         set_viewport(browser, width, height)
         golden.open_chapter(browser, url)
-        golden.select_state(browser, label, stage)
-        golden_capture.center_capture(browser, stage)
-        golden.select_state(browser, label, stage)
-        shots[f"desktop-{width}-{stage}"] = capture(
-            browser,
-            evidence / filename,
-        )
-    return shots
-
-
-def capture_compact_mobile_states(
-    browser: ChromeSession,
-    url: str,
-    evidence: Path,
-) -> dict[str, str]:
-    """Capture required 320px Numeric, Transform, and Result states."""
-    set_viewport(browser, 320, 568)
-    golden.open_chapter(browser, url)
-    shots: dict[str, str] = {}
-    for label, stage in (
-        ("숫자 표현", "numeric"),
-        ("표현 변화", "transform"),
-        ("활용 결과", "result"),
-    ):
-        golden.select_state(browser, label, stage)
-        golden_capture.center_capture(browser, stage)
-        golden.select_state(browser, label, stage)
-        shots[f"mobile-320-{stage}"] = capture(
-            browser,
-            evidence / f"mobile-320-{stage}.png",
-        )
+        for index, (stage, _label) in enumerate(golden.STATES):
+            golden.select_state(browser, index, stage)
+            browser.require_cdp().evaluate(
+                browser.page_session,
+                f"document.querySelector('{golden.DECK_SELECTOR}')?.scrollIntoView({{block:'center',inline:'nearest'}})",
+                True,
+            )
+            golden.finish_motion(browser)
+            matrix_name = f"viewport-{width}x{height}-{index + 1:02d}-{stage}.png"
+            shots[matrix_name] = capture(browser, evidence / matrix_name)
+            canonical = None
+            if (width, height) == (1440, 900):
+                canonical = _DESKTOP_NAMES[index]
+            elif (width, height) == (390, 844):
+                canonical = _MOBILE_NAMES[index]
+            if canonical is not None:
+                shots[canonical] = capture(browser, evidence / canonical)
+        if (width, height) == (1440, 900):
+            browser.require_cdp().evaluate(
+                browser.page_session,
+                "window.scrollTo({top: 0, left: 0, behavior: 'instant'})",
+                True,
+            )
+            golden.finish_motion(browser)
+            shots["06-full-chapter.png"] = _capture_chapter(
+                browser, golden.CHAPTER_SELECTOR, evidence / "06-full-chapter.png",
+            )
     return shots

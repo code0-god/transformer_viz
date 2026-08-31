@@ -3,6 +3,7 @@ import { type ReactElement, useId } from "react";
 import { useVisualNarrative } from "../../../../VisualNarrative";
 
 import "./nlpGoldenNarrative.css";
+import "./nlpGoldenNarrativeStates.css";
 
 export const NLP_GOLDEN_STAGES = [
   "language",
@@ -16,23 +17,25 @@ export type NlpGoldenStage = (typeof NLP_GOLDEN_STAGES)[number];
 
 const STAGE_LABELS: Readonly<Record<NlpGoldenStage, string>> = {
   language: "사람이 읽는 문장",
-  numeric: "계산 가능한 표현",
-  transform: "표현이 계산으로 변하는 중",
+  numeric: "언어를 숫자로",
+  transform: "모델의 계산",
   result: "사람이 사용하는 결과",
   "token-preview": "다음 질문",
 };
 
 const STAGE_SUMMARIES: Readonly<Record<NlpGoldenStage, string>> = {
-  language: "사람이 “오늘 영화 정말 재미있었어요.”라는 문장을 읽습니다.",
+  language: "사람이 문장을 읽고 의미와 분위기를 이해합니다.",
   numeric:
-    "같은 문장 아래에 여러 숫자가 모인 하나의 개념적인 표현이 나타나 계산 가능한 형태로 연결됩니다.",
-  transform:
-    "같은 숫자 표현의 배치와 크기는 유지되고 색과 연결 강조가 달라지며 계산에 따른 변화를 보여줍니다.",
+    "같은 문장 아래에 실제 모델 값이 아닌 설명용 숫자 표현이 나타납니다.",
+  transform: "같은 숫자 표현의 값이 계산 전 값에서 계산 후 값으로 바뀝니다.",
   result:
-    "변화한 숫자 표현이 문장의 긍정적인 분위기와 분류, 답변, 번역, 글 생성 같은 활용 결과로 이어집니다.",
+    "변화한 숫자 표현이 개념적인 긍정 결과와 여러 활용 형태로 이어집니다.",
   "token-preview":
-    "처음 문장에 개념적인 경계가 나타나며 다음 Chapter에서 문장을 작은 단위로 나누는 질문으로 이어집니다.",
+    "처음 문장에 개념적인 경계가 나타나며 Token Chapter로 이어집니다.",
 };
+
+const VISUAL_DESCRIPTION =
+  "문장이 여러 숫자로 이루어진 표현으로 바뀌고, 그 숫자들이 계산 과정에서 다른 값으로 변한 뒤 사람이 이해할 수 있는 결과로 연결되는 개념을 보여줍니다.";
 
 const PHRASES = [
   { id: "today", text: "오늘", trailingSpace: true },
@@ -42,31 +45,16 @@ const PHRASES = [
   { id: "period", text: ".", trailingSpace: false },
 ] as const;
 
-const NUMERIC_CELLS = [
-  "field-01",
-  "field-02",
-  "field-03",
-  "field-04",
-  "field-05",
-  "field-06",
-  "field-07",
-  "field-08",
-  "field-09",
-  "field-10",
-  "field-11",
-  "field-12",
-  "field-13",
-  "field-14",
-  "field-15",
-  "field-16",
+const NUMERIC_VALUES = [
+  { id: "value-1", before: "0.24", after: "0.51" },
+  { id: "value-2", before: "-0.71", after: "-0.12" },
+  { id: "value-3", before: "0.18", after: "0.84" },
+  { id: "value-4", before: "0.63", after: "0.27" },
+  { id: "value-5", before: "-0.09", after: "0.36" },
+  { id: "ellipsis", before: "…", after: "…" },
 ] as const;
 
-const RESULT_RANGE = [
-  ["분류", "긍정"],
-  ["질문 답변", "관련 답변"],
-  ["번역", "다른 언어"],
-  ["글 생성", "이어지는 문장"],
-] as const;
+const RESULT_SCOPE = ["분류", "질문 답변", "번역", "글 생성"] as const;
 
 function isNlpGoldenStage(stage: string | undefined): stage is NlpGoldenStage {
   switch (stage) {
@@ -87,6 +75,7 @@ export function NlpPipelineDiagram(): ReactElement {
     ? narrative.activeStage
     : "language";
   const descriptionId = useId();
+  const showsHandoff = stage === "token-preview";
 
   return (
     <div className="nlp-golden" data-nlp-stage={stage}>
@@ -118,59 +107,64 @@ export function NlpPipelineDiagram(): ReactElement {
           ))}
         </p>
         <div
-          className="nlp-golden__cells"
-          data-testid="nlp-golden-cells"
+          className="nlp-golden__numeric"
+          data-testid="nlp-golden-numeric"
           aria-hidden="true"
         >
+          <p className="nlp-golden__before-trace">
+            <span>계산 전</span>
+            <span>[ 0.24 -0.71 0.18 0.63 -0.09 … ]</span>
+          </p>
+          <span className="nlp-golden__numeric-label">
+            계산 가능한 숫자 표현
+          </span>
+          <span className="nlp-golden__after-label">계산 후</span>
           <span
-            className="nlp-golden__numeric-field"
-            data-nlp-columns="8"
-            data-nlp-mobile-columns="6"
-            data-nlp-representation="single"
-            data-nlp-rows="2"
-            data-testid="nlp-golden-numeric-field"
+            className="nlp-golden__numeric-strip"
+            data-nlp-representation="sequence"
+            data-testid="nlp-golden-numeric-strip"
           >
-            {NUMERIC_CELLS.map((cell) => (
-              <span data-nlp-cell={cell} key={cell} />
+            {NUMERIC_VALUES.map((value) => (
+              <span data-nlp-value={value.id} key={value.id}>
+                <span data-value-phase="before">{value.before}</span>
+                <span data-value-phase="after">{value.after}</span>
+              </span>
             ))}
           </span>
-          <span className="nlp-golden__cells-label">계산 가능한 숫자 표현</span>
+          <span className="nlp-golden__example-note">
+            설명을 위한 예시 · 실제 모델 값 아님
+          </span>
         </div>
-        <svg
-          className="nlp-golden__transform-lines"
-          viewBox="0 0 560 96"
-          aria-hidden="true"
-        >
-          <path d="M42 68C116 10 188 10 260 68" />
-          <path d="M148 76C222 26 338 26 412 76" />
-          <path d="M300 68C374 10 446 10 518 68" />
-        </svg>
         <div className="nlp-golden__result" aria-hidden="true">
+          <span>개념 예시</span>
           <p>
             <span>이 문장의 분위기</span>
             <strong>긍정</strong>
           </p>
-          <div className="nlp-golden__result-range">
-            {RESULT_RANGE.map(([task, outcome]) => (
-              <span key={task}>
-                <b>{task}</b>
-                {outcome}
-              </span>
-            ))}
-          </div>
+          <p className="nlp-golden__result-range">{RESULT_SCOPE.join(" · ")}</p>
         </div>
         <p className="nlp-golden__token-note" aria-hidden="true">
           개념적 경계 · 실제 경계는 토크나이저에 따라 달라집니다.
         </p>
         <p className="learning-visually-hidden" id={descriptionId}>
-          {STAGE_SUMMARIES[stage]}
+          {VISUAL_DESCRIPTION} {STAGE_SUMMARIES[stage]}
         </p>
       </div>
+      {showsHandoff ? (
+        <a
+          className="nlp-golden__handoff"
+          data-next-chapter="decoder.chapter.0.2"
+          href="#/learn/decoder-only-fundamentals/0-2"
+          aria-label="다음: Token이란?"
+        >
+          Token이란? →
+        </a>
+      ) : null}
       <fieldset
         className="nlp-golden__fallback learning-visually-hidden"
         aria-label="자연어 처리란? 의미 설명"
       >
-        <legend>자연어 처리 연속 설명 상태</legend>
+        <legend>자연어 처리 단계 설명</legend>
         <ol>
           {NLP_GOLDEN_STAGES.map((item) => (
             <li

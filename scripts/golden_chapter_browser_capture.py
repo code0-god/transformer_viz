@@ -1,260 +1,182 @@
-"""Capture helpers for Chapter 0.1 Golden Narrative evidence."""
+"""Identity, control, copy, and representation contracts for the Golden deck."""
 
 from __future__ import annotations
 
-import json
+from typing import Final, Literal, TypeAlias
+
 from browser_hybrid_contract import number, require
-from browser_hybrid_helpers import (
-    JsonObject,
-    evaluate_dict,
-    settle,
-    wait_for,
-)
+from browser_hybrid_helpers import JsonObject, evaluate_dict, pointer_click
 from browser_session import ChromeSession
 import golden_chapter_browser_probes as golden
 
-def center_visual(browser: ChromeSession) -> None:
-    browser.require_cdp().evaluate(
-        browser.page_session,
-        f"""document.querySelector('{golden.VISUAL_SELECTOR}')
-          ?.scrollIntoView({{ block: 'center', inline: 'nearest' }})""",
-        True,
-    )
-    settle(browser)
+ArrowKey: TypeAlias = Literal["ArrowLeft", "ArrowRight"]
+_KEY_VIRTUAL: Final = {
+    "ArrowLeft": 37,
+    "ArrowRight": 39,
+}
+
+_DESCRIPTION = (
+    "문장이 여러 숫자로 이루어진 표현으로 바뀌고, 그 숫자들이 계산 과정에서 다른 값으로 "
+    "변한 뒤 사람이 이해할 수 있는 결과로 연결되는 개념을 보여줍니다."
+)
+_SUMMARIES = (
+    "사람이 문장을 읽고 의미와 분위기를 이해합니다.",
+    "같은 문장 아래에 실제 모델 값이 아닌 설명용 숫자 표현이 나타납니다.",
+    "같은 숫자 표현의 값이 계산 전 값에서 계산 후 값으로 바뀝니다.",
+    "변화한 숫자 표현이 개념적인 긍정 결과와 여러 활용 형태로 이어집니다.",
+    "처음 문장에 개념적인 경계가 나타나며 Token Chapter로 이어집니다.",
+)
 
 
-def center_capture(browser: ChromeSession, stage: str) -> None:
-    selector = (
-        golden.VISUAL_SELECTOR
-        if stage == "language"
-        else f'.visual-narrative__beat[data-narrative-stage="{stage}"]'
-    )
-    browser.require_cdp().evaluate(
-        browser.page_session,
-        f"""(() => {{
-          const target = document.querySelector({json.dumps(selector)});
-          if (!(target instanceof HTMLElement)) return;
-          if (
-            innerWidth <= 768
-            && target.matches('.visual-narrative__beat')
-          ) {{
-            const targetRect = target.getBoundingClientRect();
-            const visualRect = document.querySelector(
-              '.visual-narrative--golden > .visual-narrative__visual',
-            )?.getBoundingClientRect();
-            const desiredTop = Math.min(
-              innerHeight - targetRect.height - 16,
-              (visualRect?.bottom ?? 0) + 16,
-            );
-            window.scrollBy({{
-              behavior: 'instant',
-              left: 0,
-              top: targetRect.top - desiredTop,
-            }});
-            return;
-          }}
-          target.scrollIntoView({{ block: 'center', inline: 'nearest' }});
-        }})()""",
-        True,
-    )
-    settle(browser)
-    if stage == "language":
-        return
-    for _ in range(2):
-        browser.require_cdp().evaluate(
-            browser.page_session,
-            f"""(() => {{
-              if (innerWidth > 768) return;
-              const target = document.querySelector({json.dumps(selector)});
-              const visual = document.querySelector(
-                '.visual-narrative--golden > .visual-narrative__visual',
-              );
-              if (!(target instanceof HTMLElement) || !(visual instanceof HTMLElement))
-                return;
-              const targetRect = target.getBoundingClientRect();
-              const visualRect = visual.getBoundingClientRect();
-              const desiredTop = visualRect.bottom + 16;
-              window.scrollBy({{
-                behavior: 'instant',
-                left: 0,
-                top: targetRect.top - desiredTop,
-              }});
-            }})()""",
-            True,
-        )
-        settle(browser)
-    browser.require_cdp().evaluate(
-        browser.page_session,
-        "if (innerWidth <= 768) window.scrollBy({top: 13, behavior: 'instant'})",
-        True,
-    )
-    settle(browser)
+def mark_identity(browser: ChromeSession) -> None:
+    result = evaluate_dict(browser, """(() => {
+      const deck = document.querySelector('[data-narrative-mode="deck"]');
+      const visual = document.querySelector('[data-testid="nlp-golden-visual"]');
+      const sentence = document.querySelector('[data-testid="nlp-golden-sentence"]');
+      const strip = document.querySelector('[data-testid="nlp-golden-numeric-strip"]');
+      if (!deck || !visual || !sentence || !strip)
+        throw new Error('Golden persistent object missing');
+      window.__goldenIdentity = { deck, visual, sentence, strip };
+      return { deck: true, visual: true, sentence: true, strip: true };
+    })()""")
+    require(all(value is True for value in result.values()), f"Golden identity mark: {result}")
 
 
-def reset_scroll(browser: ChromeSession) -> None:
-    browser.require_cdp().evaluate(
-        browser.page_session,
-        "window.scrollTo({top: 0, left: 0, behavior: 'instant'})",
-        True,
-    )
-    wait_for(browser, "scrollY === 0", "Golden document top")
+def assert_identity(browser: ChromeSession, stage: str) -> None:
+    result = evaluate_dict(browser, """(() => {
+      const saved = window.__goldenIdentity;
+      return {
+        deck: saved?.deck === document.querySelector('[data-narrative-mode="deck"]'),
+        visual: saved?.visual === document.querySelector('[data-testid="nlp-golden-visual"]'),
+        sentence: saved?.sentence === document.querySelector('[data-testid="nlp-golden-sentence"]'),
+        strip: saved?.strip === document.querySelector('[data-testid="nlp-golden-numeric-strip"]'),
+      };
+    })()""")
+    require(all(value is True for value in result.values()), f"Golden identity at {stage}: {result}")
 
 
-def mark_persistent_objects(browser: ChromeSession) -> None:
-    objects = evaluate_dict(
-        browser,
-        """(() => {
-          const sentence = document.querySelector(
-            '[data-testid="nlp-golden-sentence"]',
-          );
-          const cells = document.querySelector(
-            '[data-testid="nlp-golden-cells"]',
-          );
-          sentence?.setAttribute('data-object-permanence', 'sentence');
-          cells?.setAttribute('data-object-permanence', 'cells');
-          return { sentence: Boolean(sentence), cells: Boolean(cells) };
-        })()""",
-    )
-    require(objects == {"sentence": True, "cells": True}, str(objects))
+def assert_copy(browser: ChromeSession, index: int, stage: str) -> JsonObject:
+    result = evaluate_dict(browser, """(() => {
+      const article = document.querySelector(
+        '[data-curriculum-chapter-id="decoder.chapter.0.1"]'
+      );
+      const visual = document.querySelector('[data-testid="nlp-golden-visual"]');
+      const described = visual?.getAttribute('aria-describedby') ?? '';
+      const description = described === '' ? null : document.getElementById(described);
+      const dots = [...document.querySelectorAll(
+        '[data-narrative-mode="deck"] .visual-narrative__progress button'
+      )];
+      const fallback = [...document.querySelectorAll('[data-nlp-fallback-stage]')];
+      const visibleText = [...(article?.querySelectorAll('*') ?? [])]
+        .filter(element => {
+          if (element.children.length > 0 || element.getAttribute('aria-hidden') === 'true') return false;
+          const style = getComputedStyle(element);
+          const rect = element.getBoundingClientRect();
+          return style.display !== 'none' && style.visibility !== 'hidden'
+            && rect.width > 1 && rect.height > 1;
+        }).map(element => element.textContent ?? '').join(' ');
+      return {
+        description: description?.textContent?.trim() ?? '',
+        fallbackCount: fallback.length,
+        fallbackCurrent: fallback.filter(item => item.getAttribute('aria-current') === 'step').length,
+        dotCount: dots.length,
+        dotCurrent: dots.filter(item => item.getAttribute('aria-current') === 'step').length,
+        dotLabels: dots.map(item => item.getAttribute('aria-label') ?? '').join('|'),
+        forbidden: /matrix|tensor|row|column|embedding|\\[T,C\\]/i.test(visibleText),
+        caveats: (article?.textContent ?? '').includes('설명을 위한 예시 · 실제 모델 값 아님')
+          && (article?.textContent ?? '').includes('개념 예시')
+          && (article?.textContent ?? '').includes('실제 경계는 토크나이저에 따라 달라집니다.'),
+        handoffCount: document.querySelectorAll('[data-next-chapter="decoder.chapter.0.2"]').length,
+      };
+    })()""")
+    require(result["description"] == f"{_DESCRIPTION} {_SUMMARIES[index]}", f"Golden description: {result}")
+    require(result["fallbackCount"] == 5 and result["fallbackCurrent"] == 1, f"Golden summaries: {result}")
+    require(result["dotCount"] == 5 and result["dotCurrent"] == 1, f"Golden progress: {result}")
+    labels = "|".join(f"{position + 1}단계: {label}" for position, (_, label) in enumerate(golden.STATES))
+    require(result["dotLabels"] == labels, f"Golden semantic progress: {result}")
+    require(result["forbidden"] is False and result["caveats"] is True, f"Golden copy boundary: {result}")
+    require(result["handoffCount"] == (1 if stage == "token-preview" else 0), f"Golden handoff scope: {result}")
+    return result
 
 
-def assert_object_permanence(browser: ChromeSession, stage: str) -> None:
-    objects = evaluate_dict(
-        browser,
-        """(() => ({
-          sentence: document.querySelector(
-            '[data-object-permanence="sentence"]',
-          ) !== null,
-          cells: document.querySelector(
-            '[data-object-permanence="cells"]',
-          ) !== null,
-        }))()""",
-    )
-    require(
-        objects == {"sentence": True, "cells": True},
-        f"Golden object replaced at {stage}",
-    )
+def assert_numeric_representation(browser: ChromeSession) -> JsonObject:
+    golden.select_state(browser, 1, "numeric")
+    numeric = evaluate_dict(browser, """(() => {
+      const strips = [...document.querySelectorAll('[data-nlp-representation="sequence"]')];
+      const strip = strips[0]; const slots = [...(strip?.querySelectorAll(':scope > [data-nlp-value]') ?? [])];
+      const boxes = slots.map(slot => slot.getBoundingClientRect());
+      window.__goldenSlots = slots;
+      window.__goldenPhases = slots.flatMap(slot => [...slot.children]);
+      const rect = strip?.getBoundingClientRect();
+      return {
+        sequenceCount: strips.length, slotCount: slots.length,
+        forbiddenAttributes: document.querySelectorAll('[data-nlp-cell], [data-nlp-cell-group], [data-nlp-rows], [data-nlp-columns]').length,
+        oneLine: boxes.every(box => Math.abs(box.top - (boxes[0]?.top ?? 0)) <= 1),
+        mixed: (strip?.textContent ?? '').includes('-') && (strip?.textContent ?? '').includes('…'),
+        left: rect?.left ?? -1, top: rect?.top ?? -1,
+        width: rect?.width ?? -1, height: rect?.height ?? -1,
+      };
+    })()""")
+    require(numeric["sequenceCount"] == 1 and numeric["slotCount"] == 6, f"Golden sequence: {numeric}")
+    require(numeric["forbiddenAttributes"] == 0 and numeric["oneLine"] is True, f"Golden sequence shape: {numeric}")
+    require(numeric["mixed"] is True, f"Golden illustrative values: {numeric}")
+    golden.select_state(browser, 2, "transform")
+    transformed = evaluate_dict(browser, """(() => {
+      const strip = document.querySelector('[data-testid="nlp-golden-numeric-strip"]');
+      const slots = [...(strip?.querySelectorAll(':scope > [data-nlp-value]') ?? [])];
+      const phases = slots.flatMap(slot => [...slot.children]);
+      const rect = strip?.getBoundingClientRect();
+      return {
+        slotsSame: slots.every((slot, index) => slot === window.__goldenSlots[index]),
+        phasesSame: phases.every((phase, index) => phase === window.__goldenPhases[index]),
+        left: rect?.left ?? -1, top: rect?.top ?? -1,
+        width: rect?.width ?? -1, height: rect?.height ?? -1,
+      };
+    })()""")
+    require(transformed["slotsSame"] is True and transformed["phasesSame"] is True, f"Golden slot identity: {transformed}")
+    for key in ("left", "top", "width", "height"):
+        require(abs(number(numeric[key], key) - number(transformed[key], key)) <= 1, f"Golden strip bounds: {numeric}, {transformed}")
+    return {"numeric": numeric, "transform": transformed}
 
 
-def assert_mobile_order(browser: ChromeSession) -> JsonObject:
-    reset_scroll(browser)
-    order = evaluate_dict(
-        browser,
-        """(() => {
-          const beats = document.querySelectorAll(
-            '.visual-narrative--golden > .visual-narrative__beat',
-          );
-          const visual = document.querySelector(
-            '.visual-narrative--golden > .visual-narrative__visual',
-          );
-          const first = beats[0]?.getBoundingClientRect();
-          const second = beats[1]?.getBoundingClientRect();
-          const stage = visual?.getBoundingClientRect();
-          return {
-            firstTop: first?.top ?? -1,
-            firstBottom: first?.bottom ?? -1,
-            visualTop: stage?.top ?? -1,
-            visualBottom: stage?.bottom ?? -1,
-            secondTop: second?.top ?? -1,
-          };
-        })()""",
-    )
-    require(
-        number(order["firstTop"], "Golden first beat")
-        < number(order["visualTop"], "Golden mobile visual")
-        < number(order["secondTop"], "Golden second beat"),
-        f"Golden mobile source order: {order}",
-    )
-    return order
+def _key(browser: ChromeSession, key: ArrowKey) -> None:
+    for event_type in ("keyDown", "keyUp"):
+        browser.require_cdp().send("Input.dispatchKeyEvent", {
+            "type": event_type, "key": key, "code": key,
+            "windowsVirtualKeyCode": _KEY_VIRTUAL[key],
+        }, browser.page_session)
 
 
-def assert_mobile_state_geometry(
-    browser: ChromeSession,
-    stage: str,
-) -> JsonObject:
-    boxes = evaluate_dict(
-        browser,
-        """(() => {
-          const box = selector => {
-            const element = document.querySelector(selector);
-            const rect = element?.getBoundingClientRect();
-            return {
-              bottom: rect?.bottom ?? -1,
-              opacity: Number.parseFloat(
-                element ? getComputedStyle(element).opacity : '0',
-              ),
-              top: rect?.top ?? -1,
-            };
-          };
-           const cells = box('.nlp-golden__cells');
-           const activeBeat = box(
-             '.visual-narrative__beat[data-narrative-active="true"]',
-           );
-           const field = box('[data-testid="nlp-golden-numeric-field"]');
-           const label = box('.nlp-golden__state-label');
-           const result = box('.nlp-golden__result');
-           const sentence = box('.nlp-golden__sentence');
-           const visual = box('.nlp-golden__visual');
-           const visibleCells = Array.from(
-             document.querySelectorAll('[data-nlp-cell]'),
-           ).filter(cell => getComputedStyle(cell).display !== 'none').length;
-           return {
-             activeBeatBottom: activeBeat.bottom,
-             activeBeatTop: activeBeat.top,
-             cellsBottom: cells.bottom,
-             cellsOpacity: cells.opacity,
-             cellsTop: cells.top,
-             fieldBottom: field.bottom,
-             labelBottom: label.bottom,
-             resultOpacity: result.opacity,
-             resultTop: result.top,
-             sentenceBottom: sentence.bottom,
-             sentenceTop: sentence.top,
-             visibleCellCount: visibleCells,
-             viewportHeight: innerHeight,
-             visualBottom: visual.bottom,
-             visualWidth: visual.bottom > visual.top
-               ? document.querySelector('.nlp-golden__visual')
-                   ?.getBoundingClientRect().width ?? -1
-               : -1,
-           };
-        })()""",
-    )
-    require(
-        number(boxes["labelBottom"], "Golden label bottom") + 7
-        <= number(boxes["sentenceTop"], "Golden sentence top"),
-        f"Golden mobile label collision at {stage}: {boxes}",
-    )
-    if stage != "language":
-        prose_gap = (
-            number(boxes["activeBeatTop"], "Golden mobile active beat top")
-            - number(boxes["visualBottom"], "Golden mobile visual bottom")
-        )
-        require(
-            15 <= prose_gap <= 40,
-            f"Golden mobile prose occlusion at {stage}: {boxes}",
-        )
-        require(
-            number(boxes["activeBeatBottom"], "Golden mobile active beat bottom")
-            <= number(boxes["viewportHeight"], "Golden mobile viewport") - 16,
-            f"Golden mobile prose clipping at {stage}: {boxes}",
-        )
-    require(boxes["visibleCellCount"] == 12, f"Golden mobile cells: {boxes}")
-    if number(boxes["cellsOpacity"], "Golden cells opacity") >= 0.1:
-        require(
-            number(boxes["sentenceBottom"], "Golden sentence bottom") + 3
-            <= number(boxes["cellsTop"], "Golden cells top"),
-            f"Golden mobile cell collision at {stage}: {boxes}",
-        )
-    if number(boxes["resultOpacity"], "Golden result opacity") >= 0.1:
-        require(
-            number(boxes["fieldBottom"], "Golden field bottom") + 2
-            <= number(boxes["resultTop"], "Golden result top"),
-            f"Golden mobile result collision at {stage}: {boxes}",
-        )
-    if stage == "token-preview":
-        require(
-            number(boxes["cellsOpacity"], "Golden Token field opacity") <= 0.01,
-            f"Golden mobile Token ghost field: {boxes}",
-        )
-    return boxes
+def controls_contract(browser: ChromeSession) -> JsonObject:
+    initial = evaluate_dict(browser, """(() => ({
+      stage: document.querySelector('[data-narrative-mode="deck"]')?.dataset.narrativeStage ?? '',
+      previousDisabled: document.querySelector('[data-deck-action="previous"]')?.disabled ?? false,
+      hash: location.hash, historyLength: history.length,
+    }))()""")
+    require(initial["stage"] == "language" and initial["previousDisabled"] is True, f"Golden initial bound: {initial}")
+    pointer_click(browser, "document.querySelector('[data-deck-action=\"next\"]')", condition="document.querySelector('[data-narrative-mode=deck]')?.dataset.narrativeStage === 'numeric'", label="Golden real Next")
+    pointer_click(browser, "document.querySelector('[data-deck-action=\"previous\"]')", condition="document.querySelector('[data-narrative-mode=deck]')?.dataset.narrativeStage === 'language'", label="Golden real Previous")
+    golden.select_state(browser, 1, "numeric")
+    browser.require_cdp().evaluate(browser.page_session, "document.querySelector('[data-deck-action=\"next\"]')?.focus()", True)
+    _key(browser, "ArrowRight")
+    golden.finish_motion(browser)
+    require(evaluate_dict(browser, "({stage:document.querySelector('[data-narrative-mode=deck]').dataset.narrativeStage})")["stage"] == "transform", "Golden ArrowRight")
+    _key(browser, "ArrowLeft")
+    golden.finish_motion(browser)
+    require(evaluate_dict(browser, "({stage:document.querySelector('[data-narrative-mode=deck]').dataset.narrativeStage})")["stage"] == "numeric", "Golden ArrowLeft")
+    editable = evaluate_dict(browser, """(() => {
+      const deck = document.querySelector('[data-narrative-mode="deck"]');
+      const input = document.createElement('input'); deck.append(input); input.focus();
+      return {ready: document.activeElement === input};
+    })()""")
+    require(editable["ready"] is True, f"Golden editable setup: {editable}")
+    _key(browser, "ArrowRight")
+    unchanged = evaluate_dict(browser, """(() => { const stage = document.querySelector('[data-narrative-mode="deck"]').dataset.narrativeStage; document.querySelector('[data-narrative-mode="deck"] > input')?.remove(); return {stage}; })()""")
+    require(unchanged["stage"] == "numeric", f"Golden editable arrow: {unchanged}")
+    wheel = evaluate_dict(browser, """(() => { const deck = document.querySelector('[data-narrative-mode="deck"]'); const event = new WheelEvent('wheel', {deltaY: 240, bubbles: true, cancelable: true}); return {accepted: deck.dispatchEvent(event), canceled: event.defaultPrevented, stage: deck.dataset.narrativeStage}; })()""")
+    require(wheel == {"accepted": True, "canceled": False, "stage": "numeric"}, f"Golden wheel: {wheel}")
+    golden.select_state(browser, 4, "token-preview")
+    bounds = evaluate_dict(browser, """(() => { const next = document.querySelector('[data-deck-action="next"]'); next.click(); return {stage: document.querySelector('[data-narrative-mode="deck"]').dataset.narrativeStage, nextDisabled: next.disabled, hash: location.hash, historyLength: history.length}; })()""")
+    require(bounds["stage"] == "token-preview" and bounds["nextDisabled"] is True, f"Golden final bound: {bounds}")
+    require(bounds["hash"] == initial["hash"] and bounds["historyLength"] == initial["historyLength"], f"Golden history mutation: {initial}, {bounds}")
+    return {"initial": initial, "wheel": wheel, "bounds": bounds}

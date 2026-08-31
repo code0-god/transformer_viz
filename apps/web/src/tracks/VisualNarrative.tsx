@@ -1,84 +1,64 @@
 import {
-  createContext,
   Fragment,
   type ReactElement,
   useCallback,
-  useContext,
   useEffect,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 
+import { GoldenNarrativeDeck } from "./GoldenNarrativeDeck";
 import type { GuideVisualNarrativeBlock } from "./guideTypes";
 import { LearningFigure } from "./LearningFigure";
 import type { LearningFigureRegistry } from "./learningFigureTypes";
+import { VisualNarrativeContext } from "./visualNarrativeContext";
 
 import "./visualNarrative.css";
 
-type VisualNarrativeContextValue = Readonly<{
-  activeStage: string;
-  selectStage: (stage: string) => void;
+export { useVisualNarrative } from "./visualNarrativeContext";
+
+type VisualNarrativeProps = Readonly<{
+  block: GuideVisualNarrativeBlock;
+  registry: LearningFigureRegistry | undefined;
 }>;
-
-const VisualNarrativeContext =
-  createContext<VisualNarrativeContextValue | null>(null);
-
-export function useVisualNarrative(): VisualNarrativeContextValue | null {
-  return useContext(VisualNarrativeContext);
-}
 
 export function VisualNarrative({
   block,
   registry,
-}: Readonly<{
-  block: GuideVisualNarrativeBlock;
-  registry: LearningFigureRegistry | undefined;
-}>): ReactElement {
+}: VisualNarrativeProps): ReactElement {
   const initialBeat = block.beats[0];
   if (initialBeat === undefined) {
     throw new Error(`Visual Narrative has no beats: ${block.id}`);
   }
-  const [activeStage, setActiveStage] = useState(initialBeat.stage);
+  if (block.layout === "golden") {
+    return <GoldenNarrativeDeck block={block} registry={registry} />;
+  }
+  return (
+    <ScrollingVisualNarrative
+      block={block}
+      initialStage={initialBeat.stage}
+      registry={registry}
+    />
+  );
+}
+
+function ScrollingVisualNarrative({
+  block,
+  initialStage,
+  registry,
+}: VisualNarrativeProps & Readonly<{ initialStage: string }>): ReactElement {
+  const [activeStage, setActiveStage] = useState(initialStage);
   const beatElements = useRef(new Map<string, HTMLParagraphElement>());
   const selectStage = useCallback((stage: string) => {
     setActiveStage((current) => (current === stage ? current : stage));
   }, []);
-  const subscribeToGoldenBreakpoint = useCallback(
-    (onStoreChange: () => void) => {
-      if (
-        block.layout !== "golden" ||
-        typeof window.matchMedia === "undefined"
-      ) {
-        return () => undefined;
-      }
-      const mediaQuery = window.matchMedia("(max-width: 48rem)");
-      mediaQuery.addEventListener("change", onStoreChange);
-      return () => mediaQuery.removeEventListener("change", onStoreChange);
-    },
-    [block.layout],
-  );
-  const readGoldenBreakpoint = useCallback(
-    () =>
-      block.layout === "golden" &&
-      typeof window.matchMedia !== "undefined" &&
-      window.matchMedia("(max-width: 48rem)").matches,
-    [block.layout],
-  );
-  const isNarrowGolden = useSyncExternalStore(
-    subscribeToGoldenBreakpoint,
-    readGoldenBreakpoint,
-    () => false,
-  );
 
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
     let hasScrolled = false;
     let scrollFrame: number | undefined;
-    const goldenActivationLine = () =>
-      window.innerHeight * (isNarrowGolden ? 0.8 : 0.44);
     const selectNearestBeat = () => {
-      const activationLine = goldenActivationLine();
+      const activationLine = window.innerHeight / 2;
       const nearest = [...beatElements.current.values()]
         .map((element) => {
           const rect = element.getBoundingClientRect();
@@ -102,10 +82,7 @@ export function VisualNarrative({
     const observer = new IntersectionObserver(
       (entries) => {
         if (!hasScrolled) return;
-        const observerActivationLine =
-          block.layout === "golden"
-            ? goldenActivationLine()
-            : window.innerHeight / 2;
+        const observerActivationLine = window.innerHeight / 2;
         const active = entries
           .filter(({ isIntersecting }) => isIntersecting)
           .sort(
@@ -127,7 +104,7 @@ export function VisualNarrative({
         if (stage !== undefined) selectStage(stage);
       },
       {
-        rootMargin: isNarrowGolden ? "-68% 0px -8% 0px" : "-34% 0px -46% 0px",
+        rootMargin: "-34% 0px -46% 0px",
         threshold: [0, 0.25, 0.6],
       },
     );
@@ -142,7 +119,7 @@ export function VisualNarrative({
       }
       observer.disconnect();
     };
-  }, [block.layout, isNarrowGolden, selectStage]);
+  }, [selectStage]);
 
   const context = { activeStage, selectStage };
   const visual = (

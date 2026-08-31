@@ -1,45 +1,41 @@
-"""Production-browser probes for Chapter 0.1 Golden Narrative."""
+"""Production Chrome probes for the Chapter 0.1 five-slide deck."""
 
 from __future__ import annotations
 
 import json
-from typing import Final, TypeAlias
+from typing import Final
 
-from browser_hybrid_contract import require
-from browser_hybrid_helpers import evaluate_dict, navigate_hash, settle, wait_for
+from browser_hybrid_contract import number, require
+from browser_hybrid_helpers import JsonObject, evaluate_dict, navigate_hash, wait_for
 from browser_probes import READY_PROBE
 from browser_session import ChromeSession
 
-ProbeValue: TypeAlias = int | float | str | bool
-Probe: TypeAlias = dict[str, ProbeValue]
-
 CHAPTER_HASH: Final = "#/learn/decoder-only-fundamentals/0-1"
 CHAPTER_SELECTOR: Final = '[data-curriculum-chapter-id="decoder.chapter.0.1"]'
+DECK_SELECTOR: Final = '[data-narrative-mode="deck"]'
 VISUAL_SELECTOR: Final = '[data-testid="nlp-golden-visual"]'
 STATES: Final = (
-    ("사람의 언어", "language", "01-language-state.png"),
-    ("숫자 표현", "numeric", "02-numeric-state.png"),
-    ("표현 변화", "transform", "03-transform-state.png"),
-    ("활용 결과", "result", "04-result-state.png"),
-    ("다음 질문", "token-preview", "05-token-preview.png"),
+    ("language", "사람이 읽는 언어"),
+    ("numeric", "계산 가능한 표현"),
+    ("transform", "모델 계산"),
+    ("result", "결과"),
+    ("token-preview", "다음 질문"),
 )
 VIEWPORTS: Final = (
-    (320, 568), (390, 844), (768, 1024),
-    (1024, 768), (1366, 768), (1440, 900),
+    (1440, 900), (1366, 768), (1024, 768),
+    (768, 1024), (390, 844), (320, 568),
 )
-
 RAF_PROBE: Final = """
 (() => {
-  const nativeRequest = window.requestAnimationFrame.bind(window);
-  const nativeCancel = window.cancelAnimationFrame.bind(window);
+  const request = window.requestAnimationFrame.bind(window);
+  const cancel = window.cancelAnimationFrame.bind(window);
   const pending = new Set();
   window.requestAnimationFrame = callback => {
     let id = 0;
-    id = nativeRequest(time => { pending.delete(id); callback(time); });
-    pending.add(id);
-    return id;
+    id = request(time => { pending.delete(id); callback(time); });
+    pending.add(id); return id;
   };
-  window.cancelAnimationFrame = id => { pending.delete(id); nativeCancel(id); };
+  window.cancelAnimationFrame = id => { pending.delete(id); cancel(id); };
   Object.defineProperty(window, '__goldenRafPending', {
     configurable: true, get: () => pending.size,
   });
@@ -47,226 +43,141 @@ RAF_PROBE: Final = """
 """
 
 
-class GoldenProbeTypeError(TypeError):
-    """A browser probe returned a value outside its declared contract."""
-
-    def __init__(self, key: str, value: ProbeValue) -> None:
-        super().__init__(f"Golden probe {key} must be numeric: {value!r}")
-
-
 def open_chapter(browser: ChromeSession, base_url: str) -> None:
     browser.navigate(base_url)
     browser.require_cdp().evaluate(browser.page_session, READY_PROBE, True)
     navigate_hash(
-        browser,
-        CHAPTER_HASH,
+        browser, CHAPTER_HASH,
         f"document.querySelector('{CHAPTER_SELECTOR}') !== null",
-        "Golden Chapter",
+        "Golden Chapter 0.1",
     )
     wait_for(
         browser,
-        f"document.querySelector('{VISUAL_SELECTOR}') !== null",
-        "Golden visual",
+        f"document.querySelector('{DECK_SELECTOR}')?.dataset.narrativeSlideIndex === '1'",
+        "Golden initial slide",
     )
 
 
-def select_state(browser: ChromeSession, label: str, stage: str) -> None:
+def finish_motion(browser: ChromeSession) -> None:
     browser.require_cdp().evaluate(
         browser.page_session,
         f"""(() => {{
-          const button = Array.from(
-            document.querySelectorAll('.visual-narrative__steps button'),
-          ).find(item => item.textContent?.trim() === {json.dumps(label)});
+          const deck = document.querySelector('{DECK_SELECTOR}');
+          if (!deck) throw new Error('Golden deck missing');
+          for (const animation of deck.getAnimations({{subtree: true}}))
+            animation.finish();
+          return new Promise(resolve => requestAnimationFrame(
+            () => requestAnimationFrame(resolve),
+          ));
+        }})()""",
+        True,
+    )
+
+
+def select_state(browser: ChromeSession, index: int, stage: str) -> None:
+    browser.require_cdp().evaluate(
+        browser.page_session,
+        f"""(() => {{
+          const button = document.querySelectorAll(
+            '{DECK_SELECTOR} .visual-narrative__progress button'
+          )[{index}];
           if (!(button instanceof HTMLButtonElement))
-            throw new Error('Golden stage button missing');
-          button.click();
-          button.blur();
+            throw new Error('Golden progress button missing');
+          button.click(); button.blur();
         }})()""",
         True,
     )
     wait_for(
         browser,
-        f"document.querySelector('{VISUAL_SELECTOR}')"
-        f"?.getAttribute('data-nlp-stage') === {json.dumps(stage)}",
-        f"Golden {stage}",
+        f"document.querySelector('{DECK_SELECTOR}')?.dataset.narrativeStage === {json.dumps(stage)}",
+        f"Golden slide {index + 1}: {stage}",
     )
-    settle(browser)
+    finish_motion(browser)
 
 
-def keyboard_to_stage(browser: ChromeSession, label: str, stage: str) -> None:
-    browser.require_cdp().evaluate(
-        browser.page_session,
-        f"""Array.from(
-          document.querySelectorAll('.visual-narrative__steps button'),
-        ).find(item => item.textContent?.trim() === {json.dumps(label)})
-          ?.focus()""",
-        True,
-    )
-    for event_type in ("keyDown", "keyUp"):
-        browser.require_cdp().send(
-            "Input.dispatchKeyEvent",
-            {
-                "type": event_type,
-                "key": "Enter",
-                "code": "Enter",
-                "windowsVirtualKeyCode": 13,
-            },
-            browser.page_session,
-        )
-    wait_for(
-        browser,
-        f"document.querySelector('{VISUAL_SELECTOR}')"
-        f"?.getAttribute('data-nlp-stage') === {json.dumps(stage)}",
-        f"Golden keyboard {stage}",
-    )
+def probe(browser: ChromeSession) -> JsonObject:
+    return evaluate_dict(browser, f"""(() => {{
+      const deck = document.querySelector('{DECK_SELECTOR}');
+      const stage = deck?.querySelector(':scope > .visual-narrative__stage');
+      const beat = stage?.querySelector('.visual-narrative__beat');
+      const visualWrap = stage?.querySelector(':scope > .visual-narrative__visual');
+      const visual = document.querySelector('{VISUAL_SELECTOR}');
+      const controls = deck?.querySelector(':scope > .visual-narrative__steps');
+      const figure = deck?.querySelector('[data-figure-id]');
+      const content = document.querySelector('.learning-guide-introduction > p');
+      const guide = document.querySelector('.learning-guide');
+      const rect = element => element?.getBoundingClientRect();
+      const box = element => {{ const r = rect(element); return {{
+        left: r?.left ?? -1, top: r?.top ?? -1, right: r?.right ?? -1,
+        bottom: r?.bottom ?? -1, width: r?.width ?? -1, height: r?.height ?? -1,
+      }}; }};
+      const previous = deck?.querySelector('[data-deck-action="previous"]');
+      const next = deck?.querySelector('[data-deck-action="next"]');
+      const deckBox = box(deck), stageBox = box(stage), beatBox = box(beat);
+      const wrapBox = box(visualWrap), visualBox = box(visual);
+      const controlBox = box(controls), contentBox = box(content);
+      const guideBox = box(guide);
+      const style = element => element ? getComputedStyle(element) : null;
+      const observer = window.__narrativeObserverMetrics;
+      return {{
+        width: innerWidth, height: innerHeight,
+        stageName: deck?.getAttribute('data-narrative-stage') ?? '',
+        visualStage: visual?.getAttribute('data-nlp-stage') ?? '',
+        slideIndex: Number(deck?.getAttribute('data-narrative-slide-index')),
+        deckCount: document.querySelectorAll('{DECK_SELECTOR}').length,
+        beatCount: deck?.querySelectorAll('.visual-narrative__beat').length ?? -1,
+        activeBeatCount: deck?.querySelectorAll('[data-narrative-active="true"]').length ?? -1,
+        stageWidth: stageBox.width, stageHeight: stageBox.height,
+        contentStart: contentBox.left, wideEnd: guideBox.right,
+        leftStart: beatBox.left, leftEnd: beatBox.right,
+        beatBottom: beatBox.bottom,
+        rightStart: wrapBox.left, rightEnd: stageBox.right,
+        visualLeft: visualBox.left, visualTop: visualBox.top,
+        visualWidth: visualBox.width, visualHeight: visualBox.height,
+        visualCenterX: visualBox.left + visualBox.width / 2,
+        visualCenterY: visualBox.top + visualBox.height / 2,
+        controlLeft: controlBox.left, controlTop: controlBox.top,
+        controlWidth: controlBox.width, controlHeight: controlBox.height,
+        previousWidth: box(previous).width, previousHeight: box(previous).height,
+        nextWidth: box(next).width, nextHeight: box(next).height,
+        documentOverflow: Math.max(
+          0,
+          document.documentElement.scrollWidth
+            - document.documentElement.clientWidth,
+        ),
+        localOverflow: deck instanceof HTMLElement
+          ? Math.max(0, deck.scrollWidth - deck.clientWidth) : -1,
+        canvasCount: figure?.querySelectorAll('canvas').length ?? -1,
+        r3fCount: figure?.querySelectorAll('[data-threeui-renderer="r3f"]').length ?? -1,
+        replayCount: [...(deck?.querySelectorAll('button') ?? [])]
+          .filter(button => button.textContent?.includes('처음부터')).length,
+        figureBorder: style(figure)?.borderTopWidth ?? '',
+        deckBorder: style(deck)?.borderTopWidth ?? '',
+        visualPosition: style(visualWrap)?.position ?? '',
+        stageMinHeight: style(stage)?.minBlockSize ?? '',
+        pendingRaf: window.__goldenRafPending ?? -1,
+        observerActive: observer?.active ?? -1,
+        observerCreated: observer?.created ?? -1,
+      }};
+    }})()""")
 
 
-def wheel_to_stage(browser: ChromeSession, stage: str) -> None:
-    offset = evaluate_dict(
-        browser,
-        f"""(() => {{
-          const beat = document.querySelector(
-            '[data-narrative-stage="{stage}"]',
-          );
-          const box = beat?.getBoundingClientRect();
-          return {{
-            delta: (box?.top ?? 0) + (box?.height ?? 0) / 2
-              - innerHeight * 0.44,
-          }};
-        }})()""",
-    )["delta"]
-    if not isinstance(offset, int | float):
-        raise GoldenProbeTypeError("wheelDelta", str(offset))
-    for _ in range(4):
-        browser.require_cdp().send(
-            "Input.dispatchMouseEvent",
-            {
-                "type": "mouseWheel",
-                "x": 120,
-                "y": 420,
-                "deltaX": 0,
-                "deltaY": float(offset) / 4,
-            },
-            browser.page_session,
-        )
-        settle(browser)
-    wait_for(
-        browser,
-        f"document.querySelector('{VISUAL_SELECTOR}')"
-        f"?.getAttribute('data-nlp-stage') === {json.dumps(stage)}",
-        f"Golden wheel {stage}",
-    )
-
-
-def probe(browser: ChromeSession) -> Probe:
-    data = evaluate_dict(
-        browser,
-        f"""(() => {{
-          const narrative = document.querySelector(
-            '[data-narrative-layout="golden"]',
-          );
-          const visual = document.querySelector('{VISUAL_SELECTOR}');
-          const figure = document.querySelector(
-            '[data-figure-id="decoder.diagram.intro.nlp"]',
-          );
-          const caption = figure?.querySelector('figcaption');
-          const controls = narrative?.querySelector('.visual-narrative__steps');
-          const header = document.querySelector('.architecture-header');
-          const rect = element => element?.getBoundingClientRect();
-          const style = element => element instanceof Element
-            ? getComputedStyle(element)
-            : null;
-          const visualRect = rect(visual);
-          return {{
-            activeBeatCount: narrative?.querySelectorAll(
-              '[data-narrative-active="true"]',
-            ).length ?? -1,
-            beatCount: narrative?.querySelectorAll(
-              '.visual-narrative__beat',
-            ).length ?? -1,
-            canvasCount: figure?.querySelectorAll('canvas').length ?? -1,
-            captionHeight: rect(caption)?.height ?? -1,
-            controlHeight: rect(controls)?.height ?? -1,
-            documentOverflow: Math.max(
-              0,
-              document.documentElement.scrollWidth
-                - document.documentElement.clientWidth,
-            ),
-            figureBackground: style(figure)?.backgroundColor ?? '',
-            figureBorder: style(figure)?.borderTopWidth ?? '',
-            figureRenderer: figure?.getAttribute('data-figure-renderer') ?? '',
-            fallbackStageCount: figure?.querySelectorAll(
-              '[data-nlp-fallback-stage]',
-            ).length ?? -1,
-            localOverflow: narrative instanceof HTMLElement
-              ? Math.max(0, narrative.scrollWidth - narrative.clientWidth)
-              : -1,
-            narrativeBackground: style(narrative)?.backgroundColor ?? '',
-            narrativeBorder: style(narrative)?.borderTopWidth ?? '',
-            pendingRaf: window.__goldenRafPending ?? -1,
-            rectCount: visual?.querySelectorAll('rect').length ?? -1,
-            replayCount: Array.from(
-              narrative?.querySelectorAll('button') ?? [],
-            ).filter(button => button.textContent?.includes('처음부터')).length,
-            sceneCount: figure?.querySelectorAll('.scene-figure').length ?? -1,
-            stage: visual?.getAttribute('data-nlp-stage') ?? '',
-            stageButtonCount: narrative?.querySelectorAll(
-              '.visual-narrative__steps button',
-            ).length ?? -1,
-            stickyPosition: style(
-              narrative?.querySelector('.visual-narrative__visual'),
-            )?.position ?? '',
-            visualHeight: visualRect?.height ?? -1,
-            visualTop: visualRect?.top ?? -1,
-            headerBottom: rect(header)?.bottom ?? -1,
-          }};
-        }})()""",
-    )
-    return {
-        key: value
-        for key, value in data.items()
-        if isinstance(value, bool | int | float | str)
-    }
-
-
-def _number(data: Probe, key: str) -> float:
-    value = data[key]
-    if isinstance(value, bool) or not isinstance(value, int | float):
-        raise GoldenProbeTypeError(key, value)
-    return float(value)
-
-
-def assert_probe(data: Probe, width: int) -> None:
-    require(data["beatCount"] == 5, f"Golden beats at {width}: {data}")
+def assert_probe(data: JsonObject, stage: str, index: int) -> None:
+    require(data["stageName"] == stage and data["visualStage"] == stage, f"Golden stage root: {data}")
+    require(data["slideIndex"] == index + 1, f"Golden slide index: {data}")
+    require(data["deckCount"] == 1 and data["beatCount"] == 1, f"Golden mounted deck: {data}")
     require(data["activeBeatCount"] == 1, f"Golden active beat: {data}")
-    require(data["stageButtonCount"] == 5, f"Golden keyboard stages: {data}")
-    require(data["fallbackStageCount"] == 5, f"Golden fallback: {data}")
-    require(data["replayCount"] == 0, f"Golden replay chrome: {data}")
-    require(data["canvasCount"] == 0, f"Golden Canvas: {data}")
-    require(data["sceneCount"] == 0, f"Golden SceneFigure: {data}")
-    require(data["rectCount"] == 0, f"Golden generic rectangles: {data}")
-    require(data["figureRenderer"] == "static", f"Golden renderer: {data}")
-    require(data["documentOverflow"] == 0, f"Golden document overflow: {data}")
-    require(data["localOverflow"] == 0, f"Golden local overflow: {data}")
-    require(data["figureBorder"] == "0px", f"Golden Figure border: {data}")
-    require(data["narrativeBorder"] == "0px", f"Golden border: {data}")
-    require(
-        data["figureBackground"] in ("rgba(0, 0, 0, 0)", "transparent"),
-        f"Golden Figure background: {data}",
-    )
-    require(
-        data["narrativeBackground"] in ("rgba(0, 0, 0, 0)", "transparent"),
-        f"Golden narrative background: {data}",
-    )
-    require(_number(data, "captionHeight") <= 1, f"Golden caption: {data}")
-    require(_number(data, "controlHeight") <= 1, f"Golden controls: {data}")
+    for key in ("documentOverflow", "localOverflow", "canvasCount", "r3fCount", "replayCount"):
+        require(data[key] == 0, f"Golden {key}: {data}")
+    require(data["figureBorder"] == "0px" and data["deckBorder"] == "0px", f"Golden card border: {data}")
     require(data["pendingRaf"] == 0, f"Golden idle RAF: {data}")
-    require(
-        232 <= _number(data, "visualHeight") <= 390,
-        f"Golden height: {data}",
-    )
-    require(data["stickyPosition"] == "sticky", f"Golden continuity: {data}")
-    require(
-        _number(data, "visualTop") >= _number(data, "headerBottom"),
-        f"Golden visual covers Header: {data}",
-    )
+    require(data["observerActive"] == 0 and data["observerCreated"] == 0, f"Golden scroll observer: {data}")
+    for key in ("previousWidth", "previousHeight", "nextWidth", "nextHeight"):
+        require(number(data[key], key) >= 44, f"Golden control target: {data}")
+    width = number(data["width"], "viewport width")
+    if width > 768:
+        require(480 <= number(data["stageHeight"], "stage height") <= 600, f"Golden desktop height: {data}")
+    else:
+        require(data["stageMinHeight"] == "0px", f"Golden mobile fixed stage: {data}")
+        require(number(data["beatBottom"], "copy bottom") <= number(data["visualTop"], "visual top"), f"Golden mobile order: {data}")
+    require(data["visualPosition"] != "sticky", f"Golden sticky visual: {data}")

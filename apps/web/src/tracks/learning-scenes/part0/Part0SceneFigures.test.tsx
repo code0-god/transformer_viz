@@ -72,16 +72,15 @@ describe("Part 0 Learning Scenes", () => {
       />,
     );
     const sentence = screen.getByTestId("nlp-golden-sentence");
-    const cells = screen.getByTestId("nlp-golden-cells");
+    const numericStrip = screen.getByTestId("nlp-golden-numeric-strip");
     const visual = screen.getByTestId("nlp-golden-visual");
 
     expect(visual).toHaveAttribute("data-nlp-stage", "language");
-    expect(sentence.textContent).toBe("오늘 영화 정말 재미있었어요.");
     for (const [label, stage] of [
-      ["숫자 표현", "numeric"],
-      ["표현 변화", "transform"],
-      ["활용 결과", "result"],
-      ["다음 질문", "token-preview"],
+      ["2단계: 계산 가능한 표현", "numeric"],
+      ["3단계: 모델 계산", "transform"],
+      ["4단계: 결과", "result"],
+      ["5단계: 다음 질문", "token-preview"],
     ] as const) {
       fireEvent.click(screen.getByRole("button", { name: label }));
       expect(visual).toHaveAttribute("data-nlp-stage", stage);
@@ -89,8 +88,11 @@ describe("Part 0 Learning Scenes", () => {
         document.querySelector(`[data-nlp-fallback-stage="${stage}"]`),
       ).toHaveAttribute("aria-current", "step");
       expect(screen.getByTestId("nlp-golden-sentence")).toBe(sentence);
-      expect(screen.getByTestId("nlp-golden-cells")).toBe(cells);
+      expect(screen.getByTestId("nlp-golden-numeric-strip")).toBe(numericStrip);
     }
+    expect(
+      screen.getByRole("link", { name: "다음: Token이란?" }),
+    ).toHaveAttribute("data-next-chapter", "decoder.chapter.0.2");
     expect(screen.queryByRole("button", { name: "처음부터 보기" })).toBeNull();
   });
 

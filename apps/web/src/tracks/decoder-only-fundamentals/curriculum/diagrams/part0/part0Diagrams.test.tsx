@@ -25,7 +25,7 @@ const INLINE_CHAPTERS = [
     "자연어 처리란?",
     "decoder.diagram.intro.nlp",
     "자연어 처리 연속 설명",
-    "같은 문장이 숫자 표현과 계산 변화를 거쳐 사람이 활용하는 결과로 이어집니다.",
+    "문장이 숫자 표현으로 바뀌고 계산을 거쳐 사람이 활용하는 결과로 이어집니다.",
   ],
   [
     "Token이란?",
@@ -83,15 +83,16 @@ function readyCurriculum(): TestWorker {
 }
 
 describe("Part 0 curriculum Diagrams", () => {
-  test("renders one persistent sentence and representation tree", () => {
+  test("renders one persistent sentence and horizontal number sequence", () => {
     const { container } = render(<NlpPipelineDiagram />);
     expect(screen.getByTestId("nlp-golden-visual")).toHaveAttribute(
       "data-nlp-stage",
       "language",
     );
     expect(screen.getByTestId("nlp-golden-sentence")).toBeVisible();
-    expect(screen.getByTestId("nlp-golden-cells")).toBeInTheDocument();
-    expect(container.querySelectorAll("[data-nlp-cell]")).toHaveLength(16);
+    expect(screen.getByTestId("nlp-golden-numeric-strip")).toBeInTheDocument();
+    expect(container.querySelectorAll("[data-nlp-value]")).toHaveLength(6);
+    expect(container.querySelectorAll("[data-nlp-cell]")).toHaveLength(0);
     expect(container.querySelector("rect")).toBeNull();
   });
 
@@ -291,7 +292,7 @@ describe("Part 0 curriculum Diagrams", () => {
     },
   );
 
-  test("renders Chapter 0.1 as one five-state continuous narrative", async () => {
+  test("renders Chapter 0.1 as one five-step guided deck", async () => {
     // Given: a ready curriculum and the Part 0 Chapter 0.1 entrypoint.
     readyCurriculum();
     const user = userEvent.setup();
@@ -317,6 +318,9 @@ describe("Part 0 curriculum Diagrams", () => {
       pane.querySelectorAll("[data-nlp-fallback-stage]"),
     ).map((stage) => stage.getAttribute("data-nlp-fallback-stage") ?? "");
     expect(stageLabels).toEqual(NLP_GOLDEN_STAGES);
+    expect(
+      document.querySelector("[data-narrative-mode='deck']"),
+    ).not.toBeNull();
     expect(within(pane).getAllByRole("img")).toHaveLength(1);
     expect(
       within(pane).queryByRole("img", { name: "자연어 처리 추론 경로" }),

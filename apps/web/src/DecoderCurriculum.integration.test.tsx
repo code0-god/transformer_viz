@@ -284,6 +284,30 @@ describe("Decoder curriculum production integration", () => {
     }
   });
 
+  test("hands Golden slide five to Token without Worker traffic", async () => {
+    // Given: Chapter 0.1 is ready and the learner selects its final slide.
+    const worker = readyCurriculum();
+    const user = userEvent.setup();
+    const postsBefore = worker.posted.length;
+    await user.click(screen.getByRole("button", { name: "5단계: 다음 질문" }));
+
+    // When: the slide-scoped Chapter handoff is activated.
+    const handoff = document.querySelector(
+      "[data-next-chapter='decoder.chapter.0.2']",
+    );
+    if (!(handoff instanceof HTMLAnchorElement)) {
+      throw new Error("Golden Token handoff missing");
+    }
+    await user.click(handoff);
+
+    // Then: Chapter 0.2 owns URL and focus without model work.
+    expect(
+      screen.getByRole("heading", { name: "Token이란?", level: 1 }),
+    ).toHaveFocus();
+    expect(window.location.hash).toBe("#/learn/decoder-only-fundamentals/0-2");
+    expect(worker.posted).toHaveLength(postsBefore);
+  });
+
   test("starts a directly loaded Chapter at top without resetting local state", async () => {
     const scrollTo = vi
       .spyOn(window, "scrollTo")
@@ -368,7 +392,7 @@ describe("Decoder curriculum production integration", () => {
         name: "언어로 해결할 수 있는 문제",
         level: 2,
       }),
-    ).not.toBeNull();
+    ).toBeNull();
   });
 
   test("marks the current ToC link without requiring a second activation step", async () => {
@@ -412,7 +436,7 @@ describe("Decoder curriculum production integration", () => {
         name: "언어로 해결할 수 있는 문제",
         level: 2,
       }),
-    ).not.toBeNull();
+    ).toBeNull();
   });
 
   test("keeps generic Chapter content free of viewer controls", async () => {
@@ -467,7 +491,7 @@ describe("Decoder curriculum production integration", () => {
         name: "언어로 해결할 수 있는 문제",
         level: 2,
       }),
-    ).not.toBeNull();
+    ).toBeNull();
   });
 
   test.each(PART0_PRODUCTION_CHAPTERS)(
