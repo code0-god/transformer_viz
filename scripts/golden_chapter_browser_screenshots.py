@@ -50,15 +50,20 @@ def capture_additional_desktop(
 ) -> dict[str, str]:
     """Capture the Numeric split layout at intermediate desktop widths."""
     shots: dict[str, str] = {}
-    for width, height in ((1024, 768), (1366, 768)):
+    states = (
+        (1024, 768, "숫자 표현", "numeric", "desktop-1024-numeric.png"),
+        (1366, 768, "숫자 표현", "numeric", "desktop-1366-numeric.png"),
+        (2000, 1284, "사람의 언어", "language", "desktop-2000-language.png"),
+    )
+    for width, height, label, stage, filename in states:
         set_viewport(browser, width, height)
         golden.open_chapter(browser, url)
-        golden.select_state(browser, "숫자 표현", "numeric")
-        golden_capture.center_capture(browser, "numeric")
-        golden.select_state(browser, "숫자 표현", "numeric")
-        shots[f"desktop-{width}-numeric"] = capture(
+        golden.select_state(browser, label, stage)
+        golden_capture.center_capture(browser, stage)
+        golden.select_state(browser, label, stage)
+        shots[f"desktop-{width}-{stage}"] = capture(
             browser,
-            evidence / f"desktop-{width}-numeric.png",
+            evidence / filename,
         )
     return shots
 

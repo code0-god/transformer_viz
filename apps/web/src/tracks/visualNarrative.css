@@ -74,7 +74,11 @@
 }
 
 .visual-narrative--golden {
-  inline-size: min(100%, var(--learning-figure-full));
+  --golden-content-inset: calc(
+    (100% - min(100%, var(--learning-prose-width))) / 2
+  );
+  inline-size: calc(100% - var(--golden-content-inset));
+  margin-inline: var(--golden-content-inset) 0;
   grid-template-columns: minmax(17rem, 38fr) minmax(0, 62fr);
   align-items: start;
   column-gap: clamp(3.5rem, 5vw, 4.5rem);

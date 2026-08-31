@@ -12,7 +12,9 @@ import golden_chapter_browser_capture as golden_capture
 import golden_chapter_browser_probes as golden
 
 
-DESKTOP_VIEWPORTS: Final = ((1024, 768), (1366, 768), (1440, 900))
+DESKTOP_VIEWPORTS: Final = (
+    (1024, 768), (1366, 768), (1440, 900), (2000, 1284),
+)
 
 
 def collect_desktop_grid_geometry(
@@ -32,34 +34,39 @@ def collect_desktop_grid_geometry(
         boxes = evaluate_dict(
             browser,
             f"""(() => {{
-              const beat = document.querySelector(
+              const chapter = document.querySelector('{golden.CHAPTER_SELECTOR}');
+              const beat = chapter?.querySelector(
                 '.visual-narrative__beat[data-narrative-stage={json.dumps(stage)}]',
               );
-              const visual = document.querySelector(
-                '.visual-narrative--golden > .visual-narrative__visual',
+              const narrative = chapter?.querySelector('.visual-narrative--golden');
+              const visual = narrative?.querySelector(
+                ':scope > .visual-narrative__visual',
               );
-              const narrative = document.querySelector(
-                '.visual-narrative--golden',
+              const content = chapter?.querySelector(
+                '.learning-guide-section-heading',
               );
+              const guide = chapter?.querySelector('.learning-guide');
               const rect = element => element?.getBoundingClientRect();
               const beatRect = rect(beat);
               const visualRect = rect(visual);
               const narrativeRect = rect(narrative);
-              const field = document.querySelector(
+              const contentRect = rect(content);
+              const guideRect = rect(guide);
+              const field = narrative?.querySelector(
                 '[data-testid="nlp-golden-numeric-field"]',
               );
               const fieldRect = rect(field);
-              const result = document.querySelector('.nlp-golden__result');
+              const result = narrative?.querySelector('.nlp-golden__result');
               const resultRect = rect(result);
-              const cells = document.querySelector('.nlp-golden__cells');
-              const cellsLabel = document.querySelector(
+              const cells = narrative?.querySelector('.nlp-golden__cells');
+              const cellsLabel = narrative?.querySelector(
                 '.nlp-golden__cells-label',
               );
               const sentenceRect = rect(
-                document.querySelector('.nlp-golden__sentence'),
+                narrative?.querySelector('.nlp-golden__sentence'),
               );
               const tokenRect = rect(
-                document.querySelector('.nlp-golden__token-note'),
+                narrative?.querySelector('.nlp-golden__token-note'),
               );
               return {{
                 accentContent: beat instanceof Element
@@ -71,12 +78,14 @@ def collect_desktop_grid_geometry(
                 cellsLabelOpacity: cellsLabel instanceof Element
                   ? Number.parseFloat(getComputedStyle(cellsLabel).opacity)
                   : -1,
+                contentLeft: contentRect?.left ?? -1,
                 explanationLeft: beatRect?.left ?? -1,
                 explanationWidth: beatRect?.width ?? -1,
                 fieldBottom: fieldRect?.bottom ?? -1,
                 fieldCenter: (fieldRect?.left ?? -1)
                   + (fieldRect?.width ?? 0) / 2,
                 narrativeLeft: narrativeRect?.left ?? -1,
+                narrativeRight: narrativeRect?.right ?? -1,
                 narrativeWidth: narrativeRect?.width ?? -1,
                 resultCenter: (resultRect?.left ?? -1)
                   + (resultRect?.width ?? 0) / 2,
@@ -90,6 +99,7 @@ def collect_desktop_grid_geometry(
                   + (visualRect?.width ?? 0) / 2,
                 visualLeft: visualRect?.left ?? -1,
                 visualWidth: visualRect?.width ?? -1,
+                wideRight: guideRect?.right ?? -1,
               }};
             }})()""",
         )
@@ -122,6 +132,16 @@ def collect_desktop_grid_geometry(
             current["accentContent"] == "none",
             f"Golden ambiguous accent line at {width}: {measurements}",
         )
+        left_delta = abs(
+            number(current["explanationLeft"], "Golden LEFT_START")
+            - number(current["contentLeft"], "Golden CONTENT_START"),
+        )
+        require(left_delta <= 1, f"Golden LEFT_START at {width}: {measurements}")
+        right_delta = abs(
+            number(current["narrativeRight"], "Golden RIGHT_END")
+            - number(current["wideRight"], "Golden WIDE_END"),
+        )
+        require(right_delta <= 1, f"Golden RIGHT_END at {width}: {measurements}")
         for key in ("fieldCenter", "resultCenter", "sentenceCenter", "tokenCenter"):
             center_delta = abs(
                 number(current[key], f"Golden {key}")

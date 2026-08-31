@@ -29,6 +29,12 @@ matrix처럼 읽힐 가능성이 있었다.
 모든 beat가 같은 named grid lines를 사용한다. 첫 beat도 두 column을
 span하지 않는다.
 
+Final boundary correction:
+
+- LEFT_START = Chapter CONTENT_START
+- RIGHT_END = Chapter WIDE_END
+- WIDE_START에서 별도 Golden grid를 다시 시작하지 않음
+
 ## 3. Beat Alignment
 
 LANGUAGE, NUMERIC, TRANSFORM, RESULT, TOKEN_PREVIEW 모두:
@@ -62,8 +68,8 @@ LANGUAGE, NUMERIC, TRANSFORM, RESULT, TOKEN_PREVIEW 모두:
 
 NUMERIC과 TRANSFORM:
 
-- field: 508.89×78.78px
-- cell: 56.61×35.38px
+- field: 433.50×66.97px
+- cell: 47.19×29.48px
 - same rows, columns, count, anchor
 - same React/DOM objects
 
@@ -100,11 +106,13 @@ Non-Golden VisualNarrative observer behavior는 기존 50% 기준을 유지한�
 
 | Viewport | LEFT | Gap | RIGHT |
 | ---: | ---: | ---: | ---: |
-| 1024 root/subpath | 342.69px | 56.00px | 559.11px |
-| 1366 | 411.80px | 68.30px | 671.91px |
-| 1440 | 410.39px | 72.00px | 669.61px |
+| 1024 | 318.78px | 56.00px | 520.13px |
+| 1366 | 351.00px | 68.30px | 572.70px |
+| 1440 | 349.59px | 72.00px | 570.41px |
+| 2000 | 349.59px | 72.00px | 570.41px |
 
-모든 beat의 coordinate delta는 1px 이하, 실제 측정값은 0px였다.
+모든 beat의 coordinate delta는 1px 이하이며, CONTENT/LEFT와 WIDE/RIGHT
+실제 boundary delta는 0px였다.
 
 ## 9. Whitespace Audit
 

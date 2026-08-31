@@ -147,6 +147,8 @@ relationship:
 - the narrative WIDE grid is capped at 1152px;
 - every beat uses the same 38/62 explanation-to-visual columns;
 - the column gap scales from 56px to 72px;
+- LEFT_START equals the Chapter CONTENT_START;
+- RIGHT_END equals the Chapter WIDE_END;
 - all five explanation and visual grid lines remain within 1px;
 - the first beat uses the same grid instead of spanning both columns;
 - one visual remains visible while prose beats pass through the active
@@ -229,6 +231,7 @@ Required files:
 15-before-after-result.png
 desktop-1024-numeric.png
 desktop-1366-numeric.png
+desktop-2000-language.png
 mobile-01-language-state.png
 mobile-02-numeric-state.png
 mobile-03-transform-state.png
@@ -245,12 +248,14 @@ fresh Chrome sessions.
 
 Final geometry evidence:
 
-- 1024px root/subpath: 342.69px explanation, 56px gap, 559.11px visual;
-- 1366px: 411.80px explanation, 68.30px gap, 671.91px visual;
-- 1440px: 410.39px explanation, 72px gap, 669.61px visual;
-- Numeric and Transform field: 508.89×78.78px;
-- each desktop cell: 56.61×35.38px;
-- grid drift across fifteen desktop records: 0px.
+- 1024px: 318.78px explanation, 56px gap, 520.13px visual;
+- 1366px: 351px explanation, 68.30px gap, 572.70px visual;
+- 1440px: 349.59px explanation, 72px gap, 570.41px visual;
+- 2000px: 349.59px explanation, 72px gap, 570.41px visual;
+- Numeric and Transform field: 433.50×66.97px;
+- each desktop cell: 47.19×29.48px;
+- CONTENT/LEFT and WIDE/RIGHT boundary drift across twenty desktop records:
+  0px.
 
 ## Scope freeze
 

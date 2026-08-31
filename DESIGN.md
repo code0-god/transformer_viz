@@ -89,6 +89,9 @@ Chapters.
 - Canonical desktop grid: every beat uses the same WIDE grid lines with a
   38/62 explanation-to-visual ratio and a fluid 56–72px column gap. The first
   beat never expands across both columns, and no beat owns a private grid.
+- Boundary ownership: `LEFT_START` inherits the Chapter `CONTENT_START`, while
+  `RIGHT_END` remains on `WIDE_END`. The Golden root consumes only that
+  asymmetric CONTENT-to-WIDE span instead of restarting at `WIDE_START`.
 - Accent lines are absent inside the Golden narrative. Column geometry and
   spacing alone distinguish explanation from visualization.
 - Hero object: the Korean sentence `오늘 영화 정말 재미있었어요.` remains one
