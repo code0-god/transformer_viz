@@ -7,6 +7,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 
 import type { GuideVisualNarrativeBlock } from "./guideTypes";
@@ -43,18 +44,41 @@ export function VisualNarrative({
   const selectStage = useCallback((stage: string) => {
     setActiveStage((current) => (current === stage ? current : stage));
   }, []);
+  const subscribeToGoldenBreakpoint = useCallback(
+    (onStoreChange: () => void) => {
+      if (
+        block.layout !== "golden" ||
+        typeof window.matchMedia === "undefined"
+      ) {
+        return () => undefined;
+      }
+      const mediaQuery = window.matchMedia("(max-width: 48rem)");
+      mediaQuery.addEventListener("change", onStoreChange);
+      return () => mediaQuery.removeEventListener("change", onStoreChange);
+    },
+    [block.layout],
+  );
+  const readGoldenBreakpoint = useCallback(
+    () =>
+      block.layout === "golden" &&
+      typeof window.matchMedia !== "undefined" &&
+      window.matchMedia("(max-width: 48rem)").matches,
+    [block.layout],
+  );
+  const isNarrowGolden = useSyncExternalStore(
+    subscribeToGoldenBreakpoint,
+    readGoldenBreakpoint,
+    () => false,
+  );
 
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
     let hasScrolled = false;
     let scrollFrame: number | undefined;
-    const isNarrowGolden =
-      block.layout === "golden" &&
-      window.matchMedia("(max-width: 48rem)").matches;
-    const activationLine = window.innerHeight * (isNarrowGolden ? 0.8 : 0.44);
-    const observerActivationLine =
-      block.layout === "golden" ? activationLine : window.innerHeight / 2;
+    const goldenActivationLine = () =>
+      window.innerHeight * (isNarrowGolden ? 0.8 : 0.44);
     const selectNearestBeat = () => {
+      const activationLine = goldenActivationLine();
       const nearest = [...beatElements.current.values()]
         .map((element) => {
           const rect = element.getBoundingClientRect();
@@ -78,6 +102,10 @@ export function VisualNarrative({
     const observer = new IntersectionObserver(
       (entries) => {
         if (!hasScrolled) return;
+        const observerActivationLine =
+          block.layout === "golden"
+            ? goldenActivationLine()
+            : window.innerHeight / 2;
         const active = entries
           .filter(({ isIntersecting }) => isIntersecting)
           .sort(
@@ -114,7 +142,7 @@ export function VisualNarrative({
       }
       observer.disconnect();
     };
-  }, [block.layout, selectStage]);
+  }, [block.layout, isNarrowGolden, selectStage]);
 
   const context = { activeStage, selectStage };
   const visual = (
