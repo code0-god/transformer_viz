@@ -91,6 +91,9 @@ def assert_copy(browser: ChromeSession, index: int, stage: str) -> JsonObject:
           && (article?.textContent ?? '').includes('개념 예시')
           && (article?.textContent ?? '').includes('실제 경계는 토크나이저에 따라 달라집니다.'),
         handoffCount: document.querySelectorAll('[data-next-chapter="decoder.chapter.0.2"]').length,
+        chapterFooterCount: document.querySelectorAll(
+          '.curriculum-chapter-footer'
+        ).length,
       };
     })()""")
     require(result["description"] == f"{_DESCRIPTION} {_SUMMARIES[index]}", f"Golden description: {result}")
@@ -100,6 +103,7 @@ def assert_copy(browser: ChromeSession, index: int, stage: str) -> JsonObject:
     require(result["dotLabels"] == labels, f"Golden semantic progress: {result}")
     require(result["forbidden"] is False and result["caveats"] is True, f"Golden copy boundary: {result}")
     require(result["handoffCount"] == (1 if stage == "token-preview" else 0), f"Golden handoff scope: {result}")
+    require(result["chapterFooterCount"] == 0, f"Golden duplicate Chapter footer: {result}")
     return result
 
 

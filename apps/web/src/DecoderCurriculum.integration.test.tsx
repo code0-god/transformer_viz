@@ -291,6 +291,14 @@ describe("Decoder curriculum production integration", () => {
     const postsBefore = worker.posted.length;
     await user.click(screen.getByRole("button", { name: "5단계: 다음 질문" }));
 
+    // Then: the slide owns the only Chapter 0.2 handoff.
+    expect(
+      screen.getAllByRole("link", { name: "다음: Token이란?" }),
+    ).toHaveLength(1);
+    expect(
+      screen.queryByRole("navigation", { name: "Chapter 이동" }),
+    ).toBeNull();
+
     // When: the slide-scoped Chapter handoff is activated.
     const handoff = document.querySelector(
       "[data-next-chapter='decoder.chapter.0.2']",

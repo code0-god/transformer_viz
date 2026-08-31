@@ -15,7 +15,9 @@ export function CurriculumChapterFooter({
   next,
   chapterHref,
   onNavigate,
-}: CurriculumChapterFooterProps): ReactElement {
+}: CurriculumChapterFooterProps): ReactElement | null {
+  if (previous === undefined && next === undefined) return null;
+
   return (
     <nav
       className="curriculum-chapter-footer page-layout__full page-layout"

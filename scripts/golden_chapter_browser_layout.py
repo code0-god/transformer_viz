@@ -32,9 +32,11 @@ def probe(browser: ChromeSession) -> JsonObject:
       const boundaryPhrases = [...document.querySelectorAll(
         '[data-nlp-boundary-step]'
       )];
+      const tokenNote = document.querySelector('.nlp-golden__token-note'), handoff = document.querySelector('.nlp-golden__handoff');
       const controls = deck?.querySelector(
         ':scope > .visual-narrative__steps'
       );
+      const takeaway = document.querySelector('[data-testid="key-takeaway"]');
       const figure = deck?.querySelector('[data-figure-id]');
       const content = document.querySelector(
         '.learning-guide-introduction > p'
@@ -52,6 +54,8 @@ def probe(browser: ChromeSession) -> JsonObject:
       const controlBox = box(controls), contentBox = box(content);
       const guideBox = box(guide), stripBox = box(numericStrip);
       const connectorBox = box(resultConnector);
+      const tokenNoteBox = box(tokenNote), handoffBox = box(handoff);
+      const takeawayBox = box(takeaway);
       const style = element => element ? getComputedStyle(element) : null;
       const shellHeaderBottom = Math.max(
         0,
@@ -82,7 +86,8 @@ def probe(browser: ChromeSession) -> JsonObject:
         visualCenterX: visualBox.left + visualBox.width / 2,
         visualCenterY: visualBox.top + visualBox.height / 2,
         controlLeft: controlBox.left, controlTop: controlBox.top,
-        controlWidth: controlBox.width, controlHeight: controlBox.height,
+        controlWidth: controlBox.width, controlHeight: controlBox.height, controlRight: controlBox.right, takeawayLeft: takeawayBox.left,
+        takeawayRight: takeawayBox.right, takeawayWidth: takeawayBox.width,
         previousWidth: box(previous).width, previousHeight: box(previous).height,
         nextWidth: box(next).width, nextHeight: box(next).height,
         documentOverflow: Math.max(
@@ -132,6 +137,8 @@ def probe(browser: ChromeSession) -> JsonObject:
         boundaryDelays: boundaryPhrases.map(
           phrase => getComputedStyle(phrase, '::after').transitionDelay
         ).join('|'),
+        tokenNoteRight: tokenNoteBox.right, tokenNoteBottom: tokenNoteBox.bottom,
+        handoffRight: handoffBox.right, handoffTop: handoffBox.top, handoffBottom: handoffBox.bottom,
       }};
     }})()""")
 
@@ -166,6 +173,11 @@ def assert_probe(data: JsonObject, stage: str, index: int) -> None:
     )
     for key in ("previousWidth", "previousHeight", "nextWidth", "nextHeight"):
         require(number(data[key], key) >= 44, f"Golden control target: {data}")
+    divider_aligned = all(
+        abs(number(data[f"control{key}"], key) - number(data[f"takeaway{key}"], key)) <= 1
+        for key in ("Left", "Right", "Width")
+    )
+    require(divider_aligned, f"Golden divider span: {data}")
     width = number(data["width"], "viewport width")
     if width > 768:
         require(
@@ -190,6 +202,7 @@ def assert_probe(data: JsonObject, stage: str, index: int) -> None:
             data["visibleNumericSlots"] == 6,
             f"Golden mobile numeric slots: {data}",
         )
+        require(number(data["controlHeight"], "controlHeight") <= 45 and number(data["controlTop"], "controlTop") + number(data["controlHeight"], "controlHeight") <= number(data["height"], "height") + 1, f"Golden mobile controls visible: {data}")
         minimum_font = 12 if width == 390 else 11
         require(
             number(data["numericFontSize"], "Golden numeric font")
@@ -223,7 +236,21 @@ def assert_probe(data: JsonObject, stage: str, index: int) -> None:
             f"Golden token boundaries: {data}",
         )
         require(
-            data["boundaryDelays"] == "0s|0.07s|0.14s|0.21s",
+            data["boundaryDelays"] == "0s|0.16s|0.32s|0.48s",
             f"Golden boundary order: {data}",
+        )
+        token_right_aligned = all(
+            abs(number(data[key], key) - number(data["rightEnd"], "rightEnd")) <= 1
+            for key in ("tokenNoteRight", "handoffRight")
+        )
+        require(token_right_aligned, f"Golden Token right alignment: {data}")
+        require(
+            number(data["tokenNoteBottom"], "tokenNoteBottom") <= number(data["handoffTop"], "handoffTop"),
+            f"Golden Token handoff order: {data}",
+        )
+        handoff_gap = number(data["controlTop"], "controlTop") - number(data["handoffBottom"], "handoffBottom")
+        require(
+            0 <= handoff_gap <= 80,
+            f"Golden Token handoff proximity: {data}",
         )
     require(data["visualPosition"] != "sticky", f"Golden sticky visual: {data}")

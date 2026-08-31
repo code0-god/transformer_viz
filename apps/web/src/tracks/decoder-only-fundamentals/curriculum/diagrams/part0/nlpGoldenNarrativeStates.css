@@ -140,19 +140,19 @@
 .nlp-golden[data-nlp-stage="token-preview"]
   .nlp-golden__sentence
   > span:nth-child(2)::after {
-  transition-delay: 70ms;
+  transition-delay: 160ms;
 }
 
 .nlp-golden[data-nlp-stage="token-preview"]
   .nlp-golden__sentence
   > span:nth-child(3)::after {
-  transition-delay: 140ms;
+  transition-delay: 320ms;
 }
 
 .nlp-golden[data-nlp-stage="token-preview"]
   .nlp-golden__sentence
   > span:nth-child(4)::after {
-  transition-delay: 210ms;
+  transition-delay: 480ms;
 }
 
 .nlp-golden[data-nlp-stage="token-preview"] .nlp-golden__numeric {
@@ -162,6 +162,13 @@
 .nlp-golden[data-nlp-stage="token-preview"] .nlp-golden__token-note,
 .nlp-golden[data-nlp-stage="token-preview"] .nlp-golden__handoff {
   opacity: 1;
+}
+
+.nlp-golden[data-nlp-stage="token-preview"] .nlp-golden__token-note {
+  transform: translateY(3.5rem);
+}
+
+.nlp-golden[data-nlp-stage="token-preview"] .nlp-golden__handoff {
   transform: translateY(0);
 }
 
@@ -178,6 +185,10 @@
   .nlp-golden[data-nlp-stage] .nlp-golden__sentence {
     margin-inline: var(--s1);
     font-size: clamp(1.3rem, 6vw, 1.65rem);
+  }
+
+  .nlp-golden[data-nlp-stage="token-preview"] .nlp-golden__visual {
+    grid-template-rows: 1.5rem 4.25rem 4.75rem 3rem;
   }
 
   .nlp-golden[data-nlp-stage] .nlp-golden__numeric {
@@ -212,12 +223,22 @@
   }
 
   .nlp-golden[data-nlp-stage] .nlp-golden__example-note,
-  .nlp-golden[data-nlp-stage] .nlp-golden__token-note,
   .nlp-golden[data-nlp-stage] .nlp-golden__result-connector,
   .nlp-golden[data-nlp-stage] .nlp-golden__result-primary > span,
   .nlp-golden[data-nlp-stage] .nlp-golden__result-task,
   .nlp-golden[data-nlp-stage] .nlp-golden__other-tasks {
     font-size: 0.68rem;
+  }
+
+  .nlp-golden[data-nlp-stage] .nlp-golden__token-note {
+    inline-size: 100%;
+    padding-inline: var(--s1);
+    margin-inline: 0;
+    font-size: 0.68rem;
+  }
+
+  .nlp-golden[data-nlp-stage="token-preview"] .nlp-golden__token-note {
+    transform: translateY(0);
   }
 
   .nlp-golden__result strong {
@@ -277,6 +298,7 @@
   }
 
   .nlp-golden[data-nlp-stage] .nlp-golden__handoff {
+    inset-inline-start: auto;
     inset-inline-end: 0;
     inset-block-end: 0;
   }

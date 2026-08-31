@@ -114,6 +114,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+.visual-narrative__progress > span {
+  white-space: nowrap;
+}
+
 .visual-narrative__progress > ol {
   display: flex;
   gap: var(--s1);
@@ -183,6 +187,9 @@
   }
 
   .visual-narrative--golden > .visual-narrative__steps {
+    box-sizing: border-box;
+    block-size: 45px;
+    min-block-size: 45px;
     margin-block-start: var(--s3);
   }
 
@@ -200,6 +207,7 @@
 
 @media (max-width: 22rem) {
   .visual-narrative--golden > .visual-narrative__steps {
+    column-gap: 0;
     margin-block-start: 0;
   }
 }

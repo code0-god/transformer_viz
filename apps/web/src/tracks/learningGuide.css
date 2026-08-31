@@ -120,6 +120,24 @@
   margin-inline: auto;
 }
 
+[data-curriculum-chapter-id="decoder.chapter.0.1"] .learning-guide {
+  --golden-prose-inset: calc(
+    (100% - min(100%, var(--learning-prose-width))) / 2
+  );
+}
+
+[data-curriculum-chapter-id="decoder.chapter.0.1"]
+  .learning-guide-takeaway {
+  inline-size: calc(100% - var(--golden-prose-inset));
+  margin-inline: var(--golden-prose-inset) 0;
+}
+
+[data-curriculum-chapter-id="decoder.chapter.0.1"]
+  .learning-guide-takeaway
+  > * {
+  inline-size: min(100%, var(--learning-prose-width));
+}
+
 .learning-guide-sections {
   display: grid;
   gap: var(--editorial-section-gap);
@@ -503,5 +521,11 @@
   .learning-guide-glossary dl > div {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s1, 0.25rem);
+  }
+}
+
+@media (min-width: 40rem) and (max-width: 48rem) {
+  [data-curriculum-chapter-id="decoder.chapter.0.1"] .learning-guide {
+    --golden-prose-inset: var(--s4);
   }
 }
