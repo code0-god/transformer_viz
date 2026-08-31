@@ -57,12 +57,12 @@ The component is Chapter-specific. Shared Inline, Split, and Sticky
 
 사람에게 언어는 어떻게 보이는가?
 
-#### Copy
+#### Core copy
 
 사람은 문장을 읽고 그 뜻과 분위기를 자연스럽게 받아들인다. 예시 문장에서
 긍정적인 느낌을 쉽게 알아차릴 수 있다.
 
-#### Visual
+#### Main visual
 
 The canonical source object is one persistent Korean sentence:
 
@@ -78,6 +78,11 @@ rectangle surrounds it. `재미있었어요` receives one restrained underline a
 
 The sentence starts fully legible and remains mounted when later objects enter.
 
+#### Misconception avoided
+
+The quiet `긍정적인 느낌` cue records human interpretation. It is neither a
+model output nor classification UI.
+
 #### Takeaway
 
 사람은 문장에서 뜻과 분위기를 직접 읽는다.
@@ -88,12 +93,12 @@ The sentence starts fully legible and remains mounted when later objects enter.
 
 컴퓨터가 계산하려면 언어를 무엇으로 바꿔야 하는가?
 
-#### Copy
+#### Core copy
 
 컴퓨터는 `재미있다`라는 뜻 자체를 계산하지 않는다. 덧셈과 곱셈을 하려면
 문장을 숫자로 이루어진 표현으로 바꿔야 한다.
 
-#### Visual
+#### Main visual
 
 The same sentence remains visible. A shared `숫자로 표현` cue and downward
 arrow lead to one horizontal six-slot number sequence:
@@ -115,6 +120,11 @@ The values mix signs and do not form a probability distribution.
 The sentence de-emphasizes while the persistent strip enters below it. No
 sentence phrase is aligned to a numeric slot.
 
+#### Misconception avoided
+
+The displayed numbers are explanatory values, not current model values. The
+single horizontal sequence is not a matrix or grid.
+
 #### Takeaway
 
 컴퓨터가 계산하려면 언어가 숫자로 이루어진 표현이어야 한다.
@@ -125,12 +135,12 @@ sentence phrase is aligned to a numeric slot.
 
 모델의 계산은 이 숫자 표현에 무엇을 하는가?
 
-#### Copy
+#### Core copy
 
 모델 안에서는 이 숫자들을 이용한 계산이 여러 번 이어진다. 계산을 거칠
 때마다 값이 달라지고, 바뀐 값은 다음 계산의 입력이 된다.
 
-#### Visual
+#### Main visual
 
 The same number-strip and slot DOM nodes remain mounted. One shared
 `여러 계산` cue spans the strip. Five value slots show direct correspondence:
@@ -150,6 +160,11 @@ matrix appears.
 Before values move upward and soften; arrows appear; after values enter below
 inside the same fixed slots. Slot and strip geometry never move.
 
+#### Misconception avoided
+
+Each vertical arrow marks before/after correspondence inside one persistent
+slot. It does not claim that the model computes each scalar independently.
+
 #### Takeaway
 
 모델의 계산은 숫자 표현의 값을 바꾼다.
@@ -160,13 +175,13 @@ inside the same fixed slots. Slot and strip geometry never move.
 
 계산된 숫자 표현은 어떻게 사람이 쓰는 결과가 되는가?
 
-#### Copy
+#### Core copy
 
-계산된 숫자 표현은 문제에 맞는 결과로 읽어낸다. 이 예에서는 문장의
-분위기를 `긍정`으로 분류하고, 다른 문제에서는 답변, 번역문, 이어 쓸
-글을 만든다.
+계산된 숫자 표현을 문제의 목적에 맞는 결과로 읽어낸다. 이 예에서는
+문장의 분위기를 `긍정`으로 분류하며, 답변과 번역, 글 생성은 다른 문제의
+예다.
 
-#### Visual
+#### Main visual
 
 The transformed sequence becomes quiet but remains present as provenance.
 One explicit task-to-result path becomes dominant:
@@ -189,6 +204,11 @@ This is an explanatory semantic example, not a runtime inference claim.
 Transformed values remain visible above the result. The result enters below
 without replacing the strip, and a subtle divider separates other task types.
 
+#### Misconception avoided
+
+`긍정` is a conceptual classification example, not an inference produced by
+the current runtime.
+
 #### Takeaway
 
 같은 계산된 표현도 문제의 목적에 맞게 읽어야 사람이 쓰는 결과가 된다.
@@ -199,12 +219,12 @@ without replacing the strip, and a subtle divider separates other task types.
 
 그런 숫자 표현을 만들기 전에 무엇부터 해야 하는가?
 
-#### Copy
+#### Core copy
 
 문장을 숫자로 바꾸려면 먼저 작은 단위로 나눠야 한다. 어디에서 나눌지는
 토크나이저에 따라 달라지며, 그 단위는 다음 Chapter에서 살펴본다.
 
-#### Visual
+#### Main visual
 
 The source sentence returns to primary emphasis. Four conceptual boundaries
 appear from left to right and settle at equal weight.
@@ -213,6 +233,11 @@ appear from left to right and settle at equal weight.
 
 Boundary delays are `0ms`, `160ms`, `320ms`, and `480ms`; there is no idle
 loop. Reduced motion shows the final four-boundary state immediately.
+
+#### Misconception avoided
+
+The displayed boundaries are conceptual, not actual tokenizer output. Exact
+boundaries depend on the tokenizer.
 
 #### Takeaway
 
@@ -344,14 +369,23 @@ Slower Token-boundary follow-up evidence:
 .omo/evidence/golden-divider-alignment/browser/
 ```
 
+Final polish evidence:
+
+```text
+.omo/evidence/golden-final-polish/browser/
+.omo/evidence/golden-final-polish/subpath-browser/
+```
+
 Coverage:
 
 - 30 viewport/state screenshots: six required viewports × five slides;
+- five matched 1440px pre-polish states named `before-01-*` through
+  `before-05-*`;
 - exact desktop canonical files `01-language.png` through
   `05-token-preview.png`;
 - 390px canonical files `07-slide-language-390.png` through
   `11-slide-token-390.png`;
-- `06-full-chapter.png`;
+- full-Chapter captures for Slide 1, Slide 3, and Slide 5;
 - twelve rest/mid/settled transition frames plus the requested
   `02-to-03-*`, `04-result-transition.png`, and `05-boundary-*` aliases;
 - `contact-6x5.png` and `contact-transitions.png`;

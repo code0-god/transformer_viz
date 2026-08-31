@@ -114,7 +114,20 @@ Measured strip/result overlap은 여섯 viewport 모두 `0px`다.
 렌더링하지 않는다. 보조 문구와 link는 RIGHT_END에 맞춰 오른쪽 정렬하고
 deck-controls 경계 가까이에 배치했다.
 
-## 7. Visual Scale / Whitespace
+## 7. Visual Causality
+
+- Slide 2: 같은 문장에서 `숫자로 표현 ↓` 축을 따라 한 줄 숫자 표현이
+  직접 이어진다.
+- Slide 3: 같은 six slots 안에서 before value가 옅어지고 after value가
+  나타나며, 각 arrow는 독립 계산이 아닌 slot correspondence를 표시한다.
+- Slide 4: transformed strip을 남긴 채 `문장 분류로 읽기 ↓`를 거쳐
+  `긍정` 결과로 이어진다.
+- Slide 5: 처음 문장에 conceptual boundaries가 왼쪽부터 하나씩 나타난다.
+
+다섯 slide를 순서대로 보면 `사람의 언어 → 숫자 표현 → 계산으로 값 변화
+→ 목적에 맞는 결과 → Token 질문`의 한 인과관계가 끊기지 않는다.
+
+## 8. Visual Scale / Whitespace
 
 - Desktop stage: `480–518.39px`
 - Desktop LEFT/RIGHT: `38/62`
@@ -128,7 +141,7 @@ deck-controls 경계 가까이에 배치했다.
 Stage 자체를 다시 설계하거나 키우지 않았다. Sentence, numeric strip,
 result, token sentence가 고정 RIGHT zone을 의미 있게 사용한다.
 
-## 8. Object Continuity
+## 9. Object Continuity
 
 다음 object는 5개 slide 동안 mount된 채 유지된다.
 
@@ -143,7 +156,7 @@ Browser motion records 네 sequence 모두 `identity: true`다. LEFT copy만
 discrete fade/translate하며, RIGHT는 opacity/transform/color transition으로
 이어진다.
 
-## 9. Mobile
+## 10. Mobile
 
 768/390/320px 모두 explanation → visual → controls 순서를 유지한다.
 
@@ -157,7 +170,7 @@ Active copy는 실제 sticky-header bottom 아래로 배치된다. 다섯 320px
 original 모두 label/copy/control이 보이며 `copyHeaderOverlap = 0`,
 document/local overflow `0`이다.
 
-## 10. Accessibility
+## 11. Accessibility
 
 - complete `role="img"` description
 - five persistent summaries, one current summary
@@ -171,21 +184,30 @@ document/local overflow `0`이다.
 Reduced-motion records는 다섯 state 모두 running animation `0`, maximum
 duration `0.01ms`다.
 
-## 11. Independent Visual Critique
+## 12. Independent Visual Critique
 
-첫 fresh review는 320px sticky-header occlusion을 발견해 `REVISE`했다. Copy,
-mobile rhythm, evidence positioning을 수정하고 전체 evidence를 다시
-생성했다.
+첫 final pixel/CJK review는 `REVISE`했다.
 
-Final fresh reviewers:
+- Slide 4의 `숫자 표현은 ... 읽어냅니다` 조사 관계
+- 320px copy의 `답변·` orphan
+- Result→Token midpoint에서 outgoing result와 incoming qualifier/handoff
+  동시 노출
+
+Copy를 `계산된 숫자 표현을 문제의 목적에 맞는 결과로 읽어냅니다.`로
+바꾸고 네 줄 mobile rhythm을 복원했다. Token handoff는 모든 slide에서
+mount하되 비활성 상태에서 숨기고, qualifier와 함께 240ms 뒤 나타나게
+해 early midpoint의 `incomingOpacity`를 `0`으로 고정했다.
+
+Fresh fixed-build reviewers:
 
 - causal/design-system reviewer: **PASS**, confidence `0.98`, blockers `0`
-- pixel/CJK reviewer: **PASS**, confidence `0.98`, blockers `0`
+- pixel/CJK reviewer: **PASS**, confidence `0.97`, blockers `0`
 
-두 reviewer 모두 Slide 2 illustrative meaning, Slide 3 calculation cause,
-Slide 4 task/result hierarchy, Slide 5 Token preview를 YES로 판정했다.
+두 reviewer 모두 26/26 required captures를 직접 검토했고, copy clarity,
+visual causality, scale, object continuity, hierarchy, CJK, educational
+accuracy를 구체적으로 평가했다. Hard question은 둘 다 **YES**로 판정했다.
 
-## 12. Screenshots
+## 13. Screenshot Evidence
 
 Evidence root:
 
@@ -195,56 +217,63 @@ Evidence root:
 .omo/evidence/golden-boundary-slow/browser/
 .omo/evidence/golden-handoff-cleanup/browser/
 .omo/evidence/golden-divider-alignment/browser/
+.omo/evidence/golden-final-polish/browser/
+.omo/evidence/golden-final-polish/subpath-browser/
 ```
 
 Coverage:
 
 - 30 viewport/state originals
+- 5 matched 1440px pre-polish states
 - desktop `01-language.png` … `05-token-preview.png`
-- `06-full-chapter.png`
+- full-Chapter Slide 1 / Slide 3 / Slide 5
 - five 390px aliases
 - 12 transition rest/mid/settled originals
 - `02-to-03-before/mid/after.png`
 - `04-result-transition.png`
 - `05-boundary-step-1.png`, `05-boundary-final.png`
 - `contact-6x5.png`, `contact-transitions.png`
-- 59 manifest-tracked screenshots per deployment base
+- 62 candidate screenshots + 5 baseline screenshots per deployment base
+- before/after image diff: Slide 2 `2.76%`, Slide 3 `3.84%`,
+  Slide 4 `5.03%`, Slide 5 `2.37%`
 
-## 13. Tests
+## 14. Tests
 
 Final canonical `./scripts/check.sh`:
 
 - exit `0`
 - `All checks passed.`
-- Vitest: `87 files / 615 tests`
+- Vitest: `87 files / 617 tests`
 - lifecycle Vitest: `1 file / 7 tests`
 - Biome, TypeScript, production root/subpath builds: PASS
 - cargo fmt, clippy native/WASM, workspace tests/build: PASS
 - Golden root browser: PASS
 - Golden `/transformer_viz/` browser: PASS
 
-Additional:
+Additional final-polish checks:
 
-- focused Vitest: `2 files / 15 tests`
+- focused Vitest: `5 files / 87 tests`
 - flat/combined public-base Python routing: `2 tests`
-- Python no-excuse: `8 files / 0 violations`
-- TypeScript no-excuse: `3 files / 0 violations`
+- Python no-excuse: final changed scripts / `0 violations`
+- TypeScript no-excuse: final changed files / `0 violations`
 - Impeccable detector: `[]`
 - Lighthouse before/after: Performance `63 → 63`, TBT `0 → 0ms`,
   CLS unchanged `0.000208`
 
-## 14. Git
+## 15. Git
 
-Verified local implementation commit:
+Final verified implementation commit:
 
-- `80ea315 refactor(learn): polish NLP slide narrative`
+- `396b3b9 fix(learn): finalize NLP slide polish`
 
-Product, direct tests, browser evidence contracts, and base-routing fix are one
-atomic green behavior. Documentation/report are closed in a separate local
-commit. Dependency manifests and lockfile are unchanged. Remote push was not
-performed.
+`80ea315`의 main copy/causality polish와 `2d888ee`의 handoff alignment 위에서
+Slide 4 문법·mobile wrapping, Result→Token sequencing, semantic/rapid
+navigation tests, matched before/after와 full-Chapter capture contract를 하나의
+atomic green behavior로 닫았다. Documentation/report는 별도 local commit으로
+닫는다. Dependency manifests와 lockfile은 그대로이며 remote push는 하지
+않는다.
 
-## 15. User visual approval
+## 16. User visual approval
 
 Current state:
 
