@@ -5,7 +5,7 @@
 - Scope: Chapter 0.1 only
 - Implementation: complete
 - Automated verification: pass on focused and production-browser gates
-- Independent visual critique: pass, two final reviewers, blockers 0
+- Independent visual critique: pass, two fresh final reviewers, blockers 0
 - User visual approval: pending
 - Expansion to Chapter 0.2 or later: prohibited before approval
 
@@ -53,6 +53,17 @@ The component is Chapter-specific. Shared Inline, Split, and Sticky
 
 ### 1. 사람이 읽는 언어
 
+#### Question
+
+사람에게 언어는 어떻게 보이는가?
+
+#### Copy
+
+사람은 문장을 읽고 그 뜻과 분위기를 자연스럽게 받아들인다. 예시 문장에서
+긍정적인 느낌을 쉽게 알아차릴 수 있다.
+
+#### Visual
+
 The canonical source object is one persistent Korean sentence:
 
 ```text
@@ -60,12 +71,32 @@ The canonical source object is one persistent Korean sentence:
 ```
 
 Typography is the visual object. No quote box, card, chip, or generic
-rectangle surrounds it.
+rectangle surrounds it. `재미있었어요` receives one restrained underline and
+`긍정적인 느낌` remains a quiet semantic cue rather than a result badge.
+
+#### Transition
+
+The sentence starts fully legible and remains mounted when later objects enter.
+
+#### Takeaway
+
+사람은 문장에서 뜻과 분위기를 직접 읽는다.
 
 ### 2. 계산 가능한 표현
 
-The same sentence remains visible while one horizontal six-slot number
-sequence appears:
+#### Question
+
+컴퓨터가 계산하려면 언어를 무엇으로 바꿔야 하는가?
+
+#### Copy
+
+컴퓨터는 `재미있다`라는 뜻 자체를 계산하지 않는다. 덧셈과 곱셈을 하려면
+문장을 숫자로 이루어진 표현으로 바꿔야 한다.
+
+#### Visual
+
+The same sentence remains visible. A shared `숫자로 표현` cue and downward
+arrow lead to one horizontal six-slot number sequence:
 
 ```text
 0.24  -0.71  0.18  0.63  -0.09  …
@@ -79,36 +110,115 @@ Visible copy states:
 
 The values mix signs and do not form a probability distribution.
 
+#### Transition
+
+The sentence de-emphasizes while the persistent strip enters below it. No
+sentence phrase is aligned to a numeric slot.
+
+#### Takeaway
+
+컴퓨터가 계산하려면 언어가 숫자로 이루어진 표현이어야 한다.
+
 ### 3. 모델 계산
 
-The same number-slot and value DOM nodes remain mounted. Before values
-crossfade to:
+#### Question
+
+모델의 계산은 이 숫자 표현에 무엇을 하는가?
+
+#### Copy
+
+모델 안에서는 이 숫자들을 이용한 계산이 여러 번 이어진다. 계산을 거칠
+때마다 값이 달라지고, 바뀐 값은 다음 계산의 입력이 된다.
+
+#### Visual
+
+The same number-strip and slot DOM nodes remain mounted. One shared
+`여러 계산` cue spans the strip. Five value slots show direct correspondence:
 
 ```text
-0.51  -0.12  0.84  0.27  0.36  …
+ 0.24    -0.71     0.18     0.63     -0.09
+   ↓        ↓        ↓        ↓        ↓
+ 0.51    -0.12     0.84     0.27      0.36
 ```
 
-`계산 전` and `계산 후` make the semantic change explicit. No model box,
-second sequence, two-dimensional grid, or matrix appears.
+The ellipsis remains one stable continuation marker and does not pretend to be
+a calculated value. No model box, second sequence, two-dimensional grid, or
+matrix appears.
+
+#### Transition
+
+Before values move upward and soften; arrows appear; after values enter below
+inside the same fixed slots. Slot and strip geometry never move.
+
+#### Takeaway
+
+모델의 계산은 숫자 표현의 값을 바꾼다.
 
 ### 4. 결과
 
-The transformed sequence becomes quiet but remains present. One conceptual
-result becomes dominant:
+#### Question
+
+계산된 숫자 표현은 어떻게 사람이 쓰는 결과가 되는가?
+
+#### Copy
+
+계산된 숫자 표현은 문제에 맞는 결과로 읽어낸다. 이 예에서는 문장의
+분위기를 `긍정`으로 분류하고, 다른 문제에서는 답변, 번역문, 이어 쓸
+글을 만든다.
+
+#### Visual
+
+The transformed sequence becomes quiet but remains present as provenance.
+One explicit task-to-result path becomes dominant:
 
 ```text
-개념 예시
-이 문장의 분위기  긍정
-분류 · 질문 답변 · 번역 · 글 생성
+[ 0.51  -0.12  0.84  0.27  0.36  … ]
+                  ↓ 문장 분류로 읽기
+문장의 분위기
+긍정
+개념 예시 · 문장 분류
+
+다른 자연어 처리 문제
+질문 답변 · 번역 · 글 생성
 ```
 
 This is an explanatory semantic example, not a runtime inference claim.
 
+#### Transition
+
+Transformed values remain visible above the result. The result enters below
+without replacing the strip, and a subtle divider separates other task types.
+
+#### Takeaway
+
+같은 계산된 표현도 문제의 목적에 맞게 읽어야 사람이 쓰는 결과가 된다.
+
 ### 5. 다음 질문
 
-The source sentence returns to primary emphasis and conceptual boundaries
-appear. Visible copy states that actual boundaries depend on the tokenizer.
-A quiet slide-scoped `Token이란? →` link opens Chapter 0.2.
+#### Question
+
+그런 숫자 표현을 만들기 전에 무엇부터 해야 하는가?
+
+#### Copy
+
+문장을 숫자로 바꾸려면 먼저 작은 단위로 나눠야 한다. 어디에서 나눌지는
+토크나이저에 따라 달라지며, 그 단위는 다음 Chapter에서 살펴본다.
+
+#### Visual
+
+The source sentence returns to primary emphasis. Four conceptual boundaries
+appear from left to right and settle at equal weight.
+
+#### Transition
+
+Boundary delays are `0ms`, `70ms`, `140ms`, and `210ms`; there is no idle
+loop. Reduced motion shows the final four-boundary state immediately.
+
+#### Takeaway
+
+숫자 표현을 만들기 전에 문장을 작은 단위로 나누며, 실제 경계는
+토크나이저에 따라 달라진다. A quiet slide-scoped `Token이란? →` link opens
+Chapter 0.2.
 
 ## Object permanence
 
@@ -140,7 +250,7 @@ Final production measurements:
 | ---: | ---: | ---: | ---: | ---: |
 | 1440×900 | 992×518.39px | 349.59px | 72px | 570.41px |
 | 1366×768 | 992×491.75px | 351px | 68.30px | 572.70px |
-| 1024×768 | 894.91×480px | 318.78px | 56px | 520.12px |
+| 1024×768 | 902.41×480px | 321.63px | 56px | 524.78px |
 
 Across fifteen desktop state records, every stage, column, visual, and control
 coordinate drift is 0px.
@@ -160,7 +270,7 @@ accommodates the longest Korean paragraph without clipping or stage jump.
 
 | Viewport | Stage | Visual width |
 | ---: | ---: | ---: |
-| 768×1024 | 698.62×416.72px | 698.62px |
+| 768×1024 | 713.63×416.72px | 713.63px |
 | 390×844 | 358×411.59px | 358px |
 | 320×568 | 288×411.59px | 288px |
 
@@ -211,24 +321,26 @@ state geometry drift are all 0.
 Fresh root evidence:
 
 ```text
-.omo/evidence/golden-slide-rework/browser/
+.omo/evidence/golden-content-polish/browser/
 ```
 
 Fresh project-subpath evidence:
 
 ```text
-.omo/evidence/golden-slide-rework/subpath-browser/
+.omo/evidence/golden-content-polish/subpath-browser/
 ```
 
 Coverage:
 
 - 30 viewport/state screenshots: six required viewports × five slides;
-- exact canonical files `01-slide-language.png` through
+- exact desktop canonical files `01-language.png` through
+  `05-token-preview.png`;
+- 390px canonical files `07-slide-language-390.png` through
   `11-slide-token-390.png`;
 - `06-full-chapter.png`;
-- nine transition frames;
-- `contact-6x5.png`, `contact-transitions.png`, and
-  `before-after-language.png`;
+- twelve rest/mid/settled transition frames plus the requested
+  `02-to-03-*`, `04-result-transition.png`, and `05-boundary-*` aliases;
+- `contact-6x5.png` and `contact-transitions.png`;
 - root and `/transformer_viz/` `evidence.json`.
 
 Both deployment bases contain thirty geometry records, zero state drift, zero
