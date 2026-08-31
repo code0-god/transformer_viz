@@ -17,9 +17,14 @@ class TransitionSpec:
     prefix: str
     target_index: int
     target_stage: str
+    fraction: float = 0.5
 
 
-def _arm_midpoint(browser: ChromeSession, stage: str) -> None:
+def _arm_midpoint(
+    browser: ChromeSession,
+    stage: str,
+    fraction: float,
+) -> None:
     browser.require_cdp().evaluate(browser.page_session, f"""(() => {{
       const deck = document.querySelector('{golden.DECK_SELECTOR}');
       const saved = window.__goldenIdentity;
@@ -33,7 +38,8 @@ def _arm_midpoint(browser: ChromeSession, stage: str) -> None:
             for (const animation of animations) {{
               const timing = animation.effect?.getComputedTiming();
               animation.pause();
-              animation.currentTime = Number(timing?.endTime ?? 0) / 2;
+              animation.currentTime =
+                Number(timing?.endTime ?? 0) * {fraction};
             }}
             requestAnimationFrame(() => {{
               deck.getBoundingClientRect();
@@ -58,10 +64,14 @@ def _capture_transition(
     evidence: Path,
     spec: TransitionSpec,
 ) -> tuple[JsonObject, dict[str, str]]:
-    shots: dict[str, str] = {}
     prefix = spec.prefix
-    shots[f"{prefix}-rest"] = capture(browser, evidence / f"{prefix}-rest.png")
-    _arm_midpoint(browser, spec.target_stage)
+    shots = {f"{prefix}-rest": capture(browser, evidence / f"{prefix}-rest.png")}
+    if prefix == "transition-02-numeric-transform":
+        shots["02-to-03-before"] = capture(
+            browser,
+            evidence / "02-to-03-before.png",
+        )
+    _arm_midpoint(browser, spec.target_stage, spec.fraction)
     browser.require_cdp().evaluate(
         browser.page_session,
         f"""(() => {{
@@ -78,9 +88,34 @@ def _capture_transition(
     require(number(result["count"], "Golden animation count") > 0, f"Golden motion animations: {result}")
     require(result["identity"] is True, f"Golden motion identity: {result}")
     shots[f"{prefix}-mid"] = capture(browser, evidence / f"{prefix}-mid.png")
+    if prefix == "transition-02-numeric-transform":
+        shots["02-to-03-mid"] = capture(
+            browser,
+            evidence / "02-to-03-mid.png",
+        )
+    if prefix == "transition-03-transform-result":
+        shots["04-result-transition"] = capture(
+            browser,
+            evidence / "04-result-transition.png",
+        )
+    if prefix == "transition-03-result-token":
+        shots["05-boundary-step-1"] = capture(
+            browser,
+            evidence / "05-boundary-step-1.png",
+        )
     golden.finish_motion(browser)
     golden_capture.assert_identity(browser, spec.target_stage)
     shots[f"{prefix}-settled"] = capture(browser, evidence / f"{prefix}-settled.png")
+    if prefix == "transition-02-numeric-transform":
+        shots["02-to-03-after"] = capture(
+            browser,
+            evidence / "02-to-03-after.png",
+        )
+    if prefix == "transition-03-result-token":
+        shots["05-boundary-final"] = capture(
+            browser,
+            evidence / "05-boundary-final.png",
+        )
     return result, shots
 
 
@@ -102,11 +137,22 @@ def capture_transitions(
         result, captured = _capture_transition(browser, evidence, spec)
         results.append(result)
         shots.update(captured)
-    golden.select_state(browser, 3, "result")
     result, captured = _capture_transition(
         browser,
         evidence,
-        TransitionSpec("transition-03-result-token", 4, "token-preview"),
+        TransitionSpec("transition-03-transform-result", 3, "result"),
+    )
+    results.append(result)
+    shots.update(captured)
+    result, captured = _capture_transition(
+        browser,
+        evidence,
+        TransitionSpec(
+            "transition-03-result-token",
+            4,
+            "token-preview",
+            0.18,
+        ),
     )
     results.append(result)
     shots.update(captured)

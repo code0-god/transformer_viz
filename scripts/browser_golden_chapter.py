@@ -11,12 +11,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import threading
+from functools import partial
+from http.server import ThreadingHTTPServer
 from pathlib import Path
 from typing import TypedDict
 
 from browser_hybrid_contract import require, set_viewport
 from browser_hybrid_helpers import JsonObject, evaluate_dict, navigate_hash
 from browser_learning_workspace_probes import browser_errors
+from browser_release_ready import ReleaseHandler
 from browser_session import ChromeSession
 from browser_visual_narrative import _install_observer_probe, _serve
 import golden_chapter_browser_capture as golden_capture
@@ -36,6 +40,23 @@ class CandidateEvidence(TypedDict):
     observers: JsonObject
     reducedMotion: dict[str, JsonObject]
     screenshots: dict[str, str]
+
+
+def _serve_at_base(
+    root: Path,
+    base: str,
+) -> tuple[ThreadingHTTPServer, threading.Thread, str]:
+    nested = root / base.strip("/")
+    directory = nested if (nested / "index.html").is_file() else root
+    ReleaseHandler.base = base
+    server = ThreadingHTTPServer(
+        ("127.0.0.1", 0),
+        partial(ReleaseHandler, directory=str(directory.resolve())),
+    )
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    origin = f"http://127.0.0.1:{server.server_port}"
+    return server, thread, f"{origin}{base}"
 
 
 def run_candidate(url: str, evidence: Path) -> CandidateEvidence:
@@ -118,12 +139,12 @@ def main() -> int:
             server.shutdown()
             server.server_close()
             thread.join(timeout=10)
-    server, thread, candidate_url = _serve(args.candidate_root)
+    server, thread, candidate_url = _serve_at_base(
+        args.candidate_root,
+        args.candidate_base,
+    )
     try:
-        candidate = run_candidate(
-            f"{candidate_url.rstrip('/')}{args.candidate_base}",
-            args.evidence,
-        )
+        candidate = run_candidate(candidate_url, args.evidence)
     finally:
         server.shutdown()
         server.server_close()

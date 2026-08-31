@@ -168,6 +168,14 @@
     min-block-size: 9.625rem;
   }
 
+  .visual-narrative--golden .visual-narrative__beat-label {
+    margin-block-end: var(--s2);
+  }
+
+  .visual-narrative--golden .visual-narrative__beat-text {
+    line-height: 1.5;
+  }
+
   .visual-narrative--golden
     > .visual-narrative__stage
     > .visual-narrative__visual {
@@ -187,6 +195,12 @@
     .visual-narrative__progress
     button {
     inline-size: 24px;
+  }
+}
+
+@media (max-width: 22rem) {
+  .visual-narrative--golden > .visual-narrative__steps {
+    margin-block-start: 0;
   }
 }
 

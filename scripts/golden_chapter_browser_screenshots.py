@@ -14,11 +14,11 @@ from browser_visual_narrative import _capture_chapter
 import golden_chapter_browser_probes as golden
 
 _DESKTOP_NAMES = (
-    "01-slide-language.png",
-    "02-slide-numeric.png",
-    "03-slide-transform.png",
-    "04-slide-result.png",
-    "05-slide-token-preview.png",
+    "01-language.png",
+    "02-numeric.png",
+    "03-transform.png",
+    "04-result.png",
+    "05-token-preview.png",
 )
 _MOBILE_NAMES = (
     "07-slide-language-390.png",
@@ -64,11 +64,7 @@ def capture_matrix(
         golden.open_chapter(browser, url)
         for index, (stage, _label) in enumerate(golden.STATES):
             golden.select_state(browser, index, stage)
-            browser.require_cdp().evaluate(
-                browser.page_session,
-                f"document.querySelector('{golden.DECK_SELECTOR}')?.scrollIntoView({{block:'center',inline:'nearest'}})",
-                True,
-            )
+            golden.position_deck(browser)
             golden.finish_motion(browser)
             matrix_name = f"viewport-{width}x{height}-{index + 1:02d}-{stage}.png"
             shots[matrix_name] = capture(browser, evidence / matrix_name)

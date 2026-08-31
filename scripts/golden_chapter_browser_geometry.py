@@ -6,6 +6,7 @@ from browser_hybrid_contract import number, require, set_viewport
 from browser_hybrid_helpers import JsonObject
 from browser_session import ChromeSession
 import golden_chapter_browser_capture as golden_capture
+import golden_chapter_browser_layout as golden_layout
 import golden_chapter_browser_probes as golden
 
 _STABLE_KEYS = (
@@ -57,14 +58,10 @@ def collect_viewport(
     records: list[JsonObject] = []
     for index, (stage, _label) in enumerate(golden.STATES):
         golden.select_state(browser, index, stage)
-        browser.require_cdp().evaluate(
-            browser.page_session,
-            f"document.querySelector('{golden.VISUAL_SELECTOR}')?.scrollIntoView({{block:'center',inline:'nearest'}})",
-            True,
-        )
+        golden.position_deck(browser)
         golden.finish_motion(browser)
-        data = golden.probe(browser)
-        golden.assert_probe(data, stage, index)
+        data = golden_layout.probe(browser)
+        golden_layout.assert_probe(data, stage, index)
         golden_capture.assert_identity(browser, stage)
         golden_capture.assert_copy(browser, index, stage)
         records.append({"viewportWidth": width, "viewportHeight": height, **data})
