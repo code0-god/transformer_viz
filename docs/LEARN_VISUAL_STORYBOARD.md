@@ -495,7 +495,7 @@ Controls never sit as a large button wall above the stage.
 
 | Chapter | Camera | Stage height desktop | Mobile |
 | --- | --- | ---: | ---: |
-| 0.1 | shallow perspective across representation layers | 440px | 520px |
+| 0.1 | front-facing DOM/SVG continuity | 384px | 288–304px |
 | 0.2 | front-facing strip | 340px | 430px |
 | 0.3 | shallow rack perspective | 420px | 500px |
 | 0.4 | front-facing wide strip | 360px | 460px |
@@ -510,9 +510,9 @@ Controls never sit as a large button wall above the stage.
 | 4.1 | main-lane and residual-depth perspective | 600px | 660px |
 | 5.1 | staged matrix-depth perspective | 700px | 720px |
 
-The registry owns aspect ratio and preferred width. CSS may use bounded stage
-height tokens, but no viewport-specific fixed coordinates may define concept
-geometry.
+Scene registries own aspect ratio and preferred width. Golden 0.1 is a static
+DOM/SVG exception whose stable CSS footprint is browser-verified at six
+widths. No viewport-specific fixed coordinates define concept geometry.
 
 ## Implementation and review gates
 

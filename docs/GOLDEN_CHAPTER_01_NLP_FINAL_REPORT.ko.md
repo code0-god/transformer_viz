@@ -288,6 +288,7 @@ Local commits:
 9977cf5 refactor(learn): rebuild NLP chapter narrative
 f6f3a4a test(learn): verify NLP narrative flow
 docs(learn): define Golden Chapter visual language
+docs(learn): align Golden storyboard registry
 ```
 
 Push와 main merge는 수행하지 않는다.
