@@ -1,5 +1,11 @@
 # Golden Chapter 0.1 최종 보고서
 
+> Status: SUPERSEDED
+>
+> 이 문서는 최초 Golden 구현 시점의 기록이다. Canonical grid와 unified
+> numerical field를 포함한 현재 contract는
+> `GOLDEN_CHAPTER_01_REFINEMENT_FINAL_REPORT.ko.md`가 대체한다.
+
 ## 상태
 
 - Implementation: COMPLETE

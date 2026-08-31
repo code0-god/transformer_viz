@@ -100,7 +100,8 @@ Non-Golden VisualNarrative observer behavior는 기존 50% 기준을 유지한�
 
 | Viewport | LEFT | Gap | RIGHT |
 | ---: | ---: | ---: | ---: |
-| 1024 | 342.69px | 56.00px | 559.11px |
+| 1024 root | 348.38px | 56.00px | 568.44px |
+| 1024 subpath | 342.69px | 56.00px | 559.11px |
 | 1366 | 411.80px | 68.30px | 671.91px |
 | 1440 | 410.39px | 72.00px | 669.61px |
 
@@ -170,8 +171,8 @@ prose visibility, Result/Token continuity를 확인했다.
 
 PASS:
 
-- focused Vitest: 3 files / 22 tests
-- full Vitest: 85 files / 598 tests
+- focused Vitest: 4 files / 24 tests
+- full Vitest: 86 files / 600 tests
 - serialized lifecycle: 1 file / 7 tests
 - lint / typecheck / production build
 - Rust fmt / clippy native+WASM / workspace tests
@@ -194,6 +195,8 @@ PASS:
 refactor(learn): align Golden Chapter narrative grid
 test(learn): lock Golden Chapter geometry
 docs(learn): record Golden refinement evidence
+fix(learn): refresh narrative observer geometry
+docs(learn): reconcile Golden refinement records
 ```
 
 Remote push와 main merge는 수행하지 않는다.

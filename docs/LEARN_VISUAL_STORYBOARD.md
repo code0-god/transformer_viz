@@ -495,7 +495,7 @@ Controls never sit as a large button wall above the stage.
 
 | Chapter | Camera | Stage height desktop | Mobile |
 | --- | --- | ---: | ---: |
-| 0.1 | front-facing DOM/SVG continuity | 384px | 288–304px |
+| 0.1 | front-facing DOM/SVG continuity | 384px | 232–281px |
 | 0.2 | front-facing strip | 340px | 430px |
 | 0.3 | shallow rack perspective | 420px | 500px |
 | 0.4 | front-facing wide strip | 360px | 460px |
