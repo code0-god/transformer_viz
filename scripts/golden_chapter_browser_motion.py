@@ -50,6 +50,9 @@ def _arm_midpoint(
                   && saved?.visual === document.querySelector('[data-testid="nlp-golden-visual"]')
                   && saved?.sentence === document.querySelector('[data-testid="nlp-golden-sentence"]')
                   && saved?.strip === document.querySelector('[data-testid="nlp-golden-numeric-strip"]'),
+                incomingOpacity: Math.max(0, ...[...deck.querySelectorAll(
+                  '.nlp-golden__token-note, .nlp-golden__handoff'
+                )].map(element => Number.parseFloat(getComputedStyle(element).opacity))),
               }});
             }});
           }});
@@ -87,12 +90,11 @@ def _capture_transition(
     result = evaluate_dict(browser, "window.__goldenMotion")
     require(number(result["count"], "Golden animation count") > 0, f"Golden motion animations: {result}")
     require(result["identity"] is True, f"Golden motion identity: {result}")
+    if spec.target_stage == "token-preview":
+        require(number(result["incomingOpacity"], "Golden incoming opacity") <= 0.01, f"Golden Token transition sequence: {result}")
     shots[f"{prefix}-mid"] = capture(browser, evidence / f"{prefix}-mid.png")
     if prefix == "transition-02-numeric-transform":
-        shots["02-to-03-mid"] = capture(
-            browser,
-            evidence / "02-to-03-mid.png",
-        )
+        shots["02-to-03-mid"] = capture(browser, evidence / "02-to-03-mid.png")
     if prefix == "transition-03-transform-result":
         shots["04-result-transition"] = capture(
             browser,
@@ -107,10 +109,7 @@ def _capture_transition(
     golden_capture.assert_identity(browser, spec.target_stage)
     shots[f"{prefix}-settled"] = capture(browser, evidence / f"{prefix}-settled.png")
     if prefix == "transition-02-numeric-transform":
-        shots["02-to-03-after"] = capture(
-            browser,
-            evidence / "02-to-03-after.png",
-        )
+        shots["02-to-03-after"] = capture(browser, evidence / "02-to-03-after.png")
     if prefix == "transition-03-result-token":
         shots["05-boundary-final"] = capture(
             browser,

@@ -128,7 +128,7 @@ def main() -> int:
     parser.add_argument("--candidate-base", default="/")
     parser.add_argument("--evidence", type=Path, required=True)
     args = parser.parse_args()
-    before: str | None = None
+    before: dict[str, str] | None = None
     if args.baseline_root is not None:
         server, thread, baseline_url = _serve(args.baseline_root)
         try:

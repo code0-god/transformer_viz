@@ -31,7 +31,7 @@ const STAGE_SUMMARIES: Readonly<Record<NlpGoldenStage, string>> = {
   transform:
     "같은 여섯 숫자 칸에서 계산 전 값이 아래쪽 화살표를 따라 계산 후 값으로 바뀌는 모습을 보여줍니다.",
   result:
-    "계산된 숫자 표현이 문장 분류로 읽혀 개념적인 긍정 결과가 되고, 질문 답변과 번역과 글 생성은 다른 자연어 처리 문제로 구분됩니다.",
+    "계산된 숫자 표현을 문장 분류 결과로 읽어 개념적인 긍정 예시로 보여주고, 질문 답변과 번역과 글 생성은 다른 자연어 처리 문제로 구분합니다.",
   "token-preview":
     "처음 문장에 개념적인 경계가 순서대로 나타나며 다음 Token Chapter로 이어집니다.",
 };
@@ -188,16 +188,15 @@ export function NlpPipelineDiagram(): ReactElement {
           {VISUAL_DESCRIPTION} {STAGE_SUMMARIES[stage]}
         </p>
       </div>
-      {showsHandoff ? (
-        <a
-          className="nlp-golden__handoff"
-          data-next-chapter="decoder.chapter.0.2"
-          href="#/learn/decoder-only-fundamentals/0-2"
-          aria-label="다음: Token이란?"
-        >
-          Token이란? →
-        </a>
-      ) : null}
+      <a
+        className="nlp-golden__handoff"
+        data-next-chapter={showsHandoff ? "decoder.chapter.0.2" : undefined}
+        href="#/learn/decoder-only-fundamentals/0-2"
+        aria-label={showsHandoff ? "다음: Token이란?" : undefined}
+        tabIndex={showsHandoff ? undefined : -1}
+      >
+        Token이란? →
+      </a>
       <fieldset
         className="nlp-golden__fallback learning-visually-hidden"
         aria-label="자연어 처리란? 의미 설명"

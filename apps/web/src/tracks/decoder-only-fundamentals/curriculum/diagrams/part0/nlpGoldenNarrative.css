@@ -330,6 +330,7 @@
   font-weight: 680;
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
   white-space: nowrap;
   text-underline-offset: 0.22em;
   transform: translateY(var(--s2));

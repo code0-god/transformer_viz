@@ -162,6 +162,7 @@
 .nlp-golden[data-nlp-stage="token-preview"] .nlp-golden__token-note,
 .nlp-golden[data-nlp-stage="token-preview"] .nlp-golden__handoff {
   opacity: 1;
+  transition-delay: 240ms;
 }
 
 .nlp-golden[data-nlp-stage="token-preview"] .nlp-golden__token-note {
@@ -174,6 +175,7 @@
 
 .nlp-golden[data-nlp-stage="token-preview"] .nlp-golden__handoff {
   pointer-events: auto;
+  visibility: visible;
 }
 
 @media (max-width: 48rem) {

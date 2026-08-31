@@ -4,6 +4,18 @@ import { describe, expect, test } from "vitest";
 import { NlpPipelineDiagram } from "./NlpPipelineDiagram";
 
 describe("NlpPipelineDiagram numerical representation", () => {
+  test("keeps the human semantic cue outside the model result hierarchy", () => {
+    // Given/When: the persistent Chapter 0.1 visual is rendered.
+    const { container } = render(<NlpPipelineDiagram />);
+    const cue = container.querySelector(".nlp-golden__semantic-cue");
+    const result = screen.getByTestId("nlp-golden-result");
+
+    // Then: human interpretation remains a separate secondary cue.
+    expect(cue).not.toBeNull();
+    expect(result.contains(cue)).toBe(false);
+    expect(cue).not.toHaveAttribute("data-nlp-result-value");
+  });
+
   test("renders one horizontal illustrative number sequence", () => {
     // Given: the Chapter 0.1 visual narrative.
     const { container } = render(<NlpPipelineDiagram />);

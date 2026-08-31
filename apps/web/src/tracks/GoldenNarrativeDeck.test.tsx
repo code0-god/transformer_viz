@@ -184,6 +184,33 @@ describe("Golden Narrative deck", () => {
     expect(screen.getByText("3 / 5")).toBeVisible();
   });
 
+  test("retargets rapid direct navigation to the latest slide", () => {
+    // Given: the learner can select any progress step.
+    renderDeck();
+    const progress = screen.getByRole("navigation", {
+      name: `${block.label} 단계`,
+    });
+
+    // When: three destinations are selected without waiting between clicks.
+    for (const name of [
+      "2단계: 계산 가능한 표현",
+      "3단계: 모델 계산",
+      "4단계: 결과",
+    ]) {
+      fireEvent.click(within(progress).getByRole("button", { name }));
+    }
+
+    // Then: the latest destination owns the only current state.
+    expect(screen.getByTestId("deck-probe")).toHaveAttribute(
+      "data-stage",
+      "result",
+    );
+    expect(
+      within(progress).getAllByRole("button", { current: "step" }),
+    ).toHaveLength(1);
+    expect(screen.getByText("4 / 5")).toBeVisible();
+  });
+
   test("keeps the visual object mounted without browser history writes", async () => {
     // Given: one persistent visual and current URL.
     const { user } = renderDeck();
