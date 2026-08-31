@@ -245,8 +245,7 @@ fresh Chrome sessions.
 
 Final geometry evidence:
 
-- 1024px root: 348.38px explanation, 56px gap, 568.44px visual;
-- 1024px subpath: 342.69px explanation, 56px gap, 559.11px visual;
+- 1024px root/subpath: 342.69px explanation, 56px gap, 559.11px visual;
 - 1366px: 411.80px explanation, 68.30px gap, 671.91px visual;
 - 1440px: 410.39px explanation, 72px gap, 669.61px visual;
 - Numeric and Transform field: 508.89×78.78px;
