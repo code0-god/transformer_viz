@@ -73,9 +73,46 @@ may tune tokens but must not recreate the old warm theme.
 - Editorial rhythm uses 14px H1-to-abstract spacing, 14px content inset,
   16px paragraph spacing, 56px section spacing, and a 32px effective
   paragraph-to-Figure transition.
-- Part 0 Figures are textbook compositions: 0.1 is a compact responsive
-  process, 0.2 remains a Token-boundary concept, 0.3 prioritizes
+- Part 0 Figures are textbook compositions: 0.1 is a continuous visual
+  narrative, 0.2 remains a Token-boundary concept, 0.3 prioritizes
   Token-to-ID-to-Embedding relationships, and 0.4 remains a comparison sheet.
+
+## Golden Chapter 0.1
+
+Chapter 0.1 establishes the Learn visual grammar without changing later
+Chapters.
+
+- Mode: Read. Document scroll remains the only scroll owner.
+- Spatial pattern: a bounded `sticky-aside` relation keeps one visual object
+  visible beside ordinary prose on wide screens and falls back to source-order
+  block flow when space is narrow.
+- Hero object: the Korean sentence `오늘 영화 정말 재미있었어요.` remains one
+  DOM object through Language, Numeric, Transform, Result, and Token Preview.
+- Object permanence: each state adds, transforms, emphasizes, or reuses
+  existing glyphs and cells. Whole-scene replacement is forbidden.
+- Primitives: `TextPhrase`, `VectorCells`, `TransformationLayer`, and
+  `SemanticResult`. Generic cubes, slabs, black model boxes, and generic output
+  rectangles are forbidden.
+- Numeric cells are conceptual geometry without fabricated values. Visible
+  copy labels the representation as conceptual.
+- Result state keeps the source sentence and transformed cells visible while
+  showing one semantic result plus a quiet classification, answer, translation,
+  and generation range.
+- Token Preview returns emphasis to the same sentence and reveals conceptual
+  boundaries. It never claims current tokenizer output and never becomes a
+  fifth inference node.
+- Surface: article background remains continuous. Figure border, tinted Canvas,
+  title, description, caption divider, step rail, and large replay action stay
+  visually absent.
+- Color: language uses foreground neutrals, numeric representation uses the
+  cool representation role, transformation uses a restrained neutral/cool
+  shift, and result uses the output role. Color always has a structural cue.
+- Motion: 300–700ms transitions use opacity, transform, filter, or clip-path;
+  complex cell transformation may reach 1s. No autoplay or idle animation.
+- Reduced motion snaps to each complete state while preserving all objects and
+  semantic summaries.
+- Mobile keeps the stage compact, reduces cell count through CSS visibility,
+  preserves the same DOM order, and never introduces horizontal scrolling.
 
 ## Lab and viewer structure
 

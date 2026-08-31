@@ -140,6 +140,7 @@ export function VisualNarrative({
       <section
         className={`visual-narrative visual-narrative--${block.layout}`}
         data-narrative-layout={block.layout}
+        data-narrative-stage={activeStage}
         aria-label={block.label}
       >
         {block.beats.map((beat, index) => (

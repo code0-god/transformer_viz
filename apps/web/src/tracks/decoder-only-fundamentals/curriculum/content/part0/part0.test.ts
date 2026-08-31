@@ -36,14 +36,12 @@ const PART0_CHAPTERS = [
   },
 ] as const;
 
-const BEGINNER_FLOW_STAGES = [
-  "everyday-question",
-  "nlp-definition",
-  "why-numbers",
-  "tasks",
-  "training-vs-inference",
-  "roadmap",
-  "current-model.nanogpt",
+const NLP_GOLDEN_STAGES = [
+  "language",
+  "numeric",
+  "transform",
+  "result",
+  "token-preview",
 ] as const;
 
 const FORBIDDEN_CONCEPT_TOKENS = [
@@ -90,7 +88,13 @@ describe("Part 0 curriculum content", () => {
       const blocks = part0GuidePage(index).sections.flatMap(
         (section) => section.blocks,
       );
-      if (index === 2) {
+      if (index === 0) {
+        expect(
+          blocks.flatMap((block) =>
+            block.kind === "visual-narrative" ? block.beats : [],
+          ),
+        ).toHaveLength(5);
+      } else if (index === 2) {
         expect(blocks.map(({ id }) => id)).toEqual([
           "p.address",
           "p.embedding",
@@ -114,13 +118,13 @@ describe("Part 0 curriculum content", () => {
       const misconceptionCount = blocks.filter(
         ({ id, kind }) => kind === "callout" && id.startsWith("misconception."),
       ).length;
-      expect(misconceptionCount).toBeGreaterThanOrEqual(index === 0 ? 1 : 2);
+      expect(misconceptionCount).toBeGreaterThanOrEqual(index === 0 ? 0 : 2);
       expect(blocks.some(({ kind }) => kind === "formula")).toBe(false);
     }
     expect(decoderCurriculumRegistries.termIds.size).toBeGreaterThanOrEqual(15);
   });
 
-  test("keeps Chapter 0.1 on the A-G beginner flow and away from later details", () => {
+  test("locks Chapter 0.1 to one five-state Golden narrative", () => {
     // Given: the first Part 0 guide page.
     const page = part0GuidePage(0);
     const blocks = page.sections.flatMap(
@@ -128,6 +132,7 @@ describe("Part 0 curriculum content", () => {
     );
 
     // When: the machine-readable flow contract is inspected.
+    const narrative = blocks.find((block) => block.kind === "visual-narrative");
     const structuralTokens = [
       page.id,
       ...page.sections.map(({ id }) => id),
@@ -143,17 +148,25 @@ describe("Part 0 curriculum content", () => {
       ),
     ];
 
-    // Then: Chapter 0.1 stays beginner-shaped and omits later-token concepts.
-    expect(page.introduction.map(({ kind }) => kind)).toEqual([
-      "paragraph",
-      "figure",
-    ]);
+    // Then: Chapter 0.1 owns one continuous narrative and no legacy step list.
+    expect(page.introduction.map(({ kind }) => kind)).toEqual(["paragraph"]);
     expect(page.keyTakeaway).toHaveLength(1);
-    expect(page.sections.map(({ id }) => id)).toEqual(
-      BEGINNER_FLOW_STAGES.slice(0, 6),
-    );
+    expect(page.sections.map(({ id }) => id)).toEqual(["everyday-question"]);
     expect(page.keyTakeaway.map(({ id }) => id)).toEqual(["remember"]);
-    expect(blocks.some(({ id }) => id === "current-model.nanogpt")).toBe(true);
+    expect(
+      narrative?.kind === "visual-narrative"
+        ? {
+            figureId: narrative.figure.figureId,
+            layout: narrative.layout,
+            stages: narrative.beats.map(({ stage }) => stage),
+          }
+        : null,
+    ).toEqual({
+      figureId: "decoder.diagram.intro.nlp",
+      layout: "golden",
+      stages: NLP_GOLDEN_STAGES,
+    });
+    expect(blocks.some(({ kind }) => kind === "steps")).toBe(false);
     expect(
       structuralTokens.some((token) =>
         FORBIDDEN_CONCEPT_TOKENS.some((forbidden) =>

@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 
+import { nlpChapterContent } from "../../decoder-only-fundamentals/curriculum/content/part0/nlp";
 import { curriculumLearningFigures } from "../../decoder-only-fundamentals/curriculum/learningFigureRegistry";
-import type { GuideVisualNarrativeBlock } from "../../guideTypes";
+import type { GuideBlock, GuideVisualNarrativeBlock } from "../../guideTypes";
 import { VisualNarrative } from "../../VisualNarrative";
 import {
-  NlpTransformationSceneFigure,
   TokenizationMethodsSceneFigure,
   TokenSegmentationSceneFigure,
   VocabularyAddressSceneFigure,
@@ -56,24 +56,42 @@ describe("Part 0 Learning Scenes", () => {
     expect(screen.getByRole("button", { name: "현재 byte" })).toBeVisible();
   });
 
-  test("moves NLP through four representation states", () => {
-    render(<NlpTransformationSceneFigure />);
+  test("keeps one NLP object tree through all five narrative states", () => {
+    const blocks: readonly GuideBlock<string>[] =
+      nlpChapterContent.page.sections.flatMap(({ blocks: sectionBlocks }) => [
+        ...sectionBlocks,
+      ]);
+    const narrative = blocks.find((block) => block.kind === "visual-narrative");
+    if (narrative?.kind !== "visual-narrative") {
+      throw new Error("Golden NLP narrative missing");
+    }
+    render(
+      <VisualNarrative
+        block={narrative}
+        registry={curriculumLearningFigures}
+      />,
+    );
+    const sentence = screen.getByTestId("nlp-golden-sentence");
+    const cells = screen.getByTestId("nlp-golden-cells");
+    const visual = screen.getByTestId("nlp-golden-visual");
 
-    expect(
-      screen.getByRole("heading", {
-        name: "언어는 어떻게 계산 가능한 표현이 될까요?",
-      }),
-    ).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "수치 표현" }));
-    expect(screen.getByTestId("nlp-scene-state")).toHaveAttribute(
-      "data-scene-stage",
-      "representation",
-    );
-    fireEvent.click(screen.getByRole("button", { name: "결과" }));
-    expect(screen.getByTestId("nlp-scene-state")).toHaveAttribute(
-      "data-scene-stage",
-      "result",
-    );
+    expect(visual).toHaveAttribute("data-nlp-stage", "language");
+    expect(sentence.textContent).toBe("오늘 영화 정말 재미있었어요.");
+    for (const [label, stage] of [
+      ["숫자 표현", "numeric"],
+      ["표현 변화", "transform"],
+      ["활용 결과", "result"],
+      ["다음 질문", "token-preview"],
+    ] as const) {
+      fireEvent.click(screen.getByRole("button", { name: label }));
+      expect(visual).toHaveAttribute("data-nlp-stage", stage);
+      expect(
+        document.querySelector(`[data-nlp-fallback-stage="${stage}"]`),
+      ).toHaveAttribute("aria-current", "step");
+      expect(screen.getByTestId("nlp-golden-sentence")).toBe(sentence);
+      expect(screen.getByTestId("nlp-golden-cells")).toBe(cells);
+    }
+    expect(screen.queryByRole("button", { name: "처음부터 보기" })).toBeNull();
   });
 
   test("distinguishes illustrative token split from current byte mode", () => {
@@ -123,7 +141,7 @@ describe("Part 0 Learning Scenes", () => {
     ).toHaveAttribute("data-phase", "split");
   });
 
-  test("registers all four Chapters as lazy scenes with static fallbacks", () => {
+  test("registers Golden NLP as static and later Part 0 Figures as scenes", () => {
     const expected = [
       "decoder.diagram.intro.nlp",
       "decoder.diagram.tokenization.token",
@@ -131,7 +149,11 @@ describe("Part 0 Learning Scenes", () => {
       "decoder.diagram.tokenization.methods",
     ] as const;
 
-    for (const figureId of expected) {
+    expect(curriculumLearningFigures.metadata(expected[0])).toEqual({
+      preferredWidth: 960,
+      renderer: "static",
+    });
+    for (const figureId of expected.slice(1)) {
       expect(curriculumLearningFigures.metadata(figureId)).toMatchObject({
         renderer: "scene",
         loadingStrategy: "visible",
@@ -146,7 +168,7 @@ describe("Part 0 Learning Scenes", () => {
     );
 
     expect(
-      screen.getByRole("img", { name: "자연어 처리 추론 경로" }),
+      screen.getByRole("img", { name: "자연어 처리 연속 설명" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("img", { name: "Token 개념 흐름" }),

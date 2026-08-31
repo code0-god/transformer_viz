@@ -1,157 +1,182 @@
-import { type ReactElement, useSyncExternalStore } from "react";
+import { type ReactElement, useId } from "react";
 
-const MOBILE_LAYOUT_QUERY = "(max-width: 44rem)";
+import { useVisualNarrative } from "../../../../VisualNarrative";
 
-const STAGES = [
-  ["사람이 쓰는 언어", "질문 · 문장 · 글"],
-  ["숫자로 표현", "계산 가능한 형태"],
-  ["모델 계산", "학습된 숫자로 계산"],
-  ["활용 결과", "분류 · 검색 · 생성"],
+import "./nlpGoldenNarrative.css";
+
+export const NLP_GOLDEN_STAGES = [
+  "language",
+  "numeric",
+  "transform",
+  "result",
+  "token-preview",
 ] as const;
 
-type StagePosition = Readonly<{
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}>;
+export type NlpGoldenStage = (typeof NLP_GOLDEN_STAGES)[number];
 
-const DESKTOP_POSITIONS: readonly StagePosition[] = [
-  { x: 20, y: 82, width: 190, height: 82 },
-  { x: 255, y: 82, width: 190, height: 82 },
-  { x: 490, y: 82, width: 190, height: 82 },
-  { x: 725, y: 82, width: 190, height: 82 },
-];
+const STAGE_LABELS: Readonly<Record<NlpGoldenStage, string>> = {
+  language: "사람이 읽는 문장",
+  numeric: "계산 가능한 표현",
+  transform: "표현이 계산으로 변하는 중",
+  result: "사람이 사용하는 결과",
+  "token-preview": "다음 질문",
+};
 
-const MOBILE_POSITIONS: readonly StagePosition[] = [
-  { x: 36, y: 42, width: 288, height: 76 },
-  { x: 36, y: 164, width: 288, height: 76 },
-  { x: 36, y: 286, width: 288, height: 76 },
-  { x: 36, y: 408, width: 288, height: 76 },
-];
+const STAGE_SUMMARIES: Readonly<Record<NlpGoldenStage, string>> = {
+  language: "사람이 오늘 영화 정말 재미있었어요라는 문장을 읽습니다.",
+  numeric:
+    "같은 문장 아래에 개념적인 숫자 셀 배열이 나타나 계산 가능한 표현으로 연결됩니다.",
+  transform:
+    "같은 숫자 셀의 위치 관계와 강조가 달라지며 모델 내부 계산에 따른 표현 변화를 보여줍니다.",
+  result:
+    "변화한 숫자 표현이 문장의 긍정적인 분위기와 분류, 답변, 번역, 글 생성 같은 활용 결과로 이어집니다.",
+  "token-preview":
+    "처음 문장에 개념적인 경계가 나타나며 다음 Chapter에서 문장을 작은 단위로 나누는 질문으로 이어집니다.",
+};
 
-function subscribeToMobileLayout(onStoreChange: () => void): () => void {
-  if (typeof window.matchMedia !== "function") return () => undefined;
-  const query = window.matchMedia(MOBILE_LAYOUT_QUERY);
-  query.addEventListener("change", onStoreChange);
-  return () => query.removeEventListener("change", onStoreChange);
-}
+const PHRASES = [
+  { id: "today", text: "오늘", trailingSpace: true },
+  { id: "movie", text: "영화", trailingSpace: true },
+  { id: "really", text: "정말", trailingSpace: true },
+  { id: "enjoyed", text: "재미있었어요", trailingSpace: false },
+  { id: "period", text: ".", trailingSpace: false },
+] as const;
 
-function mobileLayoutSnapshot(): boolean {
-  if (typeof window.matchMedia !== "function") return false;
-  return window.matchMedia(MOBILE_LAYOUT_QUERY).matches;
-}
+const CELL_GROUPS = [
+  ["today-0", "today-1", "today-2", "today-3", "today-4", "today-5"],
+  ["movie-0", "movie-1", "movie-2", "movie-3", "movie-4", "movie-5"],
+  ["really-0", "really-1", "really-2", "really-3", "really-4", "really-5"],
+  [
+    "enjoyed-0",
+    "enjoyed-1",
+    "enjoyed-2",
+    "enjoyed-3",
+    "enjoyed-4",
+    "enjoyed-5",
+  ],
+] as const;
 
-function connector(
-  current: StagePosition,
-  next: StagePosition,
-  mobile: boolean,
-): string {
-  if (mobile) {
-    const x = current.x + current.width / 2;
-    return `M${x} ${current.y + current.height}V${next.y}`;
+const RESULT_RANGE = [
+  ["분류", "긍정"],
+  ["질문 답변", "관련 답변"],
+  ["번역", "다른 언어"],
+  ["글 생성", "이어지는 문장"],
+] as const;
+
+function isNlpGoldenStage(stage: string | undefined): stage is NlpGoldenStage {
+  switch (stage) {
+    case "language":
+    case "numeric":
+    case "transform":
+    case "result":
+    case "token-preview":
+      return true;
+    default:
+      return false;
   }
-  const y = current.y + current.height / 2;
-  return `M${current.x + current.width} ${y}H${next.x}`;
 }
 
 export function NlpPipelineDiagram(): ReactElement {
-  const mobile = useSyncExternalStore(
-    subscribeToMobileLayout,
-    mobileLayoutSnapshot,
-    () => false,
-  );
-  const positions = mobile ? MOBILE_POSITIONS : DESKTOP_POSITIONS;
+  const narrative = useVisualNarrative();
+  const stage = isNlpGoldenStage(narrative?.activeStage)
+    ? narrative.activeStage
+    : "language";
+  const descriptionId = useId();
 
   return (
-    <div className="part0-diagram part0-diagram--pipeline">
-      <svg
-        viewBox={mobile ? "0 0 360 520" : "0 0 940 240"}
+    <div className="nlp-golden" data-nlp-stage={stage}>
+      <div
+        className="nlp-golden__visual"
+        data-testid="nlp-golden-visual"
+        data-nlp-stage={stage}
         role="img"
-        aria-label="자연어 처리 추론 경로"
-        aria-describedby="nlp-pipeline-desc"
-        data-figure-layout={mobile ? "mobile" : "desktop"}
+        aria-label="자연어 처리 연속 설명"
+        aria-describedby={descriptionId}
       >
-        <title id="nlp-pipeline-title">자연어 처리 추론 경로</title>
-        <desc id="nlp-pipeline-desc">
-          사람이 쓰는 언어를 숫자로 표현하고, 모델이 계산한 뒤, 사람이 활용하는
-          결과로 이어지는 네 단계의 큰 흐름
-        </desc>
-        <defs>
-          <marker
-            id="nlp-arrow"
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="5"
-            markerWidth="6"
-            markerHeight="6"
-            orient="auto"
-          >
-            <path d="M0 0 10 5 0 10Z" />
-          </marker>
-        </defs>
-        {positions.slice(0, -1).map((position, index) => {
-          const next = positions[index + 1];
-          if (next === undefined) return null;
-          return (
-            <path
-              key={`${position.x}-${position.y}`}
-              className="part0-diagram__path"
-              markerEnd="url(#nlp-arrow)"
-              d={connector(position, next, mobile)}
-            />
-          );
-        })}
-        {STAGES.map(([label, note], index) => {
-          const position = positions[index];
-          if (position === undefined) return null;
-          return (
-            <g key={label} className="part0-diagram__stage" data-stage={label}>
-              <rect
-                x={position.x}
-                y={position.y}
-                width={position.width}
-                height={position.height}
-                rx="6"
-              />
-              <text
-                x={position.x + position.width / 2}
-                y={position.y + 32}
-                textAnchor="middle"
-              >
-                {label}
-              </text>
-              <text
-                className="part0-diagram__note"
-                x={position.x + position.width / 2}
-                y={position.y + 57}
-                textAnchor="middle"
-              >
-                {note}
-              </text>
-            </g>
-          );
-        })}
-        {mobile ? null : (
-          <text
-            className="part0-diagram__example"
-            x="470"
-            y="32"
-            textAnchor="middle"
-          >
-            언어 → 숫자 → 계산 → 활용
-          </text>
-        )}
-      </svg>
-      <div className="part0-diagram__fallback">
-        <fieldset aria-label="자연어 처리란? 의미 설명">
-          <ol>
-            {STAGES.map(([label]) => (
-              <li key={label}>{label}</li>
+        <span className="nlp-golden__state-label" aria-hidden="true">
+          {STAGE_LABELS[stage]}
+        </span>
+        <p
+          className="nlp-golden__sentence"
+          data-testid="nlp-golden-sentence"
+          aria-hidden="true"
+        >
+          {PHRASES.map((phrase) => (
+            <span
+              data-nlp-phrase={phrase.id}
+              data-nlp-space={phrase.trailingSpace ? "true" : "false"}
+              key={phrase.id}
+            >
+              {phrase.text}
+              {phrase.trailingSpace ? " " : null}
+            </span>
+          ))}
+        </p>
+        <div
+          className="nlp-golden__cells"
+          data-testid="nlp-golden-cells"
+          aria-hidden="true"
+        >
+          {CELL_GROUPS.map((cells, groupIndex) => (
+            <span
+              className="nlp-golden__cell-group"
+              data-nlp-cell-group={groupIndex + 1}
+              key={cells[0]}
+            >
+              {cells.map((cell) => (
+                <span data-nlp-cell={cell} key={cell} />
+              ))}
+            </span>
+          ))}
+          <span className="nlp-golden__cells-label">개념적 숫자 표현</span>
+        </div>
+        <svg
+          className="nlp-golden__transform-lines"
+          viewBox="0 0 640 160"
+          aria-hidden="true"
+        >
+          <path d="M72 106C142 20 214 20 284 106" />
+          <path d="M188 118C256 52 334 52 402 118" />
+          <path d="M316 106C386 20 458 20 528 106" />
+        </svg>
+        <div className="nlp-golden__result" aria-hidden="true">
+          <p>
+            <span>이 문장의 분위기</span>
+            <strong>긍정</strong>
+          </p>
+          <div className="nlp-golden__result-range">
+            {RESULT_RANGE.map(([task, outcome]) => (
+              <span key={task}>
+                <b>{task}</b>
+                {outcome}
+              </span>
             ))}
-          </ol>
-        </fieldset>
+          </div>
+        </div>
+        <p className="nlp-golden__token-note" aria-hidden="true">
+          개념적 경계 · 실제 경계는 tokenizer에 따라 달라집니다.
+        </p>
+        <p className="learning-visually-hidden" id={descriptionId}>
+          {STAGE_SUMMARIES[stage]}
+        </p>
       </div>
+      <fieldset
+        className="nlp-golden__fallback learning-visually-hidden"
+        aria-label="자연어 처리란? 의미 설명"
+      >
+        <legend>자연어 처리 연속 설명 상태</legend>
+        <ol>
+          {NLP_GOLDEN_STAGES.map((item) => (
+            <li
+              aria-current={item === stage ? "step" : undefined}
+              data-nlp-fallback-stage={item}
+              key={item}
+            >
+              {STAGE_SUMMARIES[item]}
+            </li>
+          ))}
+        </ol>
+      </fieldset>
     </div>
   );
 }

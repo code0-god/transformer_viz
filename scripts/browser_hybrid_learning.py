@@ -57,7 +57,7 @@ EXPECTED_PREFERRED_WIDTHS = {
     "root": 1000,
 }
 ALL_LEARNING_FIGURES = (
-    ("0-1", "decoder.diagram.intro.nlp", "prose"),
+    ("0-1", "decoder.diagram.intro.nlp", "full"),
     ("0-2", "decoder.diagram.tokenization.token", "wide"),
     ("0-3", "decoder.diagram.tokenization.vocabulary", "wide"),
     ("0-4", "decoder.diagram.tokenization.methods", "wide"),
@@ -809,7 +809,7 @@ def _capture_part_zero(
 ) -> list[JsonObject]:
     evidence: list[JsonObject] = []
     expected_sizes = {
-        "decoder.diagram.intro.nlp": "prose",
+        "decoder.diagram.intro.nlp": "full",
         "decoder.diagram.tokenization.token": "wide",
         "decoder.diagram.tokenization.vocabulary": "wide",
         "decoder.diagram.tokenization.methods": "wide",
@@ -818,7 +818,19 @@ def _capture_part_zero(
         _open_chapter(browser, slug)
         _wait_for_article(browser)
         _wait_for_figure(browser, figure_id)
-        _scroll_figure(browser, figure_id)
+        if slug == "0-1":
+            _evaluate(
+                browser,
+                """document.querySelector(
+                  '[data-narrative-layout="golden"] '
+                  + '.visual-narrative__visual',
+                )?.scrollIntoView({
+                  block: 'center',
+                  inline: 'nearest',
+                })""",
+            )
+        else:
+            _scroll_figure(browser, figure_id)
         evidence.append(
             _assert_inline_figure(browser, figure_id, expected_sizes[figure_id]),
         )

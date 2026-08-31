@@ -57,7 +57,7 @@ export type GuideFigureBlock = {
 export type GuideVisualNarrativeBlock = {
   readonly id: string;
   readonly kind: "visual-narrative";
-  readonly layout: "inline" | "split" | "sticky";
+  readonly layout: "golden" | "inline" | "split" | "sticky";
   readonly label: string;
   readonly beats: readonly {
     readonly id: string;

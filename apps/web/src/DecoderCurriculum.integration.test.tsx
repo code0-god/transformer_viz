@@ -49,7 +49,7 @@ function FixtureDiagram(_props: CurriculumDiagramRendererProps): ReactElement {
 }
 
 const PART0_PRODUCTION_CHAPTERS = [
-  ["자연어 처리란?", "decoder.curriculum.guide.0.1", "자연어 처리 추론 경로"],
+  ["자연어 처리란?", "decoder.curriculum.guide.0.1", "자연어 처리 연속 설명"],
   ["Token이란?", "decoder.curriculum.guide.0.2", "Token 개념 흐름"],
   [
     "Vocabulary와 Token ID",

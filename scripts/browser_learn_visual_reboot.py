@@ -36,12 +36,6 @@ class SceneSpec(NamedTuple):
 
 PART0_SCENES = (
     SceneSpec(
-        "0-1",
-        "decoder.diagram.intro.nlp",
-        "nlp",
-        "nlp-scene-state",
-    ),
-    SceneSpec(
         "0-2",
         "decoder.diagram.tokenization.token",
         "token",
@@ -554,7 +548,7 @@ def _verify_context_cycles(
     shots: dict[str, str],
 ) -> None:
     results: JsonObject = {}
-    for spec in (PART0_SCENES[1], PART2_SCENES[0], ATTENTION_SCENE):
+    for spec in (PART0_SCENES[0], PART2_SCENES[0], ATTENTION_SCENE):
         set_viewport(browser, 390, 844)
         _open_scene(browser, spec)
         wait_for(

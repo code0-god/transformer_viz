@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import { HiddenStateSceneFigure } from "../../learning-scenes/hidden/HiddenStateSceneFigure";
 import {
-  NlpTransformationSceneFigure,
   TokenizationMethodsSceneFigure,
   TokenSegmentationSceneFigure,
   VocabularyAddressSceneFigure,
@@ -29,12 +28,8 @@ type CurriculumFigureId = (typeof CURRICULUM_DIAGRAM_IDS)[number];
 
 const FIGURE_METADATA = {
   "decoder.diagram.intro.nlp": {
-    fallbackFigureId: "decoder.diagram.intro.nlp.static",
-    loadingStrategy: "visible",
-    preferredAspectRatio: 2.05,
     preferredWidth: 960,
-    reducedMotion: "static-final-state",
-    renderer: "scene",
+    renderer: "static",
   },
   "decoder.diagram.tokenization.token": {
     fallbackFigureId: "decoder.diagram.tokenization.token.static",
@@ -130,9 +125,6 @@ class CurriculumFigureRegistryError extends Error {
 
 function renderFigure(figureId: string): ReactElement {
   if (!isDiagramId(figureId)) throw new CurriculumFigureRegistryError(figureId);
-  if (figureId === "decoder.diagram.intro.nlp") {
-    return <NlpTransformationSceneFigure />;
-  }
   if (figureId === "decoder.diagram.tokenization.token") {
     return <TokenSegmentationSceneFigure />;
   }

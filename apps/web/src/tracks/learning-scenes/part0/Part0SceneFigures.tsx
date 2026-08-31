@@ -1,6 +1,5 @@
 import { type ReactElement, useState } from "react";
 
-import { NlpPipelineDiagram } from "../../decoder-only-fundamentals/curriculum/diagrams/part0/NlpPipelineDiagram";
 import { TokenComparisonDiagram } from "../../decoder-only-fundamentals/curriculum/diagrams/part0/TokenComparisonDiagram";
 import { TokenizationMethodsDiagram } from "../../decoder-only-fundamentals/curriculum/diagrams/part0/TokenizationMethodsDiagram";
 import { VocabularyAddressDiagram } from "../../decoder-only-fundamentals/curriculum/diagrams/part0/VocabularyAddressDiagram";
@@ -20,11 +19,6 @@ import {
 
 import "./part0Scenes.css";
 
-export type NlpTransformationState = Readonly<{
-  replay: number;
-  stage: "text" | "representation" | "computation" | "result";
-}>;
-
 export type TokenSegmentationState = Readonly<{
   mode: TokenUnitMode;
   narrative?: boolean;
@@ -43,10 +37,6 @@ export type TokenizationMethodsState = Readonly<{
   phase: "source" | "split";
   replay: number;
 }>;
-
-function loadNlpTransformationScene() {
-  return import("./NlpTransformationScene");
-}
 
 function loadTokenSegmentationScene() {
   return import("./TokenSegmentationScene");
@@ -83,72 +73,6 @@ function SegmentLabels({
         <li key={item.id}>{item.label}</li>
       ))}
     </ol>
-  );
-}
-
-export function NlpTransformationSceneFigure(): ReactElement {
-  const [state, setState] = useState<NlpTransformationState>({
-    replay: 0,
-    stage: "text",
-  });
-  const setStage = (stage: NlpTransformationState["stage"]) => {
-    setState((current) => ({
-      replay: current.replay + 1,
-      stage,
-    }));
-  };
-  const stages = [
-    { id: "text", label: "언어" },
-    { id: "representation", label: "수치 표현" },
-    { id: "computation", label: "모델 계산" },
-    { id: "result", label: "결과" },
-  ] as const;
-  return (
-    <SceneFigure
-      annotations={
-        <p
-          className="part0-scene__note"
-          data-scene-stage={state.stage}
-          data-testid="nlp-scene-state"
-        >
-          표현의 형태는 달라져도 같은 입력에서 이어지는 계산 흐름입니다.
-        </p>
-      }
-      aspectRatio={2.05}
-      controls={
-        <SceneStepRail
-          activeStep={state.stage}
-          label="자연어 처리 단계"
-          onReplay={() =>
-            setState((current) => ({
-              replay: current.replay + 1,
-              stage: "text",
-            }))
-          }
-          onSelect={setStage}
-          replayLabel="처음부터 보기"
-          steps={stages}
-        />
-      }
-      description="텍스트가 수치 표현과 모델 계산을 거쳐 사람이 사용하는 결과가 되는 네 단계"
-      fallback={<NlpPipelineDiagram />}
-      figureId="decoder.diagram.intro.nlp"
-      labels={stages.map((stage, index) => (
-        <SceneStageLabel
-          key={stage.id}
-          mobileX={22}
-          mobileY={15 + index * 23}
-          tone={state.stage === stage.id ? "selected" : "neutral"}
-          x={15 + index * 23.5}
-          y={16}
-        >
-          {stage.label}
-        </SceneStageLabel>
-      ))}
-      loadScene={loadNlpTransformationScene}
-      state={state}
-      title="언어는 어떻게 계산 가능한 표현이 될까요?"
-    />
   );
 }
 

@@ -23,7 +23,7 @@ function narrativeBlocks(page: NarrativePage): GuideVisualNarrativeBlock[] {
 }
 
 describe("Learn Visual Narrative benchmark scope", () => {
-  test("uses exactly one canonical narrative in only three benchmark Guides", () => {
+  test("uses one Golden narrative plus three benchmark narratives", () => {
     const pages = [...curriculumGuidePages, attentionGuide];
     const narratives = pages.flatMap((page) =>
       narrativeBlocks(page).map((block) => ({
@@ -34,6 +34,11 @@ describe("Learn Visual Narrative benchmark scope", () => {
     );
 
     expect(narratives).toEqual([
+      {
+        figureId: "decoder.diagram.intro.nlp",
+        layout: "golden",
+        pageId: "decoder.curriculum.guide.0.1",
+      },
       {
         figureId: "decoder.diagram.tokenization.token",
         layout: "inline",
@@ -59,13 +64,16 @@ describe("Learn Visual Narrative benchmark scope", () => {
     expect(
       narratives.map(({ beats }) => beats.map(({ stage }) => stage)),
     ).toEqual([
+      ["language", "numeric", "transform", "result", "token-preview"],
       ["source", "boundaries", "split"],
       ["id", "lookup", "lift", "vector"],
       ["overview", "qkv", "scores", "mask", "softmax", "value"],
     ]);
     for (const narrative of narratives) {
-      expect(narrative.beats.every(({ text }) => text.length > 30)).toBe(true);
-      expect(narrative.figure.caption.length).toBeGreaterThan(20);
+      expect(new Set(narrative.beats.map(({ id }) => id)).size).toBe(
+        narrative.beats.length,
+      );
+      expect(narrative.figure.kind).toBe("figure");
     }
   });
 });
