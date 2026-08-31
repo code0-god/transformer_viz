@@ -75,22 +75,29 @@
 
 .visual-narrative--golden {
   inline-size: min(100%, var(--learning-figure-full));
-  grid-template-columns: minmax(15rem, 0.72fr) minmax(0, 1.28fr);
+  grid-template-columns: minmax(17rem, 38fr) minmax(0, 62fr);
   align-items: start;
+  column-gap: clamp(3.5rem, 5vw, 4.5rem);
   row-gap: 0;
 }
 
-.visual-narrative--golden > .visual-narrative__beat:first-of-type {
-  grid-column: 1 / -1;
-  grid-row: 1;
-  margin-block-end: clamp(2rem, 6vh, 4rem);
-}
-
-.visual-narrative--golden > .visual-narrative__beat:nth-of-type(n + 2) {
+.visual-narrative--golden > .visual-narrative__beat {
   display: flex;
   align-items: center;
-  min-block-size: clamp(17rem, 52vh, 26rem);
-  padding-block: var(--s6);
+  grid-column: 1;
+  inline-size: 100%;
+  max-inline-size: none;
+  min-block-size: clamp(10rem, 30vh, 15rem);
+  padding-block: var(--s5);
+  padding-inline-start: 0;
+}
+
+.visual-narrative--golden > .visual-narrative__beat::before {
+  content: none;
+}
+
+.visual-narrative--golden > .visual-narrative__beat:first-of-type {
+  grid-row: 1;
 }
 
 .visual-narrative--golden > .visual-narrative__beat:nth-of-type(2) {
@@ -113,7 +120,7 @@
   position: sticky;
   inset-block-start: clamp(5.5rem, 10vh, 7rem);
   grid-column: 2;
-  grid-row: 2 / span 4;
+  grid-row: 1 / span 5;
   align-self: start;
 }
 
@@ -276,8 +283,9 @@
     background: var(--route-background);
   }
 
-  .visual-narrative--golden > .visual-narrative__beat:nth-of-type(n + 2) {
-    min-block-size: clamp(14rem, 44vh, 22rem);
+  .visual-narrative--golden > .visual-narrative__beat {
+    min-block-size: clamp(10rem, 30vh, 14rem);
+    padding-block: var(--s5);
   }
 
   .visual-narrative .scene-figure__plane {

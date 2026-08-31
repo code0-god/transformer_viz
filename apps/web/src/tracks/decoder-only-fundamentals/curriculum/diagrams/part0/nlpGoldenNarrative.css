@@ -80,11 +80,12 @@
 .nlp-golden__cells {
   position: absolute;
   inset-block-start: 47%;
-  inset-inline: clamp(var(--s4), 7vw, var(--s7));
+  inset-inline: 0;
   z-index: 2;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(var(--s2), 2vw, var(--s5));
+  gap: var(--s3);
+  inline-size: min(76%, 34rem);
+  margin-inline: auto;
   opacity: 0;
   transform: translateY(1.25rem) scale(0.96);
   transition:
@@ -93,14 +94,13 @@
     filter 520ms ease;
 }
 
-.nlp-golden__cell-group {
+.nlp-golden__numeric-field {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--s1);
-  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: var(--s2);
 }
 
-.nlp-golden__cell-group > span {
+.nlp-golden__numeric-field > span {
   aspect-ratio: 1.6;
   min-inline-size: 0;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--hairline));
@@ -111,16 +111,7 @@
   );
   transition:
     background-color 620ms ease,
-    border-color 620ms ease,
-    transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.nlp-golden__cell-group > span:nth-child(2n) {
-  background: color-mix(
-    in srgb,
-    var(--figure-operation) 72%,
-    transparent
-  );
+    border-color 620ms ease;
 }
 
 .nlp-golden__cells-label {
@@ -134,10 +125,11 @@
 
 .nlp-golden__transform-lines {
   position: absolute;
-  inset-block-start: 43%;
-  inset-inline: 7%;
+  inset-block-start: 45%;
+  inset-inline: 0;
   z-index: 1;
-  inline-size: 86%;
+  inline-size: min(76%, 34rem);
+  margin-inline: auto;
   opacity: 0;
   overflow: visible;
   fill: none;
@@ -181,9 +173,10 @@
 }
 
 .nlp-golden__result-range {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
   justify-content: center;
-  gap: var(--s4);
+  gap: var(--s1) var(--s4);
   color: var(--ink-muted);
   font-size: 0.8125rem;
 }
@@ -227,26 +220,15 @@
 }
 
 .nlp-golden[data-nlp-stage="transform"]
-  .nlp-golden__cell-group:nth-child(1) {
-  transform: translateY(0.95rem);
-}
-
-.nlp-golden[data-nlp-stage="transform"]
-  .nlp-golden__cell-group:nth-child(2) {
-  transform: translateY(-0.8rem);
-}
-
-.nlp-golden[data-nlp-stage="transform"]
-  .nlp-golden__cell-group:nth-child(3) {
-  transform: translateY(0.65rem);
-}
-
-.nlp-golden[data-nlp-stage="transform"]
-  .nlp-golden__cell-group:nth-child(4) {
-  transform: translateY(-1rem);
-}
-
-.nlp-golden[data-nlp-stage="transform"] .nlp-golden__cell-group > span {
+  .nlp-golden__numeric-field
+  > span:is(
+    :nth-child(2),
+    :nth-child(5),
+    :nth-child(8),
+    :nth-child(9),
+    :nth-child(12),
+    :nth-child(15)
+  ) {
   border-color: color-mix(in srgb, var(--figure-highlight) 65%, var(--hairline));
   background: color-mix(
     in srgb,
@@ -265,9 +247,13 @@
 }
 
 .nlp-golden[data-nlp-stage="result"] .nlp-golden__cells {
-  opacity: 0.46;
+  opacity: 0.32;
   filter: saturate(0.72);
-  transform: translateY(-1.8rem) scale(0.82);
+  transform: translateY(-2.5rem);
+}
+
+.nlp-golden[data-nlp-stage="result"] .nlp-golden__cells-label {
+  opacity: 0;
 }
 
 .nlp-golden[data-nlp-stage="result"] .nlp-golden__result {
@@ -281,9 +267,9 @@
 }
 
 .nlp-golden[data-nlp-stage="token-preview"] .nlp-golden__cells {
-  opacity: 0.13;
+  opacity: 0;
   filter: saturate(0.35);
-  transform: translateY(2.7rem) scale(0.82);
+  transform: translateY(1rem);
 }
 
 .nlp-golden[data-nlp-stage="token-preview"] .nlp-golden__cells-label {
@@ -297,24 +283,28 @@
 
 @media (max-width: 48rem) {
   .nlp-golden__visual {
-    block-size: clamp(18rem, 78vw, 21rem);
+    block-size: clamp(14.5rem, 72vw, 19rem);
   }
 
   .nlp-golden__sentence {
-    inset-block-start: 21%;
+    inset-block-start: 25%;
     font-size: clamp(1.28rem, 6vw, 1.6rem);
   }
 
+  .nlp-golden__state-label {
+    inset-block-start: 0;
+  }
+
   .nlp-golden__cells {
-    inset-inline: var(--s3);
-    gap: var(--s2);
+    inline-size: calc(100% - 2 * var(--s5));
   }
 
-  .nlp-golden__cell-group {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .nlp-golden__numeric-field {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--s1);
   }
 
-  .nlp-golden__cell-group > span:nth-child(n + 5) {
+  .nlp-golden__numeric-field > span:nth-child(n + 13) {
     display: none;
   }
 
@@ -324,17 +314,11 @@
   }
 
   .nlp-golden[data-nlp-stage="result"] .nlp-golden__sentence {
-    transform: translateY(-1.25rem) scale(0.82);
+    transform: translateY(-1.875rem) scale(0.82);
   }
 
   .nlp-golden[data-nlp-stage="result"] .nlp-golden__cells {
-    transform: translateY(-2.6rem) scale(0.78);
-  }
-
-  .nlp-golden__result-range {
-    display: grid;
-    grid-template-columns: repeat(2, auto);
-    gap: var(--s1) var(--s4);
+    transform: translateY(-3.2rem);
   }
 }
 

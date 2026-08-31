@@ -86,6 +86,11 @@ Chapters.
 - Spatial pattern: a bounded `sticky-aside` relation keeps one visual object
   visible beside ordinary prose on wide screens and falls back to source-order
   block flow when space is narrow.
+- Canonical desktop grid: every beat uses the same WIDE grid lines with a
+  38/62 explanation-to-visual ratio and a fluid 56–72px column gap. The first
+  beat never expands across both columns, and no beat owns a private grid.
+- Accent lines are absent inside the Golden narrative. Column geometry and
+  spacing alone distinguish explanation from visualization.
 - Hero object: the Korean sentence `오늘 영화 정말 재미있었어요.` remains one
   DOM object through Language, Numeric, Transform, Result, and Token Preview.
 - Object permanence: each state adds, transforms, emphasizes, or reuses
@@ -93,8 +98,12 @@ Chapters.
 - Primitives: `TextPhrase`, `VectorCells`, `TransformationLayer`, and
   `SemanticResult`. Generic cubes, slabs, black model boxes, and generic output
   rectangles are forbidden.
-- Numeric cells are conceptual geometry without fabricated values. Visible
-  copy labels the representation as conceptual.
+- Numeric cells form one persistent conceptual field, not phrase- or
+  token-sized groups. Desktop uses two rows of eight cells; narrow layouts
+  reveal two rows of six from the same DOM field. Numeric and Transform keep
+  identical field bounds, cell count, cell size, and anchor position while
+  fill and relationship emphasis change. Visible copy labels the field as a
+  calculable conceptual representation without fabricated values.
 - Result state keeps the source sentence and transformed cells visible while
   showing one semantic result plus a quiet classification, answer, translation,
   and generation range.

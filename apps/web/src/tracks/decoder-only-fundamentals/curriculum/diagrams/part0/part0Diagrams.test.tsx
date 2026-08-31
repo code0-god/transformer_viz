@@ -91,7 +91,7 @@ describe("Part 0 curriculum Diagrams", () => {
     );
     expect(screen.getByTestId("nlp-golden-sentence")).toBeVisible();
     expect(screen.getByTestId("nlp-golden-cells")).toBeInTheDocument();
-    expect(container.querySelectorAll("[data-nlp-cell]")).toHaveLength(24);
+    expect(container.querySelectorAll("[data-nlp-cell]")).toHaveLength(16);
     expect(container.querySelector("rect")).toBeNull();
   });
 

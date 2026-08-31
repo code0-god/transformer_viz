@@ -48,8 +48,13 @@ export function VisualNarrative({
     if (typeof IntersectionObserver === "undefined") return;
     let hasScrolled = false;
     let scrollFrame: number | undefined;
+    const isNarrowGolden =
+      block.layout === "golden" &&
+      window.matchMedia("(max-width: 48rem)").matches;
+    const activationLine = window.innerHeight * (isNarrowGolden ? 0.8 : 0.44);
+    const observerActivationLine =
+      block.layout === "golden" ? activationLine : window.innerHeight / 2;
     const selectNearestBeat = () => {
-      const activationLine = window.innerHeight * 0.44;
       const nearest = [...beatElements.current.values()]
         .map((element) => {
           const rect = element.getBoundingClientRect();
@@ -80,12 +85,12 @@ export function VisualNarrative({
               Math.abs(
                 left.boundingClientRect.top +
                   left.boundingClientRect.height / 2 -
-                  window.innerHeight / 2,
+                  observerActivationLine,
               ) -
               Math.abs(
                 right.boundingClientRect.top +
                   right.boundingClientRect.height / 2 -
-                  window.innerHeight / 2,
+                  observerActivationLine,
               ),
           )[0];
         if (!(active?.target instanceof HTMLElement)) return;
@@ -94,7 +99,7 @@ export function VisualNarrative({
         if (stage !== undefined) selectStage(stage);
       },
       {
-        rootMargin: "-34% 0px -46% 0px",
+        rootMargin: isNarrowGolden ? "-68% 0px -8% 0px" : "-34% 0px -46% 0px",
         threshold: [0, 0.25, 0.6],
       },
     );
@@ -109,7 +114,7 @@ export function VisualNarrative({
       }
       observer.disconnect();
     };
-  }, [selectStage]);
+  }, [block.layout, selectStage]);
 
   const context = { activeStage, selectStage };
   const visual = (

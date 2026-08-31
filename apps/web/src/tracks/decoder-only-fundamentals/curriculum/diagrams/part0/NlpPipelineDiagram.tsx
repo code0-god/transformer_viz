@@ -23,11 +23,11 @@ const STAGE_LABELS: Readonly<Record<NlpGoldenStage, string>> = {
 };
 
 const STAGE_SUMMARIES: Readonly<Record<NlpGoldenStage, string>> = {
-  language: "사람이 오늘 영화 정말 재미있었어요라는 문장을 읽습니다.",
+  language: "사람이 “오늘 영화 정말 재미있었어요.”라는 문장을 읽습니다.",
   numeric:
-    "같은 문장 아래에 개념적인 숫자 셀 배열이 나타나 계산 가능한 표현으로 연결됩니다.",
+    "같은 문장 아래에 여러 숫자가 모인 하나의 개념적인 표현이 나타나 계산 가능한 형태로 연결됩니다.",
   transform:
-    "같은 숫자 셀의 위치 관계와 강조가 달라지며 모델 내부 계산에 따른 표현 변화를 보여줍니다.",
+    "같은 숫자 표현의 배치와 크기는 유지되고 색과 연결 강조가 달라지며 계산에 따른 변화를 보여줍니다.",
   result:
     "변화한 숫자 표현이 문장의 긍정적인 분위기와 분류, 답변, 번역, 글 생성 같은 활용 결과로 이어집니다.",
   "token-preview":
@@ -42,18 +42,23 @@ const PHRASES = [
   { id: "period", text: ".", trailingSpace: false },
 ] as const;
 
-const CELL_GROUPS = [
-  ["today-0", "today-1", "today-2", "today-3", "today-4", "today-5"],
-  ["movie-0", "movie-1", "movie-2", "movie-3", "movie-4", "movie-5"],
-  ["really-0", "really-1", "really-2", "really-3", "really-4", "really-5"],
-  [
-    "enjoyed-0",
-    "enjoyed-1",
-    "enjoyed-2",
-    "enjoyed-3",
-    "enjoyed-4",
-    "enjoyed-5",
-  ],
+const NUMERIC_CELLS = [
+  "field-01",
+  "field-02",
+  "field-03",
+  "field-04",
+  "field-05",
+  "field-06",
+  "field-07",
+  "field-08",
+  "field-09",
+  "field-10",
+  "field-11",
+  "field-12",
+  "field-13",
+  "field-14",
+  "field-15",
+  "field-16",
 ] as const;
 
 const RESULT_RANGE = [
@@ -117,27 +122,28 @@ export function NlpPipelineDiagram(): ReactElement {
           data-testid="nlp-golden-cells"
           aria-hidden="true"
         >
-          {CELL_GROUPS.map((cells, groupIndex) => (
-            <span
-              className="nlp-golden__cell-group"
-              data-nlp-cell-group={groupIndex + 1}
-              key={cells[0]}
-            >
-              {cells.map((cell) => (
-                <span data-nlp-cell={cell} key={cell} />
-              ))}
-            </span>
-          ))}
-          <span className="nlp-golden__cells-label">개념적 숫자 표현</span>
+          <span
+            className="nlp-golden__numeric-field"
+            data-nlp-columns="8"
+            data-nlp-mobile-columns="6"
+            data-nlp-representation="single"
+            data-nlp-rows="2"
+            data-testid="nlp-golden-numeric-field"
+          >
+            {NUMERIC_CELLS.map((cell) => (
+              <span data-nlp-cell={cell} key={cell} />
+            ))}
+          </span>
+          <span className="nlp-golden__cells-label">계산 가능한 숫자 표현</span>
         </div>
         <svg
           className="nlp-golden__transform-lines"
-          viewBox="0 0 640 160"
+          viewBox="0 0 560 96"
           aria-hidden="true"
         >
-          <path d="M72 106C142 20 214 20 284 106" />
-          <path d="M188 118C256 52 334 52 402 118" />
-          <path d="M316 106C386 20 458 20 528 106" />
+          <path d="M42 68C116 10 188 10 260 68" />
+          <path d="M148 76C222 26 338 26 412 76" />
+          <path d="M300 68C374 10 446 10 518 68" />
         </svg>
         <div className="nlp-golden__result" aria-hidden="true">
           <p>
@@ -154,7 +160,7 @@ export function NlpPipelineDiagram(): ReactElement {
           </div>
         </div>
         <p className="nlp-golden__token-note" aria-hidden="true">
-          개념적 경계 · 실제 경계는 tokenizer에 따라 달라집니다.
+          개념적 경계 · 실제 경계는 토크나이저에 따라 달라집니다.
         </p>
         <p className="learning-visually-hidden" id={descriptionId}>
           {STAGE_SUMMARIES[stage]}
