@@ -1,5 +1,9 @@
 # Golden Chapter 0.1 Refinement 최종 보고서
 
+> Historical refinement report. 현재 구현과 최종 evidence는
+> [Golden Chapter 0.1 Guided Slides 최종 구현 보고서](./GOLDEN_CHAPTER_01_GUIDED_SLIDES_FINAL_REPORT.ko.md)가
+> 대체한다.
+
 ## 상태
 
 - Implementation: COMPLETE

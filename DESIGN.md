@@ -83,48 +83,51 @@ Chapter 0.1 establishes the Learn visual grammar without changing later
 Chapters.
 
 - Mode: Read. Document scroll remains the only scroll owner.
-- Spatial pattern: a bounded `sticky-aside` relation keeps one visual object
-  visible beside ordinary prose on wide screens and falls back to source-order
-  block flow when space is narrow.
-- Canonical desktop grid: every beat uses the same WIDE grid lines with a
-  38/62 explanation-to-visual ratio and a fluid 56–72px column gap. The first
-  beat never expands across both columns, and no beat owns a private grid.
+- Spatial pattern: one `article-page` Narrative Stage presents five
+  user-controlled steps in place. It is neither a card nor a viewport-filling
+  presentation surface.
+- Canonical desktop grid: every slide uses the same WIDE grid lines with a
+  38/62 explanation-to-visual ratio and a fluid 56–72px column gap.
 - Boundary ownership: `LEFT_START` inherits the Chapter `CONTENT_START`, while
   `RIGHT_END` remains on `WIDE_END`. The Golden root consumes only that
   asymmetric CONTENT-to-WIDE span instead of restarting at `WIDE_START`.
+- Stage footprint: desktop starts between 480px and 576px. Width, height,
+  columns, gap, and visual center stay unchanged across all five steps. Mobile
+  stacks one active explanation above the same visual and sizes from content.
 - Accent lines are absent inside the Golden narrative. Column geometry and
   spacing alone distinguish explanation from visualization.
 - Hero object: the Korean sentence `오늘 영화 정말 재미있었어요.` remains one
   DOM object through Language, Numeric, Transform, Result, and Token Preview.
-- Object permanence: each state adds, transforms, emphasizes, or reuses
-  existing glyphs and cells. Whole-scene replacement is forbidden.
-- Primitives: `TextPhrase`, `VectorCells`, `TransformationLayer`, and
-  `SemanticResult`. Generic cubes, slabs, black model boxes, and generic output
-  rectangles are forbidden.
-- Numeric cells form one persistent conceptual field, not phrase- or
-  token-sized groups. Desktop uses two rows of eight cells; narrow layouts
-  reveal two rows of six from the same DOM field. Numeric and Transform keep
-  identical field bounds, cell count, cell size, and anchor position while
-  fill and relationship emphasis change. Visible copy labels the field as a
-  calculable conceptual representation without fabricated values.
-- Result state keeps the source sentence and transformed cells visible while
-  showing one semantic result plus a quiet classification, answer, translation,
-  and generation range.
+- Object permanence: the sentence and one horizontal `NumericStrip` stay
+  mounted. Step changes alter their opacity, position, and displayed values;
+  whole-scene replacement is forbidden.
+- Numeric representation: six subtle inline slots show mixed-sign illustrative
+  values plus an ellipsis. Numeric and Transform keep identical strip bounds
+  while values crossfade from calculation-before to calculation-after.
+  Visible copy states that values are explanatory and not model output.
+- Result state keeps the source sentence and transformed strip visible while
+  showing one conceptual semantic result plus a compact classification,
+  question-answering, translation, and generation range.
 - Token Preview returns emphasis to the same sentence and reveals conceptual
   boundaries. It never claims current tokenizer output and never becomes a
   fifth inference node.
 - Surface: article background remains continuous. Figure border, tinted Canvas,
-  title, description, caption divider, step rail, and large replay action stay
-  visually absent.
+  title, description, caption divider, large timeline rail, and replay action
+  stay visually absent.
+- Controls: compact Previous, current count, five dots, and Next controls sit
+  below the stage. Native buttons own at least 44px Previous/Next targets.
+  ArrowLeft and ArrowRight work only inside the focused deck and never intercept
+  editable controls. State changes never write browser history.
 - Color: language uses foreground neutrals, numeric representation uses the
   cool representation role, transformation uses a restrained neutral/cool
   shift, and result uses the output role. Color always has a structural cue.
-- Motion: 300–700ms transitions use opacity, transform, filter, or clip-path;
-  complex cell transformation may reach 1s. No autoplay or idle animation.
+- Motion: 250–550ms prose and object transitions use opacity and transform;
+  numeric value crossfades may reach 800ms. No autoplay, idle animation,
+  scroll activation, wheel interception, or presentation framework.
 - Reduced motion snaps to each complete state while preserving all objects and
   semantic summaries.
-- Mobile keeps the stage compact, reduces cell count through CSS visibility,
-  preserves the same DOM order, and never introduces horizontal scrolling.
+- Mobile keeps the five-step deck, shows only one active slide, preserves the
+  explanation-before-visual order, and never introduces horizontal scrolling.
 
 ## Lab and viewer structure
 

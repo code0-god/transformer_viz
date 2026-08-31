@@ -1,264 +1,244 @@
-# Golden Chapter 0.1 — 자연어 처리란?
+# Golden Chapter 0.1 — Guided Slide Narrative
 
 ## Status
 
 - Scope: Chapter 0.1 only
-- Refinement implementation: complete
-- Automated verification: pass
-- Independent visual critique: pass with no blocking findings on the final
-  25-image evidence set
+- Implementation: complete
+- Automated verification: pass on focused and production-browser gates
+- Independent visual critique: pass, two final reviewers, blockers 0
 - User visual approval: pending
 - Expansion to Chapter 0.2 or later: prohibited before approval
 
 ## Learning goal
 
-The Chapter leaves a beginner with three ideas:
-
-1. People use language to share meaning.
-2. Computers and models calculate with numerical representations.
-3. Natural language processing connects human language to computable
-   representations and connects the result back to a human-usable form.
-
-The final question is not another NLP definition. It is the entrance to
-Chapter 0.2:
-
-> 그렇다면 이 문장을 계산 가능한 작은 단위로 어떻게 나눌까요?
-
-## Deliberate exclusions
-
-Chapter 0.1 does not teach Token ID, Vocabulary, Embedding, Position
-Embedding, Hidden State, Transformer Block, Self-Attention, Q/K/V, Softmax,
-Logit, Sampling, or Autoregressive Generation.
-
-The Token Preview is a conceptual boundary cue. It is not a tokenizer output
-and is never drawn as a fifth inference stage after Result.
-
-## Hero object
-
-One sentence remains the protagonist:
-
-> 오늘 영화 정말 재미있었어요.
-
-The sentence is rendered once as DOM text. The same DOM node survives every
-state. Numerical cells are also mounted once and transformed in place.
-
-## Narrative beats
-
-### Language
-
-Prose establishes that people can read a sentence and understand its meaning.
-Only the sentence is visually dominant.
-
-### Numeric
-
-One conceptual numerical field appears directly beneath the same sentence.
-It contains no fabricated values. Desktop shows two rows of eight cells;
-narrow layouts reveal two rows of six from the same sixteen mounted DOM
-cells. No phrase- or token-sized groups exist.
-
-### Transform
-
-The same field keeps identical bounds, cell dimensions, row count, column
-count, and anchor. Only cell emphasis and thin SVG relationship curves
-change. No black model box or architecture preview appears.
-
-### Result
-
-The sentence and cells remain visible while one semantic result appears:
-`이 문장의 분위기 — 긍정`. A quiet secondary range names classification,
-question answering, translation, and generation so NLP is not mistaken for
-sentiment classification alone.
-
-### Token Preview
-
-Emphasis returns to the same sentence. Conceptual boundaries appear between
-phrases with the explicit note that real boundaries depend on the tokenizer.
-Editorial Next navigation then opens Chapter 0.2.
-
-## Visual primitives
-
-### TextPhrase
-
-Readable Korean DOM text. It carries the learner's original object and never
-becomes a generic chip.
-
-### VectorCells
-
-One aligned field of small cells with no fake values. It communicates only
-that several numbers form one calculable representation; it does not claim a
-token mapping, matrix type, tensor shape, or embedding.
-
-### TransformationLayer
-
-The existing field keeps its geometry while cell emphasis and relation
-change. Thin SVG curves support the transformation without becoming a
-pipeline arrow diagram.
-
-### SemanticResult
-
-Human-readable task output and a compact task range. Meaning comes from real
-copy, not a generic output rectangle.
-
-## Object permanence contract
-
-Every state follows:
+The Chapter makes one progression directly readable:
 
 ```text
-APPEAR
-TRANSFORM
-EMPHASIZE
-REUSE
+사람의 언어
+→ 설명용 숫자 표현
+→ 계산으로 달라진 숫자 표현
+→ 사람이 사용하는 결과
+→ Token 경계에 대한 다음 질문
 ```
 
-State changes must add or transform existing objects. Whole-scene fade-out,
-new Figure replacement, generic node pipelines, and remount-driven continuity
-are failures.
+It does not teach Token ID, Vocabulary, Embedding, tensor shape, matrix
+multiplication, Hidden State, Transformer Block, or Self-Attention.
 
-## Renderer ownership
+## Why the long-scroll model was removed
 
-- DOM owns the sentence, state label, semantic result, task range, boundary
-  note, and accessible summaries.
-- SVG owns only the thin transformation relationships.
-- R3F is not used. Chapter 0.1 contains no trace-backed numerical data whose
-  meaning benefits from a Canvas.
-- ThreeUI remains the shell, navigation, focus, and global control language.
+The previous Golden layout kept one sticky visual beside five tall prose
+beats. Object continuity was correct, but the learner still had to search a
+long page for the current state. Mobile repeated the same problem as a sticky
+visual followed by successive paragraphs.
 
-Removing R3F from this Chapter is deliberate. Renderer purity is less
-important than object continuity, semantic HTML, zero idle work, and a
-seamless reading plane.
+The current model mounts one stable Narrative Stage and exposes one concept at
+a time. Previous, Next, five dots, and scoped Arrow keys are the only state
+controls. Document scrolling remains ordinary page navigation and never
+changes the slide.
 
-## Motion
+## Stable stage architecture
 
-- Typical transitions: 520–720ms.
-- Only opacity, transform, filter, and SVG stroke appearance change.
-- Numeric-to-Transform motion never changes field or cell geometry.
-- No autoplay.
-- No idle animation.
-- No scroll lock, snap, wheel interception, or product `scrollTo`.
-- Normal document scroll selects the nearest prose beat.
-- Reduced motion snaps to a complete state in at most 1ms of computed
-  transition duration.
+```text
+GoldenNarrativeDeck
+├─ one active LEFT explanation
+├─ one persistent RIGHT LearningFigure
+│  └─ NlpPipelineDiagram
+└─ compact Previous / progress / Next controls
+```
 
-## Layout
+The component is Chapter-specific. Shared Inline, Split, and Sticky
+`VisualNarrative` consumers retain their existing observer behavior.
 
-The page uses normal document scrolling and one bounded `sticky-aside`
-relationship:
+## Slide sequence
 
-- the narrative WIDE grid is capped at 1152px;
-- every beat uses the same 38/62 explanation-to-visual columns;
-- the column gap scales from 56px to 72px;
-- LEFT_START equals the Chapter CONTENT_START;
-- RIGHT_END equals the Chapter WIDE_END;
-- all five explanation and visual grid lines remain within 1px;
-- the first beat uses the same grid instead of spanning both columns;
-- one visual remains visible while prose beats pass through the active
-  reading zone;
-- no accent divider or beat-local grid exists;
-- no internal scroll container exists;
-- Figure, caption, and keyboard stage navigation remain semantic but visual
-  chrome stays hidden;
-- sticky behavior ends with the narrative section.
+### 1. 사람이 읽는 언어
 
-## Mobile
+The canonical source object is one persistent Korean sentence:
 
-- The same DOM source order remains.
-- Visual height is 232px at 320px and about 281px at 390px.
-- The same sixteen cells remain mounted; one 2×6 field is visible on narrow
-  layouts.
-- Every non-Language active paragraph begins 15–40px below the visual.
-- At 320×568, complete active prose retains at least 32px below it.
-- No horizontal document or local narrative overflow is allowed.
-- The Header remains clear of the sticky visual.
-- The Chapter footer remains normal editorial navigation.
+```text
+오늘 영화 정말 재미있었어요.
+```
+
+Typography is the visual object. No quote box, card, chip, or generic
+rectangle surrounds it.
+
+### 2. 계산 가능한 표현
+
+The same sentence remains visible while one horizontal six-slot number
+sequence appears:
+
+```text
+0.24  -0.71  0.18  0.63  -0.09  …
+```
+
+Visible copy states:
+
+```text
+설명을 위한 예시 · 실제 모델 값 아님
+```
+
+The values mix signs and do not form a probability distribution.
+
+### 3. 모델 계산
+
+The same number-slot and value DOM nodes remain mounted. Before values
+crossfade to:
+
+```text
+0.51  -0.12  0.84  0.27  0.36  …
+```
+
+`계산 전` and `계산 후` make the semantic change explicit. No model box,
+second sequence, two-dimensional grid, or matrix appears.
+
+### 4. 결과
+
+The transformed sequence becomes quiet but remains present. One conceptual
+result becomes dominant:
+
+```text
+개념 예시
+이 문장의 분위기  긍정
+분류 · 질문 답변 · 번역 · 글 생성
+```
+
+This is an explanatory semantic example, not a runtime inference claim.
+
+### 5. 다음 질문
+
+The source sentence returns to primary emphasis and conceptual boundaries
+appear. Visible copy states that actual boundaries depend on the tokenizer.
+A quiet slide-scoped `Token이란? →` link opens Chapter 0.2.
+
+## Object permanence
+
+One `NlpPipelineDiagram` remains mounted through all five slides. Browser
+contracts mark and compare strict DOM identity for:
+
+- deck root;
+- visual root;
+- sentence;
+- numeric strip;
+- each numeric slot and before/after value node.
+
+Only the LEFT prose node is discrete. RIGHT objects change through CSS
+opacity, transform, filter, and value crossfade.
+
+## Layout geometry
+
+Desktop uses one CONTENT-to-WIDE asymmetric span:
+
+- LEFT_START = Chapter CONTENT_START;
+- RIGHT_END = Chapter WIDE_END;
+- LEFT / RIGHT = 38 / 62 after subtracting the gap;
+- gap = 56–72px;
+- controls remain below the stage and do not change its geometry.
+
+Final production measurements:
+
+| Viewport | Stage | LEFT | Gap | RIGHT |
+| ---: | ---: | ---: | ---: | ---: |
+| 1440×900 | 992×518.39px | 349.59px | 72px | 570.41px |
+| 1366×768 | 992×491.75px | 351px | 68.30px | 572.70px |
+| 1024×768 | 894.91×480px | 318.78px | 56px | 520.12px |
+
+Across fifteen desktop state records, every stage, column, visual, and control
+coordinate drift is 0px.
+
+## Mobile and tablet
+
+At 768px and below, every slide keeps:
+
+```text
+active explanation
+persistent visual
+compact controls
+```
+
+No other explanation consumes block height. A 154px responsive copy slot
+accommodates the longest Korean paragraph without clipping or stage jump.
+
+| Viewport | Stage | Visual width |
+| ---: | ---: | ---: |
+| 768×1024 | 698.62×416.72px | 698.62px |
+| 390×844 | 358×411.59px | 358px |
+| 320×568 | 288×411.59px | 288px |
+
+Mobile and tablet document overflow, local overflow, nested scrollbars, and
+state geometry drift are all 0.
+
+## Interaction
+
+- Previous and Next use native buttons with at least 44×44px targets.
+- Five compact dots expose `N단계: label` and one `aria-current="step"`.
+- ArrowLeft and ArrowRight work only while focus is inside the deck.
+- Input, textarea, select, and contenteditable targets are not intercepted.
+- Boundaries do not wrap.
+- Wheel input remains uncanceled and does not change slides.
+- Slide changes do not write browser history.
+- Browser Back remounts Chapter 0.1 on Slide 1; Forward restores Chapter 0.2.
+- No autoplay, timer, scroll observer, scroll lock, or swipe dependency exists.
+
+## Motion and reduced motion
+
+- Prose transition: 360ms.
+- Object transitions: 320–640ms.
+- Numeric values crossfade in the same slots.
+- No whole-stage replacement or lateral deck animation occurs.
+- Rest, midpoint, and settled frames are captured for 1→2, 2→3, and 4→5.
+- Reduced motion yields every complete state with at most 1ms relevant
+  duration and zero running animations.
+
+## Renderer and performance boundary
+
+- DOM owns all visible and accessible learning content.
+- R3F, Canvas, SceneFigure, idle RAF, and replay controls remain absent.
+- The persistent visual creates no IntersectionObserver.
+- No dependency, Worker, model, tokenizer, or runtime protocol changed.
 
 ## Accessibility
 
-- Prose alone explains the complete concept.
-- The visual exposes one `role="img"` with a state-specific description.
-- A semantic five-item fallback remains mounted with
-  `aria-current="step"`.
-- Native buttons preserve focus, Enter, Space, click, and touch stage access;
-  the rail appears only while keyboard focus is inside it.
-- Color is paired with position, relation, copy, and boundary lines.
-- Reduced motion preserves every complete state.
-- Canvas contains no unique information because Chapter 0.1 has no Canvas.
-
-## Why no Figure box
-
-The Figure element remains for document semantics. It does not define the
-visual surface.
-
-The Chapter intentionally has no visible Figure title, description, caption
-divider, border, radius, shadow, tinted Canvas, step rail, or replay CTA.
-Article background and visual background are the same surface.
-
-## Chapter 0.1 to 0.2 handoff
-
-The final state reuses the hero sentence and reveals only conceptual
-boundaries. The note prevents false tokenizer claims. Existing editorial Next
-navigation supplies the only CTA:
-
-```text
-Token이란? →
-```
-
-Chapter 0.2 implementation and content remain unchanged in this task.
+- One `role="img"` uses the required complete visual description.
+- Five semantic fallback summaries stay mounted; one is current.
+- Native controls retain focus, Enter, Space, click, and touch behavior.
+- Current state is conveyed by text, position, `aria-current`, and visual
+  emphasis rather than color alone.
+- Korean text uses phrase-safe wrapping and keeps punctuation attached.
+- The final Chapter handoff restores destination H1 focus.
 
 ## Evidence
 
-Fresh evidence lives at:
+Fresh root evidence:
 
 ```text
-.omo/evidence/golden-chapter-01-refinement/browser/
+.omo/evidence/golden-slide-rework/browser/
 ```
 
-Required files:
+Fresh project-subpath evidence:
 
 ```text
-01-language-state.png
-02-numeric-state.png
-03-transform-state.png
-04-result-state.png
-05-token-preview.png
-06-full-chapter-desktop.png
-07-full-chapter-mobile.png
-09-language-numeric-mid.png
-10-numeric-transform-mid.png
-11-keyboard-focus.png
-12-reduced-motion-token-preview.png
-13-before-after-numeric.png
-14-before-after-transform.png
-15-before-after-result.png
-desktop-1024-numeric.png
-desktop-1366-numeric.png
-desktop-2000-language.png
-mobile-01-language-state.png
-mobile-02-numeric-state.png
-mobile-03-transform-state.png
-mobile-04-result-state.png
-mobile-05-token-preview.png
-mobile-320-numeric.png
-mobile-320-transform.png
-mobile-320-result.png
-evidence.json
+.omo/evidence/golden-slide-rework/subpath-browser/
 ```
 
-Root and `/transformer_viz/` contracts use separate production builds and
-fresh Chrome sessions.
+Coverage:
 
-Final geometry evidence:
+- 30 viewport/state screenshots: six required viewports × five slides;
+- exact canonical files `01-slide-language.png` through
+  `11-slide-token-390.png`;
+- `06-full-chapter.png`;
+- nine transition frames;
+- `contact-6x5.png`, `contact-transitions.png`, and
+  `before-after-language.png`;
+- root and `/transformer_viz/` `evidence.json`.
 
-- 1024px: 318.78px explanation, 56px gap, 520.13px visual;
-- 1366px: 351px explanation, 68.30px gap, 572.70px visual;
-- 1440px: 349.59px explanation, 72px gap, 570.41px visual;
-- 2000px: 349.59px explanation, 72px gap, 570.41px visual;
-- Numeric and Transform field: 433.50×66.97px;
-- each desktop cell: 47.19×29.48px;
-- CONTENT/LEFT and WIDE/RIGHT boundary drift across twenty desktop records:
-  0px.
+Both deployment bases contain thirty geometry records, zero state drift, zero
+boundary delta, zero overflow, and zero runtime/network/console errors.
 
 ## Scope freeze
 
-Production content, scenes, and diagrams for Chapter 0.2 and every later
-Chapter remain unchanged. No broader migration begins until Chapter 0.1
-receives explicit user visual approval.
+Chapter 0.2 and every later Chapter remain unchanged. Part 1, Part 2, GPT,
+Transformer Block, Self-Attention, Lab, Score Matrix, ThreeUI shell, Worker,
+model assets, tokenizer assets, root hosting, and project-subpath hosting keep
+their established contracts.
+
+No broader migration begins until explicit user visual approval.

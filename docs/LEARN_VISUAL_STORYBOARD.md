@@ -229,18 +229,19 @@ Controls never sit as a large button wall above the stage.
 
 - Learning question: 언어는 어떻게 계산 가능한 표현이 되어 결과로
   돌아오는가?
-- Visual type: Golden continuous visual narrative.
-- Primary renderer: DOM text and cells with restrained SVG relationships.
+- Visual type: Golden five-step guided slide narrative.
+- Primary renderer: persistent DOM sentence, numeric strip, and semantic
+  result.
 - Spatial grammar: APPEAR, TRANSFORM, EMPHASIZE, REUSE.
-- Scene sketch: one Korean sentence persists while conceptual numeric cells
-  appear, transform in place, resolve to a semantic result, and return to a
-  conceptual Token-boundary question.
-- Interaction: normal prose scrolling; assistive stage controls appear only on
-  keyboard focus.
-- Transition: the same sentence and cell nodes remain mounted through all five
-  states.
-- Mobile: compact sticky visual, source-order prose, reduced visible cell
-  count, no horizontal overflow.
+- Scene sketch: one Korean sentence persists while one horizontal illustrative
+  number sequence appears, changes values in place, resolves to a conceptual
+  semantic result, and returns to a Token-boundary question.
+- Interaction: Previous, Next, five quiet dots, and deck-scoped Arrow keys.
+  Normal page scroll never changes the slide.
+- Transition: the same sentence and numeric value nodes remain mounted through
+  all five states.
+- Mobile: one active explanation above the persistent visual and compact
+  controls, with no long-scroll beat list or horizontal overflow.
 - Fallback: semantic DOM image summary and five-state ordered description.
 - Why no 3D: Chapter 0.1 has no trace-backed values whose meaning benefits
   from Canvas depth.
@@ -495,7 +496,7 @@ Controls never sit as a large button wall above the stage.
 
 | Chapter | Camera | Stage height desktop | Mobile |
 | --- | --- | ---: | ---: |
-| 0.1 | front-facing DOM/SVG continuity | 384px | 232–281px |
+| 0.1 | front-facing DOM continuity | 480–520px | content-driven |
 | 0.2 | front-facing strip | 340px | 430px |
 | 0.3 | shallow rack perspective | 420px | 500px |
 | 0.4 | front-facing wide strip | 360px | 460px |
