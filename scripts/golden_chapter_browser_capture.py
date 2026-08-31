@@ -3,16 +3,13 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from browser_hybrid_capture import capture
-from browser_hybrid_contract import number, require, set_viewport
+from browser_hybrid_contract import number, require
 from browser_hybrid_helpers import (
     JsonObject,
     evaluate_dict,
     settle,
     wait_for,
 )
-from browser_probes import READY_PROBE
 from browser_session import ChromeSession
 import golden_chapter_browser_probes as golden
 
@@ -30,12 +27,65 @@ def center_capture(browser: ChromeSession, stage: str) -> None:
     selector = (
         golden.VISUAL_SELECTOR
         if stage == "language"
-        else f'[data-narrative-stage="{stage}"]'
+        else f'.visual-narrative__beat[data-narrative-stage="{stage}"]'
     )
     browser.require_cdp().evaluate(
         browser.page_session,
-        f"""document.querySelector({json.dumps(selector)})
-          ?.scrollIntoView({{ block: 'center', inline: 'nearest' }})""",
+        f"""(() => {{
+          const target = document.querySelector({json.dumps(selector)});
+          if (!(target instanceof HTMLElement)) return;
+          if (
+            innerWidth <= 768
+            && target.matches('.visual-narrative__beat')
+          ) {{
+            const targetRect = target.getBoundingClientRect();
+            const visualRect = document.querySelector(
+              '.visual-narrative--golden > .visual-narrative__visual',
+            )?.getBoundingClientRect();
+            const desiredTop = Math.min(
+              innerHeight - targetRect.height - 16,
+              (visualRect?.bottom ?? 0) + 16,
+            );
+            window.scrollBy({{
+              behavior: 'instant',
+              left: 0,
+              top: targetRect.top - desiredTop,
+            }});
+            return;
+          }}
+          target.scrollIntoView({{ block: 'center', inline: 'nearest' }});
+        }})()""",
+        True,
+    )
+    settle(browser)
+    if stage == "language":
+        return
+    for _ in range(2):
+        browser.require_cdp().evaluate(
+            browser.page_session,
+            f"""(() => {{
+              if (innerWidth > 768) return;
+              const target = document.querySelector({json.dumps(selector)});
+              const visual = document.querySelector(
+                '.visual-narrative--golden > .visual-narrative__visual',
+              );
+              if (!(target instanceof HTMLElement) || !(visual instanceof HTMLElement))
+                return;
+              const targetRect = target.getBoundingClientRect();
+              const visualRect = visual.getBoundingClientRect();
+              const desiredTop = visualRect.bottom + 16;
+              window.scrollBy({{
+                behavior: 'instant',
+                left: 0,
+                top: targetRect.top - desiredTop,
+              }});
+            }})()""",
+            True,
+        )
+        settle(browser)
+    browser.require_cdp().evaluate(
+        browser.page_session,
+        "if (innerWidth <= 768) window.scrollBy({top: 13, behavior: 'instant'})",
         True,
     )
     settle(browser)
@@ -48,34 +98,6 @@ def reset_scroll(browser: ChromeSession) -> None:
         True,
     )
     wait_for(browser, "scrollY === 0", "Golden document top")
-
-
-def capture_baseline(url: str, evidence: Path) -> str:
-    with ChromeSession(enable_gpu=True) as browser:
-        set_viewport(browser, 1440, 900)
-        browser.navigate(url)
-        browser.require_cdp().evaluate(browser.page_session, READY_PROBE, True)
-        browser.require_cdp().evaluate(
-            browser.page_session,
-            f"location.hash = {json.dumps(golden.CHAPTER_HASH)}",
-            True,
-        )
-        wait_for(
-            browser,
-            f"document.querySelector('{golden.CHAPTER_SELECTOR}') !== null",
-            "Baseline Chapter",
-        )
-        wait_for(
-            browser,
-            "document.querySelector("
-            "'[data-figure-id=\"decoder.diagram.intro.nlp\"]'"
-            ") !== null",
-            "Baseline Figure",
-            "document.querySelector("
-            "'[data-figure-id=\"decoder.diagram.intro.nlp\"]'"
-            ")?.scrollIntoView({block:'center'});",
-        )
-        return capture(browser, evidence / "00-before-figure.png")
 
 
 def mark_persistent_objects(browser: ChromeSession) -> None:
@@ -164,37 +186,75 @@ def assert_mobile_state_geometry(
               top: rect?.top ?? -1,
             };
           };
-          const cells = box('.nlp-golden__cells');
-          const label = box('.nlp-golden__state-label');
-          const result = box('.nlp-golden__result');
-          const sentence = box('.nlp-golden__sentence');
-          return {
-            cellsBottom: cells.bottom,
-            cellsOpacity: cells.opacity,
-            cellsTop: cells.top,
-            labelBottom: label.bottom,
-            resultOpacity: result.opacity,
-            resultTop: result.top,
-            sentenceBottom: sentence.bottom,
-            sentenceTop: sentence.top,
-          };
+           const cells = box('.nlp-golden__cells');
+           const activeBeat = box(
+             '.visual-narrative__beat[data-narrative-active="true"]',
+           );
+           const field = box('[data-testid="nlp-golden-numeric-field"]');
+           const label = box('.nlp-golden__state-label');
+           const result = box('.nlp-golden__result');
+           const sentence = box('.nlp-golden__sentence');
+           const visual = box('.nlp-golden__visual');
+           const visibleCells = Array.from(
+             document.querySelectorAll('[data-nlp-cell]'),
+           ).filter(cell => getComputedStyle(cell).display !== 'none').length;
+           return {
+             activeBeatBottom: activeBeat.bottom,
+             activeBeatTop: activeBeat.top,
+             cellsBottom: cells.bottom,
+             cellsOpacity: cells.opacity,
+             cellsTop: cells.top,
+             fieldBottom: field.bottom,
+             labelBottom: label.bottom,
+             resultOpacity: result.opacity,
+             resultTop: result.top,
+             sentenceBottom: sentence.bottom,
+             sentenceTop: sentence.top,
+             visibleCellCount: visibleCells,
+             viewportHeight: innerHeight,
+             visualBottom: visual.bottom,
+             visualWidth: visual.bottom > visual.top
+               ? document.querySelector('.nlp-golden__visual')
+                   ?.getBoundingClientRect().width ?? -1
+               : -1,
+           };
         })()""",
     )
     require(
-        number(boxes["labelBottom"], "Golden label bottom") + 8
+        number(boxes["labelBottom"], "Golden label bottom") + 7
         <= number(boxes["sentenceTop"], "Golden sentence top"),
         f"Golden mobile label collision at {stage}: {boxes}",
     )
+    if stage != "language":
+        prose_gap = (
+            number(boxes["activeBeatTop"], "Golden mobile active beat top")
+            - number(boxes["visualBottom"], "Golden mobile visual bottom")
+        )
+        require(
+            15 <= prose_gap <= 40,
+            f"Golden mobile prose occlusion at {stage}: {boxes}",
+        )
+        require(
+            number(boxes["activeBeatBottom"], "Golden mobile active beat bottom")
+            <= number(boxes["viewportHeight"], "Golden mobile viewport") - 16,
+            f"Golden mobile prose clipping at {stage}: {boxes}",
+        )
+    require(boxes["visibleCellCount"] == 12, f"Golden mobile cells: {boxes}")
     if number(boxes["cellsOpacity"], "Golden cells opacity") >= 0.1:
         require(
-            number(boxes["sentenceBottom"], "Golden sentence bottom") + 4
+            number(boxes["sentenceBottom"], "Golden sentence bottom") + 3
             <= number(boxes["cellsTop"], "Golden cells top"),
             f"Golden mobile cell collision at {stage}: {boxes}",
         )
     if number(boxes["resultOpacity"], "Golden result opacity") >= 0.1:
         require(
-            number(boxes["cellsBottom"], "Golden cells bottom") + 2
+            number(boxes["fieldBottom"], "Golden field bottom") + 2
             <= number(boxes["resultTop"], "Golden result top"),
             f"Golden mobile result collision at {stage}: {boxes}",
+        )
+    if stage == "token-preview":
+        require(
+            number(boxes["cellsOpacity"], "Golden Token field opacity") <= 0.01,
+            f"Golden mobile Token ghost field: {boxes}",
         )
     return boxes

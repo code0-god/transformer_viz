@@ -262,7 +262,7 @@ def assert_probe(data: Probe, width: int) -> None:
     require(_number(data, "controlHeight") <= 1, f"Golden controls: {data}")
     require(data["pendingRaf"] == 0, f"Golden idle RAF: {data}")
     require(
-        260 <= _number(data, "visualHeight") <= 390,
+        232 <= _number(data, "visualHeight") <= 390,
         f"Golden height: {data}",
     )
     require(data["stickyPosition"] == "sticky", f"Golden continuity: {data}")

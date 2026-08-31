@@ -21,11 +21,14 @@ from browser_learning_workspace_probes import browser_errors
 from browser_session import ChromeSession
 from browser_visual_narrative import _capture_chapter, _install_observer_probe, _serve
 import golden_chapter_browser_capture as golden_capture
+import golden_chapter_browser_geometry as golden_geometry
 import golden_chapter_browser_motion as golden_motion
 import golden_chapter_browser_probes as golden
+import golden_chapter_browser_screenshots as golden_screenshots
 
 
 class CandidateEvidence(TypedDict):
+    desktopGridGeometry: list[JsonObject]
     errors: dict[str, list[str]]
     matrix: list[golden.Probe]
     mobileOrder: list[JsonObject]
@@ -33,6 +36,7 @@ class CandidateEvidence(TypedDict):
     navigation: JsonObject
     observers: JsonObject
     reducedMotion: golden_motion.ReducedMotionEvidence
+    representationGeometry: list[JsonObject]
     screenshots: dict[str, str]
 
 
@@ -99,27 +103,9 @@ def capture_mobile_states(
     return geometry
 
 
-def verify_mobile_geometry(
-    browser: ChromeSession,
-    url: str,
-    width: int,
-    height: int,
-) -> list[JsonObject]:
-    set_viewport(browser, width, height)
-    golden.open_chapter(browser, url)
-    geometry: list[JsonObject] = []
-    for label, stage, _filename in golden.STATES:
-        golden.select_state(browser, label, stage)
-        golden_capture.center_capture(browser, stage)
-        golden.select_state(browser, label, stage)
-        geometry.append(
-            golden_capture.assert_mobile_state_geometry(browser, stage),
-        )
-    return geometry
-
-
 def run_candidate(url: str, evidence: Path) -> CandidateEvidence:
     shots: dict[str, str] = {}
+    desktop_grid_geometry: list[JsonObject] = []
     matrix: list[golden.Probe] = []
     mobile_order: list[JsonObject] = []
     mobile_geometry: list[JsonObject] = []
@@ -133,6 +119,21 @@ def run_candidate(url: str, evidence: Path) -> CandidateEvidence:
         set_viewport(browser, 1440, 900)
         golden.open_chapter(browser, url)
         capture_desktop_states(browser, evidence, shots)
+        shots.update(
+            golden_screenshots.capture_additional_desktop(browser, url, evidence),
+        )
+        for viewport in golden_geometry.DESKTOP_VIEWPORTS:
+            desktop_grid_geometry.extend(
+                golden_geometry.collect_desktop_grid_geometry(
+                    browser,
+                    url,
+                    viewport,
+                ),
+            )
+        representation_geometry = golden_geometry.collect_representation_geometry(
+            browser,
+            url,
+        )
         golden_capture.reset_scroll(browser)
         golden.select_state(browser, "다음 질문", "token-preview")
         shots["desktop"] = _capture_chapter(
@@ -169,7 +170,14 @@ def run_candidate(url: str, evidence: Path) -> CandidateEvidence:
             matrix.append({"width": width, "height": height, **data})
 
         mobile_geometry.extend(
-            verify_mobile_geometry(browser, url, 320, 568),
+            golden_geometry.verify_mobile_geometry(browser, url, (320, 568)),
+        )
+        shots.update(
+            golden_screenshots.capture_compact_mobile_states(
+                browser,
+                url,
+                evidence,
+            ),
         )
         mobile_geometry.extend(
             capture_mobile_states(browser, url, evidence, shots),
@@ -202,6 +210,7 @@ def run_candidate(url: str, evidence: Path) -> CandidateEvidence:
         require(not errors["runtime"], f"Golden runtime errors: {errors}")
         require(not errors["network"], f"Golden network errors: {errors}")
     return {
+        "desktopGridGeometry": desktop_grid_geometry,
         "errors": errors,
         "matrix": matrix,
         "mobileOrder": mobile_order,
@@ -209,6 +218,7 @@ def run_candidate(url: str, evidence: Path) -> CandidateEvidence:
         "navigation": navigation,
         "observers": observers,
         "reducedMotion": reduced_motion,
+        "representationGeometry": representation_geometry,
         "screenshots": shots,
     }
 
@@ -226,7 +236,7 @@ def main() -> int:
             args.baseline_root,
         )
         try:
-            before = golden_capture.capture_baseline(
+            before = golden_screenshots.capture_baseline(
                 baseline_url,
                 args.evidence,
             )
