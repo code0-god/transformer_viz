@@ -171,6 +171,17 @@
   display: contents;
 }
 
+.course-home__course[data-threeui-surface="course"] .course-home__step-link {
+  color: inherit;
+  text-decoration-color: var(--boundary-content);
+  text-underline-offset: 0.2em;
+}
+
+.course-home__course[data-threeui-surface="course"]
+  .course-home__step-link:hover {
+  text-decoration-color: var(--ui-accent);
+}
+
 .course-home__course[data-threeui-surface="course"]
   .course-home__step-copy
   strong {

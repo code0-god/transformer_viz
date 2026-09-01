@@ -3,9 +3,9 @@ import { describe, expect, test } from "vitest";
 import { FORMULA_IDS, formulaCatalog } from "./formulaCatalog";
 
 const PART1_FORMULAS = {
-  "fundamentals-next-token-softmax": String.raw`P(w_{t+1}=i \mid w_{1:t}) = \frac{\exp(z_i)}{\sum_j \exp(z_j)}`,
+  "fundamentals-next-token-softmax": String.raw`P_i = \frac{\exp(z_i)}{\sum_j \exp(z_j)}`,
   "fundamentals-chain-rule-three-token": String.raw`P(w_1,w_2,w_3)=P(w_1)P(w_2\mid w_1)P(w_3\mid w_1,w_2)`,
-  "fundamentals-chain-rule-sequence": String.raw`P(w_1,\ldots,w_n)=\prod_{t=1}^{n}P(w_t\mid w_1,\ldots,w_{t-1})`,
+  "fundamentals-chain-rule-sequence": String.raw`P(w_1,\ldots,w_T)=\prod_{t=1}^{T}P(w_t\mid w_{<t})`,
 } as const;
 const PART2_FORMULAS = {
   "fundamentals-embedding-table-shape": String.raw`W_E \in \mathbb{R}^{Vocab \times C}`,

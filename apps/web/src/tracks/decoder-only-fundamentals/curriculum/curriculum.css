@@ -559,6 +559,109 @@
   stroke-width: 1.5;
 }
 
+.part1-diagram__model ellipse {
+  fill: var(--accent-soft);
+  stroke: color-mix(in srgb, var(--accent) 45%, var(--hairline));
+  stroke-width: 1.5;
+}
+
+.part1-diagram__model > text:first-of-type {
+  fill: var(--accent);
+  font-weight: 800;
+}
+
+.part1-diagram__candidate-rule {
+  fill: none;
+  stroke: var(--hairline);
+  stroke-width: 1;
+}
+
+.part1-diagram__score-track {
+  fill: var(--surface-strong);
+}
+
+.part1-diagram__score-value {
+  fill: color-mix(in srgb, var(--accent) 64%, var(--surface-strong));
+}
+
+.part1-diagram__distribution-line {
+  fill: none;
+  stroke: var(--hairline);
+  stroke-width: 1.5;
+}
+
+.part1-diagram__probability-dot {
+  fill: var(--accent-soft);
+  stroke: color-mix(in srgb, var(--accent) 50%, var(--hairline));
+  stroke-width: 1.5;
+}
+
+.part1-diagram .part1-diagram__sampler path {
+  fill: var(--paper);
+  stroke: var(--figure-connector);
+  stroke-width: 1.5;
+}
+
+.part1-diagram__sampler text,
+.part1-diagram__selected > text:first-of-type {
+  fill: var(--ink);
+  font-weight: 800;
+}
+
+.part1-diagram__selected rect {
+  fill: var(--accent-soft);
+  stroke: color-mix(in srgb, var(--accent) 50%, var(--hairline));
+  stroke-width: 1.5;
+}
+
+.part1-diagram__factor circle {
+  fill: var(--paper);
+  stroke: color-mix(in srgb, var(--accent) 50%, var(--hairline));
+  stroke-width: 1.5;
+}
+
+.part1-diagram__factor > text:first-of-type,
+.part1-diagram__equation > text:first-of-type {
+  fill: var(--ink);
+  font-weight: 800;
+}
+
+.part1-diagram__probability {
+  fill: var(--accent);
+  font-weight: 750;
+}
+
+.part1-diagram__equation-rule {
+  fill: none;
+  stroke: var(--hairline);
+  stroke-width: 1;
+}
+
+.part1-diagram__context rect {
+  fill: var(--paper);
+  stroke: var(--hairline);
+  stroke-width: 1.5;
+}
+
+.part1-diagram__context--updated rect,
+.part1-diagram__generated circle {
+  fill: var(--accent-soft);
+  stroke: color-mix(in srgb, var(--accent) 50%, var(--hairline));
+  stroke-width: 1.5;
+}
+
+.part1-diagram__context > text:first-of-type,
+.part1-diagram__generated > text:first-of-type {
+  fill: var(--ink);
+  font-weight: 800;
+}
+
+.part1-diagram__loop-label {
+  fill: var(--accent);
+  font-size: 14px;
+  font-weight: 750;
+}
+
 .part1-diagram__stage:nth-of-type(2n) rect,
 .part1-diagram__candidate:nth-of-type(2n) rect {
   fill: var(--surface-strong);

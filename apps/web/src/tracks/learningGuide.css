@@ -455,7 +455,6 @@
     :is(
       .part0-diagram--vocabulary,
       .part0-diagram--methods,
-      .part1-diagram,
       .part2-diagram
     )
     > svg {
@@ -466,7 +465,6 @@
     :is(
       .part0-diagram--vocabulary,
       .part0-diagram--methods,
-      .part1-diagram,
       .part2-diagram
     )
     > :is(
