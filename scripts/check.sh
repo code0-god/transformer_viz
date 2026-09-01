@@ -137,6 +137,20 @@ for entry in index.html transformer_viz/index.html; do
     --evidence "${CHECK_DIST_DIR}/learning-${entry_label}"
 done
 
+printf '%s\n' '==> Golden Chapter 0.1 browser contract'
+for public_base in / /transformer_viz/; do
+  if [[ "${public_base}" == "/" ]]; then
+    evidence_label="root"
+  else
+    evidence_label="subpath"
+  fi
+  PYTHONPATH="${ROOT_DIR}/scripts" \
+    python3 "${ROOT_DIR}/scripts/browser_golden_chapter.py" \
+    --candidate-root "${CHECK_DIST_DIR}/browser-root" \
+    --candidate-base "${public_base}" \
+    --evidence "${CHECK_DIST_DIR}/golden-${evidence_label}"
+done
+
 printf '%s\n' '==> hybrid SVG/WebGL browser contract'
 for entry in index.html transformer_viz/index.html; do
   entry_label="${entry//\//-}"

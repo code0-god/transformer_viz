@@ -52,7 +52,7 @@ describe("Part 2 curriculum content", () => {
       {
         fallbackFigureId: "decoder.diagram.representation.embedding.static",
         loadingStrategy: "visible",
-        preferredAspectRatio: 1.55,
+        preferredAspectRatio: 1.8,
         preferredWidth: 960,
         reducedMotion: "static-final-state",
         renderer: "scene",
@@ -60,7 +60,7 @@ describe("Part 2 curriculum content", () => {
       {
         fallbackFigureId: "decoder.diagram.representation.position.static",
         loadingStrategy: "visible",
-        preferredAspectRatio: 1.55,
+        preferredAspectRatio: 1.9,
         preferredWidth: 960,
         reducedMotion: "static-final-state",
         renderer: "scene",
@@ -68,7 +68,7 @@ describe("Part 2 curriculum content", () => {
       {
         fallbackFigureId: "decoder.diagram.representation.hidden-state.static",
         loadingStrategy: "visible",
-        preferredAspectRatio: 1.6,
+        preferredAspectRatio: 2,
         preferredWidth: 1000,
         reducedMotion: "static-final-state",
         renderer: "scene",
@@ -92,8 +92,12 @@ describe("Part 2 curriculum content", () => {
     expect(contracts).toEqual(CHAPTERS);
     for (const page of part2Pages()) {
       const blocks = page.sections.flatMap(({ blocks }) => blocks);
+      const explanatoryBeatCount = blocks.flatMap((block) =>
+        block.kind === "visual-narrative" ? block.beats : [],
+      ).length;
       expect(
-        blocks.filter(({ kind }) => kind === "paragraph").length,
+        blocks.filter(({ kind }) => kind === "paragraph").length +
+          explanatoryBeatCount,
       ).toBeGreaterThanOrEqual(6);
       expect(
         blocks.filter(({ kind }) => kind === "runtime-facts"),
@@ -122,7 +126,9 @@ describe("Part 2 curriculum content", () => {
           blocks.flatMap((block) =>
             block.kind === "paragraph" || block.kind === "callout"
               ? [block.text]
-              : [],
+              : block.kind === "visual-narrative"
+                ? block.beats.map(({ text }) => text)
+                : [],
           ),
         ),
       ])

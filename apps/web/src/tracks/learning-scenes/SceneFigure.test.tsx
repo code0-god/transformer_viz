@@ -15,6 +15,22 @@ import {
 import type { LearningSceneRendererProps } from "./sceneTypes";
 
 type TestState = Readonly<{ step: "initial" | "complete" }>;
+type ContextEvent = "created" | "disposed";
+
+let contextWaiters: Record<ContextEvent, Array<() => void>> = {
+  created: [],
+  disposed: [],
+};
+
+function nextContextEvent(event: ContextEvent): Promise<void> {
+  return new Promise((resolve) => {
+    contextWaiters[event].push(resolve);
+  });
+}
+
+function emitContextEvent(event: ContextEvent): void {
+  contextWaiters[event].shift()?.();
+}
 
 class ObserverMock {
   static instances: ObserverMock[] = [];
@@ -80,7 +96,11 @@ function MockScene({
 }: LearningSceneRendererProps<TestState>): ReactElement {
   useEffect(() => {
     onContextCreated();
-    return onContextDisposed;
+    emitContextEvent("created");
+    return () => {
+      onContextDisposed();
+      emitContextEvent("disposed");
+    };
   }, [onContextCreated, onContextDisposed]);
 
   return (
@@ -110,6 +130,7 @@ function sceneProps(
     description: "Token ID selects one embedding row.",
     fallback: <div data-testid="semantic-fallback">ID, row, vector</div>,
     figureId: "decoder.diagram.representation.embedding",
+    labels: <span data-testid="scene-label">Embedding table</span>,
     loadScene,
     state: { step: "initial" },
     title: "Token ID는 어떻게 vector가 될까요?",
@@ -130,6 +151,7 @@ function observer(rootMargin: string): ObserverMock {
 describe("SceneFigure lifecycle foundation", () => {
   beforeEach(() => {
     ObserverMock.instances = [];
+    contextWaiters = { created: [], disposed: [] };
     resetLearningSceneMetrics();
     vi.stubGlobal(
       "IntersectionObserver",
@@ -176,7 +198,11 @@ describe("SceneFigure lifecycle foundation", () => {
     await waitFor(() => expect(loadScene).toHaveBeenCalledOnce());
     expect(screen.queryByTestId("mock-scene")).toBeNull();
 
+    const created = nextContextEvent("created");
     act(() => observer("0px").emit(true));
+    await act(async () => {
+      await created;
+    });
     expect(readLearningSceneMetrics().visibleSceneIds).toEqual([
       "decoder.diagram.representation.embedding",
     ]);
@@ -194,13 +220,33 @@ describe("SceneFigure lifecycle foundation", () => {
       mountCount: 1,
     });
 
+    const disposed = nextContextEvent("disposed");
     act(() => observer("0px").emit(false));
+    await act(async () => {
+      await disposed;
+    });
     expect(screen.queryByTestId("mock-scene")).toBeNull();
     expect(screen.getByTestId("semantic-fallback")).toBeVisible();
     expect(readLearningSceneMetrics()).toMatchObject({
       activeCanvasCount: 0,
       observerCount: 2,
     });
+  });
+
+  test("keeps labels on the stage and controls after the scene", () => {
+    const { container } = render(<SceneFigure {...sceneProps()} />);
+    const stage = container.querySelector(".scene-figure__plane");
+    const controls = container.querySelector(".scene-figure__controls");
+    const label = screen.getByTestId("scene-label");
+
+    if (!(stage instanceof HTMLElement) || !(controls instanceof HTMLElement)) {
+      throw new Error("Scene stage structure missing");
+    }
+    expect(stage).toContainElement(label);
+    expect(
+      stage.compareDocumentPosition(controls) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   test("uses semantic fallback when WebGL is unavailable", async () => {
@@ -324,11 +370,26 @@ describe("SceneFigure lifecycle foundation", () => {
   });
 
   test("releases Canvas state through twenty visibility cycles", async () => {
-    const view = render(<SceneFigure {...sceneProps()} />);
+    let resolveLoaded: () => void = () => undefined;
+    const loaded = new Promise<void>((resolve) => {
+      resolveLoaded = resolve;
+    });
+    const loadScene = vi.fn(async () => {
+      resolveLoaded();
+      return { default: MockScene };
+    });
+    const view = render(<SceneFigure {...sceneProps(loadScene)} />);
     act(() => observer("480px 0px").emit(true));
+    await act(async () => {
+      await loaded;
+    });
 
     for (let cycle = 0; cycle < 20; cycle += 1) {
+      const created = nextContextEvent("created");
       act(() => observer("0px").emit(true));
+      await act(async () => {
+        await created;
+      });
       expect(await screen.findByTestId("mock-scene")).toBeVisible();
       expect(readLearningSceneMetrics()).toMatchObject({
         activeCanvasCount: 1,
@@ -336,10 +397,12 @@ describe("SceneFigure lifecycle foundation", () => {
         webglContextCount: 1,
       });
 
+      const disposed = nextContextEvent("disposed");
       act(() => observer("0px").emit(false));
-      await waitFor(() =>
-        expect(screen.queryByTestId("mock-scene")).toBeNull(),
-      );
+      await act(async () => {
+        await disposed;
+      });
+      expect(screen.queryByTestId("mock-scene")).toBeNull();
       expect(readLearningSceneMetrics()).toMatchObject({
         activeCanvasCount: 0,
         webglContextCount: 0,

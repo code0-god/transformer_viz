@@ -66,14 +66,7 @@ const CHAPTER_SPECS = [
     conceptId: "decoder.intro.nlp",
     conceptTitle: "자연어 처리",
     pageId: GUIDE_PAGE_IDS[0],
-    guideSectionIds: [
-      "everyday-question",
-      "nlp-definition",
-      "why-numbers",
-      "tasks",
-      "training-vs-inference",
-      "roadmap",
-    ],
+    guideSectionIds: ["everyday-question"],
     diagramId: "decoder.diagram.intro.nlp",
     nodeId: "decoder.root.input-context",
     references: [

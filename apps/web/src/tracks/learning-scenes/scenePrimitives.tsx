@@ -3,7 +3,7 @@ import type { Group } from "three";
 
 import { LEARNING_SCENE_COLORS } from "./scenePalette";
 
-type VectorRowProps = Readonly<{
+type VectorStripProps = Readonly<{
   color: string;
   position: readonly [number, number, number];
   values: readonly Readonly<{ id: string; value: number }>[];
@@ -12,6 +12,7 @@ type VectorRowProps = Readonly<{
 type TensorGridProps = Readonly<{
   color?: string;
   cols: number;
+  encoding?: "depth" | "intensity";
   position: readonly [number, number, number];
   rowLift?: number;
   rows: number;
@@ -21,24 +22,24 @@ type TensorGridProps = Readonly<{
   values: readonly Readonly<{ id: string; value: number }>[];
 }>;
 
-export function VectorRow({
+export function VectorStrip({
   color,
   position,
   values,
-}: VectorRowProps): ReactElement {
-  const gap = 0.62;
+}: VectorStripProps): ReactElement {
+  const gap = 0.68;
   const start = -((values.length - 1) * gap) / 2;
   return (
     <group position={[...position]}>
       {values.map(({ id, value }, index) => (
         <mesh key={id} position={[start + index * gap, 0, value * 0.16]}>
-          <boxGeometry args={[0.48, 0.48, 0.16 + Math.abs(value) * 0.22]} />
+          <boxGeometry args={[0.54, 0.5, 0.14 + Math.abs(value) * 0.2]} />
           <meshStandardMaterial
             color={color}
             emissive={color}
-            emissiveIntensity={0.08 + Math.abs(value) * 0.08}
-            metalness={0.08}
-            roughness={0.72}
+            emissiveIntensity={0.02 + Math.abs(value) * 0.04}
+            metalness={0.02}
+            roughness={0.82}
           />
         </mesh>
       ))}
@@ -49,6 +50,7 @@ export function VectorRow({
 export function TensorGrid({
   color = LEARNING_SCENE_COLORS.neutral,
   cols,
+  encoding = "depth",
   position,
   rowLift = 0,
   rows,
@@ -57,7 +59,7 @@ export function TensorGrid({
   selectedRowRef,
   values,
 }: TensorGridProps): ReactElement {
-  const gap = 0.56;
+  const gap = 0.62;
   const xStart = -((cols - 1) * gap) / 2;
   const yStart = ((rows - 1) * gap) / 2;
   return (
@@ -77,20 +79,42 @@ export function TensorGrid({
             {rowCells.map(({ id, value }, col) => {
               const cellColor = selected
                 ? LEARNING_SCENE_COLORS.selected
-                : color;
+                : encoding === "intensity"
+                  ? value >= 0
+                    ? LEARNING_SCENE_COLORS.hidden
+                    : LEARNING_SCENE_COLORS.position
+                  : color;
               return (
                 <mesh key={id} position={[xStart + col * gap, 0, 0]}>
                   <boxGeometry
-                    args={[0.46, 0.46, 0.12 + Math.abs(value) * 0.2]}
+                    args={[
+                      0.52,
+                      0.52,
+                      encoding === "depth"
+                        ? 0.1 + Math.abs(value) * 0.18
+                        : 0.16,
+                    ]}
                   />
                   <meshStandardMaterial
                     color={cellColor}
                     emissive={cellColor}
-                    emissiveIntensity={selected ? 0.24 : 0.04}
-                    metalness={0.06}
-                    roughness={0.76}
+                    emissiveIntensity={
+                      selected
+                        ? 0.08
+                        : encoding === "intensity"
+                          ? 0.02 + Math.abs(value) * 0.06
+                          : 0.01
+                    }
+                    metalness={0.02}
+                    roughness={0.84}
                     transparent
-                    opacity={selected ? 1 : 0.82}
+                    opacity={
+                      selected
+                        ? 1
+                        : encoding === "intensity"
+                          ? 0.62 + Math.abs(value) * 0.3
+                          : 0.82
+                    }
                   />
                 </mesh>
               );
@@ -102,27 +126,211 @@ export function TensorGrid({
   );
 }
 
-export function SceneArrow({
+export function FlowLine({
   color = LEARNING_SCENE_COLORS.selected,
+  length = 1,
   position,
   rotation = [0, 0, -Math.PI / 2],
   scale = 1,
 }: Readonly<{
   color?: string;
+  length?: number;
   position: readonly [number, number, number];
   rotation?: readonly [number, number, number];
   scale?: number;
 }>): ReactElement {
   return (
     <group position={[...position]} rotation={[...rotation]} scale={scale}>
-      <mesh position={[0, 0.34, 0]}>
-        <cylinderGeometry args={[0.035, 0.035, 0.68, 12]} />
+      <mesh position={[0, 0.34 * length, 0]}>
+        <cylinderGeometry args={[0.035, 0.035, 0.68 * length, 12]} />
         <meshStandardMaterial color={color} emissive={color} />
       </mesh>
       <mesh position={[0, -0.08, 0]} rotation={[0, 0, Math.PI]}>
         <coneGeometry args={[0.12, 0.24, 16]} />
         <meshStandardMaterial color={color} emissive={color} />
       </mesh>
+    </group>
+  );
+}
+
+export function TokenChip({
+  color = LEARNING_SCENE_COLORS.token,
+  position,
+  scale = 1,
+  selected = false,
+}: Readonly<{
+  color?: string;
+  position: readonly [number, number, number];
+  scale?: number;
+  selected?: boolean;
+}>): ReactElement {
+  return (
+    <group position={[...position]} scale={scale}>
+      <mesh>
+        <boxGeometry args={[1.5, 0.66, 0.18]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={selected ? LEARNING_SCENE_COLORS.selected : color}
+          emissiveIntensity={selected ? 0.1 : 0.01}
+          metalness={0.02}
+          roughness={0.84}
+        />
+      </mesh>
+      {selected ? (
+        <mesh scale={[1.06, 1.14, 1.25]}>
+          <boxGeometry args={[1.5, 0.66, 0.18]} />
+          <meshBasicMaterial
+            color={LEARNING_SCENE_COLORS.selected}
+            transparent
+            opacity={0.72}
+            wireframe
+          />
+        </mesh>
+      ) : null}
+    </group>
+  );
+}
+
+export function LayerPlane({
+  color = LEARNING_SCENE_COLORS.stageDepth,
+  opacity = 0.5,
+  position,
+  size,
+}: Readonly<{
+  color?: string;
+  opacity?: number;
+  position: readonly [number, number, number];
+  size: readonly [number, number];
+}>): ReactElement {
+  return (
+    <mesh position={[...position]}>
+      <planeGeometry args={[...size]} />
+      <meshStandardMaterial
+        color={color}
+        metalness={0}
+        opacity={opacity}
+        roughness={0.9}
+        transparent
+      />
+    </mesh>
+  );
+}
+
+export function ComputationCore({
+  active,
+  position,
+  scale = 1,
+}: Readonly<{
+  active: boolean;
+  position: readonly [number, number, number];
+  scale?: number;
+}>): ReactElement {
+  return (
+    <group position={[...position]} scale={scale}>
+      {[-0.58, 0, 0.58].map((z, index) => (
+        <mesh key={z} position={[0, 0, z]}>
+          <boxGeometry args={[1.55 - index * 0.12, 1.2, 0.12]} />
+          <meshStandardMaterial
+            color={
+              active
+                ? LEARNING_SCENE_COLORS.selected
+                : LEARNING_SCENE_COLORS.graphite
+            }
+            emissive={LEARNING_SCENE_COLORS.selected}
+            emissiveIntensity={active ? 0.06 : 0}
+            metalness={0.02}
+            roughness={0.82}
+            transparent
+            opacity={0.72 + index * 0.08}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+export function SelectionFrame({
+  color = LEARNING_SCENE_COLORS.selected,
+  position,
+  size,
+}: Readonly<{
+  color?: string;
+  position: readonly [number, number, number];
+  size: readonly [number, number, number];
+}>): ReactElement {
+  return (
+    <mesh position={[...position]}>
+      <boxGeometry args={[...size]} />
+      <meshBasicMaterial color={color} transparent opacity={0.72} wireframe />
+    </mesh>
+  );
+}
+
+export function MatrixPlane({
+  cells,
+  cols,
+  mode,
+  position,
+}: Readonly<{
+  cells: readonly Readonly<{
+    col: number;
+    id: string;
+    masked?: boolean;
+    row: number;
+    value: number;
+  }>[];
+  cols: number;
+  mode: "score" | "weight";
+  position: readonly [number, number, number];
+}>): ReactElement {
+  const gap = 0.58;
+  const rows = Math.ceil(cells.length / cols);
+  const xStart = -((cols - 1) * gap) / 2;
+  const yStart = ((rows - 1) * gap) / 2;
+  return (
+    <group position={[...position]}>
+      {cells.map((cell) => {
+        const masked = cell.masked === true;
+        const magnitude = Math.abs(cell.value);
+        const depth = masked
+          ? 0.08
+          : mode === "score"
+            ? 0.12 + magnitude * 0.24
+            : 0.1 + Math.max(0, cell.value) * 0.3;
+        return (
+          <mesh
+            key={cell.id}
+            position={[
+              xStart + cell.col * gap,
+              yStart - cell.row * gap,
+              masked ? -0.16 : cell.value * 0.09,
+            ]}
+          >
+            <boxGeometry args={[0.48, 0.48, depth]} />
+            <meshStandardMaterial
+              color={
+                masked
+                  ? LEARNING_SCENE_COLORS.masked
+                  : mode === "weight"
+                    ? LEARNING_SCENE_COLORS.output
+                    : cell.value >= 0
+                      ? LEARNING_SCENE_COLORS.query
+                      : LEARNING_SCENE_COLORS.position
+              }
+              emissive={
+                mode === "weight"
+                  ? LEARNING_SCENE_COLORS.output
+                  : LEARNING_SCENE_COLORS.graphite
+              }
+              emissiveIntensity={masked ? 0 : 0.01 + magnitude * 0.04}
+              metalness={0.01}
+              opacity={masked ? 0.24 : 0.72 + magnitude * 0.22}
+              roughness={0.84}
+              transparent
+            />
+          </mesh>
+        );
+      })}
     </group>
   );
 }

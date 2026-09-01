@@ -139,6 +139,12 @@ function blockIssues(
         }
         explained = true;
         break;
+      case "visual-narrative":
+        issues.push(
+          ...blockIssues([block.figure], `${path}.figure`, registries),
+        );
+        explained = true;
+        break;
       case "bullets":
       case "callout":
       case "comparison":
@@ -176,6 +182,11 @@ function figureReferences(
         references.push({
           figureId: block.figureId,
           path: `${path}[${index}]`,
+        });
+      } else if (block.kind === "visual-narrative") {
+        references.push({
+          figureId: block.figure.figureId,
+          path: `${path}[${index}].figure`,
         });
       }
     });

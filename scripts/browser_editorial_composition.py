@@ -233,6 +233,9 @@ def _figure_probe(browser: ChromeSession, figure_id: str) -> JsonObject:
             ?.getBoundingClientRect();
           const figureRect = figure?.getBoundingClientRect();
           const style = figure ? getComputedStyle(figure) : null;
+          const narrative = figure?.closest('[data-narrative-layout]');
+          const captionRect = figure?.querySelector(':scope > figcaption')
+            ?.getBoundingClientRect();
           return {{
             id: figure?.getAttribute('data-figure-id') ?? '',
             layout: svg?.getAttribute('data-figure-layout') ?? '',
@@ -261,6 +264,9 @@ def _figure_probe(browser: ChromeSession, figure_id: str) -> JsonObject:
               ?? -1,
             caption: figure?.querySelector(':scope > figcaption')
               ?.textContent?.trim() ?? '',
+            captionHeight: captionRect?.height ?? -1,
+            narrativeLayout:
+              narrative?.getAttribute('data-narrative-layout') ?? '',
             overflow:
               document.documentElement.scrollWidth
               - document.documentElement.clientWidth,
@@ -298,15 +304,14 @@ def run_contract(url: str, screenshots: Path, evidence_path: Path) -> None:
                 probe = _figure_probe(browser, figure_id)
                 if slug == "0-1":
                     require(
-                        (
-                            probe["layout"] == "desktop"
-                            and number(probe["ratio"], "0.1 desktop ratio") < 0.4
+                        probe["narrativeLayout"] == "golden"
+                        and probe["background"] == "rgba(0, 0, 0, 0)"
+                        and number(
+                            probe["captionHeight"],
+                            "0.1 hidden caption",
                         )
-                        if width == 1440
-                        else (
-                            probe["layout"] == "mobile"
-                            and number(probe["ratio"], "0.1 mobile ratio") > 1
-                        ),
+                        <= 1
+                        and probe["overflow"] == 0,
                         f"0.1 composition: {probe}",
                     )
                 if slug == "0-3":
@@ -320,15 +325,18 @@ def run_contract(url: str, screenshots: Path, evidence_path: Path) -> None:
                         probe["methodRows"] == 4 and probe["currentRows"] == 1,
                         f"0.4 data sheet: {probe}",
                     )
-                require(
-                    probe["background"] == "rgba(0, 0, 0, 0)"
-                    and probe["marginBefore"] == "16px"
-                    and probe["marginAfter"] == "16px"
-                    and 28 <= number(probe["flowGap"], "Figure flow gap") <= 40
-                    and str(probe["caption"]).endswith(".")
-                    and probe["overflow"] == 0,
-                    f"Figure editorial contract: {probe}",
-                )
+                if slug != "0-1":
+                    require(
+                        probe["background"] == "rgba(0, 0, 0, 0)"
+                        and probe["marginBefore"] == "16px"
+                        and probe["marginAfter"] == "16px"
+                        and 28
+                        <= number(probe["flowGap"], "Figure flow gap")
+                        <= 40
+                        and str(probe["caption"]).endswith(".")
+                        and probe["overflow"] == 0,
+                        f"Figure editorial contract: {probe}",
+                    )
                 evidence["chapters"][f"{slug}-{suffix}"] = probe
                 capture(browser, screenshots / f"{name}-{suffix}.png")
 

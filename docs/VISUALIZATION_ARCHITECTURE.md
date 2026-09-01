@@ -32,9 +32,8 @@ Use SVG/DOM for:
 
 - Course diagrams
 - token flow
-- GPT Architecture
-- Transformer Block
-- Self-Attention computation graph
+- semantic fallback for every Learn scene
+- exact two-dimensional relations and tables
 - arrows and residual paths
 - Korean labels
 - KaTeX formulas
@@ -52,6 +51,8 @@ Use Three.js/R3F for:
 
 - educational lookup, composition, or evolution scenes when depth or a short
   transition materially improves one concept;
+- representation, segmentation, addressing, prediction, sequence, pipeline,
+  residual, and attention scenes in Learn;
 - actual numerical evidence in Lab;
 - Q/K/V features
 - attention scores
@@ -88,11 +89,17 @@ GuideBlock.figure
 mode, reduced motion, context loss, error isolation, and instrumentation.
 Each scene module owns only its semantic state and R3F geometry.
 
-Current benchmark scenes:
+Shipped Learn scenes:
 
-- Token Embedding: `LOOKUP`
-- Position Embedding: `COMPOSITION`
-- Hidden State: `EVOLUTION`
+- Part 0: representation transformation, token segmentation, vocabulary
+  addressing, and tokenizer resegmentation;
+- Part 1: language-model fan-out, logit/probability transformation,
+  conditional accumulation, and autoregressive growth;
+- Part 2: embedding lookup, position composition, and hidden-state evolution;
+- GPT: end-to-end generation pipeline;
+- Transformer Block: exact Pre-LN path with two residual bypasses;
+- Self-Attention: Q/K/V, scores, causal mask, Softmax, weighted V, head merge,
+  and output projection.
 
 ## Concept capability
 
@@ -190,6 +197,8 @@ Worker values.
 - `frameloop="demand"` avoids idle 60fps work.
 - Learn DPR is clamped to 1–1.5; Lab Score Matrix remains 1–2.
 - Only the visible Learn scene owns a WebGL context.
+- R3F events use a stable document source so asynchronous setup cannot connect
+  to a removed Canvas host during route or viewport changes.
 - Nearby scenes may preload code at 480px but do not mount Canvas.
 - Current maximum matrix is `24 × 24`.
 - Geometry/material ownership stays inside the lazy scene.
@@ -214,9 +223,10 @@ the Guide and SVG architecture usable.
 
 Implemented now:
 
-- reusable visible-only Learning Scene foundation
-- Token Embedding, Position Embedding, and Hidden State benchmark scenes
-- semantic Part 2 fallbacks
+- reusable visible-only Learning Scene foundation;
+- fourteen canonical Learn Chapter scenes and semantic fallbacks;
+- ThreeUI-first stage, label, control, and annotation language;
+- scene-specific lazy chunks with demand rendering;
 - generic visualization contract
 - generic renderer registry
 - shared Three visualization surface
@@ -226,13 +236,8 @@ Implemented now:
 
 Not implemented:
 
-- Part 0 or Part 1 scene migrations
-- GPT, Transformer Block, or Self-Attention learning scenes
-- Q/K/V explorer
-- Scale animation
-- causal-mask animation
-- softmax animation
-- value aggregation
+- actual runtime tensor mode for Learn
+- all-head actual attention explorer
 - embedding projection
 - all-head dashboard
 - animation timeline

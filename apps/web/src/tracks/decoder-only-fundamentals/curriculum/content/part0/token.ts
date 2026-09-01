@@ -22,27 +22,38 @@ export const tokenChapterContent = {
         primaryNodeId: "decoder.root.input-context",
         blocks: [
           {
-            id: "p.why-split",
-            kind: "paragraph",
-            text: "문장은 길이가 제각각이고 단어와 기호가 이어져 있습니다. 모델이 앞뒤 순서를 따라 계산하려면, 먼저 입력을 셀 수 있는 칸으로 나누는 일이 필요합니다.",
-          },
-          {
-            id: "p.token-definition",
-            kind: "paragraph",
-            text: "이때 만들어지는 각 칸이 토큰(token)입니다. 토큰은 모델이 순서열의 한 칸으로 처리하는 텍스트 단위입니다.",
-          },
-          {
-            id: "p.boundary",
-            kind: "paragraph",
-            text: "어디에서 나눌지는 토크나이저(tokenizer)가 정합니다. 그래서 같은 문장도 어떤 토크나이저를 쓰느냐에 따라 토큰의 경계와 개수가 달라질 수 있습니다.",
-          },
-          {
-            id: "figure.token-boundary",
-            kind: "figure",
-            figureId: "decoder.diagram.tokenization.token",
-            size: "wide",
-            caption: "Token 경계는 tokenizer에 따라 달라질 수 있습니다.",
-            alt: "The cats are sleeping 문장이 다섯 token으로 나뉜 경계",
+            id: "narrative.token-boundary",
+            kind: "visual-narrative",
+            layout: "inline",
+            label: "문장에서 token 경계가 생기는 과정",
+            beats: [
+              {
+                id: "source",
+                label: "문장",
+                stage: "source",
+                text: "문장은 길이가 제각각이고 단어와 기호가 이어져 있습니다. 모델이 앞뒤 순서를 따라 계산하려면, 먼저 입력을 셀 수 있는 칸으로 나누는 일이 필요합니다.",
+              },
+              {
+                id: "boundaries",
+                label: "경계",
+                stage: "boundaries",
+                text: "이때 만들어지는 각 칸이 토큰(token)입니다. 토큰은 모델이 순서열의 한 칸으로 처리하는 텍스트 단위입니다.",
+              },
+              {
+                id: "split",
+                label: "Token",
+                stage: "split",
+                text: "어디에서 나눌지는 토크나이저(tokenizer)가 정합니다. 그래서 같은 문장도 어떤 토크나이저를 쓰느냐에 따라 토큰의 경계와 개수가 달라질 수 있습니다.",
+              },
+            ],
+            figure: {
+              id: "figure.token-boundary",
+              kind: "figure",
+              figureId: "decoder.diagram.tokenization.token",
+              size: "wide",
+              caption: "Token 경계는 tokenizer에 따라 달라질 수 있습니다.",
+              alt: "The cats are sleeping 문장이 다섯 token으로 나뉜 경계",
+            },
           },
           {
             id: "p.token-not-word",

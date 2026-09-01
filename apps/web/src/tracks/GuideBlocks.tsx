@@ -11,6 +11,7 @@ import type {
   RuntimeFactsPresentation,
   SelectedOperationPresentation,
 } from "./types";
+import { VisualNarrative } from "./VisualNarrative";
 
 interface GuideBlockViewProps<Id extends string> {
   readonly block: GuideBlock<Id>;
@@ -140,5 +141,7 @@ export function GuideBlockView<Id extends string>({
     }
     case "figure":
       return <LearningFigure block={block} registry={figures} />;
+    case "visual-narrative":
+      return <VisualNarrative block={block} registry={figures} />;
   }
 }

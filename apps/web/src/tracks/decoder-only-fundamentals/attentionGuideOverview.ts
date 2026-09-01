@@ -19,6 +19,59 @@ export const attentionGuideIntroduction: readonly GuideBlock[] = [
       },
     ],
   },
+  {
+    id: "narrative.self-attention",
+    kind: "visual-narrative",
+    layout: "sticky",
+    label: "Causal Self-Attention 계산 흐름",
+    beats: [
+      {
+        id: "overview",
+        label: "Overview",
+        stage: "overview",
+        text: "Causal Self-Attention은 Q와 K로 과거·현재 위치의 weights를 만들고, 그 weights로 V를 합쳐 새 token 표현을 만듭니다.",
+      },
+      {
+        id: "qkv",
+        label: "Q/K/V",
+        stage: "qkv",
+        text: "하나의 combined QKV projection이 X를 한 번 투영한 뒤 결과를 Query, Key, Value 세 부분으로 나눕니다. 세 표현은 같은 X에서 시작하지만 서로 다른 학습된 역할을 갖습니다.",
+      },
+      {
+        id: "scores",
+        label: "Scores",
+        stage: "scores",
+        text: "각 Query 위치와 모든 Key 위치의 내적을 계산하면 한 head에 T×T score 표가 생깁니다. 값이 클수록 이 head의 현재 비교에서 두 표현이 더 잘 맞는다는 뜻입니다. D가 커지면 내적의 절댓값도 커지기 쉬워 Softmax가 지나치게 뾰족해질 수 있으므로 score를 √D로 나누어 안정적인 범위로 조절합니다.",
+      },
+      {
+        id: "mask",
+        label: "Mask",
+        stage: "mask",
+        text: "텍스트 생성 시 위치 i는 아직 생성되지 않은 미래 위치를 참조하면 안 됩니다. Causal mask는 j가 i보다 큰 score를 차단해 Softmax weight가 0이 되게 합니다.",
+      },
+      {
+        id: "softmax",
+        label: "Softmax",
+        stage: "softmax",
+        text: "Softmax는 한 Query 행의 허용된 score를 양수로 바꾸고 합을 1로 맞춥니다. 이제 각 값은 다음 Value weighted sum에 사용할 비율입니다.",
+      },
+      {
+        id: "value",
+        label: "Value",
+        stage: "value",
+        text: "각 attention weight를 대응하는 Value 벡터에 곱해 모두 더하면 현재 Query 위치의 head output이 됩니다. Q와 K는 섞을 비율을 정했고, 실제로 전달되는 내용은 V에서 옵니다. H개 head output을 다시 C폭으로 이어 붙인 뒤 output projection을 적용하면 Transformer Block의 첫 residual 경로에 더해질 attention 출력 Y_attn이 됩니다.",
+      },
+    ],
+    figure: {
+      id: "figure.self-attention",
+      kind: "figure",
+      figureId: "self-attention",
+      size: "full",
+      caption:
+        "Causal Self-Attention은 Q와 K로 과거·현재 위치의 weights를 만들고, 그 weights로 V를 합쳐 새 token 표현을 만듭니다.",
+      alt: "Q/K/V projection, score matrix, causal mask, Softmax, weighted V, head merge, output projection 흐름",
+    },
+  },
 ];
 
 export const attentionOverviewSections: readonly LearningGuideSection[] = [
@@ -28,11 +81,6 @@ export const attentionOverviewSections: readonly LearningGuideSection[] = [
     primaryNodeId: "decoder.attention.qkv-projection",
     associatedNodeIds: ["decoder.attention.qkv-projection"],
     blocks: [
-      {
-        id: "qkv-combined-projection",
-        kind: "paragraph",
-        text: "하나의 combined QKV projection이 X를 한 번 투영한 뒤 결과를 Query, Key, Value 세 부분으로 나눕니다. 세 표현은 같은 X에서 시작하지만 서로 다른 학습된 역할을 갖습니다.",
-      },
       {
         id: "qkv-search-analogy",
         kind: "callout",

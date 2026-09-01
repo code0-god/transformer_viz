@@ -32,6 +32,7 @@ def run_contract(
     url: str,
     screenshots: Path,
     evidence_path: Path,
+    scenario: str = "all",
 ) -> None:
     shots: dict[str, str] = {}
     evidence: JsonObject = {}
@@ -52,12 +53,13 @@ def run_contract(
             evidence,
             shots,
         )
-        capture_visualization_phase(
-            browser,
-            screenshots,
-            evidence,
-            shots,
-        )
+        if scenario == "all":
+            capture_visualization_phase(
+                browser,
+                screenshots,
+                evidence,
+                shots,
+            )
 
         errors = browser_errors(browser)
         require(not errors["network"], f"Network errors: {errors['network']}")

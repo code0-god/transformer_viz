@@ -13,12 +13,18 @@ describe("HiddenStateSceneFigure", () => {
         name: "같은 tensor가 Block을 지나면 무엇이 달라질까요?",
       }),
     ).toBeVisible();
-    expect(screen.getAllByText("[T,C]")).toHaveLength(3);
+    const frames = screen.getAllByText("[T,C]");
+    expect(frames).toHaveLength(3);
+    expect(
+      frames.map((frame) =>
+        frame.closest("[data-shape]")?.getAttribute("data-shape"),
+      ),
+    ).toEqual(["[T,C]", "[T,C]", "[T,C]"]);
     const state = screen.getByTestId("hidden-scene-state");
     expect(within(state).getByText("t0 · the")).toBeVisible();
     expect(within(state).getByText("t1 · cat")).toBeVisible();
     expect(
-      within(state).getByText("shape 유지 · activation 변화"),
+      within(state).getByText("Shape stays · values change"),
     ).toBeVisible();
 
     fireEvent.click(screen.getByRole("button", { name: "X_1" }));
@@ -46,9 +52,7 @@ describe("HiddenStateSceneFigure", () => {
 
     const state = screen.getByTestId("hidden-scene-state");
     const replayBefore = state.getAttribute("data-replay");
-    fireEvent.click(
-      screen.getByRole("button", { name: "Evolution 다시 보기" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "다시 보기" }));
 
     expect(state).toHaveAttribute("data-stage", "x0");
     expect(state.getAttribute("data-replay")).not.toBe(replayBefore);
@@ -68,7 +72,9 @@ describe("HiddenStateSceneFigure", () => {
         name: "Shape를 유지하며 값이 바뀌는 hidden state 흐름",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText("activation 값은 예시입니다.")).toBeVisible();
+    expect(
+      screen.getByText("Activation 값은 학습을 위한 예시입니다."),
+    ).toBeVisible();
     expect(screen.queryByText(/causal prefix/i)).toBeNull();
   });
 });

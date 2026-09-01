@@ -3,151 +3,126 @@ import type { Group } from "three";
 
 import { LearningSceneCanvas } from "../LearningSceneCanvas";
 import { LEARNING_SCENE_COLORS } from "../scenePalette";
-import { SceneArrow, TensorGrid, VectorRow } from "../scenePrimitives";
+import {
+  FlowLine,
+  SelectionFrame,
+  TensorGrid,
+  TokenChip,
+  VectorStrip,
+} from "../scenePrimitives";
 import type { LearningSceneRendererProps } from "../sceneTypes";
 import { useDemandTransition } from "../useDemandTransition";
 import type { TokenEmbeddingState } from "./TokenEmbeddingSceneFigure";
 
-const TABLE_VALUES = [
-  { id: "r0-c0", value: 0.2 },
-  { id: "r0-c1", value: -0.6 },
-  { id: "r0-c2", value: 0.4 },
-  { id: "r0-c3", value: 0.8 },
-  { id: "r1-c0", value: -0.3 },
-  { id: "r1-c1", value: 0.7 },
-  { id: "r1-c2", value: -0.8 },
-  { id: "r1-c3", value: 0.1 },
-  { id: "r2-c0", value: 0.6 },
-  { id: "r2-c1", value: 0.3 },
-  { id: "r2-c2", value: -0.4 },
-  { id: "r2-c3", value: 0.9 },
-  { id: "r3-c0", value: -0.7 },
-  { id: "r3-c1", value: 0.5 },
-  { id: "r3-c2", value: 0.2 },
-  { id: "r3-c3", value: -0.2 },
-  { id: "r4-c0", value: 0.8 },
-  { id: "r4-c1", value: -0.5 },
-  { id: "r4-c2", value: 0.7 },
-  { id: "r4-c3", value: 0.3 },
-] as const;
+const TABLE_VALUES = Array.from({ length: 30 }, (_, index) => ({
+  id: `embedding-r${Math.floor(index / 6)}-c${index % 6}`,
+  value: (((index * 37) % 19) - 9) / 10,
+}));
 
 const VECTOR_VALUES = {
-  cat: [
-    { id: "cat-c0", value: -0.7 },
-    { id: "cat-c1", value: 0.5 },
-    { id: "cat-c2", value: 0.2 },
-    { id: "cat-c3", value: -0.2 },
-  ],
-  the: [
-    { id: "the-c0", value: -0.3 },
-    { id: "the-c1", value: 0.7 },
-    { id: "the-c2", value: -0.8 },
-    { id: "the-c3", value: 0.1 },
-  ],
+  cat: Array.from({ length: 6 }, (_, index) => ({
+    id: `cat-c${index}`,
+    value: (((index * 11) % 9) - 4) / 5,
+  })),
+  the: Array.from({ length: 6 }, (_, index) => ({
+    id: `the-c${index}`,
+    value: (((index * 7) % 11) - 5) / 6,
+  })),
 } as const;
 
-function TokenLookupGeometry({
+function EmbeddingGeometry({
+  mobile,
   onFrame,
   reducedMotion,
   state,
-  viewport,
-}: Pick<
-  LearningSceneRendererProps<TokenEmbeddingState>,
-  "onFrame" | "reducedMotion" | "state" | "viewport"
->) {
+}: Readonly<{
+  mobile: boolean;
+  onFrame: () => void;
+  reducedMotion: boolean;
+  state: TokenEmbeddingState;
+}>) {
+  const selectedRow = useRef<Group>(null);
   const extracted = useRef<Group>(null);
-  const connector = useRef<Group>(null);
-  const selectedRowGroup = useRef<Group>(null);
-  const mobile = viewport === "mobile";
-  const selectedRow = state.token === "the" ? 1 : 3;
-  const finalVector = mobile
-    ? ([0, -2.72, 0.35] as const)
-    : ([3.15, -0.05, 0.4] as const);
-  const originVector = mobile
-    ? ([0, -1.25, 0] as const)
-    : ([1.1, -0.05, 0] as const);
   const apply = useCallback(
     (progress: number) => {
-      const selectionProgress =
-        state.phase === "id" ? 0 : state.phase === "lookup" ? progress : 1;
-      const extractionProgress = state.phase === "vector" ? progress : 0;
-      if (selectedRowGroup.current !== null) {
-        selectedRowGroup.current.position.z = selectionProgress * 0.55;
+      if (selectedRow.current !== null) {
+        const lift =
+          state.phase === "id" ? 0 : state.phase === "lookup" ? 0.2 : 0.52;
+        selectedRow.current.position.z = lift * progress;
       }
       if (extracted.current !== null) {
-        extracted.current.visible = state.phase === "vector";
-        extracted.current.position.set(
-          originVector[0] +
-            (finalVector[0] - originVector[0]) * extractionProgress,
-          originVector[1] +
-            (finalVector[1] - originVector[1]) * extractionProgress,
-          originVector[2] +
-            (finalVector[2] - originVector[2]) * extractionProgress,
+        const visible = state.phase === "vector";
+        extracted.current.scale.setScalar(
+          visible ? 0.82 + 0.18 * progress : 0.82,
         );
-      }
-      if (connector.current !== null) {
-        connector.current.visible = state.phase === "vector";
-        connector.current.scale.setScalar(0.35 + extractionProgress * 0.65);
+        extracted.current.position.z = visible ? 0.34 * progress : 0;
       }
     },
-    [finalVector, originVector, state.phase],
+    [state.phase],
   );
-
   useDemandTransition({
     apply,
+    duration: 0.58,
     onFrame,
     reducedMotion,
     transitionKey: `${state.token}-${state.phase}-${state.replay}`,
   });
 
+  const tokenPosition = mobile
+    ? ([0, 3.35, 0] as const)
+    : ([-4.5, 0, 0] as const);
+  const tablePosition = mobile
+    ? ([0, 0, 0] as const)
+    : ([-0.45, 0, 0] as const);
+  const vectorPosition = mobile
+    ? ([0, -3.4, 0] as const)
+    : ([4.1, 0, 0] as const);
+
   return (
-    <group
-      position={mobile ? [0, 0.1, 0] : [0, 0, 0]}
-      rotation={mobile ? [0.06, -0.12, 0] : [0.08, -0.18, 0]}
-      scale={mobile ? 0.88 : 1}
-    >
-      <mesh position={mobile ? [0, 3, -0.2] : [-3.25, 0, -0.15]}>
-        <boxGeometry args={[1.45, 0.82, 0.28]} />
-        <meshStandardMaterial
-          color={LEARNING_SCENE_COLORS.token}
-          emissive={LEARNING_SCENE_COLORS.token}
-          emissiveIntensity={0.15}
-          metalness={0.08}
-          roughness={0.64}
+    <group>
+      <TokenChip position={tokenPosition} selected={state.phase === "id"} />
+      <group
+        position={tablePosition}
+        scale={mobile ? [1.02, 1.02, 1] : [1.28, 1.28, 1]}
+      >
+        <TensorGrid
+          cols={6}
+          position={[0, 0, 0]}
+          rows={5}
+          selectionActive={state.phase !== "id"}
+          selectedRow={2}
+          selectedRowRef={selectedRow}
+          values={TABLE_VALUES}
         />
-      </mesh>
-      <TensorGrid
-        cols={4}
-        position={mobile ? [0, 0.15, 0] : [-0.35, 0, 0]}
-        rowLift={0}
-        rows={5}
-        selectionActive={state.phase !== "id"}
-        selectedRow={selectedRow}
-        selectedRowRef={selectedRowGroup}
-        values={TABLE_VALUES}
-      />
-      {state.phase === "id" ? null : (
-        <SceneArrow
-          color={LEARNING_SCENE_COLORS.token}
-          position={mobile ? [0, 1.65, 0.1] : [-1.95, 0, 0.1]}
-          rotation={mobile ? [0, 0, 0] : [0, 0, Math.PI / 2]}
-          scale={mobile ? 1.1 : 1}
-        />
-      )}
-      <group ref={connector}>
-        <SceneArrow
-          position={mobile ? [0, -1.7, 0.1] : [1.62, -0.05, 0.15]}
-          rotation={mobile ? [0, 0, 0] : [0, 0, Math.PI / 2]}
-          scale={mobile ? 1.15 : 1}
+        <SelectionFrame
+          color={LEARNING_SCENE_COLORS.graphite}
+          position={[0, 0, -0.08]}
+          size={[3.85, 3.25, 0.12]}
         />
       </group>
-      <group ref={extracted} visible={state.phase === "vector"}>
-        <VectorRow
-          color={LEARNING_SCENE_COLORS.selected}
+      <group
+        ref={extracted}
+        position={vectorPosition}
+        visible={state.phase === "vector"}
+      >
+        <VectorStrip
+          color={LEARNING_SCENE_COLORS.output}
           position={[0, 0, 0]}
           values={VECTOR_VALUES[state.token]}
         />
       </group>
+      <FlowLine
+        color={LEARNING_SCENE_COLORS.graphite}
+        position={mobile ? [0, 2.15, -0.15] : [-2.72, 0, -0.15]}
+        rotation={mobile ? [0, 0, 0] : [0, 0, Math.PI / 2]}
+        scale={1.15}
+      />
+      <FlowLine
+        color={LEARNING_SCENE_COLORS.output}
+        position={mobile ? [0, -2.15, -0.15] : [2.15, 0, -0.15]}
+        rotation={mobile ? [0, 0, 0] : [0, 0, Math.PI / 2]}
+        scale={1.15}
+      />
     </group>
   );
 }
@@ -163,11 +138,12 @@ export default function TokenEmbeddingScene({
   state,
   viewport,
 }: LearningSceneRendererProps<TokenEmbeddingState>) {
+  const mobile = viewport === "mobile";
   return (
     <LearningSceneCanvas
       camera={{
-        fov: viewport === "mobile" ? 46 : 42,
-        position: viewport === "mobile" ? [0, 0.2, 10] : [0, 0.4, 9],
+        fov: mobile ? 48 : 42,
+        position: mobile ? [0, 0, 13] : [0, 0.8, 11],
       }}
       onContextCreated={onContextCreated}
       onContextDisposed={onContextDisposed}
@@ -176,11 +152,11 @@ export default function TokenEmbeddingScene({
       sceneId={sceneId}
       viewport={viewport}
     >
-      <TokenLookupGeometry
+      <EmbeddingGeometry
+        mobile={mobile}
         onFrame={onFrame}
         reducedMotion={reducedMotion}
         state={state}
-        viewport={viewport}
       />
     </LearningSceneCanvas>
   );

@@ -15,11 +15,6 @@ export const attentionOperationSections: readonly LearningGuideSection[] = [
     primaryNodeId: "decoder.attention.score-matmul",
     associatedNodeIds: ["decoder.attention.score-matmul"],
     blocks: [
-      {
-        id: "score-explanation",
-        kind: "paragraph",
-        text: "각 Query 위치와 모든 Key 위치의 내적을 계산하면 한 head에 T×T score 표가 생깁니다. 값이 클수록 이 head의 현재 비교에서 두 표현이 더 잘 맞는다는 뜻입니다.",
-      },
       scoreProbabilityWarning,
       {
         id: "score-formula",
@@ -40,11 +35,6 @@ export const attentionOperationSections: readonly LearningGuideSection[] = [
     associatedNodeIds: ["decoder.attention.scale"],
     blocks: [
       {
-        id: "scale-explanation",
-        kind: "paragraph",
-        text: "D가 커지면 내적의 절댓값도 커지기 쉬워 Softmax가 지나치게 뾰족해질 수 있습니다. score를 √D로 나누어 비교값의 크기를 안정적인 범위로 조절합니다.",
-      },
-      {
         id: "scale-formula",
         kind: "formula",
         formulaId: "attention-scale",
@@ -62,11 +52,6 @@ export const attentionOperationSections: readonly LearningGuideSection[] = [
     primaryNodeId: "decoder.attention.causal-mask",
     associatedNodeIds: ["decoder.attention.causal-mask"],
     blocks: [
-      {
-        id: "mask-explanation",
-        kind: "paragraph",
-        text: "텍스트 생성 시 위치 i는 아직 생성되지 않은 미래 위치를 참조하면 안 됩니다. Causal mask는 j가 i보다 큰 score를 차단해 Softmax weight가 0이 되게 합니다.",
-      },
       {
         id: "mask-four-token-example",
         kind: "example",
@@ -98,11 +83,6 @@ export const attentionOperationSections: readonly LearningGuideSection[] = [
     associatedNodeIds: ["decoder.attention.softmax"],
     blocks: [
       {
-        id: "softmax-explanation",
-        kind: "paragraph",
-        text: "Softmax는 한 Query 행의 허용된 score를 양수로 바꾸고 합을 1로 맞춥니다. 이제 각 값은 다음 Value weighted sum에 사용할 비율입니다.",
-      },
-      {
         id: "softmax-row-example",
         kind: "example",
         title: "한 Query 행의 예",
@@ -126,11 +106,6 @@ export const attentionOperationSections: readonly LearningGuideSection[] = [
     primaryNodeId: "decoder.attention.value-matmul",
     associatedNodeIds: ["decoder.attention.value-matmul"],
     blocks: [
-      {
-        id: "value-explanation",
-        kind: "paragraph",
-        text: "각 attention weight를 대응하는 Value 벡터에 곱해 모두 더하면 현재 Query 위치의 head output이 됩니다. Q와 K는 섞을 비율을 정했고, 실제로 전달되는 내용은 V에서 옵니다.",
-      },
       {
         id: "value-expansion-example",
         kind: "example",
@@ -159,11 +134,6 @@ export const attentionOperationSections: readonly LearningGuideSection[] = [
       "decoder.attention.output-projection",
     ],
     blocks: [
-      {
-        id: "merge-explanation",
-        kind: "paragraph",
-        text: "H개 head output을 다시 C폭으로 이어 붙인 뒤 output projection을 적용합니다. 결과 Y_attn은 Transformer Block의 첫 residual 경로에 더해질 attention 출력입니다.",
-      },
       {
         id: "merge-formula",
         kind: "formula",

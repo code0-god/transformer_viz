@@ -79,6 +79,7 @@ export function LearningGuide<Id extends string>({
   );
   const nextStep = page.nextStep;
   const SectionHeading = presentation === "chapter" ? "h2" : "h4";
+  const sectionAriaLevel = presentation === "route" ? 3 : undefined;
 
   return (
     <article
@@ -89,7 +90,9 @@ export function LearningGuide<Id extends string>({
     >
       {presentation === "route" ? (
         <header className="learning-guide-header">
-          <h3 id={`${page.id}-title`}>{page.title}</h3>
+          <h3 id={`${page.id}-title`} aria-level={2}>
+            {page.title}
+          </h3>
           <p className="learning-guide-goal" data-testid="learning-goal">
             <strong>학습 목표</strong>
             <span>{page.learningGoal}</span>
@@ -176,7 +179,10 @@ export function LearningGuide<Id extends string>({
             >
               {section.title === "" ? null : (
                 <div className="learning-guide-section-heading">
-                  <SectionHeading id={sectionHeadingId(page.id, section.id)}>
+                  <SectionHeading
+                    id={sectionHeadingId(page.id, section.id)}
+                    aria-level={sectionAriaLevel}
+                  >
                     {section.title}
                   </SectionHeading>
                 </div>
@@ -205,7 +211,9 @@ export function LearningGuide<Id extends string>({
           data-testid="key-takeaway"
           aria-label="핵심 정리"
         >
-          <SectionHeading>핵심 정리</SectionHeading>
+          <SectionHeading aria-level={sectionAriaLevel}>
+            핵심 정리
+          </SectionHeading>
           {page.keyTakeaway.map((block) => (
             <GuideBlockView
               key={block.id}
@@ -227,7 +235,9 @@ export function LearningGuide<Id extends string>({
           className="learning-guide-glossary"
           data-testid="guide-glossary"
         >
-          <SectionHeading>용어 정리</SectionHeading>
+          <SectionHeading aria-level={sectionAriaLevel}>
+            용어 정리
+          </SectionHeading>
           <dl>
             {glossaryEntries.map((entry) => (
               <div key={entry.id} id={`${page.id}-glossary-${entry.id}`}>

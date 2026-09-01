@@ -16,7 +16,9 @@
     "lint": "biome check .",
     "preview": "vite preview",
     "pretypecheck": "../../scripts/ensure-worker-wasm.sh",
-    "test": "vitest run",
+    "test": "pnpm test:parallel && pnpm test:lifecycle",
+    "test:lifecycle": "vitest run --config vitest.lifecycle.config.ts",
+    "test:parallel": "vitest run --maxWorkers=2 --exclude src/tracks/learning-scenes/SceneFigure.test.tsx",
     "typecheck": "python3 ../../scripts/worker_verified_snapshot.py ../.. src/generated/worker -- pnpm --dir apps/web exec tsc --noEmit -p {verified-tsconfig}"
   },
   "dependencies": {

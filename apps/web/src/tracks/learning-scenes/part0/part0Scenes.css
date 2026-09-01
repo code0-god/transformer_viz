@@ -1,0 +1,57 @@
+.part0-scene__controls {
+  display: grid;
+  gap: var(--s1);
+}
+
+.part0-scene__note {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.part0-scene__segment-labels {
+  position: absolute;
+  inset-block-start: 61%;
+  inset-inline-start: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.2rem, 0.7vw, 0.45rem);
+  max-inline-size: 90%;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  transform: translate(-50%, -50%);
+}
+
+.part0-scene__segment-labels li {
+  min-inline-size: 0;
+  padding: 0.25rem 0.42rem;
+  border: 1px solid rgb(31 104 92 / 34%);
+  border-radius: 0.2rem;
+  background: rgb(237 247 244 / 92%);
+  color: #174e45;
+  font-size: clamp(0.66rem, 1vw, 0.76rem);
+  font-weight: 720;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.part0-scene__segment-labels[data-tone="output"] li {
+  border-color: rgb(47 111 100 / 28%);
+  background: rgb(246 249 248 / 94%);
+  color: #225b52;
+}
+
+@media (max-width: 40rem) {
+  .part0-scene__segment-labels {
+    inset-block-start: 64%;
+    flex-wrap: wrap;
+    inline-size: 88%;
+  }
+
+  .part0-scene__segment-labels li {
+    font-size: 0.7rem;
+  }
+}

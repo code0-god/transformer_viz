@@ -3,7 +3,7 @@ import type { Group } from "three";
 
 import { LearningSceneCanvas } from "../LearningSceneCanvas";
 import { LEARNING_SCENE_COLORS } from "../scenePalette";
-import { SceneArrow, TensorGrid } from "../scenePrimitives";
+import { FlowLine, SelectionFrame, TensorGrid } from "../scenePrimitives";
 import type { LearningSceneRendererProps } from "../sceneTypes";
 import { useDemandTransition } from "../useDemandTransition";
 import type {
@@ -11,142 +11,109 @@ import type {
   HiddenStateStage,
 } from "./HiddenStateSceneFigure";
 
-const STATE_VALUES = {
-  x0: [
-    { id: "x0-t0-c0", value: 0.2 },
-    { id: "x0-t0-c1", value: -0.7 },
-    { id: "x0-t0-c2", value: 0.4 },
-    { id: "x0-t0-c3", value: 0.8 },
-    { id: "x0-t1-c0", value: -0.6 },
-    { id: "x0-t1-c1", value: 0.3 },
-    { id: "x0-t1-c2", value: 0.9 },
-    { id: "x0-t1-c3", value: -0.4 },
-  ],
-  x1: [
-    { id: "x1-t0-c0", value: -0.7 },
-    { id: "x1-t0-c1", value: 0.4 },
-    { id: "x1-t0-c2", value: 0.8 },
-    { id: "x1-t0-c3", value: -0.3 },
-    { id: "x1-t1-c0", value: 0.3 },
-    { id: "x1-t1-c1", value: -0.9 },
-    { id: "x1-t1-c2", value: 0.5 },
-    { id: "x1-t1-c3", value: 0.7 },
-  ],
-  xn: [
-    { id: "xn-t0-c0", value: 0.4 },
-    { id: "xn-t0-c1", value: 0.9 },
-    { id: "xn-t0-c2", value: -0.3 },
-    { id: "xn-t0-c3", value: 0.7 },
-    { id: "xn-t1-c0", value: -0.8 },
-    { id: "xn-t1-c1", value: 0.5 },
-    { id: "xn-t1-c2", value: 0.7 },
-    { id: "xn-t1-c3", value: -0.2 },
-  ],
-} as const;
+const STATE_VALUES: Readonly<
+  Record<HiddenStateStage, readonly Readonly<{ id: string; value: number }>[]>
+> = {
+  x0: [0.2, -0.7, 0.4, 0.8, -0.6, 0.3, -0.9, 0.5].map((value, index) => ({
+    id: `x0-c${index}`,
+    value,
+  })),
+  x1: [0.72, -0.22, -0.58, 0.36, 0.18, -0.82, 0.64, -0.31].map(
+    (value, index) => ({ id: `x1-c${index}`, value }),
+  ),
+  xn: [-0.42, 0.88, 0.26, -0.65, 0.76, -0.36, 0.54, 0.21].map(
+    (value, index) => ({ id: `xn-c${index}`, value }),
+  ),
+};
 
-function moveSlab(
-  slab: Group | null,
-  selected: boolean,
-  progress: number,
-): void {
-  if (slab === null) return;
-  const amount = selected ? progress : 0;
-  slab.position.z = amount * 0.65;
-  slab.scale.setScalar(selected ? 0.94 + amount * 0.12 : 0.9);
-}
+const STAGES = ["x0", "x1", "xn"] as const;
 
-function HiddenEvolutionGeometry({
+function HiddenGeometry({
+  mobile,
   onFrame,
   reducedMotion,
   state,
-  viewport,
-}: Pick<
-  LearningSceneRendererProps<HiddenStateSceneState>,
-  "onFrame" | "reducedMotion" | "state" | "viewport"
->) {
-  const x0 = useRef<Group>(null);
-  const x1 = useRef<Group>(null);
-  const xn = useRef<Group>(null);
-  const mobile = viewport === "mobile";
+}: Readonly<{
+  mobile: boolean;
+  onFrame: () => void;
+  reducedMotion: boolean;
+  state: HiddenStateSceneState;
+}>) {
+  const frames = useRef<(Group | null)[]>([]);
+  const active = STAGES.indexOf(state.stage);
   const apply = useCallback(
     (progress: number) => {
-      moveSlab(x0.current, state.stage === "x0", progress);
-      moveSlab(x1.current, state.stage === "x1", progress);
-      moveSlab(xn.current, state.stage === "xn", progress);
+      frames.current.forEach((frame, index) => {
+        if (frame === null) return;
+        frame.visible = index === active;
+        frame.position.z = index === active ? 0.24 * progress : 0;
+      });
     },
-    [state.stage],
+    [active],
   );
-
   useDemandTransition({
     apply,
+    duration: 0.46,
     onFrame,
     reducedMotion,
     transitionKey: `${state.stage}-${state.replay}`,
   });
 
-  const layouts: Readonly<
-    Record<HiddenStateStage, readonly [number, number, number]>
-  > = mobile
-    ? {
-        x0: [0, 2.55, -0.5],
-        x1: [0, 0, 0],
-        xn: [0, -2.55, 0.5],
-      }
-    : {
-        x0: [-3.1, 0, -0.55],
-        x1: [0, 0, 0],
-        xn: [3.1, 0, 0.55],
-      };
+  const positions = mobile
+    ? ([
+        [0, 2.65, 0],
+        [0, 0, 0],
+        [0, -2.65, 0],
+      ] as const)
+    : ([
+        [-3.35, 0, 0],
+        [0, 0, 0],
+        [3.35, 0, 0],
+      ] as const);
 
   return (
-    <group
-      rotation={mobile ? [0.22, -0.12, 0] : [0.28, -0.15, 0]}
-      scale={mobile ? 0.9 : 1.15}
-    >
-      <group position={[...layouts.x0]}>
-        <group ref={x0}>
-          <TensorGrid
-            color={LEARNING_SCENE_COLORS.hidden}
-            cols={4}
-            position={[0, 0, 0]}
-            rows={2}
-            selectionActive={false}
-            values={STATE_VALUES.x0}
-          />
-        </group>
-      </group>
-      <SceneArrow
-        position={mobile ? [0, 1.28, 0] : [-1.55, 0, 0]}
+    <group>
+      {STAGES.map((stage, index) => {
+        const position = positions[index] ?? positions[0];
+        return (
+          <group key={stage} position={[...position]}>
+            <SelectionFrame
+              color={LEARNING_SCENE_COLORS.graphite}
+              position={[0, 0, 0]}
+              size={[2.65, 1.38, 0.28]}
+            />
+            <TensorGrid
+              cols={4}
+              encoding="intensity"
+              position={[0, 0, 0]}
+              rows={2}
+              selectionActive={false}
+              values={STATE_VALUES[stage]}
+            />
+            <group
+              ref={(frame) => {
+                frames.current[index] = frame;
+              }}
+            >
+              <SelectionFrame
+                color={LEARNING_SCENE_COLORS.selected}
+                position={[0, 0, 0]}
+                size={[2.75, 1.48, 0.32]}
+              />
+            </group>
+          </group>
+        );
+      })}
+      <FlowLine
+        color={LEARNING_SCENE_COLORS.graphite}
+        position={mobile ? [0, 1.35, -0.12] : [-1.68, 0, -0.12]}
         rotation={mobile ? [0, 0, 0] : [0, 0, Math.PI / 2]}
       />
-      <group position={[...layouts.x1]}>
-        <group ref={x1}>
-          <TensorGrid
-            color={LEARNING_SCENE_COLORS.hidden}
-            cols={4}
-            position={[0, 0, 0]}
-            rows={2}
-            selectionActive={false}
-            values={STATE_VALUES.x1}
-          />
-        </group>
-      </group>
-      <SceneArrow
-        position={mobile ? [0, -1.28, 0] : [1.55, 0, 0]}
+      <FlowLine
+        color={LEARNING_SCENE_COLORS.graphite}
+        position={mobile ? [0, -1.35, -0.12] : [1.68, 0, -0.12]}
         rotation={mobile ? [0, 0, 0] : [0, 0, Math.PI / 2]}
       />
-      <group position={[...layouts.xn]}>
-        <group ref={xn}>
-          <TensorGrid
-            color={LEARNING_SCENE_COLORS.hidden}
-            cols={4}
-            position={[0, 0, 0]}
-            rows={2}
-            selectionActive={false}
-            values={STATE_VALUES.xn}
-          />
-        </group>
-      </group>
     </group>
   );
 }
@@ -162,11 +129,12 @@ export default function HiddenStateScene({
   state,
   viewport,
 }: LearningSceneRendererProps<HiddenStateSceneState>) {
+  const mobile = viewport === "mobile";
   return (
     <LearningSceneCanvas
       camera={{
-        fov: viewport === "mobile" ? 46 : 42,
-        position: viewport === "mobile" ? [0, 0, 10.5] : [0, 0.4, 10],
+        fov: mobile ? 48 : 40,
+        position: mobile ? [0, 0, 13.5] : [0, 0.7, 9.6],
       }}
       onContextCreated={onContextCreated}
       onContextDisposed={onContextDisposed}
@@ -175,11 +143,11 @@ export default function HiddenStateScene({
       sceneId={sceneId}
       viewport={viewport}
     >
-      <HiddenEvolutionGeometry
+      <HiddenGeometry
+        mobile={mobile}
         onFrame={onFrame}
         reducedMotion={reducedMotion}
         state={state}
-        viewport={viewport}
       />
     </LearningSceneCanvas>
   );

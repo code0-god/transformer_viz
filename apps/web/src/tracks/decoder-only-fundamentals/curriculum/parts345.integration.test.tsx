@@ -97,7 +97,11 @@ describe("Parts 3 through 5 incumbent route integration", () => {
         "Decoder-only GPT는 현재 context에서 다음 token을 예측하고, 선택된 token을 다시 context에 붙여 생성을 반복합니다.",
       ).tagName,
     ).toBe("FIGCAPTION");
-    expect(within(figure).queryByRole("button")).toBeNull();
+    expect(
+      within(figure).getByRole("group", {
+        name: "GPT generation pipeline",
+      }),
+    ).toHaveAttribute("data-threeui-control", "scene-step-rail");
     expect(screen.queryByTestId("open-diagram-viewer")).toBeNull();
     const detail = within(figure).getByRole("link", {
       name: "Transformer Block 설명으로 이동",

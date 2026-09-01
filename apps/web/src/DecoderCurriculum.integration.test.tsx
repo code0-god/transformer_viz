@@ -49,7 +49,7 @@ function FixtureDiagram(_props: CurriculumDiagramRendererProps): ReactElement {
 }
 
 const PART0_PRODUCTION_CHAPTERS = [
-  ["자연어 처리란?", "decoder.curriculum.guide.0.1", "자연어 처리 추론 경로"],
+  ["자연어 처리란?", "decoder.curriculum.guide.0.1", "자연어 처리 연속 설명"],
   ["Token이란?", "decoder.curriculum.guide.0.2", "Token 개념 흐름"],
   [
     "Vocabulary와 Token ID",
@@ -284,6 +284,38 @@ describe("Decoder curriculum production integration", () => {
     }
   });
 
+  test("hands Golden slide five to Token without Worker traffic", async () => {
+    // Given: Chapter 0.1 is ready and the learner selects its final slide.
+    const worker = readyCurriculum();
+    const user = userEvent.setup();
+    const postsBefore = worker.posted.length;
+    await user.click(screen.getByRole("button", { name: "5단계: 다음 질문" }));
+
+    // Then: the slide owns the only Chapter 0.2 handoff.
+    expect(
+      screen.getAllByRole("link", { name: "다음: Token이란?" }),
+    ).toHaveLength(1);
+    expect(
+      screen.queryByRole("navigation", { name: "Chapter 이동" }),
+    ).toBeNull();
+
+    // When: the slide-scoped Chapter handoff is activated.
+    const handoff = document.querySelector(
+      "[data-next-chapter='decoder.chapter.0.2']",
+    );
+    if (!(handoff instanceof HTMLAnchorElement)) {
+      throw new Error("Golden Token handoff missing");
+    }
+    await user.click(handoff);
+
+    // Then: Chapter 0.2 owns URL and focus without model work.
+    expect(
+      screen.getByRole("heading", { name: "Token이란?", level: 1 }),
+    ).toHaveFocus();
+    expect(window.location.hash).toBe("#/learn/decoder-only-fundamentals/0-2");
+    expect(worker.posted).toHaveLength(postsBefore);
+  });
+
   test("starts a directly loaded Chapter at top without resetting local state", async () => {
     const scrollTo = vi
       .spyOn(window, "scrollTo")
@@ -368,7 +400,7 @@ describe("Decoder curriculum production integration", () => {
         name: "언어로 해결할 수 있는 문제",
         level: 2,
       }),
-    ).not.toBeNull();
+    ).toBeNull();
   });
 
   test("marks the current ToC link without requiring a second activation step", async () => {
@@ -412,7 +444,7 @@ describe("Decoder curriculum production integration", () => {
         name: "언어로 해결할 수 있는 문제",
         level: 2,
       }),
-    ).not.toBeNull();
+    ).toBeNull();
   });
 
   test("keeps generic Chapter content free of viewer controls", async () => {
@@ -467,7 +499,7 @@ describe("Decoder curriculum production integration", () => {
         name: "언어로 해결할 수 있는 문제",
         level: 2,
       }),
-    ).not.toBeNull();
+    ).toBeNull();
   });
 
   test.each(PART0_PRODUCTION_CHAPTERS)(

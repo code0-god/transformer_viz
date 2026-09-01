@@ -11,7 +11,7 @@ import { TokenComparisonDiagram } from "./TokenComparisonDiagram";
 import { VocabularyAddressDiagram } from "./VocabularyAddressDiagram";
 
 const CHAPTERS = [
-  ["자연어 처리란?", "자연어 처리 추론 경로"],
+  ["자연어 처리란?", "자연어 처리 연속 설명"],
   ["Token이란?", "Token 개념 흐름"],
   [
     "Vocabulary와 Token ID",
@@ -24,8 +24,8 @@ const INLINE_CHAPTERS = [
   [
     "자연어 처리란?",
     "decoder.diagram.intro.nlp",
-    "자연어 처리 추론 경로",
-    "언어는 숫자 표현으로 바뀐 뒤 모델 계산을 거쳐 결과로 사용됩니다.",
+    "자연어 처리 연속 설명",
+    "문장이 숫자 표현으로 바뀌고 계산을 거쳐 사람이 활용하는 결과로 이어집니다.",
   ],
   [
     "Token이란?",
@@ -47,11 +47,12 @@ const INLINE_CHAPTERS = [
   ],
 ] as const;
 
-const BEGINNER_STAGE_LABELS = [
-  "사람이 쓰는 언어",
-  "숫자로 표현",
-  "모델 계산",
-  "활용 결과",
+const NLP_GOLDEN_STAGES = [
+  "language",
+  "numeric",
+  "transform",
+  "result",
+  "token-preview",
 ] as const;
 
 const FORBIDDEN_STAGE_LABELS = [
@@ -82,68 +83,26 @@ function readyCurriculum(): TestWorker {
 }
 
 describe("Part 0 curriculum Diagrams", () => {
-  test("lays out Chapter 0.1 horizontally on desktop", () => {
+  test("renders one persistent sentence and horizontal number sequence", () => {
     const { container } = render(<NlpPipelineDiagram />);
-    const stages = Array.from(container.querySelectorAll("[data-stage]"));
-    const positions = stages.map((stage) => {
-      const rect = stage.querySelector("rect");
-      return {
-        x: Number(rect?.getAttribute("x")),
-        y: Number(rect?.getAttribute("y")),
-      };
-    });
-
-    expect(container.querySelector("svg")).toHaveAttribute(
-      "viewBox",
-      "0 0 940 240",
+    expect(screen.getByTestId("nlp-golden-visual")).toHaveAttribute(
+      "data-nlp-stage",
+      "language",
     );
-    expect(new Set(positions.map(({ y }) => y)).size).toBe(1);
-    expect(positions.map(({ x }) => x)).toEqual(
-      [...positions.map(({ x }) => x)].sort((left, right) => left - right),
-    );
+    expect(screen.getByTestId("nlp-golden-sentence")).toBeVisible();
+    expect(screen.getByTestId("nlp-golden-numeric-strip")).toBeInTheDocument();
+    expect(container.querySelectorAll("[data-nlp-value]")).toHaveLength(6);
+    expect(container.querySelectorAll("[data-nlp-cell]")).toHaveLength(0);
+    expect(container.querySelector("rect")).toBeNull();
   });
 
-  test("stacks Chapter 0.1 vertically on mobile", () => {
-    const originalMatchMedia = window.matchMedia;
-    Object.defineProperty(window, "matchMedia", {
-      configurable: true,
-      value: () =>
-        ({
-          matches: true,
-          media: "(max-width: 44rem)",
-          onchange: null,
-          addEventListener: () => undefined,
-          removeEventListener: () => undefined,
-          addListener: () => undefined,
-          removeListener: () => undefined,
-          dispatchEvent: () => true,
-        }) satisfies MediaQueryList,
-    });
-
-    try {
-      const { container } = render(<NlpPipelineDiagram />);
-      const stages = Array.from(container.querySelectorAll("[data-stage]"));
-      const positions = stages.map((stage) => {
-        const rect = stage.querySelector("rect");
-        return {
-          x: Number(rect?.getAttribute("x")),
-          y: Number(rect?.getAttribute("y")),
-        };
-      });
-      expect(container.querySelector("svg")).toHaveAttribute(
-        "viewBox",
-        "0 0 360 520",
-      );
-      expect(new Set(positions.map(({ x }) => x)).size).toBe(1);
-      expect(positions.map(({ y }) => y)).toEqual(
-        [...positions.map(({ y }) => y)].sort((top, bottom) => top - bottom),
-      );
-    } finally {
-      Object.defineProperty(window, "matchMedia", {
-        configurable: true,
-        value: originalMatchMedia,
-      });
-    }
+  test("exposes all five states through semantic fallback", () => {
+    render(<NlpPipelineDiagram />);
+    expect(
+      screen
+        .getAllByRole("listitem")
+        .map((item) => item.getAttribute("data-nlp-fallback-stage")),
+    ).toEqual(NLP_GOLDEN_STAGES);
   });
 
   test("places the Token Figure before the word distinction", () => {
@@ -152,12 +111,21 @@ describe("Part 0 curriculum Diagrams", () => {
     );
 
     expect(tokenUnit?.blocks.map(({ id }) => id)).toEqual([
-      "p.why-split",
-      "p.token-definition",
-      "p.boundary",
-      "figure.token-boundary",
+      "narrative.token-boundary",
       "p.token-not-word",
     ]);
+    const narrative = tokenUnit?.blocks[0];
+    expect(
+      narrative?.kind === "visual-narrative"
+        ? {
+            beats: narrative.beats.map(({ id }) => id),
+            figureId: narrative.figure.figureId,
+          }
+        : null,
+    ).toEqual({
+      beats: ["source", "boundaries", "split"],
+      figureId: "decoder.diagram.tokenization.token",
+    });
   });
 
   test("renders Vocabulary as lookup relationships without a board", () => {
@@ -297,9 +265,15 @@ describe("Part 0 curriculum Diagrams", () => {
       expect(pane).not.toBeNull();
       if (!(pane instanceof HTMLElement))
         throw new Error("Missing inline Figure");
-      expect(
-        pane.querySelector(`svg[aria-label='${imageName}']`),
-      ).not.toBeNull();
+      if (chapterTitle === "자연어 처리란?") {
+        expect(
+          pane.querySelector("[data-testid='nlp-golden-visual']"),
+        ).not.toBeNull();
+      } else {
+        expect(
+          pane.querySelector(`svg[aria-label='${imageName}']`),
+        ).not.toBeNull();
+      }
       expect(within(pane).getAllByRole("img")).toHaveLength(1);
       expect(
         within(pane).getByRole("img", { name: imageName }),
@@ -318,7 +292,7 @@ describe("Part 0 curriculum Diagrams", () => {
     },
   );
 
-  test("renders Chapter 0.1 as four conceptual stages only", async () => {
+  test("renders Chapter 0.1 as one five-step guided deck", async () => {
     // Given: a ready curriculum and the Part 0 Chapter 0.1 entrypoint.
     readyCurriculum();
     const user = userEvent.setup();
@@ -334,28 +308,35 @@ describe("Part 0 curriculum Diagrams", () => {
     );
     // Then: the inline SVG and fallback stay present without viewer chrome.
     const image = screen.getByRole("img", {
-      name: "자연어 처리 추론 경로",
+      name: "자연어 처리 연속 설명",
     });
     const pane = image.closest("figure");
     expect(pane).not.toBeNull();
     if (!(pane instanceof HTMLElement))
       throw new Error("Missing inline Figure");
-    const stageLabels = Array.from(pane.querySelectorAll("[data-stage]")).map(
-      (stage) => stage.getAttribute("data-stage") ?? "",
-    );
-    expect(stageLabels).toEqual(BEGINNER_STAGE_LABELS);
+    const stageLabels = Array.from(
+      pane.querySelectorAll("[data-nlp-fallback-stage]"),
+    ).map((stage) => stage.getAttribute("data-nlp-fallback-stage") ?? "");
+    expect(stageLabels).toEqual(NLP_GOLDEN_STAGES);
+    expect(
+      document.querySelector("[data-narrative-mode='deck']"),
+    ).not.toBeNull();
     expect(within(pane).getAllByRole("img")).toHaveLength(1);
     expect(
-      within(pane).getByRole("img", { name: "자연어 처리 추론 경로" }),
-    ).toBeInTheDocument();
+      within(pane).queryByRole("img", { name: "자연어 처리 추론 경로" }),
+    ).not.toBeInTheDocument();
     expect(
-      within(pane).getByRole("group", { name: "자연어 처리란? 의미 설명" }),
+      within(pane).getByRole("img", { name: "자연어 처리 연속 설명" }),
     ).toBeInTheDocument();
+    const fallback = within(pane).getByRole("group", {
+      name: "자연어 처리란? 의미 설명",
+    });
+    expect(fallback).toBeInTheDocument();
     expect(
-      within(pane)
+      within(fallback)
         .getAllByRole("listitem")
-        .map((item) => item.textContent ?? ""),
-    ).toEqual(BEGINNER_STAGE_LABELS);
+        .map((item) => item.getAttribute("data-nlp-fallback-stage")),
+    ).toEqual(NLP_GOLDEN_STAGES);
     for (const forbidden of FORBIDDEN_STAGE_LABELS) {
       expect(stageLabels).not.toContain(forbidden);
       expect(pane.textContent).not.toContain(forbidden);

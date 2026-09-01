@@ -187,7 +187,7 @@ export function registerAppRouteTests({
       ).toBeDisabled();
     });
 
-    test("updates the Chapter hash on Next", async () => {
+    test("updates the Chapter hash from the Golden Token handoff", async () => {
       const { worker } = renderRouteApp(
         renderApp,
         "#/learn/decoder-only-fundamentals/0-1",
@@ -195,6 +195,9 @@ export function registerAppRouteTests({
       readyWorker(worker);
       const user = userEvent.setup();
 
+      await user.click(
+        screen.getByRole("button", { name: "5단계: 다음 질문" }),
+      );
       await user.click(screen.getByRole("link", { name: "다음: Token이란?" }));
 
       expect(window.location.hash).toBe(

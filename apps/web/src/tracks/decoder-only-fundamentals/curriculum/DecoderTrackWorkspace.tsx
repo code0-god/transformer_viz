@@ -21,6 +21,7 @@ import {
   type CurriculumFocusEvent,
   createCurriculumFocusHandoff,
 } from "./curriculumState";
+import { CHAPTER_IDS } from "./ids";
 import {
   chapterNavigation,
   destinationForChapter,
@@ -206,7 +207,7 @@ function DecoderCurriculumWorkspace({
       </div>
       <CurriculumChapterFooter
         previous={navigation?.previous}
-        next={navigation?.next}
+        next={chapterId === CHAPTER_IDS[0] ? undefined : navigation?.next}
         chapterHref={(nextChapterId) => course.chapterHref(nextChapterId)}
         onNavigate={course.navigateChapter}
       />
