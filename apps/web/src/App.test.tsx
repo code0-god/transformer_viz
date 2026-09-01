@@ -91,6 +91,25 @@ describe("production React Worker integration", () => {
     expect(worker.terminations).toBe(1);
   });
 
+  test("names Lab inspection launchers from their visible copy", async () => {
+    const { worker } = renderApp();
+    readyWorker(worker);
+
+    const root = screen.getByTestId("lab-open-architecture-root");
+    expect(root).not.toHaveAttribute("aria-label");
+    expect(root).toHaveAccessibleName(/Model 전체 구조 \d+ blocks · 4 heads/);
+    expect(
+      screen.getByRole("button", {
+        name: /Attention Self-Attention Layer 1 · Head 1/,
+      }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", {
+        name: /Score Matrix Actual trace Generate and select step/,
+      }),
+    ).toBeDisabled();
+  });
+
   test("generates once, grants one continuation credit per token, and stops", async () => {
     const { worker } = await readyApp();
     const user = await startGeneration(worker);
@@ -190,7 +209,7 @@ describe("production React Worker integration", () => {
     });
     const requestCount = worker.posted.length;
     await user.click(
-      screen.getByRole("button", { name: "Self-Attention 보기" }),
+      screen.getByRole("button", { name: /Attention Self-Attention/ }),
     );
     expect(screen.getByRole("dialog")).toBeVisible();
     expect(screen.getByTestId("attention-detail")).toHaveAttribute(

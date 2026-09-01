@@ -50,9 +50,9 @@ EXPECTED_PREFERRED_WIDTHS = {
     "decoder.diagram.language-model.next-token": 720,
     "decoder.diagram.language-model.conditional-probability": 780,
     "decoder.diagram.language-model.autoregressive": 760,
-    "decoder.diagram.representation.embedding": 760,
-    "decoder.diagram.representation.position": 760,
-    "decoder.diagram.representation.hidden-state": 760,
+    "decoder.diagram.representation.embedding": 960,
+    "decoder.diagram.representation.position": 960,
+    "decoder.diagram.representation.hidden-state": 1000,
     "root": 832,
 }
 ALL_LEARNING_FIGURES = (
@@ -474,6 +474,34 @@ def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
               const content = figure?.querySelector('.learning-figure__content');
               const graphic = figure?.querySelector('.learning-figure__graphic');
               const graphicRect = graphic?.getBoundingClientRect();
+              const localOverflowSources = content
+                ? Array.from(content.querySelectorAll('*'))
+                    .map((element) => {{
+                      const box = element.getBoundingClientRect();
+                      return {{
+                        tag: element.tagName,
+                        className:
+                          typeof element.className === 'string'
+                            ? element.className
+                            : element.getAttribute('class') ?? '',
+                        width: box.width,
+                        right: box.right,
+                        scrollWidth:
+                          element instanceof HTMLElement
+                            ? element.scrollWidth
+                            : 0,
+                        clientWidth:
+                          element instanceof HTMLElement
+                            ? element.clientWidth
+                            : 0,
+                      }};
+                    }})
+                    .filter((item) =>
+                      item.right > (graphicRect?.right ?? 0) + 0.5
+                      || item.scrollWidth > item.clientWidth + 0.5
+                    )
+                    .slice(0, 12)
+                : [];
               const visible = (element) => {{
                 if (!(element instanceof Element)) return false;
                 const box = element.getBoundingClientRect();
@@ -495,6 +523,11 @@ def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
               const mobileFlow = figure?.querySelector(
                 '.decoder-learning-architecture__mobile',
               );
+              const sceneCanvas = figure?.querySelector(
+                '.scene-figure canvas',
+              );
+              const sceneStatus = figure?.querySelector('.scene-figure')
+                ?.getAttribute('data-scene-status') ?? '';
               const articleText = article?.textContent ?? '';
               const forbiddenTerms = [
                 '구현 노트',
@@ -513,6 +546,9 @@ def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
               ];
               return {{
                 figureId: figure?.getAttribute('data-figure-id') ?? '',
+                renderer:
+                  figure?.getAttribute('data-figure-renderer') ?? '',
+                sceneStatus,
                 size: figure?.getAttribute('data-figure-size') ?? '',
                 preferredWidth: Number(
                   figure?.getAttribute('data-figure-preferred-width') ?? 0,
@@ -526,7 +562,9 @@ def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
                 visibleFallbackCount: visibleFallbacks.length,
                 mobileFlowVisible: visible(mobileFlow),
                 visualMode:
-                  visibleImages.length > 0
+                  visible(sceneCanvas) && sceneStatus === 'ready'
+                    ? 'scene'
+                    : visibleImages.length > 0
                     ? 'svg'
                     : visibleFallbacks.length > 0
                       ? 'fallback'
@@ -547,6 +585,9 @@ def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
                 localOverflow: content
                   ? Math.max(0, content.scrollWidth - content.clientWidth)
                   : -1,
+                localClientWidth: content?.clientWidth ?? -1,
+                localScrollWidth: content?.scrollWidth ?? -1,
+                localOverflowSources,
                 articleContains: !!article && !!figure && article.contains(figure),
                 insideArticle:
                   !!rect && !!articleRect
@@ -579,6 +620,23 @@ def _assert_inline_figure(
     expected_size: str,
 ) -> JsonObject:
     probe = _probe_figure(browser, figure_id)
+    if (
+        probe.get("renderer") == "scene"
+        and probe.get("sceneStatus") in ("loading", "initializing")
+    ):
+        scene_selector = json.dumps(
+            f"{_figure_selector(figure_id)} .scene-figure",
+        )
+        wait_for(
+            browser,
+            (
+                "['ready', 'static', 'unavailable', 'error'].includes("
+                f"document.querySelector({scene_selector})"
+                "?.getAttribute('data-scene-status') ?? '')"
+            ),
+            f"Scene Figure settled: {figure_id}",
+        )
+        probe = _probe_figure(browser, figure_id)
     require(_string(probe, "figureId") == figure_id, "Wrong Figure")
     require(
         _string(probe, "size") == expected_size,
@@ -614,9 +672,15 @@ def _assert_inline_figure(
     require(_boolean(probe, "articleContains"), "Figure is outside article")
     require(_boolean(probe, "insideArticle"), "Figure exceeds article shell")
     require(_boolean(probe, "visible"), "Figure has no visible geometry")
-    require(_string(probe, "visualMode") != "blank", "Figure content is blank")
+    require(
+        _string(probe, "visualMode") != "blank",
+        f"Figure content is blank: {figure_id}: {probe}",
+    )
     require(_integer(probe, "overflow") == 0, "Horizontal overflow")
-    require(_integer(probe, "localOverflow") == 0, "Local Figure overflow")
+    require(
+        _integer(probe, "localOverflow") == 0,
+        f"Local Figure overflow: {figure_id}: {probe}",
+    )
     return probe
 
 

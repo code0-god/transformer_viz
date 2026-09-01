@@ -107,16 +107,14 @@ export function LabInspectionPanel(): ReactElement {
           data-testid="lab-open-architecture-root"
           data-inspection-kind="model"
           disabled={model === null}
-          aria-label="전체 모델 구조 보기"
           onClick={() => openArchitecture("root")}
         >
           <span className="lab-inspection__index" aria-hidden="true">
             01
           </span>
           <span className="lab-inspection__copy">
-            <strong>Model</strong>
-            <span>전체 구조</span>
-          </span>
+            <strong>Model</strong> <span>전체 구조</span>
+          </span>{" "}
           <span className="lab-inspection__context">
             {model === null
               ? "Unavailable"
@@ -128,16 +126,14 @@ export function LabInspectionPanel(): ReactElement {
           type="button"
           data-inspection-kind="block"
           disabled={model === null}
-          aria-label="현재 Transformer Block 보기"
           onClick={() => openArchitecture("transformer-block")}
         >
           <span className="lab-inspection__index" aria-hidden="true">
             02
           </span>
           <span className="lab-inspection__copy">
-            <strong>Block</strong>
-            <span>Transformer Block</span>
-          </span>
+            <strong>Block</strong> <span>Transformer Block</span>
+          </span>{" "}
           <span className="lab-inspection__context">
             Layer {state.architecture.selectedLayer + 1}
           </span>
@@ -147,16 +143,14 @@ export function LabInspectionPanel(): ReactElement {
           type="button"
           data-inspection-kind="attention"
           disabled={model === null}
-          aria-label="Self-Attention 보기"
           onClick={() => openArchitecture("self-attention")}
         >
           <span className="lab-inspection__index" aria-hidden="true">
             03
           </span>
           <span className="lab-inspection__copy">
-            <strong>Attention</strong>
-            <span>Self-Attention</span>
-          </span>
+            <strong>Attention</strong> <span>Self-Attention</span>
+          </span>{" "}
           <span className="lab-inspection__context">
             Layer {state.architecture.selectedLayer + 1} · Head{" "}
             {state.architecture.selectedHead + 1}
@@ -167,16 +161,14 @@ export function LabInspectionPanel(): ReactElement {
           type="button"
           data-inspection-kind="score-matrix"
           disabled={!scoreAvailable}
-          aria-label="실제 Score Matrix 확인하기"
           onClick={openScoreMatrix}
         >
           <span className="lab-inspection__index" aria-hidden="true">
             04
           </span>
           <span className="lab-inspection__copy">
-            <strong>Score Matrix</strong>
-            <span>Actual trace</span>
-          </span>
+            <strong>Score Matrix</strong> <span>Actual trace</span>
+          </span>{" "}
           <span className="lab-inspection__context">
             {scoreAvailable
               ? `Step ${(state.generation.selectedStep ?? 0) + 1} · Head ${

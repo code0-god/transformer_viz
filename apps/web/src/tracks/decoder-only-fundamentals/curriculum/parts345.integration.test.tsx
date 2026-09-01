@@ -326,7 +326,7 @@ describe("Parts 3 through 5 incumbent route integration", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("link", { name: "모델 실험실" }));
     await user.click(
-      screen.getByRole("button", { name: "Self-Attention 보기" }),
+      screen.getByRole("button", { name: /Attention Self-Attention/ }),
     );
     const viewer = focusedViewer();
     await user.click(within(viewer).getByRole("button", { name: "Layer 3" }));
@@ -347,7 +347,7 @@ describe("Parts 3 through 5 incumbent route integration", () => {
 
     // When: the same Lab inspector is reopened.
     await user.click(
-      screen.getByRole("button", { name: "Self-Attention 보기" }),
+      screen.getByRole("button", { name: /Attention Self-Attention/ }),
     );
 
     // Then: architecture selections remain owned upstream.

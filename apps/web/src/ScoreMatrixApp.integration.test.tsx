@@ -67,7 +67,7 @@ describe("Score Matrix production App integration", () => {
     });
 
     await user.click(
-      screen.getByRole("button", { name: "Self-Attention 보기" }),
+      screen.getByRole("button", { name: /Attention Self-Attention/ }),
     );
     const viewer = screen.getByRole("dialog");
     const headOne = viewer.querySelector('button[data-head-index="1"]');
@@ -76,7 +76,7 @@ describe("Score Matrix production App integration", () => {
     await user.click(headOne);
     await user.keyboard("{Escape}");
     await user.click(
-      screen.getByRole("button", { name: "실제 Score Matrix 확인하기" }),
+      screen.getByRole("button", { name: /Score Matrix Actual trace/ }),
     );
     await user.click(
       await screen.findByRole("button", {

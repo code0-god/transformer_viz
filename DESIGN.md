@@ -14,9 +14,11 @@ parchment interface recolored with gray.
 ## Product roles
 
 - ThreeUI: shell, navigation language, status, controls, surfaces, and Lab UI.
-- DOM/SVG/KaTeX: article semantics, educational Figures, architecture
+- DOM/SVG/KaTeX: article semantics, every Figure's fallback, architecture
   relationships, formulas, and exact labels.
-- R3F: actual trace-backed numeric visualization.
+- R3F: actual trace-backed numeric visualization in Lab and selected Learn
+  scenes where spatial or temporal representation materially improves one
+  learning question.
 
 ## Grounding
 
@@ -140,6 +142,8 @@ forced into a role its public API cannot represent.
 ## Motion
 
 - No permanent decorative RAF on static routes.
+- Learn scenes mount only while visible, use demand rendering, and return to
+  zero scene frames after each short state transition.
 - Hover and press feedback stays under 180ms.
 - Reduced motion removes transitions and blocks animated renderer mounting.
 - Motion never carries exclusive meaning.

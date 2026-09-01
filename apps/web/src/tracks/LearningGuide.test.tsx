@@ -17,6 +17,7 @@ import type { LearningFigureRegistry } from "./learningFigureTypes";
 
 const figures: LearningFigureRegistry = {
   figureIds: new Set(["fixture.figure"]),
+  metadata: () => ({ preferredWidth: 720, renderer: "static" }),
   preferredWidth: () => 720,
   render: () => (
     <svg role="img" aria-label="FIGURE_RENDERER" viewBox="0 0 10 10">

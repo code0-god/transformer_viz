@@ -5,6 +5,7 @@ import type { LearningFigureRegistry } from "./learningFigureTypes";
 
 type FigureBlock = Extract<GuideBlock<string>, { kind: "figure" }>;
 type LearningFigureStyle = CSSProperties & {
+  readonly "--learning-figure-preferred-aspect-ratio"?: number;
   readonly "--learning-figure-preferred-width": string;
 };
 
@@ -25,9 +26,16 @@ export function LearningFigure({
   if (registry === undefined || !registry.figureIds.has(block.figureId)) {
     throw new LearningFigureRegistryError(block.figureId);
   }
-  const preferredWidth = registry.preferredWidth(block.figureId);
+  const metadata = registry.metadata(block.figureId);
+  const preferredWidth = metadata.preferredWidth;
   const graphicStyle: LearningFigureStyle = {
     "--learning-figure-preferred-width": `${preferredWidth}px`,
+    ...(metadata.renderer === "scene"
+      ? {
+          "--learning-figure-preferred-aspect-ratio":
+            metadata.preferredAspectRatio,
+        }
+      : {}),
   };
 
   return (
@@ -35,6 +43,7 @@ export function LearningFigure({
       className="learning-figure"
       data-figure-id={block.figureId}
       data-figure-preferred-width={preferredWidth}
+      data-figure-renderer={metadata.renderer}
       data-figure-size={block.size ?? "prose"}
       data-threeui-surface="figure"
       aria-label={block.alt}

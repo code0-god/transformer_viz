@@ -1,0 +1,101 @@
+.learning-figure[data-figure-renderer="scene"] .learning-figure__content {
+  overflow: clip;
+}
+
+.scene-figure {
+  --scene-aspect-ratio: 1.55;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s3);
+  min-inline-size: 0;
+}
+
+.scene-figure__header {
+  display: grid;
+  gap: var(--s1);
+}
+
+.scene-figure__status {
+  position: absolute;
+  z-index: 2;
+  inset: auto var(--s3) var(--s3);
+  padding: var(--s2) var(--s3);
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 0.35rem;
+  background: rgb(12 18 20 / 88%);
+  color: rgb(231 237 235 / 82%);
+  font-size: 0.82rem;
+}
+
+.scene-figure__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  min-inline-size: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.scene-figure__annotations {
+  min-inline-size: 0;
+}
+
+.scene-figure__plane {
+  position: relative;
+  overflow: clip;
+  border: 1px solid var(--boundary-content);
+  border-radius: 0.65rem;
+  background:
+    linear-gradient(180deg, rgb(18 25 27 / 96%), rgb(11 17 19 / 98%)),
+    var(--ui-text);
+  aspect-ratio: var(--scene-aspect-ratio);
+}
+
+.scene-figure__fallback {
+  min-block-size: 100%;
+  padding: var(--s4);
+  background: var(--paper);
+}
+
+.scene-figure__fallback--semantic {
+  position: absolute;
+  block-size: 1px;
+  inline-size: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.scene-figure__fallback--overlay {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: auto;
+}
+
+.scene-figure__header > h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(1rem, 1.4vw, 1.2rem);
+  letter-spacing: -0.02em;
+}
+
+.scene-figure__header > span {
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+}
+
+.scene-figure__plane > canvas {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+@media (max-width: 40rem) {
+  .scene-figure__plane {
+    min-block-size: 34rem;
+    aspect-ratio: auto;
+  }
+}

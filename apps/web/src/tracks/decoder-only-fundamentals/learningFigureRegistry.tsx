@@ -29,6 +29,10 @@ export function createDecoderLearningFigureRegistry(
 ): LearningFigureRegistry {
   return {
     figureIds: ROOT_FIGURE_IDS,
+    metadata: (figureId) => {
+      if (figureId !== "root") throw new DecoderLearningFigureError(figureId);
+      return { preferredWidth: 832, renderer: "static" };
+    },
     preferredWidth: (figureId): number => {
       if (figureId !== "root") throw new DecoderLearningFigureError(figureId);
       return 832;

@@ -1,6 +1,12 @@
 import type { ReactElement } from "react";
 
-import type { LearningFigureRegistry } from "../../learningFigureTypes";
+import { HiddenStateSceneFigure } from "../../learning-scenes/hidden/HiddenStateSceneFigure";
+import { PositionEmbeddingSceneFigure } from "../../learning-scenes/position/PositionEmbeddingSceneFigure";
+import { TokenEmbeddingSceneFigure } from "../../learning-scenes/token/TokenEmbeddingSceneFigure";
+import type {
+  LearningFigureMetadata,
+  LearningFigureRegistry,
+} from "../../learningFigureTypes";
 import {
   type CURRICULUM_DIAGRAM_IDS,
   curriculumDiagramComponent,
@@ -10,19 +16,66 @@ import { isDiagramId } from "./types";
 
 type CurriculumFigureId = (typeof CURRICULUM_DIAGRAM_IDS)[number];
 
-const PREFERRED_WIDTHS = {
-  "decoder.diagram.intro.nlp": 720,
-  "decoder.diagram.tokenization.token": 800,
-  "decoder.diagram.tokenization.vocabulary": 760,
-  "decoder.diagram.tokenization.methods": 840,
-  "decoder.diagram.language-model.definition": 760,
-  "decoder.diagram.language-model.next-token": 720,
-  "decoder.diagram.language-model.conditional-probability": 780,
-  "decoder.diagram.language-model.autoregressive": 760,
-  "decoder.diagram.representation.embedding": 760,
-  "decoder.diagram.representation.position": 760,
-  "decoder.diagram.representation.hidden-state": 760,
-} satisfies Readonly<Record<CurriculumFigureId, number>>;
+const FIGURE_METADATA = {
+  "decoder.diagram.intro.nlp": {
+    preferredWidth: 720,
+    renderer: "static",
+  },
+  "decoder.diagram.tokenization.token": {
+    preferredWidth: 800,
+    renderer: "static",
+  },
+  "decoder.diagram.tokenization.vocabulary": {
+    preferredWidth: 760,
+    renderer: "static",
+  },
+  "decoder.diagram.tokenization.methods": {
+    preferredWidth: 840,
+    renderer: "static",
+  },
+  "decoder.diagram.language-model.definition": {
+    preferredWidth: 760,
+    renderer: "static",
+  },
+  "decoder.diagram.language-model.next-token": {
+    preferredWidth: 720,
+    renderer: "static",
+  },
+  "decoder.diagram.language-model.conditional-probability": {
+    preferredWidth: 780,
+    renderer: "static",
+  },
+  "decoder.diagram.language-model.autoregressive": {
+    preferredWidth: 760,
+    renderer: "static",
+  },
+  "decoder.diagram.representation.embedding": {
+    fallbackFigureId: "decoder.diagram.representation.embedding.static",
+    loadingStrategy: "visible",
+    preferredAspectRatio: 1.55,
+    preferredWidth: 960,
+    reducedMotion: "static-final-state",
+    renderer: "scene",
+  },
+  "decoder.diagram.representation.position": {
+    fallbackFigureId: "decoder.diagram.representation.position.static",
+    loadingStrategy: "visible",
+    preferredAspectRatio: 1.55,
+    preferredWidth: 960,
+    reducedMotion: "static-final-state",
+    renderer: "scene",
+  },
+  "decoder.diagram.representation.hidden-state": {
+    fallbackFigureId: "decoder.diagram.representation.hidden-state.static",
+    loadingStrategy: "visible",
+    preferredAspectRatio: 1.6,
+    preferredWidth: 1000,
+    reducedMotion: "static-final-state",
+    renderer: "scene",
+  },
+} as const satisfies Readonly<
+  Record<CurriculumFigureId, LearningFigureMetadata>
+>;
 
 class CurriculumFigureRegistryError extends Error {
   constructor(readonly figureId: string) {
@@ -33,6 +86,15 @@ class CurriculumFigureRegistryError extends Error {
 
 function renderFigure(figureId: string): ReactElement {
   if (!isDiagramId(figureId)) throw new CurriculumFigureRegistryError(figureId);
+  if (figureId === "decoder.diagram.representation.embedding") {
+    return <TokenEmbeddingSceneFigure />;
+  }
+  if (figureId === "decoder.diagram.representation.position") {
+    return <PositionEmbeddingSceneFigure />;
+  }
+  if (figureId === "decoder.diagram.representation.hidden-state") {
+    return <HiddenStateSceneFigure />;
+  }
   const Figure = curriculumDiagramComponent(figureId);
   if (Figure === undefined) throw new CurriculumFigureRegistryError(figureId);
   return <Figure />;
@@ -48,11 +110,17 @@ function preferredWidth(figureId: string): number {
   if (!isCurriculumFigureId(figureId)) {
     throw new CurriculumFigureRegistryError(figureId);
   }
-  return PREFERRED_WIDTHS[figureId];
+  return FIGURE_METADATA[figureId].preferredWidth;
 }
 
 export const curriculumLearningFigures: LearningFigureRegistry = {
   figureIds: curriculumDiagramIds,
+  metadata: (figureId) => {
+    if (!isCurriculumFigureId(figureId)) {
+      throw new CurriculumFigureRegistryError(figureId);
+    }
+    return FIGURE_METADATA[figureId];
+  },
   preferredWidth,
   render: renderFigure,
 };

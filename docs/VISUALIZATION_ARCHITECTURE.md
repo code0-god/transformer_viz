@@ -1,6 +1,7 @@
 # Visualization architecture
 
-Transformer Viz uses two rendering systems for two kinds of teaching evidence.
+Transformer Viz uses semantic and spatial renderers for distinct teaching
+evidence.
 
 ```text
 Learning Concept
@@ -10,6 +11,11 @@ Learning Concept
   |
   +-- Architecture
   |     `-- deterministic SVG
+  |
+  +-- Learning Visualization
+  |     +-- semantic DOM/SVG fallback
+  |     +-- visible-only lazy R3F scene
+  |     `-- illustrative, explicitly labeled state
   |
   `-- Data Visualization (optional capability)
         |
@@ -42,9 +48,11 @@ SVG answers:
 
 ### Three.js and React Three Fiber
 
-Use Three.js/R3F only for actual numerical evidence:
+Use Three.js/R3F for:
 
-- Embedding values
+- educational lookup, composition, or evolution scenes when depth or a short
+  transition materially improves one concept;
+- actual numerical evidence in Lab;
 - Q/K/V features
 - attention scores
 - causal mask
@@ -52,9 +60,39 @@ Use Three.js/R3F only for actual numerical evidence:
 - value aggregation
 - head comparison
 
-Three.js answers:
+Three.js answers either:
 
-> 그 연산 안에서 실제 숫자들이 어떻게 변하는가?
+> 이 개념의 공간적 관계나 짧은 계산 단계는 어떻게 이어지는가?
+
+or, for trace-backed Lab views:
+
+> 실제 숫자들이 어떻게 변하는가?
+
+Illustrative Learn values are always labeled as examples and never presented
+as model weights.
+
+## Learn scene boundary
+
+```text
+GuideBlock.figure
+  -> LearningFigureRegistry metadata
+  -> SceneFigure
+       +-- semantic title, description, controls, annotations
+       +-- static DOM/SVG fallback
+       +-- nearby preload observer
+       +-- visible-only scene renderer
+             `-- LearningSceneCanvas (demand loop)
+```
+
+`SceneFigure` centralizes capability checks, lazy loading, visibility, viewport
+mode, reduced motion, context loss, error isolation, and instrumentation.
+Each scene module owns only its semantic state and R3F geometry.
+
+Current benchmark scenes:
+
+- Token Embedding: `LOOKUP`
+- Position Embedding: `COMPOSITION`
+- Hidden State: `EVOLUTION`
 
 ## Concept capability
 
@@ -148,9 +186,11 @@ Worker values.
 
 ## Performance
 
-- Canvas is lazy and absent from initial Learn/Home bundles.
+- Canvas is lazy and absent from Home and non-scene Learn routes.
 - `frameloop="demand"` avoids idle 60fps work.
-- DPR is clamped to 1-2.
+- Learn DPR is clamped to 1–1.5; Lab Score Matrix remains 1–2.
+- Only the visible Learn scene owns a WebGL context.
+- Nearby scenes may preload code at 480px but do not mount Canvas.
 - Current maximum matrix is `24 × 24`.
 - Geometry/material ownership stays inside the lazy scene.
 - Controls invalidate only after interaction.
@@ -174,6 +214,9 @@ the Guide and SVG architecture usable.
 
 Implemented now:
 
+- reusable visible-only Learning Scene foundation
+- Token Embedding, Position Embedding, and Hidden State benchmark scenes
+- semantic Part 2 fallbacks
 - generic visualization contract
 - generic renderer registry
 - shared Three visualization surface
@@ -183,6 +226,8 @@ Implemented now:
 
 Not implemented:
 
+- Part 0 or Part 1 scene migrations
+- GPT, Transformer Block, or Self-Attention learning scenes
 - Q/K/V explorer
 - Scale animation
 - causal-mask animation

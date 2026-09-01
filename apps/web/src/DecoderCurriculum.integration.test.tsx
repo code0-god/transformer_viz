@@ -100,7 +100,7 @@ const PART2_PRODUCTION_CHAPTERS = [
   [
     "Hidden State",
     "decoder.curriculum.guide.2.3",
-    "Causal prefix를 반영하는 hidden state 흐름",
+    "Shape를 유지하며 값이 바뀌는 hidden state 흐름",
   ],
 ] as const;
 
@@ -123,6 +123,7 @@ const fixtureRegistry: CurriculumRendererRegistry = {
   resolveDiagram: () => FixtureDiagram,
   figures: {
     figureIds: new Set(["decoder.diagram.intro.nlp"]),
+    metadata: () => ({ preferredWidth: 544, renderer: "static" }),
     preferredWidth: () => 544,
     render: () => <FixtureDiagram />,
   },

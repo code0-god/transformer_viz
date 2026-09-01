@@ -135,7 +135,7 @@ describe("Learning Workspace production integration", () => {
     const worker = readyWorkspace("#/lab");
     const user = userEvent.setup();
     await user.click(
-      screen.getByRole("button", { name: "Self-Attention 보기" }),
+      screen.getByRole("button", { name: /Attention Self-Attention/ }),
     );
     const viewer = focusedViewer();
     const softmax = viewerElement<SVGGElement>(
