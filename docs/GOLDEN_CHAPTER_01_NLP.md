@@ -59,8 +59,8 @@ The component is Chapter-specific. Shared Inline, Split, and Sticky
 
 #### Core copy
 
-사람은 문장을 읽고 그 뜻과 분위기를 자연스럽게 받아들인다. 예시 문장에서
-긍정적인 느낌을 쉽게 알아차릴 수 있다.
+사람은 문장을 읽고 그 뜻과 분위기를 자연스럽게 받아들인다. 단어를
+하나씩 따로 보지 않아도 문장 전체의 의미가 바로 전해진다.
 
 #### Main visual
 
@@ -72,16 +72,16 @@ The canonical source object is one persistent Korean sentence:
 
 Typography is the visual object. No quote box, card, chip, or generic
 rectangle surrounds it. `재미있었어요` receives one restrained underline and
-`긍정적인 느낌` remains a quiet semantic cue rather than a result badge.
+no semantic result cue appears before Slide 4.
 
 #### Transition
 
 The sentence starts fully legible and remains mounted when later objects enter.
+Slide 1 ends with only the sentence and its restrained underline.
 
 #### Misconception avoided
 
-The quiet `긍정적인 느낌` cue records human interpretation. It is neither a
-model output nor classification UI.
+Slide 1 does not preview `긍정`, a model output, or classification UI.
 
 #### Takeaway
 
@@ -100,8 +100,9 @@ model output nor classification UI.
 
 #### Main visual
 
-The same sentence remains visible. A shared `숫자로 표현` cue and downward
-arrow lead to one horizontal six-slot number sequence:
+The same sentence remains visible. One continuous vertical axis passes through
+the `숫자로 표현` cue and downward arrow into a horizontal six-slot number
+sequence:
 
 ```text
 0.24  -0.71  0.18  0.63  -0.09  …
@@ -157,8 +158,9 @@ matrix appears.
 
 #### Transition
 
-Before values move upward and soften; arrows appear; after values enter below
-inside the same fixed slots. Slot and strip geometry never move.
+Before values move upward and soften; arrows appear; after values start from
+the same cell center and enter below inside the fixed slots. Slot and strip
+geometry never move.
 
 #### Misconception avoided
 
@@ -277,9 +279,9 @@ Final production measurements:
 
 | Viewport | Stage | LEFT | Gap | RIGHT |
 | ---: | ---: | ---: | ---: | ---: |
-| 1440×900 | 992×518.39px | 349.59px | 72px | 570.41px |
-| 1366×768 | 992×491.75px | 351px | 68.30px | 572.70px |
-| 1024×768 | 894.91×480px | 318.78px | 56px | 520.13px |
+| 1440×900 | 992×432px | 349.59px | 72px | 570.41px |
+| 1366×768 | 992×432px | 351px | 68.30px | 572.70px |
+| 1024×768 | 894.91×432px | 318.78px | 56px | 520.13px |
 
 Across fifteen desktop state records, every stage, column, visual, and control
 coordinate drift is 0px.
@@ -299,9 +301,9 @@ accommodates the longest Korean paragraph without clipping or stage jump.
 
 | Viewport | Stage | Visual width |
 | ---: | ---: | ---: |
-| 768×1024 | 698.63×416.72px | 698.63px |
-| 390×844 | 358×411.59px | 358px |
-| 320×568 | 288×411.59px | 288px |
+| 768×1024 | 698.63×386px | 698.63px |
+| 390×844 | 358×386px | 358px |
+| 320×568 | 288×386px | 288px |
 
 Mobile and tablet document overflow, local overflow, nested scrollbars, and
 state geometry drift are all 0.
@@ -374,6 +376,13 @@ Final polish evidence:
 ```text
 .omo/evidence/golden-final-polish/browser/
 .omo/evidence/golden-final-polish/subpath-browser/
+```
+
+Freeze-pass evidence:
+
+```text
+.omo/evidence/golden-freeze-pass/browser/
+.omo/evidence/golden-freeze-pass/subpath-browser/
 ```
 
 Coverage:

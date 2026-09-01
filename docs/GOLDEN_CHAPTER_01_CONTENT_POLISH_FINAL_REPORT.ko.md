@@ -32,8 +32,8 @@ RIGHT의 가장 강한 object는 계속 다음 문장이다.
 ```
 
 문장 크기를 키우고 `재미있었어요`에 1px underline을 적용했다. 아래의
-`긍정적인 느낌`은 semantic cue일 뿐 badge나 model output UI가 아니다.
-Quote card, speech bubble, sentiment badge를 추가하지 않았다.
+`긍정적인 느낌` semantic cue는 제거해 `긍정` 해석이 Slide 4에서 처음
+명시되게 했다. Quote card, speech bubble, sentiment badge를 추가하지 않았다.
 
 ## 3. Slide 2 — 계산 가능한 표현
 
@@ -54,6 +54,8 @@ LEFT는 컴퓨터가 `재미있다`라는 뜻 자체를 계산하지 않으며, 
 Strip은 desktop RIGHT width의 `82%`, `467.72×70px`를 사용한다. 기존보다
 높이와 숫자 크기를 키웠고, 320/390px에서도 여섯 slot을 한 줄로 유지한다.
 `설명을 위한 예시 · 실제 모델 값 아님`은 strip 아래의 secondary note다.
+Sentence에서 `숫자로 표현 ↓`까지 이어지는 vertical line을 추가해 label과
+arrow가 하나의 transformation axis로 읽힌다.
 
 ## 4. Slide 3 — 모델 계산
 
@@ -73,7 +75,8 @@ Strip은 desktop RIGHT width의 `82%`, `467.72×70px`를 사용한다. 기존보
 
 `여러 계산`은 strip 전체에 한 번만 표시한다. 각 arrow는 독립 계산을 뜻하는
 것이 아니라 동일 slot의 value continuity를 보여 준다. Before value가 위로
-옅어지고 after value가 아래에 나타난다. Strip, six slots, value phase DOM
+옅어지고 after value가 같은 cell center에서 출발해 아래에 나타난다. Strip,
+six slots, value phase DOM
 identity와 `467.72×70px` bounds는 Slide 2와 동일하다.
 
 ## 5. Slide 4 — 사람이 사용하는 결과
@@ -81,7 +84,8 @@ identity와 `467.72×70px` bounds는 Slide 2와 동일하다.
 ### Numeric → Result
 
 변환된 strip은 `0.42` opacity로 위에 남는다. `문장 분류로 읽기 ↓`가
-provenance와 결과를 직접 연결한다.
+24px vertical axis로 provenance와 결과를 직접 연결한다. 다른 NLP 문제
+목록은 더 작은 type과 낮은 contrast로 한 단계 약하게 했다.
 
 ### Task hierarchy
 
@@ -112,7 +116,7 @@ Measured strip/result overlap은 여섯 viewport 모두 `0px`다.
 0.2 H1로 이동하고 focus하며, Back/Forward contract도 통과한다. 중복되던
 페이지 하단 Chapter footer와 full-width final divider는 Chapter 0.1에서
 렌더링하지 않는다. 보조 문구와 link는 RIGHT_END에 맞춰 오른쪽 정렬하고
-deck-controls 경계 가까이에 배치했다.
+deck-controls 경계에서 `8px` 위에 배치했다.
 
 ## 7. Visual Causality
 
@@ -129,7 +133,7 @@ deck-controls 경계 가까이에 배치했다.
 
 ## 8. Visual Scale / Whitespace
 
-- Desktop stage: `480–518.39px`
+- Desktop stage: `432px` (`1440px` 기준 `16.7%` 감소)
 - Desktop LEFT/RIGHT: `38/62`
 - Gap: `56–72px`
 - Numeric strip: RIGHT width의 `82%`
@@ -162,9 +166,9 @@ discrete fade/translate하며, RIGHT는 opacity/transform/color transition으로
 
 | Viewport | Stage | Strip | Numeral |
 | ---: | ---: | ---: | ---: |
-| 768×1024 | 698.63×416.72px | 698.63×54px | 13.12px |
-| 390×844 | 358×411.59px | 358×54px | 12.09px |
-| 320×568 | 288×411.59px | 288×54px | 11.2px |
+| 768×1024 | 698.63×386px | 698.63×54px | 13.12px |
+| 390×844 | 358×386px | 358×54px | 12.09px |
+| 320×568 | 288×386px | 288×54px | 11.2px |
 
 Active copy는 실제 sticky-header bottom 아래로 배치된다. 다섯 320px
 original 모두 label/copy/control이 보이며 `copyHeaderOverlap = 0`,
@@ -219,6 +223,8 @@ Evidence root:
 .omo/evidence/golden-divider-alignment/browser/
 .omo/evidence/golden-final-polish/browser/
 .omo/evidence/golden-final-polish/subpath-browser/
+.omo/evidence/golden-freeze-pass/browser/
+.omo/evidence/golden-freeze-pass/subpath-browser/
 ```
 
 Coverage:
@@ -272,6 +278,9 @@ navigation tests, matched before/after와 full-Chapter capture contract를 하�
 atomic green behavior로 닫았다. Documentation/report는 별도 local commit으로
 닫는다. Dependency manifests와 lockfile은 그대로이며 remote push는 하지
 않는다.
+
+마지막 freeze refinement는 사용자 visual approval를 위해 local worktree에
+유지하며 아직 commit하지 않는다.
 
 ## 16. User visual approval
 
