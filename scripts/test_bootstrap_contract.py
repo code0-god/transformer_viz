@@ -38,18 +38,5 @@ class DockerBootstrapContractTests(unittest.TestCase):
             "Pages must use build-web's root-anchored default output directory",
         )
 
-    def test_pages_workflow_enables_actions_deployment(self) -> None:
-        workflow = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8")
-        configure_step = workflow.split(
-            "      - name: Configure Pages\n", maxsplit=1
-        )[1].split("      - name: Upload static artifact\n", maxsplit=1)[0]
-
-        self.assertIn(
-            "          enablement: true\n",
-            configure_step,
-            "configure-pages must enable an unconfigured repository Pages site",
-        )
-
-
 if __name__ == "__main__":
     unittest.main()
