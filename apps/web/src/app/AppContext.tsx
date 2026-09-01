@@ -135,6 +135,7 @@ export function AppProvider({
       const client = clientRef.current;
       if (client === null) throw new Error("Model Worker is not ready");
       client.stopGeneration(active.requestId.value, active.runId.value);
+      dispatch({ type: "generation-stop-requested" });
     } catch (error: unknown) {
       reportError(error);
     }

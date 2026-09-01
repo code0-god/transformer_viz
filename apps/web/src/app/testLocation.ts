@@ -101,14 +101,52 @@ export function registerAppRouteTests({
         screen.getByText("Prompt", { selector: "#prompt-label" }),
       ).toBeInTheDocument();
       expect(
+        screen
+          .getByRole("heading", { name: "모델 실험실" })
+          .closest('[data-threeui-surface="lab"]'),
+      ).toBeInTheDocument();
+      expect(
+        screen
+          .getByRole("heading", { name: "모델 실험실" })
+          .closest('[data-lab-layout="instrument-stack"]'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "모델 실험실" }),
+      ).toHaveTextContent("MODEL LAB");
+      expect(
         screen.getByText("Generate", { selector: "[data-testid='generate']" }),
       ).toBeInTheDocument();
       expect(
-        screen.getByText("Decoded continuation", { selector: "h2" }),
+        screen.getByTestId("generate").closest(".lumen-cta"),
+      ).not.toBeNull();
+      expect(
+        screen
+          .getByTestId("generate")
+          .closest('[data-threeui-surface="generation-controls"]'),
       ).toBeInTheDocument();
+      expect(
+        screen
+          .getByRole("heading", { name: "Decoded continuation" })
+          .closest('[data-threeui-surface="generation-output"]'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "Decoded continuation" }),
+      ).toHaveTextContent("Output");
+      expect(document.querySelectorAll("[data-inspection-kind]")).toHaveLength(
+        4,
+      );
+      expect(document.querySelector(".lab-inspection__actions")).toBeNull();
+      expect(
+        screen.getByRole("button", { name: "실제 Score Matrix 확인하기" }),
+      ).toBeDisabled();
       expect(screen.queryByTestId("architecture-root")).toBeNull();
       expect(
         screen.getByTestId("lab-open-architecture-root"),
+      ).toBeInTheDocument();
+      expect(
+        screen
+          .getByTestId("lab-open-architecture-root")
+          .closest('[data-threeui-surface="inspection-launchers"]'),
       ).toBeInTheDocument();
       expect(worker.posted).toEqual([
         {
@@ -116,6 +154,37 @@ export function registerAppRouteTests({
           manifest_url: "https://example.test/models/edu/manifest.json",
         },
       ]);
+    });
+
+    test("operates inspection launchers by keyboard and announces unavailable data", async () => {
+      const { worker } = renderRouteApp(renderApp, "#/lab");
+      readyWorker(worker);
+      const user = userEvent.setup();
+      const root = screen.getByRole("button", {
+        name: "전체 모델 구조 보기",
+      });
+
+      root.focus();
+      await user.keyboard("{Enter}");
+      expect(
+        screen.getByRole("dialog", { name: "GPT 전체 모델 구조" }),
+      ).toBeInTheDocument();
+      await user.keyboard("{Escape}");
+      expect(screen.queryByRole("dialog")).toBeNull();
+
+      const attention = screen.getByRole("button", {
+        name: "Self-Attention 보기",
+      });
+      attention.focus();
+      await user.keyboard(" ");
+      expect(
+        document.querySelector('#focused-viewer[role="dialog"]'),
+      ).toHaveTextContent("Self-Attention 계산 흐름");
+      await user.keyboard("{Escape}");
+
+      expect(
+        screen.getByRole("button", { name: "실제 Score Matrix 확인하기" }),
+      ).toBeDisabled();
     });
 
     test("updates the Chapter hash on Next", async () => {
@@ -182,7 +251,14 @@ export function registerAppRouteTests({
       await user.click(trigger);
 
       // Then
-      expect(screen.getByRole("dialog")).toBeVisible();
+      const dialog = screen.getByRole("dialog");
+      expect(dialog).toBeVisible();
+      expect(dialog).toHaveAttribute("data-threeui-surface", "focused-viewer");
+      expect(
+        within(dialog)
+          .getByRole("button", { name: "집중 보기 닫기" })
+          .closest(".circle-buttons"),
+      ).toBeInTheDocument();
       expect(screen.getByTestId("architecture-root")).toBeVisible();
 
       await user.keyboard("{Escape}");

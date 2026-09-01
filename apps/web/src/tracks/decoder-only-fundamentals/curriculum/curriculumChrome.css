@@ -1,0 +1,209 @@
+.curriculum-workspace {
+  gap: 0;
+}
+
+.curriculum-workspace__header[data-threeui-surface="chapter-header"] {
+  gap: 0;
+}
+
+.curriculum-workspace__header[data-threeui-surface="chapter-header"]
+  .curriculum-workspace__header-content {
+  gap: var(--editorial-h1-abstract-gap) var(--s4);
+  padding-block: clamp(1.5rem, 4dvb, 2.5rem) var(--s5);
+}
+
+.curriculum-workspace__header[data-threeui-surface="chapter-header"]
+  .curriculum-workspace__chapter-copy {
+  gap: var(--s2);
+}
+
+.curriculum-workspace__header[data-threeui-surface="chapter-header"] h1 {
+  color: var(--ui-text);
+  font-size: clamp(1.75rem, 2.7vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.curriculum-workspace__header[data-threeui-surface="chapter-header"]
+  .curriculum-workspace__eyebrow {
+  color: var(--ui-accent);
+  font-size: 0.66rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: none;
+}
+
+.curriculum-workspace__header[data-threeui-surface="chapter-header"]
+  .curriculum-workspace__chapter-copy
+  > p:last-child {
+  max-inline-size: 62ch;
+  color: var(--ui-text-muted);
+  line-height: 1.65;
+}
+
+.curriculum-navigation[data-threeui-surface="chapter-navigation"]
+  .curriculum-navigation__opener {
+  min-inline-size: 4rem;
+  border: 1px solid rgb(43 56 60 / 0.24);
+  border-radius: 6px;
+  background: linear-gradient(180deg, #fff, #e7ecec);
+  box-shadow:
+    0 2px 0 #c1caca,
+    0 6px 10px -8px rgb(13 26 30 / 0.46),
+    inset 0 1px #fff;
+  color: var(--ui-text-muted);
+  transition:
+    background-color 160ms ease-out,
+    box-shadow 160ms ease-out,
+    color 160ms ease-out,
+    transform 160ms ease-out;
+}
+
+.curriculum-navigation[data-threeui-surface="chapter-navigation"]
+  .curriculum-navigation__opener:hover {
+  background: linear-gradient(180deg, #fff, #dde5e4);
+  box-shadow:
+    0 3px 0 #b5c1c0,
+    0 8px 12px -8px rgb(13 26 30 / 0.52),
+    inset 0 1px #fff;
+  color: var(--ui-text);
+  transform: translateY(-1px);
+}
+
+.curriculum-navigation[data-threeui-surface="chapter-navigation"]
+  .curriculum-toc {
+  gap: var(--s4);
+  padding: var(--s4);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+}
+
+.curriculum-navigation[data-threeui-surface="chapter-navigation"]
+  .curriculum-toc__part {
+  gap: var(--s1);
+}
+
+.curriculum-navigation[data-threeui-surface="chapter-navigation"]
+  .curriculum-toc__part
+  h2 {
+  padding-block-end: var(--s2);
+  border-block-end: 1px solid var(--ui-border);
+  color: var(--ui-text-soft);
+  font-size: 0.7rem;
+  font-weight: 720;
+}
+
+.curriculum-navigation[data-threeui-surface="chapter-navigation"]
+  .curriculum-toc
+  :is(button, a) {
+  padding: var(--s2) var(--s3);
+  border: 1px solid transparent;
+  border-radius: var(--ui-radius-sm);
+  color: var(--ui-text-muted);
+  font-size: 0.78rem;
+  font-weight: 680;
+}
+
+.curriculum-navigation[data-threeui-surface="chapter-navigation"]
+  .curriculum-toc
+  :is(button, a):hover {
+  background: var(--ui-surface-subtle);
+  color: var(--ui-text);
+}
+
+.curriculum-navigation[data-threeui-surface="chapter-navigation"]
+  .curriculum-toc
+  :is(button, a)[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--ui-accent) 35%, var(--ui-border));
+  background: color-mix(in srgb, var(--ui-accent) 9%, var(--ui-surface));
+  color: var(--ui-accent);
+}
+
+.curriculum-chapter-footer[data-threeui-surface="chapter-footer"] {
+  gap: 0;
+}
+
+.curriculum-chapter-footer[data-threeui-surface="chapter-footer"]
+  .curriculum-chapter-footer__content {
+  gap: var(--s3);
+  padding-block: var(--s6);
+}
+
+.curriculum-chapter-footer[data-threeui-surface="chapter-footer"]
+  .curriculum-chapter-footer__content
+  > span {
+  display: flex;
+  min-inline-size: 0;
+}
+
+.curriculum-chapter-footer[data-threeui-surface="chapter-footer"]
+  .curriculum-chapter-footer__content
+  > span:last-child {
+  justify-content: flex-end;
+}
+
+.curriculum-chapter-footer[data-threeui-surface="chapter-footer"] a {
+  min-block-size: 44px;
+  padding: var(--s2) var(--s3);
+  border: 1px solid rgb(43 56 60 / 0.22);
+  border-radius: 6px;
+  background: linear-gradient(180deg, #fff, #e9eded);
+  box-shadow:
+    0 2px 0 #c4cccc,
+    inset 0 1px #fff;
+  color: var(--ui-text-muted);
+  font-size: 0.78rem;
+  font-weight: 680;
+  transition:
+    background-color 160ms ease-out,
+    box-shadow 160ms ease-out,
+    color 160ms ease-out,
+    transform 160ms ease-out;
+}
+
+.curriculum-chapter-footer[data-threeui-surface="chapter-footer"]
+  a:is(:hover, :focus-visible) {
+  background: linear-gradient(180deg, #fff, #e0e7e6);
+  box-shadow:
+    0 3px 0 #b9c4c3,
+    0 7px 11px -9px rgb(13 26 30 / 0.48),
+    inset 0 1px #fff;
+  color: var(--ui-text);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 40rem) {
+  .curriculum-workspace__header[data-threeui-surface="chapter-header"]
+    .curriculum-workspace__header-content {
+    padding-block-start: var(--s5);
+  }
+
+  .curriculum-workspace__header[data-threeui-surface="chapter-header"] h1 {
+    font-size: clamp(1.7rem, 8vw, 2.2rem);
+  }
+
+  .curriculum-navigation[data-threeui-surface="chapter-navigation"]
+    .curriculum-toc {
+    padding: var(--s3);
+  }
+
+  .curriculum-chapter-footer[data-threeui-surface="chapter-footer"]
+    .curriculum-chapter-footer__content {
+    align-items: stretch;
+  }
+
+  .curriculum-chapter-footer[data-threeui-surface="chapter-footer"] a {
+    inline-size: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .curriculum-navigation[data-threeui-surface="chapter-navigation"]
+    .curriculum-navigation__opener,
+  .curriculum-chapter-footer[data-threeui-surface="chapter-footer"] a {
+    transform: none;
+    transition: none;
+  }
+}

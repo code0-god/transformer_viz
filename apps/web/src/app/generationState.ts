@@ -32,6 +32,7 @@ export type GenerationState = Readonly<{
   pending: PendingGeneration | null;
   active: ActiveGeneration | null;
   pendingReplay: ReplayCorrelation | null;
+  stopPending: boolean;
   promptText: string;
   promptTokens: ReadonlyArray<Readonly<TokenInfo>>;
   config: Readonly<GenerationConfig> | null;
@@ -62,6 +63,7 @@ export function createGenerationState(): GenerationState {
     pending: null,
     active: null,
     pendingReplay: null,
+    stopPending: false,
     promptText: "",
     promptTokens: [],
     config: null,
@@ -127,6 +129,12 @@ export function beginGeneration(
   return requestId === null
     ? state
     : { ...state, pending: { requestId, prompt }, error: null };
+}
+
+export function requestGenerationStop(state: GenerationState): GenerationState {
+  return state.phase === "running" && state.active !== null
+    ? { ...state, stopPending: true }
+    : state;
 }
 
 export function inspectGenerationStep(

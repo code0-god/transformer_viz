@@ -1,8 +1,8 @@
 .lab-inspection {
   display: grid;
   gap: var(--s3);
-  padding-block: var(--s4);
-  border-block: 1px solid var(--hairline);
+  padding: 0;
+  border: 0;
 }
 
 .lab-inspection header {
@@ -19,34 +19,23 @@
 
 .lab-inspection header p {
   color: var(--ink-muted);
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
 }
 
-.lab-inspection__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s2);
+.lab-inspection header h2 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 
-.lab-inspection__actions button {
-  min-block-size: 44px;
-  padding: var(--s2) 0;
-  border: 0;
-  border-block-end: 1px solid currentColor;
-  border-radius: 0;
-  background: transparent;
-  color: var(--accent);
+.lab-inspection__launcher {
+  display: grid;
 }
 
 @media (max-width: 40rem) {
-  .lab-inspection__actions {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .lab-inspection__actions button {
-    inline-size: 100%;
-    text-align: start;
+  .lab-inspection header {
+    align-items: start;
   }
 }

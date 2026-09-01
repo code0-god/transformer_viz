@@ -6,6 +6,8 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { PageDivider } from "../layout/PageLayout";
+import { ThreeUiIconAction } from "../threeui/ThreeUi";
 import { FocusedViewerContent } from "./focusedViewerRegistry";
 import type { FocusedViewerRequest } from "./focusedViewerTypes";
 import "./focusedViewer.css";
@@ -37,7 +39,7 @@ export function OverlayHost({
   onClose,
 }: OverlayHostProps): ReactElement {
   const dialogRef = useRef<HTMLElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const closeHostRef = useRef<HTMLSpanElement>(null);
   const backdropPointerRef = useRef<number | null>(null);
 
   useLayoutEffect(() => {
@@ -61,7 +63,7 @@ export function OverlayHost({
     body.style.width = "100%";
     body.style.overflow = "hidden";
 
-    closeRef.current?.focus();
+    closeHostRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -125,6 +127,7 @@ export function OverlayHost({
     <div
       className="focused-viewer-backdrop"
       data-viewer-backdrop=""
+      data-threeui-surface="focused-viewer-backdrop"
       onPointerDown={handleBackdropPointerDown}
       onPointerUp={handleBackdropPointerUp}
       onPointerCancel={() => {
@@ -145,6 +148,7 @@ export function OverlayHost({
         }
         data-viewer-kind={request.kind}
         data-viewer-source={request.source}
+        data-threeui-surface="focused-viewer"
         tabIndex={-1}
       >
         <header className="focused-viewer__header">
@@ -155,19 +159,14 @@ export function OverlayHost({
             )}
           </div>
           <div className="focused-viewer__header-actions">
-            <button
-              ref={closeRef}
-              type="button"
-              className="focused-viewer__close"
-              aria-label="집중 보기 닫기"
+            <ThreeUiIconAction
+              ariaLabel="집중 보기 닫기"
+              containerRef={closeHostRef}
               onClick={onClose}
-            >
-              <svg viewBox="0 0 16 16" aria-hidden="true">
-                <path d="M3 3l10 10M13 3L3 13" />
-              </svg>
-            </button>
+            />
           </div>
         </header>
+        <PageDivider boundaryId="overlay-header" />
         <div className="focused-viewer__body">
           <FocusedViewerContent request={request} />
         </div>

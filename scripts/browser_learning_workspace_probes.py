@@ -208,7 +208,13 @@ def browser_errors(browser: ChromeSession) -> dict[str, list[str]]:
     network: list[str] = []
     runtime: list[str] = []
     request_urls: dict[str, str] = {}
+    owned_sessions = {
+        browser.page_session,
+        *browser.app_worker_sessions(),
+    }
     for event in browser.require_cdp().events:
+        if event.get("sessionId") not in owned_sessions:
+            continue
         method = event.get("method")
         params = event.get("params", {})
         if method == "Network.requestWillBeSent":

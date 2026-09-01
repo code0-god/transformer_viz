@@ -31,6 +31,7 @@ import {
 } from "./navigation";
 import type { ChapterId } from "./types";
 import "./curriculum.css";
+import "./curriculumChrome.css";
 
 type DecoderTrackWorkspaceProps = {
   readonly context: ArchitectureRenderContext;
@@ -188,7 +189,7 @@ function DecoderCurriculumWorkspace({
   return (
     <section
       ref={workspaceRef}
-      className="curriculum-workspace"
+      className="curriculum-workspace page-layout__full page-layout"
       data-curriculum-chapter-id={chapterId}
       data-learning-layout="article"
     >
@@ -200,7 +201,9 @@ function DecoderCurriculumWorkspace({
         course={course}
         headingRef={headingRef}
       />
-      {content}
+      <div className="curriculum-workspace__content page-layout__wide">
+        {content}
+      </div>
       <CurriculumChapterFooter
         previous={navigation?.previous}
         next={navigation?.next}

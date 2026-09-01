@@ -37,7 +37,10 @@ export function LearningRouteHeader({
   onTitleRef,
 }: LearningRouteHeaderProps): ReactElement {
   return (
-    <header className="learning-route-header">
+    <header
+      className="learning-route-header"
+      data-threeui-surface="learning-route-header"
+    >
       <div className="learning-route-header__copy">
         <h2 id="learning-route-title" ref={onTitleRef} tabIndex={-1}>
           {route.title}
@@ -74,6 +77,7 @@ export function LearningWorkspace({
       data-learning-route-id={route.id}
       data-learning-presentation={presentation}
       data-learning-layout="article"
+      data-threeui-surface="learning-workspace"
     >
       {presentation === "route" ? (
         <LearningRouteHeader

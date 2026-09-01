@@ -1,50 +1,73 @@
 .continuation-panel {
   display: grid;
   min-inline-size: 0;
-  gap: var(--s3);
-  padding: var(--s3);
+  gap: var(--s4);
+  padding: clamp(var(--s4), 2.5vw, var(--s5));
   border: 0;
-  border-block: 1px solid var(--hairline);
   border-radius: 0;
   background: transparent;
 }
 
-.continuation-panel > h2 {
-  font-size: 0.8rem;
-  letter-spacing: 0.01em;
+.continuation-panel__header,
+.runtime-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+
+.continuation-panel__header h2,
+.runtime-panel__header h2 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.continuation-panel__header > span,
+.runtime-panel__header > span {
+  color: var(--ui-text-soft);
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .continuation-panel .decoded-text {
   display: grid;
-  gap: var(--s2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s3);
   min-inline-size: 0;
 }
 
 .continuation-panel .decoded-text > div {
   display: grid;
-  grid-template-columns: minmax(7.5rem, auto) minmax(0, 1fr);
-  gap: var(--s3);
-  align-items: baseline;
+  align-content: start;
+  gap: var(--s2);
+  min-block-size: 6.5rem;
+  padding: var(--s3) 0;
+  border: 0;
+  border-block-start: var(--boundary-width) solid var(--boundary-internal);
+  border-radius: 0;
+  background: transparent;
 }
 
 .continuation-panel .decoded-text dt {
   color: var(--ink-muted);
   font-size: 0.7rem;
-  font-weight: 750;
+  font-weight: 620;
 }
 
 .continuation-panel .decoded-text dd {
   min-inline-size: 0;
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  font-size: 0.86rem;
-  line-height: 1.45;
+  font-size: 0.9rem;
+  line-height: 1.6;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 
 .continuation-panel .decoded-text > div:last-child dd {
   color: var(--accent);
-  font-weight: 750;
+  font-weight: 620;
 }
 
 .continuation-panel .generation-steps {
@@ -84,25 +107,32 @@
   font-size: 0.65rem;
 }
 
-.continuation-panel .token-details {
+.runtime-panel {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--s4);
+  padding: clamp(var(--s4), 2.5vw, var(--s5));
+}
+
+.runtime-panel .token-details {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--s2) var(--s4);
   padding-block-start: var(--s3);
-  border-block-start: 1px solid var(--hairline);
+  border-block-start: var(--boundary-width) solid var(--boundary-internal);
 }
 
-.continuation-panel .token-details div {
+.runtime-panel .token-details div {
   min-inline-size: 0;
 }
 
-.continuation-panel .token-details dt {
+.runtime-panel .token-details dt {
   color: var(--ink-muted);
   font-size: 0.68rem;
   font-weight: 750;
 }
 
-.continuation-panel .token-details dd {
+.runtime-panel .token-details dd {
   margin-block-start: var(--s1);
   overflow-wrap: anywhere;
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
@@ -110,7 +140,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.continuation-panel .generation-usage {
+.runtime-panel .generation-usage {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -120,13 +150,7 @@
 }
 
 @media (max-width: 767px) {
-  .continuation-panel {
-    border-block-start: 1px solid var(--hairline);
-    border-inline-start: 0;
-  }
-
-  .continuation-panel .decoded-text > div {
+  .continuation-panel .decoded-text {
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--s1);
   }
 }

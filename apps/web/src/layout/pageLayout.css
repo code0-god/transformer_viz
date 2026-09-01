@@ -1,0 +1,73 @@
+:root {
+  --page-gutter: clamp(1rem, 2.5vw, 2rem);
+  --page-content-max: 52rem;
+  --page-wide-max: 90rem;
+  --page-breakout: calc(
+    (var(--page-wide-max) - var(--page-content-max)) / 2
+  );
+  --boundary-width: 1px;
+  --boundary-structural: var(--ui-border);
+  --boundary-content: color-mix(
+    in srgb,
+    var(--ui-border) 82%,
+    transparent
+  );
+  --boundary-internal: color-mix(
+    in srgb,
+    var(--ui-border) 68%,
+    transparent
+  );
+  --figure-connector: var(--line);
+}
+
+.page-layout {
+  display: grid;
+  grid-template-columns:
+    [full-start] minmax(var(--page-gutter), 1fr)
+    [wide-start] minmax(0, var(--page-breakout))
+    [content-start] min(
+      calc(100% - var(--page-gutter) - var(--page-gutter)),
+      var(--page-content-max)
+    )
+    [content-end] minmax(0, var(--page-breakout))
+    [wide-end] minmax(var(--page-gutter), 1fr)
+    [full-end];
+  min-inline-size: 0;
+}
+
+.page-layout__full {
+  grid-column: full-start / full-end;
+}
+
+.page-layout__wide {
+  grid-column: wide-start / wide-end;
+}
+
+.page-layout__content {
+  grid-column: content-start / content-end;
+}
+
+.page-layout__subgrid {
+  display: grid;
+  grid-template-columns: subgrid;
+  min-inline-size: 0;
+}
+
+.ui-boundary {
+  block-size: var(--boundary-width);
+  min-block-size: var(--boundary-width);
+  background: var(--boundary-internal);
+  pointer-events: none;
+}
+
+.ui-boundary--structural {
+  background: var(--boundary-structural);
+}
+
+.ui-boundary--content {
+  background: var(--boundary-content);
+}
+
+.ui-boundary--internal {
+  background: var(--boundary-internal);
+}

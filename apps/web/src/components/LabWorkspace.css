@@ -1,0 +1,283 @@
+.lab-workspace[data-threeui-surface="lab"] {
+  display: grid;
+  gap: 0;
+  align-content: start;
+  padding-block: clamp(1.5rem, 4dvb, 2.5rem) var(--s6);
+  background: var(--ui-reading);
+}
+
+.lab-introduction[data-threeui-surface="lab-header"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  inline-size: min(100%, 72rem);
+  justify-self: center;
+  min-block-size: 4.5rem;
+  padding: var(--s3) clamp(var(--s4), 2.5vw, var(--s5));
+  background: color-mix(
+    in srgb,
+    var(--ui-surface-subtle) 58%,
+    var(--ui-reading)
+  );
+}
+
+.lab-introduction__identity {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.lab-introduction[data-threeui-surface="lab-header"]
+  .lab-introduction__identity
+  h1 {
+  color: var(--ui-text);
+  font-size: 1rem;
+  font-weight: 720;
+  line-height: 1.1;
+  letter-spacing: 0.09em;
+}
+
+.lab-introduction[data-threeui-surface="lab-header"]
+  .lab-introduction__identity
+  p {
+  color: var(--ui-text-muted);
+  font-size: 0.72rem;
+}
+
+.lab-introduction__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--ui-text-muted);
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+
+.lab-introduction__status > span {
+  inline-size: 0.48rem;
+  block-size: 0.48rem;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.lab-introduction__status[data-status="ready"],
+.lab-introduction__status[data-status="complete"] {
+  color: var(--ui-ready);
+}
+
+.lab-introduction__status[data-status="error"] {
+  color: var(--ui-error);
+}
+
+.lab-experiment-grid {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: full-start / full-end;
+  gap: 0;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"],
+.continuation-panel[data-threeui-surface="generation-output"],
+.runtime-panel[data-threeui-surface="runtime-evidence"],
+.lab-inspection[data-threeui-surface="inspection-launchers"] {
+  grid-column: wide-start / wide-end;
+  inline-size: min(100%, 72rem);
+  justify-self: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"] {
+  display: grid;
+  align-content: start;
+  gap: var(--s4);
+  min-inline-size: 0;
+  padding: clamp(var(--s4), 2.5vw, var(--s5));
+}
+
+.generation-bar__header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+
+.generation-bar__header > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.generation-bar__header h2 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-bar__header
+  p,
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-bar__header
+  > span {
+  color: var(--ui-text-soft);
+  font-size: 0.68rem;
+}
+
+.generation-bar__header > span {
+  font-variant-numeric: tabular-nums;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-primary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--s3);
+  padding: 0;
+  border: 0;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"] .prompt-field {
+  display: grid;
+  gap: var(--s2);
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .prompt-field
+  > span,
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-settings-grid
+  label
+  > span {
+  color: var(--ui-text-muted);
+  font-size: 0.7rem;
+  font-weight: 620;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"] textarea,
+.generation-bar[data-threeui-surface="generation-controls"]
+  :is(input, select) {
+  min-block-size: 44px;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font: inherit;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"] textarea {
+  min-block-size: 3.75rem;
+  resize: vertical;
+  box-shadow:
+    inset 0 1px 3px rgb(15 27 31 / 0.09),
+    0 1px #fff;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-primary
+  > .threeui-action-host {
+  min-inline-size: 7rem;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-settings {
+  padding-block-start: var(--s1);
+  border-block-start: 1px solid var(--ui-border);
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-settings
+  summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  min-block-size: 44px;
+  padding-block: 0.7rem;
+  color: var(--ui-text-muted);
+  font-size: 0.75rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-settings
+  summary
+  small {
+  color: var(--ui-text-soft);
+  font-size: 0.66rem;
+  font-weight: 520;
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s3);
+  padding-block-start: var(--s2);
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-settings-grid
+  label {
+  display: grid;
+  gap: var(--s1);
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-settings-grid
+  :is(input, select) {
+  inline-size: 100%;
+  padding-inline: var(--s3);
+}
+
+.generation-bar[data-threeui-surface="generation-controls"]
+  .generation-error {
+  color: var(--ui-error);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 40rem) {
+  .lab-workspace[data-threeui-surface="lab"] {
+    padding-block-start: var(--s4);
+  }
+
+  .lab-introduction[data-threeui-surface="lab-header"] {
+    align-items: flex-start;
+  }
+
+  .generation-bar[data-threeui-surface="generation-controls"]
+    .generation-primary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .generation-bar[data-threeui-surface="generation-controls"]
+    .generation-primary
+    > :is(button, .threeui-action) {
+    inline-size: 100%;
+  }
+
+  .generation-bar[data-threeui-surface="generation-controls"]
+    .generation-primary
+    > .threeui-action-host,
+  .generation-bar[data-threeui-surface="generation-controls"]
+    .generation-primary
+    > .threeui-action-host
+    .threeui-action {
+    inline-size: 100%;
+  }
+
+  .generation-bar[data-threeui-surface="generation-controls"]
+    .generation-settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-introduction__status > span {
+    animation: none;
+  }
+}

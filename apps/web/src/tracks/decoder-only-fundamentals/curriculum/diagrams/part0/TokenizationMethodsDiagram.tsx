@@ -58,7 +58,7 @@ export function TokenizationMethodsDiagram(): ReactElement {
         </text>
         <g className="part0-diagram__axis-headings">
           <text x="285" y="92" textAnchor="middle">
-            Example
+            분할 예시
           </text>
           <text x="550" y="92" textAnchor="middle">
             Vocabulary
@@ -77,13 +77,13 @@ export function TokenizationMethodsDiagram(): ReactElement {
               data-tokenization-example={method.id}
               data-current-runtime={method.id === "byte" ? "true" : undefined}
             >
-              <rect x="24" y={y} width="712" height="68" rx="14" />
+              <rect x="24" y={y} width="712" height="68" rx="6" />
               <text x="48" y={y + 28}>
                 {method.label}
               </text>
               {method.id === "byte" ? (
                 <text className="part0-diagram__badge" x="48" y={y + 51}>
-                  CURRENT MODEL
+                  현재 모델
                 </text>
               ) : null}
               <text x="285" y={y + 41} textAnchor="middle">
@@ -108,7 +108,7 @@ export function TokenizationMethodsDiagram(): ReactElement {
       <div className="part0-diagram__fallback">
         <fieldset aria-label="Tokenization 방식 의미 설명">
           <table>
-            <caption>the cats를 나누는 Tokenization 방식의 trade-off</caption>
+            <caption>the cats Tokenization 방식 비교</caption>
             <thead>
               <tr>
                 <th scope="col">방식</th>
@@ -119,7 +119,12 @@ export function TokenizationMethodsDiagram(): ReactElement {
             </thead>
             <tbody>
               {methods.map((method) => (
-                <tr key={method.id}>
+                <tr
+                  key={method.id}
+                  data-tokenization-fallback-current={
+                    method.id === "byte" ? "true" : undefined
+                  }
+                >
                   <th scope="row">{method.label}</th>
                   <td data-label="예시">{method.example}</td>
                   <td data-label="Vocabulary">{method.vocabulary}</td>

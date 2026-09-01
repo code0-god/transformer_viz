@@ -52,6 +52,7 @@ describe("LearningGuide", () => {
     );
 
     const figure = screen.getByRole("figure", { name: "FIGURE_ALT" });
+    expect(figure).toHaveAttribute("data-threeui-surface", "figure");
     expect(figure).toHaveAttribute("data-figure-id", "fixture.figure");
     expect(figure).toHaveAttribute("data-figure-size", "wide");
     expect(figure).toHaveAttribute("data-figure-preferred-width", "720");
@@ -81,6 +82,20 @@ describe("LearningGuide", () => {
     );
     expect(css).not.toMatch(
       /\.learning-figure__graphic\s*{[^}]*block-size:\s*[^a}]/s,
+    );
+  });
+
+  test("integrates Figures as renderer planes instead of white cards", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "src/tracks/learningGuide.css"),
+      "utf8",
+    );
+
+    expect(css).toMatch(
+      /\.learning-figure\[data-threeui-surface="figure"\]\s*\{[^}]*background:\s*transparent;/s,
+    );
+    expect(css).not.toMatch(
+      /\.learning-figure\[data-threeui-surface="figure"\]\s*\{[^}]*border(?:-block|-inline)?:/s,
     );
   });
 
@@ -130,6 +145,10 @@ describe("LearningGuide", () => {
       />,
     );
 
+    expect(screen.getByRole("article")).toHaveAttribute(
+      "data-threeui-surface",
+      "article",
+    );
     expect(screen.getByRole("article")).toHaveAttribute(
       "aria-labelledby",
       "fixture-guide-title",

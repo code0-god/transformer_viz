@@ -7,7 +7,25 @@ describe("Course Home frontispiece", () => {
   test("presents primary Learn and secondary Lab routes", () => {
     render(<CourseHome />);
 
+    const heading = screen.getByRole("heading", {
+      level: 1,
+      name: "Transformer를 처음부터 살펴봅니다",
+    });
+    expect(
+      Array.from(heading.querySelectorAll("[data-home-title-word]")).map(
+        (word) => word.textContent,
+      ),
+    ).toEqual(["Transformer를", "처음부터", "살펴봅니다"]);
     const journey = screen.getByRole("list", { name: "학습 순서" });
+    expect(
+      journey.closest('[data-threeui-surface="course"]'),
+    ).toBeInTheDocument();
+    expect(
+      journey.closest('[data-threeui-surface="course-home"]'),
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('[data-boundary-id="home-final"]'),
+    ).toHaveAttribute("data-boundary-kind", "structural");
     const steps = within(journey).getAllByRole("listitem");
     expect(journey.tagName).toBe("OL");
     expect(steps).toHaveLength(7);

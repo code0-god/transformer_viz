@@ -8,9 +8,10 @@ web
 
 ## Stack
 
-React 19, strict TypeScript, Vite 8, KaTeX 0.18, Three.js 0.185, React Three Fiber 9.7,
-Rust 1.94.0, WebAssembly, a Rust module Web Worker, Candle CPU f32 inference, SVG, HTML, and CSS.
-Deployment is static-only and supports both root hosting and a GitHub Pages project subpath.
+React 19, strict TypeScript, Vite 8, ThreeUI 1.1, KaTeX 0.18, Three.js 0.185,
+React Three Fiber 9.7, Rust 1.94.0, WebAssembly, a Rust module Web Worker,
+Candle CPU f32 inference, SVG, HTML, and CSS. Deployment is static-only and
+supports both root hosting and a GitHub Pages project subpath.
 
 ## Users
 
@@ -69,6 +70,24 @@ Every Chapter identity change starts at document top, including Next,
 Previous, ToC, Figure Chapter links, direct routes, and browser Back/Forward.
 Same-Chapter state changes and Lab overlays preserve their current scroll.
 
+## Product UI Direction
+
+ThreeUI is the canonical visual and interaction layer for the application
+shell, navigation, controls, status, surfaces, Course Home, Learn chrome, and
+Lab UI. The product adopts ThreeUI's neutral instrument language rather than
+repainting it as the previous parchment theme.
+
+Renderer ownership remains specialized:
+
+- ThreeUI = shell, navigation, controls, surfaces, and interaction language.
+- DOM/SVG/KaTeX = exact educational semantics and architecture relationships.
+- R3F = actual trace-backed tensor and matrix visualization.
+
+Package limitations remain explicit. Product adapters own Korean copy,
+application state, accessibility, reduced-motion behavior, and error
+isolation. Heavy renderers remain lazy, permanent decorative animation is not
+allowed, and semantic Figures never become package demos.
+
 ## Capabilities and Constraints
 
 - Tiny educational model: 2 blocks, 4 heads, embedding width 64, context length 24, vocabulary 259.
@@ -99,8 +118,8 @@ Same-Chapter state changes and Lab overlays preserve their current scroll.
 ## Brand Commitments
 
 Keep the name `Transformer Viz`, Korean instructional voice, factual model language, and the
-existing warm scientific-notebook identity. Explanation must remain precise rather than magical,
-competitive, or promotional.
+restrained ThreeUI neutral-instrument identity with a brighter reading plane. Explanation must
+remain precise rather than magical, competitive, or promotional.
 
 ## Evidence on Hand
 
@@ -131,6 +150,10 @@ available and none may be fabricated.
 11. Store Home, Chapter, and Lab location in a static-host-safe hash route.
 12. Let SVG explain where computation happens; use Three.js only when real tensor values benefit
     from a spatial encoding.
+13. Preserve ThreeUI depth, surface, motion, and interaction character instead of flattening
+    package controls into legacy native-button styling.
+14. Treat Lab as one runtime-aware instrument stack and focused viewers as renderer surfaces, not
+    generic dashboard cards or Three.js demos.
 
 ## Accessibility & Inclusion
 

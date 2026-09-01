@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import { type ReactElement, useState } from "react";
 
 import { ReadyScoreMatrixVisualization } from "./ReadyScoreMatrixVisualization";
 import type { ScoreMatrixInspectionState } from "./scoreMatrixState";
@@ -11,6 +11,7 @@ type ScoreMatrixVisualizationPaneProps = Readonly<{
   replayAvailable: boolean;
   selectedLayer: number;
   selectedHead: number;
+  selectedStep?: number | null;
   onInspect: () => void;
   isWebGLAvailable?: () => boolean;
 }>;
@@ -21,10 +22,12 @@ export function ScoreMatrixVisualizationPane({
   replayAvailable,
   selectedLayer,
   selectedHead,
+  selectedStep = null,
   onInspect,
   isWebGLAvailable,
 }: ScoreMatrixVisualizationPaneProps): ReactElement {
   const definition = resolveVisualizationDefinition(visualizationId);
+  const [viewMode, setViewMode] = useState<"3d" | "2d">("3d");
 
   if (definition === null)
     return (
@@ -34,7 +37,11 @@ export function ScoreMatrixVisualizationPane({
     );
   if (!replayAvailable)
     return (
-      <section className="score-matrix-empty" data-score-matrix-state="idle">
+      <section
+        className="score-matrix-empty"
+        data-score-matrix-state="idle"
+        data-threeui-surface="score-matrix-state"
+      >
         <h3>{definition.title}</h3>
         <p>
           실제 Attention Score를 보려면 모델 실험실에서 텍스트를 생성하고
@@ -47,7 +54,11 @@ export function ScoreMatrixVisualizationPane({
   switch (state.status) {
     case "idle":
       return (
-        <section className="score-matrix-empty" data-score-matrix-state="idle">
+        <section
+          className="score-matrix-empty"
+          data-score-matrix-state="idle"
+          data-threeui-surface="score-matrix-state"
+        >
           <h3>{definition.title}</h3>
           <p>{definition.description}</p>
           <button type="button" onClick={onInspect}>
@@ -63,7 +74,10 @@ export function ScoreMatrixVisualizationPane({
       );
     case "error":
       return (
-        <section className="score-matrix-empty">
+        <section
+          className="score-matrix-empty"
+          data-threeui-surface="score-matrix-state"
+        >
           <p role="alert" data-score-matrix-state="error">
             {state.message}
           </p>
@@ -79,6 +93,9 @@ export function ScoreMatrixVisualizationPane({
           key={`${provenance.requestId}:${provenance.runId}:${provenance.layer}:${provenance.head}`}
           definition={definition}
           state={state}
+          selectedStep={selectedStep}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
           {...(isWebGLAvailable === undefined ? {} : { isWebGLAvailable })}
         />
       );

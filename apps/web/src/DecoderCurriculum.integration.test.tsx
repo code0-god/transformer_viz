@@ -1,5 +1,5 @@
 // allow: SIZE_OK — curriculum end-to-end integration matrix
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { type ReactElement, StrictMode } from "react";
 import { describe, expect, test, vi } from "vitest";
@@ -104,6 +104,15 @@ const INLINE_PRODUCTION_CHAPTERS = [
   ...PART1_PRODUCTION_CHAPTERS,
   ...PART2_PRODUCTION_CHAPTERS,
 ] as const;
+const PRODUCTION_CHAPTER_ROUTES = decoderCurriculum.parts.flatMap((part) =>
+  part.chapters.map(
+    (chapter) =>
+      [
+        chapter.title,
+        chapter.id.replace("decoder.chapter.", "").replaceAll(".", "-"),
+      ] as const,
+  ),
+);
 
 const fixtureRegistry: CurriculumRendererRegistry = {
   resolveGuidePage: () => fixturePage,
@@ -173,17 +182,10 @@ function readyCurriculum(slug = "0-1") {
 }
 
 describe("Decoder curriculum production integration", () => {
-  test("keeps every Learn Chapter free of overlays and developer notes", () => {
-    readyCurriculum();
-    const chapters = decoderCurriculum.parts.flatMap((part) => part.chapters);
-
-    for (const chapter of chapters) {
-      fireEvent.click(screen.getByRole("button", { name: "목차 열기" }));
-      fireEvent.click(
-        within(
-          screen.getByRole("navigation", { name: "Chapter 목차" }),
-        ).getByRole("link", { name: chapter.title }),
-      );
+  test.each(PRODUCTION_CHAPTER_ROUTES)(
+    "keeps Learn Chapter %s free of overlays and developer notes",
+    (_chapterTitle, slug) => {
+      readyCurriculum(slug);
       const article = screen.getByRole("article");
       expect(
         article.querySelectorAll("[data-testid='open-diagram-viewer']"),
@@ -195,8 +197,8 @@ describe("Decoder curriculum production integration", () => {
       expect(article.textContent).not.toMatch(
         /\b(?:Rust|exporter|fixture|provenance|current runtime|KV cache|Replay cache)\b|runtime 사실|교육용 runtime/i,
       );
-    }
-  });
+    },
+  );
 
   test.each(INLINE_PRODUCTION_CHAPTERS)(
     "renders production %s Figure inline without opening a viewer",

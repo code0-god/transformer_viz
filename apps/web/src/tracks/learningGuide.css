@@ -2,14 +2,18 @@
   --learning-prose-width: 52rem;
   --learning-figure-wide: 64rem;
   --learning-figure-full: 72rem;
+  --editorial-paragraph-gap: 1rem;
+  --editorial-section-gap: 3.5rem;
+  --editorial-figure-leading: 1rem;
+  --editorial-figure-following: 1rem;
   display: grid;
   gap: clamp(var(--s4, 1rem), 2vw, var(--s5, 1.5rem));
   min-inline-size: 0;
   inline-size: 100%;
   max-inline-size: var(--learning-figure-full);
   margin-inline: auto;
-  padding: 0 var(--s5, 1.5rem) var(--s5, 1.5rem);
-  color: var(--ink, #24231f);
+  padding-block-end: var(--s5, 1.5rem);
+  color: var(--ui-text, #17191c);
   font-size: 1.0625rem;
   font-weight: 400;
   line-height: 1.75;
@@ -36,7 +40,7 @@
   display: grid;
   gap: var(--s1, 0.25rem);
   padding-block: var(--s3, 0.75rem);
-  border-block: 1px solid var(--hairline, #d3ccbd);
+  border-block: var(--boundary-width) solid var(--boundary-content);
 }
 
 .learning-guide-goal strong,
@@ -56,7 +60,7 @@
 
 .learning-guide-outline {
   padding: var(--s3, 0.75rem) 0;
-  border-block: 1px solid var(--hairline, #d3ccbd);
+  border-block: var(--boundary-width) solid var(--boundary-content);
   border-radius: 0;
   background: transparent;
 }
@@ -91,7 +95,7 @@
 .learning-guide-takeaway,
 .learning-guide-glossary {
   display: grid;
-  gap: var(--s4, 1rem);
+  gap: var(--editorial-paragraph-gap);
   min-inline-size: 0;
 }
 
@@ -118,7 +122,7 @@
 
 .learning-guide-sections {
   display: grid;
-  gap: 2rem;
+  gap: var(--editorial-section-gap);
   min-inline-size: 0;
 }
 
@@ -138,20 +142,7 @@
 }
 
 .learning-guide-section[data-active="true"] {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--accent-soft, #f1d4c8) 62%, transparent),
-    transparent 34%
-  );
-}
-
-.learning-guide-section[data-active="true"]::before {
-  position: absolute;
-  inset-block: var(--s5, 1.5rem);
-  inset-inline-start: calc(var(--s3, 0.75rem) * -1);
-  inline-size: 1px;
-  background: var(--accent, #a53d23);
-  content: "";
+  background: color-mix(in srgb, var(--ui-accent) 5%, transparent);
 }
 
 .learning-guide-section-heading {
@@ -160,11 +151,15 @@
   gap: var(--s3, 0.75rem);
 }
 
-.learning-figure {
+.learning-figure[data-threeui-surface="figure"] {
   display: grid;
-  gap: .65rem;
+  gap: var(--s3);
   min-inline-size: 0;
-  margin-block: clamp(2rem, 5vw, 3rem) clamp(2.4rem, 5vw, 3.5rem);
+  margin-block:
+    var(--editorial-figure-leading)
+    var(--editorial-figure-following);
+  padding: clamp(1rem, 3vw, 1.75rem) 0;
+  background: transparent;
 }
 
 .learning-figure[data-figure-size="prose"] {
@@ -198,7 +193,12 @@
 
 .learning-figure:not([data-figure-size="prose"]) .learning-figure__content {
   padding-block: clamp(.8rem, 2vw, 1.25rem);
-  border-block: 1px solid var(--hairline, #d3ccbd);
+  border-block: 0;
+}
+
+.learning-figure[data-figure-id^="decoder.diagram.tokenization."]
+  .learning-figure__content {
+  padding-block: 0;
 }
 
 .learning-figure > figcaption {
@@ -207,6 +207,8 @@
   color: var(--ink-muted, #68645c);
   font-size: .875rem;
   line-height: 1.58;
+  padding-block-start: var(--s3);
+  border-block-start: var(--boundary-width) solid var(--boundary-internal);
 }
 
 .learning-figure
@@ -294,24 +296,15 @@
   margin: 0;
   padding: var(--s3, 0.75rem) var(--s4, 1rem);
   border: 0;
-  border-block-start: 1px solid var(--hairline, #d3ccbd);
-  border-radius: 0;
-  background: color-mix(
-    in srgb,
-    var(--surface, #fbfaf6) 42%,
-    transparent
-  );
+  border-block-start: var(--boundary-width) solid var(--boundary-internal);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface);
 }
 
 .learning-guide-callout {
   padding: var(--s3, 0.75rem) var(--s4, 1rem);
   border-block-start: 0;
-  border-inline-start: 2px solid var(--border-strong, #887d71);
-  background: color-mix(
-    in srgb,
-    var(--surface-subtle, #ebe5dc) 58%,
-    transparent
-  );
+  background: var(--ui-surface-subtle);
 }
 
 .learning-guide-callout strong {
@@ -333,19 +326,6 @@
   margin-block-end: var(--s3, 0.75rem);
 }
 
-.learning-guide-callout[data-guide-tone="important"],
-.learning-guide-operation {
-  border-inline-start-color: color-mix(
-    in srgb,
-    var(--accent, #a53d23) 58%,
-    var(--hairline, #d3ccbd)
-  );
-}
-
-.learning-guide-callout[data-guide-tone="warning"] {
-  border-inline-start-color: var(--error, #a73c31);
-}
-
 .learning-guide-callout[data-guide-tone="analogy"] {
   background: var(--normalization-soft, #fbf2d8);
 }
@@ -358,7 +338,7 @@
 
 .learning-guide-comparison section {
   padding-block-start: var(--s3, 0.75rem);
-  border-block-start: 1px solid var(--line, #8b8374);
+  border-block-start: var(--boundary-width) solid var(--boundary-internal);
 }
 
 .learning-guide-example figcaption {
@@ -422,8 +402,7 @@
 
 .learning-guide-takeaway {
   padding: var(--s4, 1rem) 0;
-  border-block: 1px solid
-    color-mix(in srgb, var(--accent, #a53d23) 32%, var(--hairline, #d3ccbd));
+  border-block: var(--boundary-width) solid var(--boundary-content);
   border-radius: 0;
   background: transparent;
 }
@@ -432,7 +411,7 @@
   display: flex;
   justify-content: flex-end;
   padding-block-start: var(--s3, 0.75rem);
-  border-block-start: 1px solid var(--hairline, #d3ccbd);
+  border-block-start: var(--boundary-width) solid var(--boundary-content);
 }
 
 .learning-guide-next-step button {
@@ -459,7 +438,9 @@
   }
 
   .learning-figure {
-    margin-block: 1.8rem 2.5rem;
+    margin-block:
+      var(--editorial-figure-leading)
+      var(--editorial-figure-following);
   }
 
   .learning-figure__content {
@@ -502,8 +483,21 @@
     clip: auto;
     white-space: normal;
     border: 1px solid var(--hairline, #d3ccbd);
-    border-radius: 6px;
-    background: var(--surface-subtle, #f4efe6);
+    border-radius: 4px;
+    background: color-mix(
+      in srgb,
+      var(--ui-surface-subtle) 72%,
+      var(--ui-reading)
+    );
+  }
+
+  .learning-figure
+    :is(.part0-diagram--vocabulary, .part0-diagram--methods)
+    > .part0-diagram__fallback {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
   }
 
   .learning-guide-runtime dl > div,

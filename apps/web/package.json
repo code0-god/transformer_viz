@@ -20,6 +20,7 @@
     "typecheck": "python3 ../../scripts/worker_verified_snapshot.py ../.. src/generated/worker -- pnpm --dir apps/web exec tsc --noEmit -p {verified-tsconfig}"
   },
   "dependencies": {
+    "@designcodeio/threeui": "1.1.0",
     "@react-three/fiber": "9.7.0",
     "katex": "0.18.4",
     "react": "19.2.8",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.10",
+    "@tanstack/react-devtools": "^0.10.12",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.2",
     "@testing-library/user-event": "14.6.6",
@@ -38,6 +40,7 @@
     "@types/three": "0.185.4",
     "@vitejs/plugin-react": "6.1.0",
     "jsdom": "30.0.1",
+    "react-grab": "^0.2.0",
     "typescript": "7.0.2",
     "vite": "8.2.2",
     "vitest": "4.1.11"

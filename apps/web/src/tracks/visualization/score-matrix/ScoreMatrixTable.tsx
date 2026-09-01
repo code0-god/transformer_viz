@@ -12,6 +12,7 @@ type ScoreMatrixTableProps = Readonly<{
   model: ScoreMatrixModel;
   selectedCellKey: ScoreMatrixCellKey | null;
   onSelect?: (cellKey: ScoreMatrixCellKey) => void;
+  showSelectionSummary?: boolean;
 }>;
 
 type ScoreMatrixSelectionProps = Pick<
@@ -39,12 +40,54 @@ export function ScoreMatrixSelection({
       scoreMatrixCellKey(cell.queryIndex, cell.keyIndex) === selectedCellKey,
   );
 
+  const status =
+    selectedCell === undefined
+      ? null
+      : maskStatus(selectedCell.allowed, selectedCell.blockedByLaterCausalMask);
+
   return (
-    <p className={className} role="status">
-      {selectedCell === undefined
-        ? "선택된 셀 없음"
-        : `선택: 질의 ${selectedCell.queryIndex} ${selectedCell.queryTokenLabel}, 키 ${selectedCell.keyIndex} ${selectedCell.keyTokenLabel}, 점수 ${formatScoreMatrixValue(selectedCell.value)}, ${maskStatus(selectedCell.allowed, selectedCell.blockedByLaterCausalMask)}`}
-    </p>
+    <aside
+      className={className}
+      role="status"
+      data-selected={selectedCell === undefined ? "false" : "true"}
+    >
+      <strong>Selected cell</strong>
+      {selectedCell === undefined || status === null ? (
+        <p>3D bar 또는 2D cell을 선택하세요.</p>
+      ) : (
+        <>
+          <dl>
+            <div>
+              <dt>Query</dt>
+              <dd data-selected-axis="query">
+                {selectedCell.queryIndex} ·{" "}
+                {JSON.stringify(selectedCell.queryTokenLabel)}
+              </dd>
+            </div>
+            <div>
+              <dt>Key</dt>
+              <dd data-selected-axis="key">
+                {selectedCell.keyIndex} ·{" "}
+                {JSON.stringify(selectedCell.keyTokenLabel)}
+              </dd>
+            </div>
+            <div>
+              <dt>Score</dt>
+              <dd data-selected-value="score">
+                {formatScoreMatrixValue(selectedCell.value)}
+              </dd>
+            </div>
+            <div>
+              <dt>Mask</dt>
+              <dd>{status}</dd>
+            </div>
+          </dl>
+          <span className="score-matrix-visually-hidden">
+            {`선택: 질의 ${selectedCell.queryIndex} ${selectedCell.queryTokenLabel}, 키 ${selectedCell.keyIndex} ${selectedCell.keyTokenLabel}, 점수 ${formatScoreMatrixValue(selectedCell.value)}, ${status}`}
+          </span>
+        </>
+      )}
+    </aside>
   );
 }
 
@@ -52,6 +95,7 @@ export function ScoreMatrixTable({
   model,
   selectedCellKey,
   onSelect,
+  showSelectionSummary = true,
 }: ScoreMatrixTableProps): ReactElement {
   return (
     <div className="score-matrix-table-scroll">
@@ -122,7 +166,9 @@ export function ScoreMatrixTable({
           ))}
         </tbody>
       </table>
-      <ScoreMatrixSelection model={model} selectedCellKey={selectedCellKey} />
+      {showSelectionSummary ? (
+        <ScoreMatrixSelection model={model} selectedCellKey={selectedCellKey} />
+      ) : null}
     </div>
   );
 }

@@ -12,10 +12,25 @@ const VIEWER_TITLES: Readonly<Record<ArchitectureView, string>> = {
   "self-attention": "Self-Attention 계산 흐름",
 };
 
+function InspectionArrow(): ReactElement {
+  return (
+    <svg
+      className="lab-inspection__arrow"
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+    >
+      <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" />
+    </svg>
+  );
+}
+
 export function LabInspectionPanel(): ReactElement {
   const { state, commands } = useAppContext();
   const { openViewer } = useFocusedViewer();
   const model = state.worker.model;
+  const scoreAvailable =
+    state.generation.selectedStep !== null &&
+    state.generation.replaySummary !== null;
 
   const openArchitecture = (view: ArchitectureView): void => {
     if (model === null) return;
@@ -69,10 +84,14 @@ export function LabInspectionPanel(): ReactElement {
   };
 
   return (
-    <section className="lab-inspection" aria-labelledby="lab-inspection-title">
+    <section
+      className="lab-inspection"
+      aria-labelledby="lab-inspection-title"
+      data-threeui-surface="inspection-launchers"
+    >
       <header>
         <div>
-          <h2 id="lab-inspection-title">현재 실행 검사</h2>
+          <h2 id="lab-inspection-title">Inspect</h2>
           <p>
             Layer {state.architecture.selectedLayer + 1} · Head{" "}
             {state.architecture.selectedHead + 1} · Step{" "}
@@ -82,31 +101,90 @@ export function LabInspectionPanel(): ReactElement {
           </p>
         </div>
       </header>
-      <div className="lab-inspection__actions">
+      <div className="lab-inspection__launcher">
         <button
           type="button"
           data-testid="lab-open-architecture-root"
+          data-inspection-kind="model"
           disabled={model === null}
+          aria-label="전체 모델 구조 보기"
           onClick={() => openArchitecture("root")}
         >
-          전체 모델 구조 보기
+          <span className="lab-inspection__index" aria-hidden="true">
+            01
+          </span>
+          <span className="lab-inspection__copy">
+            <strong>Model</strong>
+            <span>전체 구조</span>
+          </span>
+          <span className="lab-inspection__context">
+            {model === null
+              ? "Unavailable"
+              : `${model.config.n_layer} blocks · ${model.config.n_head} heads`}
+          </span>
+          <InspectionArrow />
         </button>
         <button
           type="button"
+          data-inspection-kind="block"
           disabled={model === null}
+          aria-label="현재 Transformer Block 보기"
           onClick={() => openArchitecture("transformer-block")}
         >
-          현재 Transformer Block 보기
+          <span className="lab-inspection__index" aria-hidden="true">
+            02
+          </span>
+          <span className="lab-inspection__copy">
+            <strong>Block</strong>
+            <span>Transformer Block</span>
+          </span>
+          <span className="lab-inspection__context">
+            Layer {state.architecture.selectedLayer + 1}
+          </span>
+          <InspectionArrow />
         </button>
         <button
           type="button"
+          data-inspection-kind="attention"
           disabled={model === null}
+          aria-label="Self-Attention 보기"
           onClick={() => openArchitecture("self-attention")}
         >
-          Self-Attention 보기
+          <span className="lab-inspection__index" aria-hidden="true">
+            03
+          </span>
+          <span className="lab-inspection__copy">
+            <strong>Attention</strong>
+            <span>Self-Attention</span>
+          </span>
+          <span className="lab-inspection__context">
+            Layer {state.architecture.selectedLayer + 1} · Head{" "}
+            {state.architecture.selectedHead + 1}
+          </span>
+          <InspectionArrow />
         </button>
-        <button type="button" onClick={openScoreMatrix}>
-          실제 Score Matrix 확인하기
+        <button
+          type="button"
+          data-inspection-kind="score-matrix"
+          disabled={!scoreAvailable}
+          aria-label="실제 Score Matrix 확인하기"
+          onClick={openScoreMatrix}
+        >
+          <span className="lab-inspection__index" aria-hidden="true">
+            04
+          </span>
+          <span className="lab-inspection__copy">
+            <strong>Score Matrix</strong>
+            <span>Actual trace</span>
+          </span>
+          <span className="lab-inspection__context">
+            {scoreAvailable
+              ? `Step ${(state.generation.selectedStep ?? 0) + 1} · Head ${
+                  state.architecture.selectedHead + 1
+                }`
+              : "Generate and select step"}
+          </span>
+          <InspectionArrow />
         </button>
       </div>
     </section>

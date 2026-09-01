@@ -1,31 +1,40 @@
 /* allow: SIZE_OK — shared curriculum presentation contract across Parts */
 .curriculum-workspace {
+  --editorial-h1-abstract-gap: 0.875rem;
+  --editorial-abstract-content-gap: 0.875rem;
   display: grid;
-  gap: var(--s4);
+  gap: 0;
   min-inline-size: 0;
   max-inline-size: 100%;
 }
 
 .curriculum-workspace__header {
+  align-content: start;
+  min-inline-size: 0;
+}
+
+.curriculum-workspace__header-content {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--s3);
+  gap: var(--editorial-h1-abstract-gap) var(--s4);
   align-items: start;
-  inline-size: 100%;
-  max-inline-size: 56rem;
   min-inline-size: 0;
-  margin-inline: auto;
-  padding-block-end: var(--s3);
-  border-block-end: 1px solid var(--hairline);
+  padding-block: var(--s5);
+}
+
+.curriculum-workspace__content {
+  min-inline-size: 0;
+  padding-block-start: var(--editorial-abstract-content-gap);
 }
 
 .curriculum-workspace__chapter-copy {
-  display: grid;
-  gap: var(--s1);
-  min-inline-size: 0;
+  display: contents;
 }
 
 .curriculum-workspace__eyebrow {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
   color: var(--text-tertiary);
   font-size: .72rem;
   font-weight: 700;
@@ -34,6 +43,9 @@
 }
 
 .curriculum-workspace__chapter-copy h1 {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  justify-self: start;
   max-inline-size: 24ch;
   font-size: clamp(1.4rem, 2.1vw, 1.8rem);
   letter-spacing: -.035em;
@@ -42,15 +54,13 @@
 }
 
 .curriculum-workspace__chapter-copy h1:focus-visible {
-  outline: 0;
-  text-decoration: underline;
-  text-decoration-color: color-mix(
+  outline: 1px solid
+    color-mix(
     in srgb,
     var(--accent) 42%,
     transparent
   );
-  text-decoration-thickness: 2px;
-  text-underline-offset: 0.2em;
+  outline-offset: 4px;
 }
 
 .curriculum-workspace__chapter-copy p {
@@ -59,13 +69,18 @@
   word-break: keep-all;
 }
 
+.curriculum-workspace__chapter-copy > p:last-child {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
 .curriculum-navigation {
-  display: grid;
-  gap: var(--s2);
-  min-inline-size: 0;
+  display: contents;
 }
 
 .curriculum-navigation__header {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -94,17 +109,14 @@
   color: var(--text-primary);
 }
 
-.curriculum-workspace__header:has(.curriculum-toc) .curriculum-navigation {
-  grid-column: 1 / -1;
-}
-
 .curriculum-toc {
   grid-column: 1 / -1;
+  grid-row: 4;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--s4);
   padding: var(--s4) 0;
-  border-block: 1px solid var(--hairline);
+  border-block: var(--boundary-width) solid var(--boundary-content);
   border-radius: 0;
   background: transparent;
   box-shadow: none;
@@ -160,14 +172,14 @@
 }
 
 .curriculum-chapter-footer {
+  align-content: start;
+}
+
+.curriculum-chapter-footer__content {
   display: flex;
   justify-content: space-between;
   gap: var(--s4);
-  inline-size: 100%;
-  max-inline-size: 56rem;
-  margin-inline: auto;
   padding-block: var(--s5);
-  border-block-start: 1px solid var(--hairline);
 }
 
 .curriculum-chapter-footer a {
@@ -197,14 +209,10 @@
   padding: 0;
 }
 
-.part0-diagram--pipeline {
-  inline-size: min(100%, 34rem);
-  margin-inline: auto;
-}
-
+.part0-diagram--pipeline,
 .part0-diagram--vocabulary,
 .part0-diagram--methods {
-  inline-size: min(100%, 56rem);
+  inline-size: 100%;
   margin-inline: auto;
 }
 
@@ -220,7 +228,7 @@
 
 .part0-diagram__path {
   fill: none;
-  stroke: var(--line);
+  stroke: var(--figure-connector);
   stroke-width: 2;
 }
 
@@ -337,7 +345,42 @@
 }
 
 .part0-diagram__example {
-  font-weight: 750;
+  font-weight: 650;
+}
+
+.part0-diagram__input-sequence > text:first-child,
+.part0-diagram__lookup-headings text {
+  fill: var(--ui-text-muted);
+  font-size: 14px;
+  font-weight: 620;
+}
+
+.part0-diagram__lookup-value {
+  fill: var(--ui-text);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 18px;
+  font-weight: 680;
+}
+
+.part0-diagram__lookup-edge,
+.part0-diagram__sequence-link,
+.part0-diagram__lookup-rule {
+  fill: none;
+}
+
+.part0-diagram__lookup-edge,
+.part0-diagram__sequence-link {
+  stroke: var(--figure-connector);
+  stroke-width: 1.5;
+}
+
+.part0-diagram__sequence-link {
+  stroke-dasharray: 4 4;
+}
+
+.part0-diagram__lookup-rule {
+  stroke: var(--boundary-internal);
+  stroke-width: var(--boundary-width);
 }
 
 .part0-diagram__lens line {
@@ -362,14 +405,46 @@
 .part0-diagram__badge {
   fill: var(--accent);
   font-size: 12px;
-  font-weight: 850;
+  font-weight: 720;
   letter-spacing: .08em;
 }
 
-.part0-diagram__method-row[data-current-runtime="true"] > rect {
-  fill: var(--accent-soft);
+.part0-diagram__address-board > rect {
+  fill: color-mix(in srgb, var(--ui-surface-subtle) 72%, transparent);
+  stroke: var(--ui-border);
+}
+
+.part0-diagram--vocabulary .part0-diagram__reserved-legend > rect {
+  fill: transparent;
+  stroke: transparent;
+}
+
+.part0-diagram__reserved-legend .part0-diagram__note {
+  fill: var(--ui-text-muted);
+  font-size: 13px;
+  font-weight: 560;
+}
+
+.part0-diagram.part0-diagram--methods
+  .part0-diagram__method-row
+  > rect {
+  fill: transparent;
+  stroke: var(--ui-border);
+  stroke-width: 1;
+}
+
+.part0-diagram.part0-diagram--methods
+  .part0-diagram__method-row[data-current-runtime="true"]
+  > rect {
+  fill: color-mix(in srgb, var(--ui-accent) 7%, transparent);
   stroke: var(--accent);
-  stroke-width: 2;
+  stroke-width: 1.5;
+}
+
+.part0-diagram--methods
+  [data-tokenization-fallback-current="true"] {
+  background: color-mix(in srgb, var(--ui-accent) 7%, transparent);
+  color: var(--ui-text);
 }
 
 .part0-diagram__fallback {
@@ -510,7 +585,7 @@
 
 .part1-diagram__path {
   fill: none;
-  stroke: var(--line);
+  stroke: var(--figure-connector);
   stroke-width: 2;
 }
 
@@ -620,7 +695,7 @@
 .part2-diagram__path,
 .part2-diagram__brace {
   fill: none;
-  stroke: var(--line);
+  stroke: var(--figure-connector);
   stroke-width: 2;
 }
 
@@ -667,8 +742,8 @@
 }
 
 @media (max-width: 79.999rem) {
-  .curriculum-workspace__header {
-    grid-template-columns: minmax(0, 1fr);
+  .curriculum-workspace__header-content {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .curriculum-navigation__header,

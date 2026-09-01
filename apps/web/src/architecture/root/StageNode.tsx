@@ -33,7 +33,7 @@ export function StageNode({
   return (
     <ArchitectureNode
       id={id}
-      bounds={{ ...bounds, radius: 9 }}
+      bounds={{ ...bounds, radius: 6 }}
       selected={selected}
       highlighted={highlighted}
       interactive={interactive}
@@ -42,7 +42,7 @@ export function StageNode({
       <g
         className={`architecture-node ${className}${interactive ? ` architecture-interactive-node architecture-interactive-node--${capability}` : ""}${selected ? " is-selected" : ""}`}
       >
-        <rect {...bounds} rx={9} />
+        <rect {...bounds} rx={6} />
         <text
           x={bounds.x + bounds.width / 2}
           y={titleY}

@@ -61,6 +61,15 @@ function ArchitectureViewer({
     <DiagramViewport
       label={`${request.title} 보기`}
       resetKey={`${request.id}:${context.state.view}`}
+      description={
+        <div className="architecture-viewer-status">
+          <span>Current view · {context.state.view}</span>
+          <span>
+            Layer {context.state.selectedLayer + 1} · Head{" "}
+            {context.state.selectedHead + 1}
+          </span>
+        </div>
+      }
       {...(presentation.controls === undefined
         ? {}
         : { extraControls: presentation.controls })}
@@ -81,6 +90,7 @@ function VisualizationViewer({
       replayAvailable={state.generation.replaySummary !== null}
       selectedLayer={state.architecture.selectedLayer}
       selectedHead={state.architecture.selectedHead}
+      selectedStep={state.generation.selectedStep}
       onInspect={commands.inspectScoreMatrix}
     />
   );

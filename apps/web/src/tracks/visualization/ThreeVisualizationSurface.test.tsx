@@ -67,6 +67,32 @@ describe("ThreeVisualizationSurface", () => {
     expect(isWebGLAvailable).toHaveBeenCalledOnce();
   });
 
+  test("keeps static fallback and skips lazy renderer under reduced motion", () => {
+    const loadRenderer = vi.fn(async () => ({ default: WorkingRenderer }));
+    const prefersReducedMotion = vi.fn(() => true);
+
+    render(
+      <ThreeVisualizationSurface
+        title="Score Matrix"
+        loadRenderer={loadRenderer}
+        rendererProps={{}}
+        isWebGLAvailable={() => true}
+        prefersReducedMotion={prefersReducedMotion}
+        fallback={<FallbackTable />}
+      />,
+    );
+
+    expect(screen.getByRole("status")).toHaveAttribute(
+      "data-visualization-state",
+      "reduced-motion",
+    );
+    expect(
+      screen.getByRole("table", { name: "Score Matrix fallback" }),
+    ).toBeVisible();
+    expect(loadRenderer).not.toHaveBeenCalled();
+    expect(prefersReducedMotion).toHaveBeenCalledOnce();
+  });
+
   test("opens fallback and remounts renderer after context loss", async () => {
     const user = userEvent.setup();
     const loadRenderer = vi.fn(async () => ({ default: WorkingRenderer }));

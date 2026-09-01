@@ -43,7 +43,7 @@ def _close_viewer(browser: ChromeSession) -> None:
 def _open_score_viewer(browser: ChromeSession) -> None:
     pointer_click(
         browser,
-        button_with_text("실제 Score Matrix 확인하기"),
+        "document.querySelector('[data-inspection-kind=\"score-matrix\"]')",
         condition=(
             "document.querySelector('#focused-viewer"
             "[data-viewer-kind=\"visualization\"]') !== null"
@@ -83,13 +83,21 @@ def _assert_lab_base(browser: ChromeSession) -> JsonObject:
         """(() => {
           const main = document.querySelector('.architecture-main');
           const style = main ? getComputedStyle(main) : null;
+          const prompt = document.querySelector('.generation-bar');
+          const continuation = document.querySelector('.continuation-panel');
+          const runtime = document.querySelector('.runtime-panel');
+          const promptRect = prompt?.getBoundingClientRect();
+          const continuationRect = continuation?.getBoundingClientRect();
+          const runtimeRect = runtime?.getBoundingClientRect();
           return {
             prompt: document.querySelector('textarea') !== null,
             generate: document.querySelector('[data-testid="generate"]') !== null,
             continuation:
               document.querySelector('.continuation-panel') !== null,
+            runtime:
+              document.querySelector('.runtime-panel') !== null,
             inspectionActions: document.querySelectorAll(
-              '.lab-inspection__actions button',
+              '.lab-inspection__launcher button',
             ).length,
             architectureMounted:
               document.querySelector('[data-testid="architecture-root"]')
@@ -99,7 +107,23 @@ def _assert_lab_base(browser: ChromeSession) -> JsonObject:
               document.querySelector('[role="dialog"]') !== null,
             columns: style?.gridTemplateColumns ?? null,
             mainWidth: main?.getBoundingClientRect().width ?? 0,
-            overflowX: document.documentElement.scrollWidth > innerWidth,
+            promptLeft: promptRect?.left ?? -1,
+            promptRight: promptRect?.right ?? -1,
+            promptBottom: promptRect?.bottom ?? -1,
+            continuationLeft: continuationRect?.left ?? -1,
+            continuationRight: continuationRect?.right ?? -1,
+            continuationTop: continuationRect?.top ?? -1,
+            continuationBottom: continuationRect?.bottom ?? -1,
+            runtimeLeft: runtimeRect?.left ?? -1,
+            runtimeRight: runtimeRect?.right ?? -1,
+            runtimeTop: runtimeRect?.top ?? -1,
+            boundaryIds: Array.from(
+              document.querySelectorAll('.lab-workspace [data-boundary-id]'),
+              (node) => node.getAttribute('data-boundary-id'),
+            ),
+            overflowX:
+              document.documentElement.scrollWidth
+              - document.documentElement.clientWidth,
           };
         })()""",
     )
@@ -107,6 +131,7 @@ def _assert_lab_base(browser: ChromeSession) -> JsonObject:
         lab["prompt"] is True
         and lab["generate"] is True
         and lab["continuation"] is True
+        and lab["runtime"] is True
         and lab["inspectionActions"] == 4,
         f"Lab experiment flow missing: {lab}",
     )
@@ -114,13 +139,27 @@ def _assert_lab_base(browser: ChromeSession) -> JsonObject:
         lab["architectureMounted"] is False
         and lab["canvasMounted"] is False
         and lab["dialogMounted"] is False
-        and lab["overflowX"] is False,
+        and lab["overflowX"] == 0,
         f"Lab mounted permanent inspection UI: {lab}",
     )
     require(
         isinstance(lab["columns"], str)
-        and " " not in lab["columns"].strip()
-        and number(lab["mainWidth"], "Lab width") <= 1200,
+        and str(lab["columns"]).startswith("subgrid")
+        and number(lab["promptLeft"], "Prompt left")
+        == number(lab["continuationLeft"], "Continuation left")
+        and number(lab["promptRight"], "Prompt right")
+        == number(lab["continuationRight"], "Continuation right")
+        and number(lab["continuationTop"], "Continuation top")
+        >= number(lab["promptBottom"], "Prompt bottom")
+        and number(lab["runtimeLeft"], "Runtime left")
+        == number(lab["continuationLeft"], "Continuation left")
+        and number(lab["runtimeRight"], "Runtime right")
+        == number(lab["continuationRight"], "Continuation right")
+        and number(lab["runtimeTop"], "Runtime top")
+        >= number(lab["continuationBottom"], "Continuation bottom")
+        and lab["boundaryIds"]
+        == ["lab-prompt", "lab-output", "lab-runtime", "lab-inspect"]
+        and number(lab["mainWidth"], "Lab width") <= 1440,
         f"Lab fixed split remains: {lab}",
     )
     return lab
@@ -141,17 +180,59 @@ def _open_lab_architecture(browser: ChromeSession) -> JsonObject:
         "[data-viewer-backdrop]",
         "Lab Architecture viewer animation",
     )
+    pointer_click(
+        browser,
+        (
+            "document.querySelector('#focused-viewer "
+            "button[aria-label=\"확대\"]')"
+        ),
+        condition=(
+            "document.querySelector('#focused-viewer "
+            "[data-testid=\"diagram-viewport-surface\"]')"
+            "?.dataset.viewportMode === 'zoomed'"
+        ),
+        label="Architecture viewer zoom before refit",
+    )
+    pointer_click(
+        browser,
+        (
+            "document.querySelector('#focused-viewer "
+            "button[aria-label=\"전체 보기\"]')"
+        ),
+        condition=(
+            "document.querySelector('#focused-viewer "
+            "[data-testid=\"diagram-viewport-surface\"]')"
+            "?.dataset.viewportMode === 'fit'"
+        ),
+        label="Architecture viewer stable fit",
+    )
+    settle(browser)
     overlay = evaluate_dict(
         browser,
         """(() => {
           const viewer = document.querySelector('#focused-viewer');
           const rect = viewer?.getBoundingClientRect();
+          const surface = viewer?.querySelector(
+            '[data-testid="diagram-viewport-surface"]',
+          )?.getBoundingClientRect();
+          const content = viewer?.querySelector(
+            '.diagram-viewport__content',
+          )?.getBoundingClientRect();
+          const diagram = viewer?.querySelector(
+            '.architecture-diagram',
+          )?.getBoundingClientRect();
           return {
             dialogCount: document.querySelectorAll('[role="dialog"]').length,
             kind: viewer?.dataset.viewerKind ?? null,
             source: viewer?.dataset.viewerSource ?? null,
             widthRatio: (rect?.width ?? 0) / innerWidth,
             heightRatio: (rect?.height ?? 0) / innerHeight,
+            contentTop: content?.top ?? -1,
+            contentBottom: content?.bottom ?? -1,
+            diagramTop: diagram?.top ?? -1,
+            diagramBottom: diagram?.bottom ?? -1,
+            surfaceTop: surface?.top ?? -1,
+            surfaceBottom: surface?.bottom ?? -1,
             pageInert:
               document.querySelector('.architecture-app')?.hasAttribute(
                 'inert',
@@ -170,6 +251,20 @@ def _open_lab_architecture(browser: ChromeSession) -> JsonObject:
         number(overlay["widthRatio"], "Architecture viewer width") >= 0.8
         and number(overlay["heightRatio"], "Architecture viewer height") >= 0.78,
         f"Lab Architecture viewer too small: {overlay}",
+    )
+    require(
+        number(overlay["contentTop"], "Architecture content top")
+        >= number(overlay["surfaceTop"], "Architecture surface top") - 1
+        and number(overlay["contentBottom"], "Architecture content bottom")
+        <= number(overlay["surfaceBottom"], "Architecture surface bottom") + 1,
+        f"Lab Architecture content clipped after fit: {overlay}",
+    )
+    require(
+        number(overlay["diagramTop"], "Architecture diagram top")
+        >= number(overlay["surfaceTop"], "Architecture surface top") - 1
+        and number(overlay["diagramBottom"], "Architecture diagram bottom")
+        <= number(overlay["surfaceBottom"], "Architecture surface bottom") + 1,
+        f"Lab Architecture diagram clipped after fit: {overlay}",
     )
     return overlay
 
@@ -323,10 +418,29 @@ def capture_visualization_phase(
     shots["labBase"] = capture(
         browser, screenshots / "lab-base-1440x900.png"
     )
+    shots["requiredLabDesktop"] = capture(
+        browser,
+        screenshots / "04-lab-1440.png",
+    )
+    browser.require_cdp().evaluate(
+        browser.page_session,
+        """document.querySelector('.lab-inspection')
+          ?.scrollIntoView({ block: 'center', behavior: 'auto' })""",
+        True,
+    )
+    settle(browser)
+    shots["labInspection"] = capture(
+        browser,
+        screenshots / "lab-inspection-1440x900.png",
+    )
 
     evidence["labArchitectureViewer"] = _open_lab_architecture(browser)
     shots["labArchitectureViewer"] = capture(
         browser, screenshots / "lab-architecture-viewer-1440x900.png"
+    )
+    shots["requiredArchitectureDesktop"] = capture(
+        browser,
+        screenshots / "05-lab-architecture-viewer-1440.png",
     )
     _select_attention_head_two(browser)
     _close_viewer(browser)
@@ -342,6 +456,74 @@ def capture_visualization_phase(
     evidence["cellInteraction"] = cell_interaction
     shots["scoreMatrixViewer"] = capture(
         browser, screenshots / "viewer-score-matrix-3d-1440x900.png"
+    )
+    shots["requiredScoreMatrixDesktop"] = capture(
+        browser,
+        screenshots / "06-lab-score-matrix-1440.png",
+    )
+    pointer_click(
+        browser,
+        button_with_text("2D Matrix", "document.querySelector('#focused-viewer')"),
+        condition=(
+            "document.querySelector('[data-score-matrix-mode=\"2d\"]') !== null"
+            " && document.querySelector('.score-matrix-table-mode:not([hidden])"
+            " .score-matrix-table') !== null"
+        ),
+        label="Score Matrix 2D mode",
+    )
+    mode_evidence = evaluate_dict(
+        browser,
+        """(() => {
+          const selectedTableCell = document.querySelector(
+            '.score-matrix-table-mode:not([hidden]) td[data-selected="true"]',
+          );
+          const selectedScore = document.querySelector(
+            '.score-matrix-selection--primary [data-selected-value="score"]',
+          );
+          const canvas = document.querySelector('.score-matrix-canvas');
+          return {
+            mode: document.querySelector('.score-matrix-visualization')
+              ?.getAttribute('data-score-matrix-mode') ?? '',
+            tableVisible: selectedTableCell instanceof HTMLElement
+              && selectedTableCell.getBoundingClientRect().height > 0,
+            canvasVisible: canvas instanceof HTMLElement
+              && canvas.getBoundingClientRect().height > 0,
+            selectedTableValue:
+              selectedTableCell?.querySelector(
+                '.score-matrix-cell-button > span:not(.score-matrix-visually-hidden)',
+              )?.textContent?.trim() ?? '',
+            selectedDetailValue: selectedScore?.textContent?.trim() ?? '',
+            inspectRequests: window.__learningWorkerRequests.filter(
+              item => item?.type === 'inspect_attention_head',
+            ).length,
+          };
+        })()""",
+    )
+    require(
+        mode_evidence["mode"] == "2d"
+        and mode_evidence["tableVisible"] is True
+        and mode_evidence["canvasVisible"] is False
+        and mode_evidence["selectedTableValue"]
+        == mode_evidence["selectedDetailValue"],
+        f"Score Matrix 2D mode failed: {mode_evidence}",
+    )
+    require(
+        mode_evidence["inspectRequests"] == matrix["inspectRequests"],
+        f"2D mode changed Worker requests: {mode_evidence}",
+    )
+    evidence["viewModes"] = mode_evidence
+    shots["scoreMatrixTable"] = capture(
+        browser, screenshots / "viewer-score-matrix-2d-1440x900.png"
+    )
+    pointer_click(
+        browser,
+        button_with_text("3D Surface", "document.querySelector('#focused-viewer')"),
+        condition=(
+            "document.querySelector('[data-score-matrix-mode=\"3d\"]') !== null"
+            " && document.querySelector('.score-matrix-canvas')"
+            "?.getBoundingClientRect().height > 0"
+        ),
+        label="Score Matrix 3D mode restore",
     )
     evidence["camera"] = _exercise_camera(browser)
     context = lose_context(browser)
@@ -371,15 +553,125 @@ def capture_visualization_phase(
             matrix["inspectRequests"],
         ),
     }
-    evidence["labResponsive"] = _verify_lab_responsive(browser)
+    evidence["labResponsive"] = _verify_lab_responsive(
+        browser,
+        screenshots,
+        shots,
+    )
 
 
-def _verify_lab_responsive(browser: ChromeSession) -> list[JsonObject]:
+def _verify_lab_responsive(
+    browser: ChromeSession,
+    screenshots: Path,
+    shots: dict[str, str],
+) -> list[JsonObject]:
     evidence: list[JsonObject] = []
-    for width, height in ((1440, 900), (1366, 768), (1024, 768), (390, 844)):
+    for width, height in (
+        (1440, 900),
+        (1366, 768),
+        (1024, 768),
+        (768, 1024),
+        (390, 844),
+        (320, 568),
+    ):
         set_viewport(browser, width, height)
         base = _assert_lab_base(browser)
-        require(base["overflowX"] is False, f"Lab base overflow: {base}")
+        require(base["overflowX"] == 0, f"Lab base overflow: {base}")
+        if width in (320, 390):
+            browser.require_cdp().evaluate(
+                browser.page_session,
+                "window.scrollTo({ top: 0, left: 0, behavior: 'auto' })",
+                True,
+            )
+            wait_for(browser, "scrollY === 0", f"Lab {width} top")
+        layout = evaluate_dict(
+            browser,
+            """(() => {
+              const stacked = (selector) => {
+                const children = Array.from(
+                  document.querySelector(selector)?.children ?? [],
+                ).filter(
+                  (child) =>
+                    child instanceof HTMLElement
+                    && !child.matches('.ui-boundary'),
+                );
+                if (children.length < 2) return false;
+                const first = children[0]?.getBoundingClientRect();
+                const second = children[1]?.getBoundingClientRect();
+                return !!first && !!second
+                  && Math.abs(first.left - second.left) <= 1
+                  && second.top >= first.bottom - 1;
+              };
+              const settings = document.querySelector(
+                '.generation-settings',
+              );
+              if (settings instanceof HTMLDetailsElement) settings.open = true;
+              const controls = Array.from(
+                document.querySelectorAll(
+                  '.generation-bar :is(button, input, textarea, select)',
+                ),
+              );
+              const generation = document.querySelector('.generation-bar')
+                ?.getBoundingClientRect();
+              return {
+                experimentStacked: stacked('.lab-experiment-grid'),
+                primaryStacked: stacked('.generation-primary'),
+                settingsStacked: stacked('.generation-settings-grid'),
+                controlsFit: controls.every((control) => {
+                  const rect = control.getBoundingClientRect();
+                  return !!generation
+                    && rect.left >= generation.left - 1
+                    && rect.right <= generation.right + 1;
+                }),
+                controlMinHeight: Math.min(
+                  ...controls.map(
+                    (control) => control.getBoundingClientRect().height,
+                  ),
+                ),
+              };
+            })()""",
+        )
+        if width <= 880:
+            require(
+                layout["experimentStacked"] is True,
+                f"Lab experiment did not stack at {width}: {layout}",
+            )
+        if width <= 640:
+            require(
+                layout["primaryStacked"] is True
+                and layout["settingsStacked"] is True,
+                f"Lab controls did not stack at {width}: {layout}",
+            )
+        require(
+            layout["controlsFit"] is True
+            and number(layout["controlMinHeight"], "Lab control height") >= 44,
+            f"Lab controls exceed mobile surface at {width}: {layout}",
+        )
+        if width == 390:
+            shots["labBaseMobile"] = capture(
+                browser,
+                screenshots / "lab-base-390x844.png",
+            )
+            shots["requiredLabMobile"] = capture(
+                browser,
+                screenshots / "09-lab-390.png",
+            )
+            browser.require_cdp().evaluate(
+                browser.page_session,
+                """document.querySelector('.lab-inspection')
+                  ?.scrollIntoView({ block: 'center', behavior: 'auto' })""",
+                True,
+            )
+            settle(browser)
+            shots["labInspectionMobile"] = capture(
+                browser,
+                screenshots / "lab-inspection-390x844.png",
+            )
+        elif width == 320:
+            shots["labBaseNarrow"] = capture(
+                browser,
+                screenshots / "lab-base-320x568.png",
+            )
         pointer_click(
             browser,
             "document.querySelector('[data-testid=\"lab-open-architecture-root\"]')",
@@ -414,8 +706,11 @@ def _verify_lab_responsive(browser: ChromeSession) -> list[JsonObject]:
                 kind: viewer?.getAttribute('data-viewer-kind') ?? '',
                 modal: viewer?.getAttribute('aria-modal') ?? '',
                 overflow:
-                  document.documentElement.scrollWidth
-                  - document.documentElement.clientWidth,
+                  Math.max(
+                    0,
+                    document.documentElement.scrollWidth
+                    - document.documentElement.clientWidth,
+                  ),
                 localOverflow: body
                   ? Math.max(0, body.scrollWidth - body.clientWidth)
                   : -1,
@@ -453,7 +748,24 @@ def _verify_lab_responsive(browser: ChromeSession) -> list[JsonObject]:
             and number(probe["closeHeight"], "close height") >= 44,
             f"Lab close target too small: {probe}",
         )
-        evidence.append({"width": width, "height": height, **probe})
+        if width == 390:
+            shots["labArchitectureMobile"] = capture(
+                browser,
+                screenshots / "lab-architecture-viewer-390x844.png",
+            )
+        elif width == 320:
+            shots["labArchitectureNarrow"] = capture(
+                browser,
+                screenshots / "lab-architecture-viewer-320x568.png",
+            )
+        evidence.append(
+            {
+                "width": width,
+                "height": height,
+                "layout": layout,
+                **probe,
+            },
+        )
         _close_viewer(browser)
         focus = evaluate_dict(
             browser,
@@ -477,6 +789,24 @@ def _verify_lab_responsive(browser: ChromeSession) -> list[JsonObject]:
             },
             f"Lab close restoration failed: {focus}",
         )
+        if width == 390:
+            _open_score_viewer(browser)
+            wait_for(
+                browser,
+                "document.querySelector('.score-matrix-canvas canvas')"
+                "?.dataset.renderState === 'ready'",
+                "Score Matrix mobile renderer",
+            )
+            settle(browser)
+            shots["scoreMatrixMobile"] = capture(
+                browser,
+                screenshots / "viewer-score-matrix-3d-390x844.png",
+            )
+            shots["requiredScoreMatrixMobile"] = capture(
+                browser,
+                screenshots / "10-score-matrix-390.png",
+            )
+            _close_viewer(browser)
     browser.require_cdp().evaluate(
         browser.page_session,
         """

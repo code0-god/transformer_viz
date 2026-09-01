@@ -1,10 +1,12 @@
 import type { ReactElement } from "react";
 
 import { chapterHref } from "../app/appRoute";
+import { PageDivider } from "../layout/PageLayout";
 import {
   type LearningTrackRegistry,
   learningTrackRegistry,
 } from "../tracks/registry";
+import "./CourseHome.css";
 
 type CourseHomeProps = {
   readonly registry?: LearningTrackRegistry;
@@ -30,82 +32,101 @@ export function CourseHome({
   );
 
   return (
-    <section className="course-home" aria-labelledby="course-home-title">
-      <header className="course-home__intro">
-        <h1 id="course-home-title">Transformer를 처음부터 살펴봅니다</h1>
-        <p>
-          텍스트가 숫자가 되고, 그 숫자가 Transformer 안에서 처리되어 다음
-          token이 되는 과정을 순서대로 배웁니다.
-        </p>
-      </header>
-
-      {courses.map(({ registration, course }) => (
-        <article
-          key={registration.profile.id}
-          className="course-home__course"
-          aria-labelledby={`${registration.profile.id}-course-title`}
-        >
-          <div className="course-home__course-copy">
-            <p className="course-home__model">{course.modelLabel}</p>
-            <h2 id={`${registration.profile.id}-course-title`}>
-              {course.title}
-            </h2>
-            <p>{course.summary}</p>
-          </div>
-
-          <div className="course-home__actions">
-            <a
-              className="course-home__start"
-              href={chapterHref(
-                registration.profile.id,
-                course.initialChapterId,
-                registry,
-              )}
-            >
-              처음부터 시작
-            </a>
-            <a className="course-home__lab" href="#/lab">
-              Lab으로 가기
-            </a>
-            <button
-              type="button"
-              className="course-home__contents"
-              aria-controls={`${registration.profile.id}-journey`}
-              onClick={() =>
-                document
-                  .getElementById(`${registration.profile.id}-journey`)
-                  ?.scrollIntoView({ block: "start" })
-              }
-            >
-              목차
-            </button>
-          </div>
-
-          <ol
-            id={`${registration.profile.id}-journey`}
-            className="course-home__journey"
-            aria-label="학습 순서"
+    <section
+      className="course-home page-layout__full page-layout"
+      aria-labelledby="course-home-title"
+      data-threeui-surface="course-home"
+    >
+      <div className="course-home__content page-layout__wide">
+        <header className="course-home__intro">
+          <h1
+            id="course-home-title"
+            aria-label="Transformer를 처음부터 살펴봅니다"
           >
-            {course.journey.map((step, index) => (
-              <li key={step}>
-                <span
-                  className="course-home__step-number"
-                  data-course-step-number
-                  aria-hidden="true"
-                >
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className="course-home__step-copy">
-                  <strong data-course-step-title>{step}</strong>
-                  <span data-course-step-summary>
-                    {COURSE_STEP_SUMMARIES[step] ?? ""}
+            <span className="course-home__title-line">
+              <span data-home-title-word>Transformer를</span>
+            </span>{" "}
+            <span className="course-home__title-line">
+              <span data-home-title-word>처음부터</span>{" "}
+              <span data-home-title-word>살펴봅니다</span>
+            </span>
+          </h1>
+          <p>
+            텍스트가 숫자가 되고, 그 숫자가 Transformer 안에서 처리되어 다음
+            token이 되는 과정을 순서대로 배웁니다.
+          </p>
+        </header>
+
+        {courses.map(({ registration, course }) => (
+          <article
+            key={registration.profile.id}
+            className="course-home__course"
+            aria-labelledby={`${registration.profile.id}-course-title`}
+            data-threeui-surface="course"
+          >
+            <div className="course-home__course-copy">
+              <h2 id={`${registration.profile.id}-course-title`}>
+                {course.title}
+              </h2>
+              <p className="course-home__model">{course.modelLabel}</p>
+              <p>{course.summary}</p>
+            </div>
+
+            <div className="course-home__actions">
+              <a
+                className="course-home__start"
+                href={chapterHref(
+                  registration.profile.id,
+                  course.initialChapterId,
+                  registry,
+                )}
+              >
+                처음부터 시작
+              </a>
+              <a className="course-home__lab" href="#/lab">
+                Lab으로 가기
+              </a>
+              <button
+                type="button"
+                className="course-home__contents"
+                aria-controls={`${registration.profile.id}-journey`}
+                onClick={() =>
+                  document
+                    .getElementById(`${registration.profile.id}-journey`)
+                    ?.scrollIntoView({ block: "start" })
+                }
+              >
+                목차
+              </button>
+            </div>
+
+            <ol
+              id={`${registration.profile.id}-journey`}
+              className="course-home__journey"
+              aria-label="학습 순서"
+            >
+              {course.journey.map((step, index) => (
+                <li key={step}>
+                  <span
+                    className="course-home__step-number"
+                    data-course-step-number
+                    aria-hidden="true"
+                  >
+                    {String(index + 1).padStart(2, "0")}
                   </span>
-                </span>
-              </li>
-            ))}
-          </ol>
-        </article>
-      ))}
+                  <span className="course-home__step-copy">
+                    <strong data-course-step-title>{step}</strong>
+                    <span data-course-step-summary>
+                      {COURSE_STEP_SUMMARIES[step] ?? ""}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </article>
+        ))}
+      </div>
+      <PageDivider boundaryId="home-final" />
     </section>
   );
 }

@@ -44,6 +44,68 @@ Inline Figure size ceilings are 52rem for `prose`, 64rem for `wide`, and 72rem
 for `full`. Figures use transparent or subtle surfaces, restrained 4–8px
 radii, no default shadow, and one conclusion sentence as caption.
 
+## Learn editorial composition
+
+Home and Learn use editorial grouping before card containment.
+
+- Home H1 wraps only between explicit Korean word units. Desktop renders
+  `Transformer를` then `처음부터 살펴봅니다`; narrow screens may place each
+  Korean phrase on its own line.
+- Hero and course entry share one aligned composition. The course region has
+  no standalone radius or shadow.
+- Learn's route background owns the reading tone. The 72rem article surface is
+  transparent.
+- Metadata and ToC share the first Chapter row. H1, abstract, then prose retain
+  descending hierarchy.
+- H1-to-abstract is 14px. Paragraphs use 16px rhythm, sections 56px, and
+  Figure flow gaps 28–40px including grid spacing and margin.
+- Part 0.1 is horizontal on desktop and vertical on mobile. Part 0.2 appears
+  after the tokenizer boundary explanation. Part 0.3 uses direct relation
+  arrows without a vocabulary board. Part 0.4 remains a data sheet with only
+  Current byte selected.
+
+## Lab and focused-viewer composition
+
+Lab and overlays reuse the global boundary vocabulary at different scopes.
+
+- Page structural dividers span the application viewport. Overlay structural
+  dividers span the overlay body content width, excluding its scrollbar track.
+- Lab regions are MODEL LAB, Prompt, Output, Runtime, and Inspect. Their
+  content shares one 72rem WIDE stack and never introduces a decorative
+  vertical divider.
+- Output owns decoded text and generated steps. Runtime owns selected Token
+  ID, bytes, probability, timing, stop reason, and context usage.
+- Inspection launchers remain four runtime-aware rows separated by internal
+  boundaries; they do not have a surrounding card.
+- Architecture uses modal header, diagram plane, and final status/caption
+  regions. DiagramViewport toolbar remains inside the plane. Only the modal
+  owns an outer border.
+- Score Matrix uses Header, Renderer/Data, Selected Cell, and Legend/Fallback
+  regions. Above 1024px, Renderer and Selected Cell form real columns with one
+  continuous one-pixel divider. At 1024px and below they stack with a
+  horizontal divider.
+- Query/Key axes, signed zero plane, positive/negative encoding, selected-cell
+  values, exact 2D fallback, and lazy R3F loading remain semantic contracts.
+
+## Boundary coordinate system
+
+The application shell, Home, Learn, Lab, and focused viewers share one
+coordinate vocabulary:
+
+- `FULL` is the application or viewer edge and owns structural boundaries.
+- `WIDE` is the maximum working region for Figures, instruments, and renderers;
+  each component may retain a smaller preferred width.
+- `CONTENT` is the 52rem Chapter, prose, caption, and footer line.
+
+`PageDivider` emits explicit structural, content, or internal roles. The
+corresponding tokens are `--boundary-structural`, `--boundary-content`, and
+`--boundary-internal`, with `--boundary-width: 1px`. Normal boundaries stay
+neutral. Current, selected, and focus states may use accent. Named grid lines
+provide full bleed without viewport-width or negative-margin breakout.
+
+Figure and architecture connectors are semantic renderer geometry. They use
+connector classes and `--figure-connector`, never UI boundary tokens.
+
 ## Visual hierarchy
 
 - Course Home, Token Article + Inline Figure, GPT Article + Inline Figure, and
@@ -180,7 +242,8 @@ mask, softmax, and weighted value. That redesign is outside ADR 0012.
 - The article shell may reach 72rem. Prose stays within 52rem; `wide` and
   `full` define 64rem and 72rem maximum available Figure space. Registry
   preferred widths may keep a graphic substantially narrower.
-- Lab uses one centered instrument column with a maximum inline size of 72rem.
+- Lab uses full-width structural separators around centered instrument regions
+  with a maximum inline size of 72rem.
 - `FocusedViewerOverlay` uses one application-level `OverlayHost`. Desktop surfaces occupy about
   90vw by 86dvh; mobile uses an almost full-screen surface with the same local controls.
 - The backdrop is warm and translucent, the surface is solid with a thin border and restrained
@@ -264,3 +327,30 @@ copy, and arbitrary runtime strings never enter KaTeX.
 React renders only validated model metadata and typed Worker responses. Unknown payloads fail
 closed. Missing traces display pending/unknown values rather than inferred tensors or dimensions.
 Generation replay selects stored Worker evidence without resampling.
+
+## ThreeUI-first visual integration
+
+ThreeUI-first means preserving the library's visual and interaction
+character, not flattening package components into legacy custom controls.
+
+- Lumen primary and secondary actions retain gradient depth, face/rim
+  highlights, status ring, hover lift, and pressed response.
+- Circle viewer actions retain atmosphere, aura, rim, face, and detail layers.
+- Product adapters may tune Korean font, hue, saturation, brightness, focus,
+  compact size, and reduced motion.
+- Primary, secondary, and tertiary tiers connect product meaning to visual
+  weight. Rich inspection launchers stay semantic native buttons because
+  package Rectangle variants hard-code content and omit required state APIs.
+- Motion is short and input-driven. Loading may pulse; idle decorative RAF,
+  floating controls, and continuously animated article surfaces are forbidden.
+
+The shell is a compact instrument dock. Learn uses a brighter reading plane
+inside the neutral application plane. Lab is one vertical instrument stack:
+Prompt, generation settings, Output, run evidence, then Inspect. Focused
+viewers share neutral ThreeUI chrome; Architecture SVG and Score Matrix R3F
+retain renderer-owned semantics.
+
+Score Matrix uses a dark renderer plane, visible zero reference, actual
+Query/Key token labels, colorblind-safe signed colors, persistent cell
+selection, exact detail, and user-visible 3D/2D modes. Its HTML table remains
+the keyboard and failure fallback. R3F stays lazy and demand-rendered.

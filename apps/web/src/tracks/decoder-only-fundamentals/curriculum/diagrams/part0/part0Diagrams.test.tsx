@@ -5,7 +5,10 @@ import { describe, expect, test } from "vitest";
 
 import { App } from "../../../../../App";
 import { model, TestWorker } from "../../../../../test/workerFixtures";
+import { tokenChapterContent } from "../../content/part0/token";
+import { NlpPipelineDiagram } from "./NlpPipelineDiagram";
 import { TokenComparisonDiagram } from "./TokenComparisonDiagram";
+import { VocabularyAddressDiagram } from "./VocabularyAddressDiagram";
 
 const CHAPTERS = [
   ["자연어 처리란?", "자연어 처리 추론 경로"],
@@ -22,33 +25,33 @@ const INLINE_CHAPTERS = [
     "자연어 처리란?",
     "decoder.diagram.intro.nlp",
     "자연어 처리 추론 경로",
-    "자연어 처리는 텍스트를 숫자로 표현해 계산하고, 그 결과를 사람이 사용하는 형태로 바꿉니다.",
+    "언어는 숫자 표현으로 바뀐 뒤 모델 계산을 거쳐 결과로 사용됩니다.",
   ],
   [
     "Token이란?",
     "decoder.diagram.tokenization.token",
     "Token 개념 흐름",
-    "Token의 경계는 사용하는 tokenizer에 따라 달라질 수 있습니다.",
+    "Token 경계는 tokenizer에 따라 달라질 수 있습니다.",
   ],
   [
     "Vocabulary와 Token ID",
     "decoder.diagram.tokenization.vocabulary",
     "Token과 Token ID를 embedding row에 연결하는 vocabulary lookup",
-    "Token ID는 vocabulary에서 token을 찾는 주소이며, 의미 계산은 embedding vector에서 시작합니다.",
+    "Token ID는 의미값이 아니라 vocabulary와 embedding row를 찾는 주소입니다.",
   ],
   [
     "Tokenization 방식",
     "decoder.diagram.tokenization.methods",
     "Tokenization 방식 비교",
-    "같은 텍스트도 tokenization 방식에 따라 경계, vocabulary 크기, sequence 길이가 달라집니다.",
+    "Tokenization 방식은 vocabulary 크기와 sequence 길이에 영향을 줍니다.",
   ],
 ] as const;
 
 const BEGINNER_STAGE_LABELS = [
-  "사람이 쓰는 텍스트",
-  "숫자로 표현하기",
-  "모델의 계산",
-  "사람이 사용하는 결과",
+  "사람이 쓰는 언어",
+  "숫자로 표현",
+  "모델 계산",
+  "활용 결과",
 ] as const;
 
 const FORBIDDEN_STAGE_LABELS = [
@@ -79,6 +82,123 @@ function readyCurriculum(): TestWorker {
 }
 
 describe("Part 0 curriculum Diagrams", () => {
+  test("lays out Chapter 0.1 horizontally on desktop", () => {
+    const { container } = render(<NlpPipelineDiagram />);
+    const stages = Array.from(container.querySelectorAll("[data-stage]"));
+    const positions = stages.map((stage) => {
+      const rect = stage.querySelector("rect");
+      return {
+        x: Number(rect?.getAttribute("x")),
+        y: Number(rect?.getAttribute("y")),
+      };
+    });
+
+    expect(container.querySelector("svg")).toHaveAttribute(
+      "viewBox",
+      "0 0 940 240",
+    );
+    expect(new Set(positions.map(({ y }) => y)).size).toBe(1);
+    expect(positions.map(({ x }) => x)).toEqual(
+      [...positions.map(({ x }) => x)].sort((left, right) => left - right),
+    );
+  });
+
+  test("stacks Chapter 0.1 vertically on mobile", () => {
+    const originalMatchMedia = window.matchMedia;
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: () =>
+        ({
+          matches: true,
+          media: "(max-width: 44rem)",
+          onchange: null,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+          addListener: () => undefined,
+          removeListener: () => undefined,
+          dispatchEvent: () => true,
+        }) satisfies MediaQueryList,
+    });
+
+    try {
+      const { container } = render(<NlpPipelineDiagram />);
+      const stages = Array.from(container.querySelectorAll("[data-stage]"));
+      const positions = stages.map((stage) => {
+        const rect = stage.querySelector("rect");
+        return {
+          x: Number(rect?.getAttribute("x")),
+          y: Number(rect?.getAttribute("y")),
+        };
+      });
+      expect(container.querySelector("svg")).toHaveAttribute(
+        "viewBox",
+        "0 0 360 520",
+      );
+      expect(new Set(positions.map(({ x }) => x)).size).toBe(1);
+      expect(positions.map(({ y }) => y)).toEqual(
+        [...positions.map(({ y }) => y)].sort((top, bottom) => top - bottom),
+      );
+    } finally {
+      Object.defineProperty(window, "matchMedia", {
+        configurable: true,
+        value: originalMatchMedia,
+      });
+    }
+  });
+
+  test("places the Token Figure before the word distinction", () => {
+    const tokenUnit = tokenChapterContent.page.sections.find(
+      ({ id }) => id === "token-unit",
+    );
+
+    expect(tokenUnit?.blocks.map(({ id }) => id)).toEqual([
+      "p.why-split",
+      "p.token-definition",
+      "p.boundary",
+      "figure.token-boundary",
+      "p.token-not-word",
+    ]);
+  });
+
+  test("renders Vocabulary as lookup relationships without a board", () => {
+    const { container } = render(<VocabularyAddressDiagram />);
+
+    expect(container.querySelectorAll("[data-vocabulary-lookup]")).toHaveLength(
+      2,
+    );
+    expect(container.querySelector(".part0-diagram__address-board")).toBeNull();
+    expect(
+      container.querySelector(".part0-diagram__reserved-legend"),
+    ).toBeNull();
+    expect(container.querySelectorAll("rect")).toHaveLength(0);
+  });
+
+  test("orders chapter context before the title and keeps precise corners", () => {
+    readyCurriculum();
+
+    const header = document.querySelector(
+      ".curriculum-workspace__chapter-copy",
+    );
+    const eyebrow = header?.querySelector(".curriculum-workspace__eyebrow");
+    const title = header?.querySelector("h1");
+    if (
+      !(eyebrow instanceof HTMLElement) ||
+      !(title instanceof HTMLHeadingElement)
+    )
+      throw new Error("Curriculum heading hierarchy is missing");
+
+    expect(
+      eyebrow.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    const methodRows = document.querySelectorAll(
+      ".part0-diagram__method-row > rect",
+    );
+    for (const row of methodRows) {
+      expect(Number(row.getAttribute("rx"))).toBeLessThanOrEqual(8);
+    }
+  });
+
   test.each(INLINE_CHAPTERS)(
     "renders %s Figure inline without a Learn overlay trigger",
     async (chapterTitle, figureId, imageName, caption) => {

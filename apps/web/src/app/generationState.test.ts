@@ -9,6 +9,7 @@ import {
   createGenerationState,
   inspectGenerationStep,
   parseGenerationForm,
+  requestGenerationStop,
 } from "./generationState";
 
 const token = (id: number, display: string): TokenInfo => ({
@@ -155,6 +156,24 @@ describe("generation state Rust seam parity", () => {
     });
     expect(finished.phase).toBe("complete");
     expect(finished.stopReason).toBe("max_new_tokens");
+  });
+
+  test("tracks Stop acknowledgement without changing Worker correlation", () => {
+    const running = runningGeneration();
+    const stopping = requestGenerationStop(running);
+
+    expect(stopping.stopPending).toBe(true);
+    expect(stopping.active).toBe(running.active);
+
+    const finished = reduceGenerationResponse(stopping, {
+      type: "generation_finished",
+      request_id: 7,
+      run_id: 40,
+      reason: "user_stopped",
+    });
+    expect(finished.phase).toBe("complete");
+    expect(finished.stopPending).toBe(false);
+    expect(finished.stopReason).toBe("user_stopped");
   });
 
   test("rejects stale correlated errors without clearing replay", () => {

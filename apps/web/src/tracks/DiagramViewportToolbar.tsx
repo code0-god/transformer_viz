@@ -22,6 +22,7 @@ export function DiagramViewportToolbar({
       className="diagram-viewport__toolbar"
       role="toolbar"
       aria-label="다이어그램 보기 도구"
+      data-threeui-surface="diagram-toolbar"
       onKeyDown={onKeyDown}
     >
       <div className="diagram-viewport__zoom-controls">

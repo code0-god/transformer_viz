@@ -36,6 +36,7 @@ export function LearningFigure({
       data-figure-id={block.figureId}
       data-figure-preferred-width={preferredWidth}
       data-figure-size={block.size ?? "prose"}
+      data-threeui-surface="figure"
       aria-label={block.alt}
     >
       <div
