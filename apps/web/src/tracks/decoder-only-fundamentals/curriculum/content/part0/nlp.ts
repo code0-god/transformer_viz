@@ -34,7 +34,7 @@ export const nlpChapterContent = {
                 id: "language",
                 label: "사람이 읽는 언어",
                 stage: "language",
-                text: "사람은 문장을 읽고 그 뜻과 분위기를 자연스럽게 받아들입니다. 예를 들어 이 문장을 보면 긍정적인 느낌을 쉽게 알아차릴 수 있습니다.",
+                text: "사람은 문장을 읽고 그 뜻과 분위기를 자연스럽게 받아들입니다. 단어를 하나씩 따로 보지 않아도 문장 전체의 의미가 바로 전해집니다.",
               },
               {
                 id: "numeric",

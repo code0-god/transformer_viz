@@ -4,16 +4,12 @@ import { describe, expect, test } from "vitest";
 import { NlpPipelineDiagram } from "./NlpPipelineDiagram";
 
 describe("NlpPipelineDiagram numerical representation", () => {
-  test("keeps the human semantic cue outside the model result hierarchy", () => {
+  test("does not preview result semantics on the language slide", () => {
     // Given/When: the persistent Chapter 0.1 visual is rendered.
     const { container } = render(<NlpPipelineDiagram />);
-    const cue = container.querySelector(".nlp-golden__semantic-cue");
-    const result = screen.getByTestId("nlp-golden-result");
 
-    // Then: human interpretation remains a separate secondary cue.
-    expect(cue).not.toBeNull();
-    expect(result.contains(cue)).toBe(false);
-    expect(cue).not.toHaveAttribute("data-nlp-result-value");
+    // Then: explicit result meaning remains exclusive to Slide 4.
+    expect(container.querySelector(".nlp-golden__semantic-cue")).toBeNull();
   });
 
   test("renders one horizontal illustrative number sequence", () => {

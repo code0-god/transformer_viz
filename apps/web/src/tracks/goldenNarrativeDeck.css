@@ -13,7 +13,7 @@
   display: grid;
   grid-template-columns: minmax(17rem, 38fr) minmax(0, 62fr);
   column-gap: var(--golden-stage-gap);
-  min-block-size: clamp(30rem, 36vw, 32.5rem);
+  min-block-size: clamp(25.5rem, 30vw, 27rem);
 }
 
 .visual-narrative--golden .visual-narrative__copy,
@@ -59,8 +59,11 @@
   inline-size: 100%;
 }
 
-.visual-narrative--golden .learning-figure__content {
+.visual-narrative--golden
+  .learning-figure[data-figure-size="full"]
+  .learning-figure__content {
   overflow: visible;
+  padding-block: 0;
 }
 
 .visual-narrative--golden > .visual-narrative__steps {
@@ -103,6 +106,22 @@
   > .visual-narrative__steps
   > button:disabled {
   opacity: 0.34;
+}
+
+.threeui-root
+  .visual-narrative--golden
+  > .visual-narrative__steps
+  > button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.threeui-root
+  .visual-narrative--golden
+  > .visual-narrative__steps
+  > button:focus-visible {
+  border-radius: 2px;
+  outline: 1px solid color-mix(in srgb, var(--ui-accent) 68%, transparent);
+  outline-offset: 2px;
 }
 
 .visual-narrative__progress {

@@ -181,7 +181,7 @@ def assert_probe(data: JsonObject, stage: str, index: int) -> None:
     width = number(data["width"], "viewport width")
     if width > 768:
         require(
-            480 <= number(data["stageHeight"], "stage height") <= 600,
+            400 <= number(data["stageHeight"], "stage height") <= 450,
             f"Golden desktop height: {data}",
         )
     else:

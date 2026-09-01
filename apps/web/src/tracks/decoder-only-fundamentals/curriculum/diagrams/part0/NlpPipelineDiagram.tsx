@@ -25,7 +25,7 @@ const STAGE_LABELS: Readonly<Record<NlpGoldenStage, string>> = {
 
 const STAGE_SUMMARIES: Readonly<Record<NlpGoldenStage, string>> = {
   language:
-    "사람이 문장을 읽고 뜻과 분위기를 이해하며, 재미있었다는 표현에서 긍정적인 느낌을 알아차리는 모습을 보여줍니다.",
+    "사람이 문장을 읽고 단어 사이의 관계와 문장 전체의 의미를 자연스럽게 받아들이는 모습을 보여줍니다.",
   numeric:
     "문장이 아래쪽 화살표를 따라 실제 모델 값이 아닌 한 줄의 설명용 숫자 표현으로 이어집니다.",
   transform:
@@ -113,9 +113,6 @@ export function NlpPipelineDiagram(): ReactElement {
               {phrase.trailingSpace ? " " : null}
             </span>
           ))}
-        </p>
-        <p className="nlp-golden__semantic-cue" aria-hidden="true">
-          긍정적인 느낌
         </p>
         <div
           className="nlp-golden__numeric"

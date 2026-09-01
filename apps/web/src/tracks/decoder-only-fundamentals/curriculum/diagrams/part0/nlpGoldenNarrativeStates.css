@@ -1,8 +1,3 @@
-.nlp-golden[data-nlp-stage="language"] .nlp-golden__semantic-cue {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 .nlp-golden[data-nlp-stage="language"]
   .nlp-golden__sentence
   > [data-nlp-phrase="enjoyed"] {
@@ -25,6 +20,11 @@
 .nlp-golden[data-nlp-stage="transform"] .nlp-golden__numeric {
   opacity: 1;
   transform: translateY(0);
+}
+
+.nlp-golden[data-nlp-stage="numeric"] .nlp-golden__numeric::before,
+.nlp-golden[data-nlp-stage="transform"] .nlp-golden__numeric::before {
+  opacity: 0.72;
 }
 
 .nlp-golden[data-nlp-stage="transform"] .nlp-golden__sentence {
@@ -99,7 +99,7 @@
   grid-template-rows: 0 4.25rem 0;
   gap: 0;
   align-self: start;
-  margin-block-start: var(--s2);
+  margin-block-start: 0;
   opacity: 0.42;
   filter: saturate(0.65);
   transform: none;
@@ -199,6 +199,10 @@
     inline-size: 100%;
   }
 
+  .nlp-golden[data-nlp-stage] .nlp-golden__numeric::before {
+    content: none;
+  }
+
   .nlp-golden[data-nlp-stage] .nlp-golden__numeric-action {
     grid-template-rows: 0.75rem 0.75rem;
     font-size: 0.66rem;
@@ -276,7 +280,13 @@
   }
 
   .nlp-golden[data-nlp-stage] .nlp-golden__result-connector > span {
+    display: inline;
+    min-block-size: 0;
     font-size: 0.68rem;
+  }
+
+  .nlp-golden[data-nlp-stage] .nlp-golden__result-connector > span::before {
+    content: none;
   }
 
   .nlp-golden[data-nlp-stage] .nlp-golden__result-primary,
@@ -297,6 +307,7 @@
 
   .nlp-golden__other-tasks > p {
     gap: var(--s2);
+    font-size: 0.62rem;
   }
 
   .nlp-golden[data-nlp-stage] .nlp-golden__handoff {
