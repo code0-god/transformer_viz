@@ -3,7 +3,6 @@ import { decoderCurriculum, decoderCurriculumRegistries } from "./catalog";
 import { curriculumLearningFigures } from "./learningFigureRegistry";
 
 const CURRICULUM_SCENE_IDS = [
-  "decoder.diagram.tokenization.token",
   "decoder.diagram.tokenization.vocabulary",
   "decoder.diagram.tokenization.methods",
   "decoder.diagram.language-model.definition",
@@ -24,9 +23,15 @@ describe("fourteen-Chapter visual story registry", () => {
     expect(decoderCurriculumRegistries.figureOwners.size).toBe(14);
   });
 
-  test("maps Golden NLP to DOM and later Figures to scene contracts", () => {
+  test("maps Golden narratives to DOM and later Figures to scene contracts", () => {
     expect(
       curriculumLearningFigures.metadata("decoder.diagram.intro.nlp"),
+    ).toEqual({
+      preferredWidth: 960,
+      renderer: "static",
+    });
+    expect(
+      curriculumLearningFigures.metadata("decoder.diagram.tokenization.token"),
     ).toEqual({
       preferredWidth: 960,
       renderer: "static",

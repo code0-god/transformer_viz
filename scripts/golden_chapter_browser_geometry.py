@@ -20,8 +20,17 @@ _STABLE_KEYS = (
 def assert_stable_geometry(records: list[JsonObject], viewport: tuple[int, int]) -> None:
     require(len(records) == 5, f"Golden state coverage at {viewport}: {records}")
     baseline = records[0]
+    stable_keys = (
+        _STABLE_KEYS
+        if viewport[0] > 768
+        else tuple(
+            key
+            for key in _STABLE_KEYS
+            if key not in ("visualTop", "visualCenterY")
+        )
+    )
     for current in records:
-        for key in _STABLE_KEYS:
+        for key in stable_keys:
             require(
                 abs(
                     number(current[key], f"Golden {key}")

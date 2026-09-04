@@ -85,4 +85,11 @@ describe("NlpPipelineDiagram numerical representation", () => {
     // Then: four boundaries expose one deterministic sequence.
     expect(boundarySteps).toEqual(["1", "2", "3", "4"]);
   });
+
+  test("keeps adjacent Chapter navigation outside the visual", () => {
+    const { container } = render(<NlpPipelineDiagram />);
+
+    expect(container.querySelector(".nlp-golden__handoff")).toBeNull();
+    expect(container.querySelector("[aria-label='Chapter 이동']")).toBeNull();
+  });
 });

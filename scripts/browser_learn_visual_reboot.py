@@ -35,12 +35,7 @@ class SceneSpec(NamedTuple):
 
 
 PART0_SCENES = (
-    SceneSpec(
-        "0-2",
-        "decoder.diagram.tokenization.token",
-        "token",
-        "tokenization-unit-scene-state",
-    ),
+    # Golden Chapter 0.2 is static and covered by browser_visual_narrative.py.
     SceneSpec(
         "0-3",
         "decoder.diagram.tokenization.vocabulary",
@@ -272,27 +267,6 @@ def _finish_part0(browser: ChromeSession, spec: SceneSpec) -> None:
                 "?.getAttribute('data-scene-stage') === 'result'"
             ),
             description="NLP result stage",
-        )
-    elif spec.name == "token":
-        _click_button(
-            browser,
-            "현재 byte",
-            condition=(
-                "document.querySelector("
-                "'[data-testid=\"tokenization-unit-scene-state\"]'"
-                ")?.getAttribute('data-mode') === 'byte'"
-            ),
-            description="Token byte mode",
-        )
-        _click_button(
-            browser,
-            "Token",
-            condition=(
-                "document.querySelector("
-                "'[data-testid=\"tokenization-unit-scene-state\"]'"
-                ")?.getAttribute('data-phase') === 'split'"
-            ),
-            description="Token split",
         )
     elif spec.name == "vocabulary":
         _click_button(
@@ -642,7 +616,8 @@ def _capture_specs(
 ) -> None:
     if not callable(finish):
         raise TypeError("Scene finish callback must be callable")
-    evidence[bucket] = {}
+    bucket_evidence: JsonObject = {}
+    evidence[bucket] = bucket_evidence
     for spec in specs:
         set_viewport(browser, 1440, 900)
         _open_scene(browser, spec)
@@ -681,7 +656,7 @@ def _capture_specs(
             browser,
             screenshots / f"{spec.name}-final-390x844.png",
         )
-        evidence[bucket][spec.name] = {
+        bucket_evidence[spec.name] = {
             "initial": initial,
             "final": final,
             "mobile": mobile,

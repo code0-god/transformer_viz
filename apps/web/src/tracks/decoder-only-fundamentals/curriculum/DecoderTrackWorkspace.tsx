@@ -9,7 +9,6 @@ import type {
 } from "../../types";
 import { DecoderLearningWorkspace } from "../DecoderLearningWorkspace";
 import { decoderRoute, decoderRouteId } from "../routes";
-import { CurriculumChapterFooter } from "./CurriculumChapterFooter";
 import { CurriculumChapterHeader } from "./CurriculumChapterHeader";
 import { decoderCurriculum } from "./catalog";
 import { createCourseArchitectureContext } from "./courseArchitectureNavigation";
@@ -21,7 +20,6 @@ import {
   type CurriculumFocusEvent,
   createCurriculumFocusHandoff,
 } from "./curriculumState";
-import { CHAPTER_IDS } from "./ids";
 import {
   chapterNavigation,
   destinationForChapter,
@@ -103,6 +101,38 @@ function DecoderCurriculumWorkspace({
       }),
     [],
   );
+  const previousChapter = navigation?.previous;
+  const nextChapter = navigation?.next;
+  const adjacentNavigation =
+    previousChapter === undefined && nextChapter === undefined ? undefined : (
+      <nav
+        className="curriculum-workspace__adjacent-navigation"
+        aria-label="Chapter 이동"
+      >
+        {previousChapter === undefined ? null : (
+          <a
+            className="curriculum-workspace__adjacent-link"
+            data-previous-chapter={previousChapter.id}
+            data-navigation-direction="previous"
+            href={course.chapterHref(previousChapter.id)}
+            aria-label={`이전: ${previousChapter.title}`}
+          >
+            ← {previousChapter.title}
+          </a>
+        )}
+        {nextChapter === undefined ? null : (
+          <a
+            className="curriculum-workspace__adjacent-link"
+            data-next-chapter={nextChapter.id}
+            data-navigation-direction="next"
+            href={course.chapterHref(nextChapter.id)}
+            aria-label={`다음: ${nextChapter.title}`}
+          >
+            {nextChapter.title} →
+          </a>
+        )}
+      </nav>
+    );
 
   useLayoutEffect(() => {
     const previousRestoration = window.history.scrollRestoration;
@@ -204,13 +234,8 @@ function DecoderCurriculumWorkspace({
       />
       <div className="curriculum-workspace__content page-layout__wide">
         {content}
+        {adjacentNavigation}
       </div>
-      <CurriculumChapterFooter
-        previous={navigation?.previous}
-        next={chapterId === CHAPTER_IDS[0] ? undefined : navigation?.next}
-        chapterHref={(nextChapterId) => course.chapterHref(nextChapterId)}
-        onNavigate={course.navigateChapter}
-      />
     </section>
   );
 }

@@ -208,6 +208,7 @@ def _learn_alignment_probe(
           const rect = (selector) =>
             document.querySelector(selector)?.getBoundingClientRect();
           const content = rect('.curriculum-workspace__header-content');
+          const workspace = rect('.curriculum-workspace__content');
           const title = rect('.curriculum-workspace__chapter-copy h1');
           const prose = rect(
             '.learning-guide-introduction > p, '
@@ -215,18 +216,19 @@ def _learn_alignment_probe(
           );
           const figure = rect('.learning-figure');
           const caption = rect('.learning-figure figcaption');
-          const footer = rect('.curriculum-chapter-footer__content');
-          const boundary = rect('[data-boundary-id="article-final"]');
           return {
             contentLeft: content?.left ?? -1,
+            workspaceLeft: workspace?.left ?? -1,
+            workspaceRight: workspace?.right ?? -1,
             titleLeft: title?.left ?? -1,
             proseLeft: prose?.left ?? -1,
             figureLeft: figure?.left ?? -1,
             figureRight: figure?.right ?? -1,
             captionLeft: caption?.left ?? -1,
-            footerLeft: footer?.left ?? -1,
-            boundaryLeft: boundary?.left ?? -1,
-            boundaryRight: boundary?.right ?? -1,
+            footerCount:
+              document.querySelectorAll('.curriculum-chapter-footer').length,
+            finalBoundaryCount:
+              document.querySelectorAll('[data-boundary-id="article-final"]').length,
             rootColumns: getComputedStyle(
               document.querySelector('.architecture-app'),
             ).gridTemplateColumns,
@@ -237,19 +239,25 @@ def _learn_alignment_probe(
           };
         })()""",
     )
-    aligned = ("titleLeft", "proseLeft", "captionLeft", "footerLeft")
+    aligned = ("titleLeft", "proseLeft")
     for key in aligned:
         require(
             abs(float(probe[key]) - float(probe["contentLeft"])) <= 1,
             f"Chapter {slug} {key} is off the CONTENT line: {probe}",
         )
     require(
-        float(probe["figureLeft"]) <= float(probe["contentLeft"]) + 1,
-        f"Chapter {slug} Figure does not use CONTENT/WIDE: {probe}",
+        float(probe["figureLeft"]) >= float(probe["workspaceLeft"]) - 1
+        and float(probe["figureRight"]) <= float(probe["workspaceRight"]) + 1,
+        f"Chapter {slug} Figure escaped WIDE workspace: {probe}",
     )
     require(
-        float(probe["figureRight"]) >= float(probe["contentLeft"]),
-        f"Chapter {slug} Figure has invalid bounds: {probe}",
+        float(probe["captionLeft"]) >= float(probe["figureLeft"]) - 1
+        and float(probe["captionLeft"]) <= float(probe["figureRight"]) + 1,
+        f"Chapter {slug} caption escaped Figure bounds: {probe}",
+    )
+    require(
+        probe["footerCount"] == 0 and probe["finalBoundaryCount"] == 0,
+        f"Chapter {slug} retained the removed footer bar: {probe}",
     )
     return probe
 
@@ -344,7 +352,18 @@ def run_contract(url: str, evidence_path: Path) -> None:
 
             _go_chapter(browser, "0-2")
             chapter = _assert_boundary(browser, "chapter-header")
-            article = _assert_boundary(browser, "article-final")
+            article = evaluate_dict(
+                browser,
+                """({
+                  found: document.querySelector(
+                    '[data-boundary-id="article-final"]',
+                  ) !== null,
+                })""",
+            )
+            require(
+                article["found"] is False,
+                f"Removed article-final boundary remained: {article}",
+            )
             learn_overflow = _assert_no_overflow(browser)
 
             _go_lab(browser)

@@ -23,7 +23,7 @@ function narrativeBlocks(page: NarrativePage): GuideVisualNarrativeBlock[] {
 }
 
 describe("Learn Visual Narrative benchmark scope", () => {
-  test("uses one Golden narrative plus three benchmark narratives", () => {
+  test("uses Golden and benchmark narratives", () => {
     const pages = [...curriculumGuidePages, attentionGuide];
     const narratives = pages.flatMap((page) =>
       narrativeBlocks(page).map((block) => ({
@@ -41,7 +41,7 @@ describe("Learn Visual Narrative benchmark scope", () => {
       },
       {
         figureId: "decoder.diagram.tokenization.token",
-        layout: "inline",
+        layout: "golden",
         pageId: "decoder.curriculum.guide.0.2",
       },
       {
@@ -65,7 +65,7 @@ describe("Learn Visual Narrative benchmark scope", () => {
       narratives.map(({ beats }) => beats.map(({ stage }) => stage)),
     ).toEqual([
       ["language", "numeric", "transform", "result", "token-preview"],
-      ["source", "boundaries", "split"],
+      ["why-split", "token-units", "not-word", "current-byte", "next-token-id"],
       ["id", "lookup", "lift", "vector"],
       ["overview", "qkv", "scores", "mask", "softmax", "value"],
     ]);

@@ -171,36 +171,6 @@
   color: var(--accent);
 }
 
-.curriculum-chapter-footer {
-  align-content: start;
-}
-
-.curriculum-chapter-footer__content {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--s4);
-  padding-block: var(--s5);
-}
-
-.curriculum-chapter-footer a {
-  display: inline-flex;
-  align-items: center;
-  min-block-size: 44px;
-  max-inline-size: 28ch;
-  padding: var(--s2) var(--s1);
-  color: var(--text-secondary);
-  font-size: .86rem;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-  text-align: start;
-  text-decoration: none;
-}
-
-.curriculum-chapter-footer a:hover,
-.curriculum-chapter-footer a:focus-visible {
-  color: var(--accent-hover);
-}
-
 .part0-diagram {
   display: grid;
   gap: var(--s4);

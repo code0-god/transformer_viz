@@ -51,7 +51,7 @@ def _arm_midpoint(
                   && saved?.sentence === document.querySelector('[data-testid="nlp-golden-sentence"]')
                   && saved?.strip === document.querySelector('[data-testid="nlp-golden-numeric-strip"]'),
                 incomingOpacity: Math.max(0, ...[...deck.querySelectorAll(
-                  '.nlp-golden__token-note, .nlp-golden__handoff'
+                  '.nlp-golden__token-note'
                 )].map(element => Number.parseFloat(getComputedStyle(element).opacity))),
               }});
             }});
@@ -177,7 +177,6 @@ def reduced_motion_contract(browser: ChromeSession, url: str) -> dict[str, JsonO
             '[data-testid="nlp-golden-numeric"]',
             '[data-testid="nlp-golden-numeric-strip"]',
             '.nlp-golden__result', '.nlp-golden__token-note',
-            '.nlp-golden__handoff',
           ].join(','))];
           const values = relevant.flatMap(element => {{
             const style = getComputedStyle(element);
@@ -207,20 +206,20 @@ def reduced_motion_contract(browser: ChromeSession, url: str) -> dict[str, JsonO
     return results
 
 
-def click_token_handoff(browser: ChromeSession) -> JsonObject:
+def click_token_page_navigation(browser: ChromeSession) -> JsonObject:
     pointer_click(
         browser,
         "document.querySelector('[data-next-chapter=\"decoder.chapter.0.2\"]')",
         condition="document.querySelector('[data-curriculum-chapter-id=\"decoder.chapter.0.2\"]') !== null",
-        label="Golden Chapter 0.2 handoff",
+        label="Golden Chapter 0.2 page navigation",
     )
     result = evaluate_dict(browser, """(() => ({
       hash: location.hash,
       chapter: document.querySelector('[data-curriculum-chapter-id="decoder.chapter.0.2"]') !== null,
       focusedHeading: document.activeElement?.id === 'curriculum-chapter-title',
     }))()""")
-    require(result["hash"] == "#/learn/decoder-only-fundamentals/0-2", f"Golden handoff hash: {result}")
-    require(result["chapter"] is True and result["focusedHeading"] is True, f"Golden handoff focus: {result}")
+    require(result["hash"] == "#/learn/decoder-only-fundamentals/0-2", f"Golden page navigation hash: {result}")
+    require(result["chapter"] is True and result["focusedHeading"] is True, f"Golden page navigation focus: {result}")
     browser.require_cdp().evaluate(
         browser.page_session,
         "history.back()",

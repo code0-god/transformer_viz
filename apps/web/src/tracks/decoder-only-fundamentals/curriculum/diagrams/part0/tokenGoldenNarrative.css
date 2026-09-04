@@ -1,0 +1,410 @@
+.token-golden {
+  position: relative;
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.visual-narrative--golden
+  > .visual-narrative__stage:has(.token-golden) {
+  position: relative;
+}
+
+.visual-narrative--golden .token-golden {
+  position: static;
+}
+
+.token-golden .learning-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  overflow-wrap: anywhere;
+  white-space: nowrap;
+}
+
+.token-golden .token-golden__fallback.learning-visually-hidden {
+  min-inline-size: 0;
+  max-inline-size: 1px;
+  border: 0;
+}
+
+.token-golden__visual {
+  display: grid;
+  grid-template-rows: 2rem minmax(0, 1fr) 3rem;
+  inline-size: 100%;
+  block-size: 27rem;
+  overflow: clip;
+  color: var(--ink);
+  isolation: isolate;
+}
+
+.token-golden__state-label {
+  grid-row: 1;
+  place-self: center;
+  color: color-mix(in srgb, var(--ink) 74%, transparent);
+  font-size: 0.8125rem;
+  font-weight: 720;
+  white-space: nowrap;
+}
+
+.token-golden__scene {
+  display: grid;
+  grid-row: 2;
+  place-items: start center;
+  min-inline-size: 0;
+}
+
+.token-golden__conceptual,
+.token-golden__resegment,
+.token-golden__current {
+  grid-area: 1 / 1;
+  inline-size: 100%;
+  min-inline-size: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(var(--s3));
+  visibility: hidden;
+}
+
+.token-golden__conceptual {
+  display: grid;
+  gap: var(--s6);
+  place-items: center;
+}
+
+.token-golden__conceptual-rail,
+.token-golden__resegment-rail,
+.token-golden__byte-rail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.token-golden__conceptual-rail {
+  flex-wrap: wrap;
+  gap: var(--s2);
+  inline-size: min(94%, 34rem);
+}
+
+.token-golden__chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 3.25rem;
+  padding: var(--s2) var(--s3);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font-size: clamp(1.25rem, 2.8vw, 1.75rem);
+  font-weight: 720;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  transition:
+    opacity 360ms ease,
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 360ms ease,
+    background-color 420ms ease,
+    border-color 420ms ease;
+}
+
+.token-golden__boundary {
+  position: absolute;
+  inset-block: 0.35rem;
+  inset-inline-end: calc(-1 * var(--s1));
+  inline-size: 1px;
+  background: var(--figure-highlight);
+  transform-origin: center;
+}
+
+.token-golden__ordinal {
+  position: absolute;
+  inset-block-end: -1.25rem;
+  inset-inline-start: 50%;
+  color: var(--ink-muted);
+  font: 620 0.65rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  opacity: 0;
+  transform: translateX(-50%) translateY(var(--s1));
+  transition:
+    opacity 320ms ease,
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.token-golden__concept-note,
+.token-golden__example-note,
+.token-golden__korean-note {
+  max-inline-size: calc(100% - var(--s4));
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  font-weight: 620;
+  line-height: 1.45;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.token-golden__resegment {
+  display: grid;
+  grid-template-rows: repeat(4, auto);
+  place-items: center;
+  row-gap: var(--s3);
+}
+
+.token-golden__word {
+  display: grid;
+  place-items: center;
+  gap: var(--s1);
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+}
+
+.token-golden__word strong {
+  color: var(--ink);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  letter-spacing: -0.03em;
+}
+
+.token-golden__segmentation-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 720;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.token-golden__segmentation-preview > span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.token-golden__segment-boundary {
+  display: inline-block;
+  inline-size: 1px;
+  block-size: 1.8rem;
+  margin-inline: 0.18rem;
+  background: var(--figure-highlight);
+  opacity: 0.9;
+  transform-origin: center;
+}
+
+.token-golden__mapping-arrow {
+  display: block;
+  align-self: stretch;
+  inline-size: 0.75rem;
+  block-size: 2.75rem;
+  overflow: visible;
+  color: color-mix(in srgb, var(--figure-connector) 55%, var(--ink));
+  opacity: 0.86;
+}
+
+.token-golden__resegment-rail,
+.token-golden__byte-rail {
+  flex-wrap: nowrap;
+  inline-size: max-content;
+  max-inline-size: 100%;
+  gap: var(--s2);
+}
+
+.token-golden__resegment-rail .token-golden__chip,
+.token-golden__byte-rail .token-golden__chip {
+  flex: 0 0 auto;
+}
+
+.token-golden__chip [data-token-chip-content] {
+  display: block;
+  text-align: center;
+}
+
+.token-golden__resegment-rail {
+  justify-self: center;
+}
+
+.token-golden__resegment-rail .token-golden__chip,
+.token-golden__byte-rail .token-golden__chip {
+  border-color: var(--boundary-content);
+  background: color-mix(
+    in srgb,
+    var(--figure-representation) 60%,
+    transparent
+  );
+}
+
+.token-golden__example-note {
+  margin-block-start: var(--s3);
+}
+
+.token-golden__current {
+  display: grid;
+  grid-template-rows: repeat(5, auto);
+  place-items: center;
+  row-gap: var(--s2);
+}
+
+.token-golden__current-marker {
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  font-weight: 680;
+}
+
+.token-golden__current-marker,
+.token-golden__current-source,
+.token-golden__current > .token-golden__segmentation-preview,
+.token-golden__current > .token-golden__mapping-arrow,
+.token-golden__korean-note {
+  transition:
+    opacity 320ms ease,
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.token-golden__current-source {
+  margin-block-start: var(--s2);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  letter-spacing: -0.03em;
+}
+
+.token-golden__byte-rail {
+  gap: var(--s2);
+}
+
+.token-golden__current > .token-golden__mapping-arrow {
+  display: none;
+}
+
+.token-golden__korean-note {
+  margin-block-start: var(--s4);
+}
+
+.token-golden__identity {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  place-items: center;
+  gap: var(--s1);
+  color: var(--ink-muted);
+  opacity: 0;
+  transform: translateY(var(--s3));
+  transition:
+    opacity 360ms ease,
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.token-golden__identity > span {
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.token-golden__identity strong {
+  color: var(--accent);
+  font: 720 clamp(2rem, 4vw, 2.75rem) / 1 ui-monospace,
+    SFMono-Regular, Menlo, monospace;
+}
+
+@keyframes token-scene-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s3));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 48rem) {
+  .visual-narrative--golden:has(.token-golden)
+    .visual-narrative__copy {
+    block-size: auto;
+    min-block-size: 0;
+    overflow: visible;
+  }
+
+  .token-golden__visual {
+    grid-template-rows: 1.5rem minmax(0, 1fr) 2.25rem;
+    block-size: 13.5rem;
+  }
+
+  .token-golden__state-label {
+    font-size: 0.7rem;
+  }
+
+  .token-golden__conceptual {
+    gap: var(--s4);
+  }
+
+  .token-golden__conceptual-rail {
+    gap: var(--s1);
+    inline-size: 100%;
+  }
+
+  .token-golden__chip {
+    min-block-size: 2.55rem;
+    padding: var(--s1) var(--s2);
+    font-size: clamp(1rem, 4.8vw, 1.3rem);
+  }
+
+  .token-golden__boundary {
+    inset-block: 0.25rem;
+    inset-inline-end: -0.18rem;
+  }
+
+  .token-golden__ordinal {
+    inset-block-end: -0.8rem;
+    font-size: 0.58rem;
+  }
+
+  .token-golden__concept-note,
+  .token-golden__example-note,
+  .token-golden__korean-note,
+  .token-golden__current-marker,
+  .token-golden__word {
+    font-size: 0.64rem;
+  }
+
+  .token-golden__resegment {
+    row-gap: var(--s2);
+  }
+
+  .token-golden__word strong,
+  .token-golden__segmentation-preview,
+  .token-golden__current-source {
+    font-size: 1.5rem;
+  }
+
+  .token-golden__segment-boundary {
+    block-size: 1.25rem;
+  }
+
+  .token-golden__example-note,
+  .token-golden__korean-note {
+    margin-block-start: var(--s2);
+  }
+
+  .token-golden__current {
+    row-gap: var(--s1);
+  }
+
+  .token-golden__current-source {
+    margin-block-start: var(--s1);
+  }
+
+  .token-golden__identity {
+    gap: 0.1rem;
+  }
+
+  .token-golden__identity > span {
+    font-size: 0.64rem;
+  }
+
+  .token-golden__identity strong {
+    font-size: 1.65rem;
+  }
+
+}

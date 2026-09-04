@@ -50,7 +50,7 @@ function FixtureDiagram(_props: CurriculumDiagramRendererProps): ReactElement {
 
 const PART0_PRODUCTION_CHAPTERS = [
   ["자연어 처리란?", "decoder.curriculum.guide.0.1", "자연어 처리 연속 설명"],
-  ["Token이란?", "decoder.curriculum.guide.0.2", "Token 개념 흐름"],
+  ["Token이란?", "decoder.curriculum.guide.0.2", "Token 분절 연속 설명"],
   [
     "Vocabulary와 Token ID",
     "decoder.curriculum.guide.0.3",
@@ -116,6 +116,9 @@ const PRODUCTION_CHAPTER_ROUTES = decoderCurriculum.parts.flatMap((part) =>
         chapter.id.replace("decoder.chapter.", "").replaceAll(".", "-"),
       ] as const,
   ),
+);
+const PRODUCTION_CHAPTERS = decoderCurriculum.parts.flatMap(
+  ({ chapters }) => chapters,
 );
 
 const fixtureRegistry: CurriculumRendererRegistry = {
@@ -187,6 +190,80 @@ function readyCurriculum(slug = "0-1") {
 }
 
 describe("Decoder curriculum production integration", () => {
+  test.each(
+    PRODUCTION_CHAPTER_ROUTES.map(
+      ([chapterTitle, slug], index) => [chapterTitle, slug, index] as const,
+    ),
+  )(
+    "renders persistent bottom navigation on %s",
+    (chapterTitle, slug, index) => {
+      readyCurriculum(slug);
+
+      const navigation = document.querySelector(
+        "nav.curriculum-workspace__adjacent-navigation",
+      );
+      const article = screen.getByRole("article");
+      const content = document.querySelector(".curriculum-workspace__content");
+      const previous = PRODUCTION_CHAPTERS[index - 1];
+      const next = PRODUCTION_CHAPTERS[index + 1];
+      if (!(navigation instanceof HTMLElement)) {
+        throw new Error("Adjacent Chapter navigation missing");
+      }
+      const links = navigation.querySelectorAll("a");
+
+      expect(content?.lastElementChild).toBe(navigation);
+      expect(
+        article.compareDocumentPosition(navigation) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).not.toBe(0);
+      expect(navigation.closest("[data-narrative-layout]")).toBeNull();
+      expect(links).toHaveLength(
+        Number(previous !== undefined) + Number(next !== undefined),
+      );
+      if (previous === undefined) {
+        expect(
+          navigation.querySelector("[data-navigation-direction='previous']"),
+        ).toBeNull();
+      } else {
+        const previousLink = navigation.querySelector(
+          "[data-navigation-direction='previous']",
+        );
+        expect(previousLink).toHaveAccessibleName(`이전: ${previous.title}`);
+        expect(previousLink).toHaveAttribute(
+          "data-navigation-direction",
+          "previous",
+        );
+        expect(previousLink).toHaveAttribute(
+          "href",
+          `#/learn/decoder-only-fundamentals/${previous.id
+            .replace("decoder.chapter.", "")
+            .replaceAll(".", "-")}`,
+        );
+      }
+      if (next === undefined) {
+        expect(
+          navigation.querySelector("[data-navigation-direction='next']"),
+        ).toBeNull();
+      } else {
+        const nextLink = navigation.querySelector(
+          "[data-navigation-direction='next']",
+        );
+        expect(nextLink).toHaveAccessibleName(`다음: ${next.title}`);
+        expect(nextLink).toHaveAttribute("data-navigation-direction", "next");
+        expect(nextLink).toHaveAttribute(
+          "href",
+          `#/learn/decoder-only-fundamentals/${next.id
+            .replace("decoder.chapter.", "")
+            .replaceAll(".", "-")}`,
+        );
+      }
+      expect(
+        screen.getByRole("heading", { name: chapterTitle, level: 1 }),
+      ).toBeInTheDocument();
+      expect(document.querySelector(".curriculum-chapter-footer")).toBeNull();
+    },
+  );
+
   test.each(PRODUCTION_CHAPTER_ROUTES)(
     "keeps Learn Chapter %s free of overlays and developer notes",
     (_chapterTitle, slug) => {
@@ -284,28 +361,31 @@ describe("Decoder curriculum production integration", () => {
     }
   });
 
-  test("hands Golden slide five to Token without Worker traffic", async () => {
-    // Given: Chapter 0.1 is ready and the learner selects its final slide.
+  test("hands Chapter 0.1 bottom navigation to Token without Worker traffic", async () => {
+    // Given: Chapter 0.1 is ready at its first slide.
     const worker = readyCurriculum();
     const user = userEvent.setup();
     const postsBefore = worker.posted.length;
-    await user.click(screen.getByRole("button", { name: "5단계: 다음 질문" }));
+    const navigation = screen.getByRole("navigation", {
+      name: "Chapter 이동",
+    });
+    const handoff = within(navigation).getByRole("link", {
+      name: "다음: Token이란?",
+    });
 
-    // Then: the slide owns the only Chapter 0.2 handoff.
+    // Then: the page owns one persistent next-Chapter link.
     expect(
-      screen.getAllByRole("link", { name: "다음: Token이란?" }),
-    ).toHaveLength(1);
+      document.querySelector(".curriculum-workspace__content")
+        ?.lastElementChild,
+    ).toBe(navigation);
+    expect(navigation.closest("[data-narrative-layout]")).toBeNull();
     expect(
-      screen.queryByRole("navigation", { name: "Chapter 이동" }),
+      within(navigation).queryByRole("link", { name: /^이전:/ }),
     ).toBeNull();
+    await user.click(screen.getByRole("button", { name: "5단계: 다음 질문" }));
+    expect(handoff).toBeVisible();
 
-    // When: the slide-scoped Chapter handoff is activated.
-    const handoff = document.querySelector(
-      "[data-next-chapter='decoder.chapter.0.2']",
-    );
-    if (!(handoff instanceof HTMLAnchorElement)) {
-      throw new Error("Golden Token handoff missing");
-    }
+    // When: the page-bottom Chapter handoff is activated.
     await user.click(handoff);
 
     // Then: Chapter 0.2 owns URL and focus without model work.
@@ -315,6 +395,83 @@ describe("Decoder curriculum production integration", () => {
     expect(window.location.hash).toBe("#/learn/decoder-only-fundamentals/0-2");
     expect(worker.posted).toHaveLength(postsBefore);
   });
+
+  test("keeps Token adjacent links visible at the page bottom", async () => {
+    // Given: Chapter 0.2 is ready at its first slide.
+    const user = userEvent.setup();
+    readyCurriculum("0-2");
+
+    // Then: one page-scoped navigation follows every learning section.
+    const navigation = screen.getByRole("navigation", {
+      name: "Chapter 이동",
+    });
+    const glossary = screen.getByTestId("guide-glossary");
+    expect(navigation).toHaveClass("curriculum-workspace__adjacent-navigation");
+    expect(
+      document.querySelector(".curriculum-workspace__content")
+        ?.lastElementChild,
+    ).toBe(navigation);
+    expect(
+      glossary.compareDocumentPosition(navigation) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).not.toBe(0);
+    expect(navigation.closest("[data-narrative-layout]")).toBeNull();
+    expect(
+      within(navigation).getByRole("link", {
+        name: "이전: 자연어 처리란?",
+      }),
+    ).toHaveAttribute("href", "#/learn/decoder-only-fundamentals/0-1");
+    expect(
+      within(navigation).getByRole("link", {
+        name: "다음: Vocabulary와 Token ID",
+      }),
+    ).toHaveAttribute("href", "#/learn/decoder-only-fundamentals/0-3");
+    expect(document.querySelector(".curriculum-chapter-footer")).toBeNull();
+
+    // And: changing slides never hides or relocates the page navigation.
+    const slideButtons = screen.getAllByRole("button", {
+      name: /^\d단계:/,
+    });
+    expect(slideButtons).toHaveLength(5);
+    for (const slideButton of slideButtons) {
+      await user.click(slideButton);
+      expect(navigation).toBeVisible();
+      expect(
+        document.querySelector(".curriculum-workspace__content")
+          ?.lastElementChild,
+      ).toBe(navigation);
+    }
+  });
+
+  test.each([
+    [
+      "이전: 자연어 처리란?",
+      "#/learn/decoder-only-fundamentals/0-1",
+      "자연어 처리란?",
+    ],
+    [
+      "다음: Vocabulary와 Token ID",
+      "#/learn/decoder-only-fundamentals/0-3",
+      "Vocabulary와 Token ID",
+    ],
+  ] as const)(
+    "routes the Token page link %s and focuses its Chapter",
+    async (linkName, hash, headingName) => {
+      const user = userEvent.setup();
+      readyCurriculum("0-2");
+
+      await user.click(
+        within(
+          screen.getByRole("navigation", { name: "Chapter 이동" }),
+        ).getByRole("link", { name: linkName }),
+      );
+
+      expect(window.location.hash).toBe(hash);
+      expect(
+        screen.getByRole("heading", { name: headingName, level: 1 }),
+      ).toHaveFocus();
+    },
+  );
 
   test("starts a directly loaded Chapter at top without resetting local state", async () => {
     const scrollTo = vi

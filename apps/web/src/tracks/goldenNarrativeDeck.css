@@ -2,6 +2,7 @@
   --golden-content-inset: calc(
     (100% - min(100%, var(--learning-prose-width))) / 2
   );
+  --golden-stage-content-top: 2rem;
   --golden-stage-gap: clamp(3.5rem, 5vw, 4.5rem);
   display: block;
   inline-size: calc(100% - var(--golden-content-inset));
@@ -20,7 +21,12 @@
 .visual-narrative--golden > .visual-narrative__stage > .visual-narrative__visual {
   display: flex;
   min-inline-size: 0;
-  align-items: center;
+  align-items: flex-start;
+}
+
+.visual-narrative--golden .visual-narrative__copy {
+  box-sizing: border-box;
+  padding-block-start: var(--golden-stage-content-top);
 }
 
 .visual-narrative--golden .visual-narrative__beat {
@@ -182,13 +188,14 @@
 @media (max-width: 48rem) {
   .visual-narrative--golden > .visual-narrative__stage {
     grid-template-columns: minmax(0, 1fr);
+    align-content: start;
     gap: var(--s4);
-    min-block-size: 0;
+    min-block-size: 24.125rem;
   }
 
   .visual-narrative--golden .visual-narrative__copy {
-    align-items: end;
-    min-block-size: 9.625rem;
+    padding-block-start: 0;
+    min-block-size: 0;
   }
 
   .visual-narrative--golden .visual-narrative__beat-label {

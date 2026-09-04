@@ -175,10 +175,9 @@ describe("Parts 3 through 5 incumbent route integration", () => {
     );
   });
 
-  test("moves 2.3 next to 3.1 without skipping Part 3", async () => {
+  test("moves 2.3 to 3.1 through ToC without skipping Part 3", async () => {
     // Given: Chapter 2.3 is active and focus events are subscribed before navigation.
     readyCurriculum();
-    const user = userEvent.setup();
     await selectChapter("Hidden State");
     const trace: string[] = [];
     const record = (event: Event): void => {
@@ -187,8 +186,8 @@ describe("Parts 3 through 5 incumbent route integration", () => {
     window.addEventListener("curriculum-focus", record);
 
     try {
-      // When: the exact adjacent next control is activated.
-      await user.click(screen.getByRole("link", { name: "다음: GPT" }));
+      // When: GPT is selected from the persistent Chapter ToC.
+      await selectChapter("GPT");
 
       // Then: the root Guide registers before reveal/focus and Part 4 is not skipped to.
       expect(trace).toEqual([
@@ -217,35 +216,28 @@ describe("Parts 3 through 5 incumbent route integration", () => {
     }
   });
 
-  test("traverses 3.1 through 5.1 and back without a stale focus or final next control", async () => {
+  test("traverses 3.1 through 5.1 by ToC without a stale focus or footer", async () => {
     // Given: Chapter 3.1 is active on the incumbent Root Guide.
     readyCurriculum();
-    const user = userEvent.setup();
     await selectChapter("GPT");
 
-    // When/Then: adjacent controls follow the exact bidirectional spine.
-    await user.click(
-      screen.getByRole("link", { name: "다음: Transformer Block" }),
-    );
+    // When/Then: ToC selections follow the exact bidirectional spine.
+    await selectChapter("Transformer Block");
     expect(
       document.querySelector(
         "[data-curriculum-chapter-id='decoder.chapter.4.1']",
       ),
     ).not.toBeNull();
-    await user.click(
-      screen.getByRole("link", { name: "다음: Self-Attention" }),
-    );
+    await selectChapter("Self-Attention");
     expect(
       document.querySelector(
         "[data-curriculum-chapter-id='decoder.chapter.5.1']",
       ),
     ).not.toBeNull();
-    expect(screen.queryByRole("link", { name: /^다음:/ })).toBeNull();
-    await user.click(
-      screen.getByRole("link", { name: "이전: Transformer Block" }),
-    );
-    await user.click(screen.getByRole("link", { name: "이전: GPT" }));
-    await user.click(screen.getByRole("link", { name: "이전: Hidden State" }));
+    expect(document.querySelector(".curriculum-chapter-footer")).toBeNull();
+    await selectChapter("Transformer Block");
+    await selectChapter("GPT");
+    await selectChapter("Hidden State");
     expect(
       document.querySelector(
         "[data-curriculum-chapter-id='decoder.chapter.2.3']",

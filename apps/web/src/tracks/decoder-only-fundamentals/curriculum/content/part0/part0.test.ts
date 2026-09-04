@@ -88,7 +88,7 @@ describe("Part 0 curriculum content", () => {
       const blocks = part0GuidePage(index).sections.flatMap(
         (section) => section.blocks,
       );
-      if (index === 0) {
+      if (index <= 1) {
         expect(
           blocks.flatMap((block) =>
             block.kind === "visual-narrative" ? block.beats : [],
@@ -118,7 +118,7 @@ describe("Part 0 curriculum content", () => {
       const misconceptionCount = blocks.filter(
         ({ id, kind }) => kind === "callout" && id.startsWith("misconception."),
       ).length;
-      expect(misconceptionCount).toBeGreaterThanOrEqual(index === 0 ? 0 : 2);
+      expect(misconceptionCount).toBeGreaterThanOrEqual(index <= 1 ? 0 : 2);
       expect(blocks.some(({ kind }) => kind === "formula")).toBe(false);
     }
     expect(decoderCurriculumRegistries.termIds.size).toBeGreaterThanOrEqual(15);

@@ -29,10 +29,29 @@ def probe(browser: ChromeSession) -> JsonObject:
       const resultConnector = result?.querySelector(
         '[data-nlp-result-connector]'
       );
+      const rightContent = [
+        document.querySelector('.nlp-golden__sentence'),
+        document.querySelector('.nlp-golden__numeric'),
+        document.querySelector('.nlp-golden__result'),
+      ].filter(element => {{
+        const elementStyle = element ? getComputedStyle(element) : null;
+        const elementBox = element?.getBoundingClientRect();
+        return elementStyle !== null
+          && elementBox !== undefined
+          && elementStyle.visibility !== 'hidden'
+          && Number.parseFloat(elementStyle.opacity) > 0.05
+          && elementBox.height > 0;
+      }});
       const boundaryPhrases = [...document.querySelectorAll(
         '[data-nlp-boundary-step]'
       )];
-      const tokenNote = document.querySelector('.nlp-golden__token-note'), handoff = document.querySelector('.nlp-golden__handoff');
+      const tokenNote = document.querySelector('.nlp-golden__token-note');
+      const pageNavigation = document.querySelector(
+        '.curriculum-workspace__adjacent-navigation'
+      );
+      const workspaceContent = document.querySelector(
+        '.curriculum-workspace__content'
+      );
       const controls = deck?.querySelector(
         ':scope > .visual-narrative__steps'
       );
@@ -54,7 +73,7 @@ def probe(browser: ChromeSession) -> JsonObject:
       const controlBox = box(controls), contentBox = box(content);
       const guideBox = box(guide), stripBox = box(numericStrip);
       const connectorBox = box(resultConnector);
-      const tokenNoteBox = box(tokenNote), handoffBox = box(handoff);
+      const tokenNoteBox = box(tokenNote);
       const takeawayBox = box(takeaway);
       const style = element => element ? getComputedStyle(element) : null;
       const shellHeaderBottom = Math.max(
@@ -77,12 +96,27 @@ def probe(browser: ChromeSession) -> JsonObject:
           '[data-narrative-active="true"]'
         ).length ?? -1,
         stageWidth: stageBox.width, stageHeight: stageBox.height,
+        stageTop: stageBox.top,
         contentStart: contentBox.left, wideEnd: guideBox.right,
         leftStart: beatBox.left, leftEnd: beatBox.right,
+        leftTop: beatBox.top,
+        leftTopOffset: beatBox.top - stageBox.top,
         beatBottom: beatBox.bottom,
         rightStart: wrapBox.left, rightEnd: stageBox.right,
+        rightContentTop: Math.min(
+          ...rightContent.map(element => box(element).top),
+        ),
+        rightTopOffset: Math.min(
+          ...rightContent.map(element => box(element).top),
+        ) - stageBox.top,
+        leftRightTopDelta: Math.abs(
+          beatBox.top - Math.min(
+            ...rightContent.map(element => box(element).top),
+          ),
+        ),
         visualLeft: visualBox.left, visualTop: visualBox.top,
         visualWidth: visualBox.width, visualHeight: visualBox.height,
+        mobileStackGap: visualBox.top - beatBox.bottom,
         visualCenterX: visualBox.left + visualBox.width / 2,
         visualCenterY: visualBox.top + visualBox.height / 2,
         controlLeft: controlBox.left, controlTop: controlBox.top,
@@ -106,6 +140,10 @@ def probe(browser: ChromeSession) -> JsonObject:
         figureBorder: style(figure)?.borderTopWidth ?? '',
         deckBorder: style(deck)?.borderTopWidth ?? '',
         visualPosition: style(visualWrap)?.position ?? '',
+        copyAlignItems: style(stage?.querySelector(
+          ':scope > .visual-narrative__copy'
+        ))?.alignItems ?? '',
+        visualAlignItems: style(visualWrap)?.alignItems ?? '',
         stageMinHeight: style(stage)?.minBlockSize ?? '',
         pendingRaf: window.__goldenRafPending ?? -1,
         observerActive: observer?.active ?? -1,
@@ -138,7 +176,13 @@ def probe(browser: ChromeSession) -> JsonObject:
           phrase => getComputedStyle(phrase, '::after').transitionDelay
         ).join('|'),
         tokenNoteRight: tokenNoteBox.right, tokenNoteBottom: tokenNoteBox.bottom,
-        handoffRight: handoffBox.right, handoffTop: handoffBox.top, handoffBottom: handoffBox.bottom,
+        pageNavigationCount: document.querySelectorAll(
+          '.curriculum-workspace__adjacent-navigation'
+        ).length,
+        pageNavigationLast:
+          workspaceContent?.lastElementChild === pageNavigation,
+        stageHandoffCount:
+          document.querySelectorAll('.nlp-golden__handoff').length,
       }};
     }})()""")
 
@@ -154,6 +198,12 @@ def assert_probe(data: JsonObject, stage: str, index: int) -> None:
         f"Golden mounted deck: {data}",
     )
     require(data["activeBeatCount"] == 1, f"Golden active beat: {data}")
+    require(
+        data["pageNavigationCount"] == 1
+        and data["pageNavigationLast"] is True
+        and data["stageHandoffCount"] == 0,
+        f"Golden persistent page navigation: {data}",
+    )
     for key in (
         "documentOverflow",
         "localOverflow",
@@ -184,10 +234,22 @@ def assert_probe(data: JsonObject, stage: str, index: int) -> None:
             400 <= number(data["stageHeight"], "stage height") <= 450,
             f"Golden desktop height: {data}",
         )
+        require(
+            24 <= number(data["leftTopOffset"], "Golden LEFT top") <= 48
+            and 24 <= number(data["rightTopOffset"], "Golden RIGHT top") <= 48
+            and number(data["leftRightTopDelta"], "Golden top delta") <= 24,
+            f"Golden top alignment: {data}",
+        )
+        require(
+            data["copyAlignItems"] == "flex-start"
+            and data["visualAlignItems"] == "flex-start",
+            f"Golden top alignment styles: {data}",
+        )
     else:
         require(
-            data["stageMinHeight"] == "0px",
-            f"Golden mobile fixed stage: {data}",
+            data["stageMinHeight"] == "386px"
+            and 385 <= number(data["stageHeight"], "mobile stage height") <= 387,
+            f"Golden mobile stage contract: {data}",
         )
         require(
             number(data["beatBottom"], "copy bottom")
@@ -197,6 +259,10 @@ def assert_probe(data: JsonObject, stage: str, index: int) -> None:
         require(
             number(data["copyHeaderOverlap"], "Golden copy/header overlap") <= 1,
             f"Golden mobile header clearance: {data}",
+        )
+        require(
+            0 <= number(data["mobileStackGap"], "mobile stack gap") <= 32,
+            f"Golden mobile stack rhythm: {data}",
         )
         require(
             data["visibleNumericSlots"] == 6,
@@ -239,18 +305,12 @@ def assert_probe(data: JsonObject, stage: str, index: int) -> None:
             data["boundaryDelays"] == "0s|0.16s|0.32s|0.48s",
             f"Golden boundary order: {data}",
         )
-        token_right_aligned = all(
-            abs(number(data[key], key) - number(data["rightEnd"], "rightEnd")) <= 1
-            for key in ("tokenNoteRight", "handoffRight")
+        token_right_aligned = (
+            abs(
+                number(data["tokenNoteRight"], "tokenNoteRight")
+                - number(data["rightEnd"], "rightEnd")
+            )
+            <= 1
         )
         require(token_right_aligned, f"Golden Token right alignment: {data}")
-        require(
-            number(data["tokenNoteBottom"], "tokenNoteBottom") <= number(data["handoffTop"], "handoffTop"),
-            f"Golden Token handoff order: {data}",
-        )
-        handoff_gap = number(data["controlTop"], "controlTop") - number(data["handoffBottom"], "handoffBottom")
-        require(
-            0 <= handoff_gap <= 80,
-            f"Golden Token handoff proximity: {data}",
-        )
     require(data["visualPosition"] != "sticky", f"Golden sticky visual: {data}")
