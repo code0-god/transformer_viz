@@ -327,6 +327,11 @@ copy, and arbitrary runtime strings never enter KaTeX.
 - ToC disclosure, inline Figures, architecture state, and other same-Chapter
   interactions do not reset document scroll. Lab overlay open/close preserves
   its independent scroll-lock and exact restoration contract.
+- Every curriculum Chapter ends with one persistent adjacent-Chapter
+  navigation after all rendered learning content. It never lives inside a
+  Figure or depends on a slide/scene state. Previous aligns to the left edge,
+  Next aligns to the right edge, and the first/last Chapter renders only the
+  available direction. This is the default contract for future Chapters.
 - Lab Diagram viewers support Fit, zoom, pan, Ctrl+Wheel, and `+`, `-`, `F`, or
   `0` keyboard controls.
 

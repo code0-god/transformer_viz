@@ -230,7 +230,7 @@ export function registerAppRouteTests({
       expect(document.getElementById("learning-diagram-pane")).toBeNull();
       expect(screen.queryByRole("tablist", { name: "학습 보기" })).toBeNull();
       expect(
-        screen.getByRole("img", { name: "Token 개념 흐름" }),
+        screen.getByRole("img", { name: "Token 분절 연속 설명" }),
       ).toBeVisible();
       expect(screen.queryByTestId("open-diagram-viewer")).toBeNull();
       expect(screen.queryByRole("dialog")).toBeNull();

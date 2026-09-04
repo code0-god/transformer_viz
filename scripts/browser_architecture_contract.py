@@ -395,7 +395,7 @@ def _capture_chrome_ax_focus_transcript(
           const figure=document.querySelector('[data-figure-id="decoder.diagram.tokenization.token"]');
           return {fallbackText:figure?.querySelector(':scope > figcaption')?.textContent?.replace(/\\s+/g,' ').trim()||'',siblingControls:[...(figure?.querySelectorAll('button')||[])].map(button=>button.textContent?.trim()||button.getAttribute('aria-label')||'')};
         })()""", True)
-        adjacent = cdp.evaluate(session, "[...document.querySelectorAll('.curriculum-chapter-footer a')].map(link=>link.getAttribute('aria-label'))", True)
+        adjacent = cdp.evaluate(session, "[...document.querySelectorAll('nav[aria-label=\"Chapter 이동\"] a[aria-label]')].map(link=>link.getAttribute('aria-label'))", True)
         progress = {
             "role": "text",
             "name": cdp.evaluate(

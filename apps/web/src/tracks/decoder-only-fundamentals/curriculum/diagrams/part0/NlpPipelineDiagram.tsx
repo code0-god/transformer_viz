@@ -82,7 +82,6 @@ export function NlpPipelineDiagram(): ReactElement {
     ? narrative.activeStage
     : "language";
   const descriptionId = useId();
-  const showsHandoff = stage === "token-preview";
 
   return (
     <div className="nlp-golden" data-nlp-stage={stage}>
@@ -185,15 +184,6 @@ export function NlpPipelineDiagram(): ReactElement {
           {VISUAL_DESCRIPTION} {STAGE_SUMMARIES[stage]}
         </p>
       </div>
-      <a
-        className="nlp-golden__handoff"
-        data-next-chapter={showsHandoff ? "decoder.chapter.0.2" : undefined}
-        href="#/learn/decoder-only-fundamentals/0-2"
-        aria-label={showsHandoff ? "다음: Token이란?" : undefined}
-        tabIndex={showsHandoff ? undefined : -1}
-      >
-        Token이란? →
-      </a>
       <fieldset
         className="nlp-golden__fallback learning-visually-hidden"
         aria-label="자연어 처리란? 의미 설명"

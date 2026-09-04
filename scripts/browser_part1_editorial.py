@@ -326,33 +326,20 @@ def _scroll_reset_workflow(browser: ChromeSession, screenshots: Path) -> JsonObj
     )
     wait_for(browser, "scrollY === 0", "Course Home Part 1 top")
     _scroll_down()
-    browser.require_cdp().evaluate(
+    footer_count = browser.require_cdp().evaluate(
         browser.page_session,
-        """document.querySelector(
-          '.curriculum-chapter-footer a[aria-label^="다음:"]',
-        )?.click()""",
+        "document.querySelectorAll('.curriculum-chapter-footer').length",
         True,
     )
-    wait_for(
-        browser,
-        "document.querySelector('[data-curriculum-chapter-id=\"decoder.chapter.1.2\"]') !== null",
-        "Part 1 Next",
+    require(
+        footer_count == 0,
+        f"Part 1 retained the removed footer bar: {footer_count}",
     )
+    _go_chapter(browser, "1-2")
     wait_for(browser, "scrollY === 0", "Part 1 Next top")
 
     _scroll_down()
-    browser.require_cdp().evaluate(
-        browser.page_session,
-        """document.querySelector(
-          '.curriculum-chapter-footer a[aria-label^="이전:"]',
-        )?.click()""",
-        True,
-    )
-    wait_for(
-        browser,
-        "document.querySelector('[data-curriculum-chapter-id=\"decoder.chapter.1.1\"]') !== null",
-        "Part 1 Previous",
-    )
+    _go_chapter(browser, "1-1")
     wait_for(browser, "scrollY === 0", "Part 1 Previous top")
 
     _scroll_down()
@@ -382,18 +369,7 @@ def _scroll_reset_workflow(browser: ChromeSession, screenshots: Path) -> JsonObj
 
     _go_chapter(browser, "1-4")
     _scroll_down()
-    browser.require_cdp().evaluate(
-        browser.page_session,
-        """document.querySelector(
-          '.curriculum-chapter-footer a[aria-label^="다음:"]',
-        )?.click()""",
-        True,
-    )
-    wait_for(
-        browser,
-        "document.querySelector('[data-curriculum-chapter-id=\"decoder.chapter.2.1\"]') !== null",
-        "Part 1 to Part 2",
-    )
+    _go_chapter(browser, "2-1")
     wait_for(browser, "scrollY === 0", "Part 2 top")
     capture(browser, screenshots / "09-part1-to-part2-navigation.png")
     final_navigation = evaluate_dict(

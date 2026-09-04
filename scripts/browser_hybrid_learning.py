@@ -58,7 +58,7 @@ EXPECTED_PREFERRED_WIDTHS = {
 }
 ALL_LEARNING_FIGURES = (
     ("0-1", "decoder.diagram.intro.nlp", "full"),
-    ("0-2", "decoder.diagram.tokenization.token", "wide"),
+    ("0-2", "decoder.diagram.tokenization.token", "full"),
     ("0-3", "decoder.diagram.tokenization.vocabulary", "wide"),
     ("0-4", "decoder.diagram.tokenization.methods", "wide"),
     ("1-1", "decoder.diagram.language-model.definition", "wide"),
@@ -69,6 +69,22 @@ ALL_LEARNING_FIGURES = (
     ("2-2", "decoder.diagram.representation.position", "wide"),
     ("2-3", "decoder.diagram.representation.hidden-state", "wide"),
     ("3-1", "root", "full"),
+)
+ALL_CHAPTER_SLUGS = (
+    "0-1",
+    "0-2",
+    "0-3",
+    "0-4",
+    "1-1",
+    "1-2",
+    "1-3",
+    "1-4",
+    "2-1",
+    "2-2",
+    "2-3",
+    "3-1",
+    "4-1",
+    "5-1",
 )
 
 
@@ -479,6 +495,9 @@ def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
               const content = figure?.querySelector('.learning-figure__content');
               const graphic = figure?.querySelector('.learning-figure__graphic');
               const graphicRect = graphic?.getBoundingClientRect();
+              const narrativeStage = figure?.closest('.visual-narrative')
+                ?.querySelector(':scope > .visual-narrative__stage');
+              const narrativeRect = narrativeStage?.getBoundingClientRect();
               const localOverflowSources = content
                 ? Array.from(content.querySelectorAll('*'))
                     .map((element) => {{
@@ -610,12 +629,9 @@ def _probe_figure(browser: ChromeSession, figure_id: str) -> JsonObject:
                 graphicWidth: graphicRect?.width ?? 0,
                 graphicLeft: graphicRect?.left ?? 0,
                 graphicRight: graphicRect?.right ?? 0,
+                narrativeHeight: narrativeRect?.height ?? 0,
                 left: rect?.left ?? 0,
                 right: rect?.right ?? 0,
-                tokenRows: Array.from(
-                  figure?.querySelectorAll('[data-token-row]') ?? [],
-                  (node) => node.getAttribute('data-token-row'),
-                ),
                 implementationTermHits: forbiddenTerms.filter((term) =>
                   articleText.toLocaleLowerCase().includes(term),
                 ),
@@ -810,7 +826,7 @@ def _capture_part_zero(
     evidence: list[JsonObject] = []
     expected_sizes = {
         "decoder.diagram.intro.nlp": "full",
-        "decoder.diagram.tokenization.token": "wide",
+        "decoder.diagram.tokenization.token": "full",
         "decoder.diagram.tokenization.vocabulary": "wide",
         "decoder.diagram.tokenization.methods": "wide",
     }
@@ -926,13 +942,16 @@ def _capture_responsive(
     _wait_for_article(browser)
     _wait_for_figure(browser, "decoder.diagram.tokenization.token")
     _scroll_figure(browser, "decoder.diagram.tokenization.token")
-    responsive.append(
-        _assert_inline_figure(
-            browser,
-            "decoder.diagram.tokenization.token",
-            "wide",
-        ),
+    token_desktop = _assert_inline_figure(
+        browser,
+        "decoder.diagram.tokenization.token",
+        "full",
     )
+    require(
+        abs(_number(token_desktop, "narrativeHeight") - 432) <= 1,
+        f"Desktop Golden Token stage height changed: {token_desktop}",
+    )
+    responsive.append(token_desktop)
     shots["inline-token-1366"] = capture(
         browser,
         screenshots / "learn-token-0-2-inline-1366x768.png",
@@ -967,12 +986,11 @@ def _capture_responsive(
     token = _assert_inline_figure(
         browser,
         "decoder.diagram.tokenization.token",
-        "wide",
+        "full",
     )
-    token_rows = token.get("tokenRows")
     require(
-        token_rows == ["1", "1", "1", "2", "2"],
-        "Mobile Token Figure did not reflow to two rows",
+        abs(_number(token, "narrativeHeight") - 386) <= 1,
+        f"Mobile Golden Token stage height changed: {token}",
     )
     responsive.append(token)
     shots["inline-token-mobile"] = capture(
@@ -1155,12 +1173,144 @@ def _verify_learn_matrix(browser: ChromeSession) -> list[JsonObject]:
     return evidence
 
 
+def _verify_all_chapter_navigation(
+    browser: ChromeSession,
+) -> list[JsonObject]:
+    evidence: list[JsonObject] = []
+    for index, slug in enumerate(ALL_CHAPTER_SLUGS):
+        _open_chapter(browser, slug)
+        _wait_for_article(browser)
+        probe = evaluate_dict(
+            browser,
+            """(() => {
+              const workspace = document.querySelector(
+                '[data-curriculum-chapter-id]',
+              );
+              const content = workspace?.querySelector(
+                '.curriculum-workspace__content',
+              );
+              const article = content?.querySelector('.learning-guide');
+              const navigation = content?.querySelector(
+                '.curriculum-workspace__adjacent-navigation',
+              );
+              const previous = navigation?.querySelector(
+                '[data-navigation-direction="previous"]',
+              );
+              const next = navigation?.querySelector(
+                '[data-navigation-direction="next"]',
+              );
+              const rect = element => element?.getBoundingClientRect();
+              const navigationRect = rect(navigation);
+              const previousRect = rect(previous);
+              const nextRect = rect(next);
+              const style =
+                navigation instanceof Element
+                  ? getComputedStyle(navigation)
+                  : null;
+              return {
+                afterArticle:
+                  article instanceof Element
+                  && navigation instanceof Element
+                  && Boolean(
+                    article.compareDocumentPosition(navigation)
+                      & Node.DOCUMENT_POSITION_FOLLOWING,
+                  ),
+                contentLast: content?.lastElementChild === navigation,
+                footerCount:
+                  document.querySelectorAll('.curriculum-chapter-footer')
+                    .length,
+                inNarrative:
+                  navigation?.closest('[data-narrative-layout]') !== null,
+                linkCount: navigation?.querySelectorAll('a').length ?? -1,
+                navigationCount:
+                  content?.querySelectorAll(
+                    '.curriculum-workspace__adjacent-navigation',
+                  ).length ?? -1,
+                navigationLeft: navigationRect?.left ?? -1,
+                navigationRight: navigationRect?.right ?? -1,
+                nextHeight: nextRect?.height ?? 0,
+                nextHref: next?.getAttribute('href') ?? '',
+                nextRight: nextRect?.right ?? -1,
+                oldStageHandoffCount:
+                  document.querySelectorAll('.nlp-golden__handoff').length,
+                opacity: style?.opacity ?? '',
+                overflow: Math.max(
+                  0,
+                  document.documentElement.scrollWidth
+                    - document.documentElement.clientWidth,
+                ),
+                previousHeight: previousRect?.height ?? 0,
+                previousHref: previous?.getAttribute('href') ?? '',
+                previousLeft: previousRect?.left ?? -1,
+                visibility: style?.visibility ?? '',
+              };
+            })()""",
+        )
+        previous_slug = ALL_CHAPTER_SLUGS[index - 1] if index > 0 else None
+        next_slug = (
+            ALL_CHAPTER_SLUGS[index + 1]
+            if index + 1 < len(ALL_CHAPTER_SLUGS)
+            else None
+        )
+        require(
+            _integer(probe, "navigationCount") == 1
+            and _boolean(probe, "contentLast")
+            and _boolean(probe, "afterArticle")
+            and not _boolean(probe, "inNarrative")
+            and _integer(probe, "oldStageHandoffCount") == 0
+            and _integer(probe, "footerCount") == 0
+            and _integer(probe, "overflow") == 0
+            and _string(probe, "visibility") == "visible"
+            and _string(probe, "opacity") == "1"
+            and _integer(probe, "linkCount")
+            == int(previous_slug is not None) + int(next_slug is not None),
+            f"Chapter {slug} persistent bottom navigation: {probe}",
+        )
+        if previous_slug is None:
+            require(
+                _string(probe, "previousHref") == "",
+                f"Chapter {slug} unexpected previous link: {probe}",
+            )
+        else:
+            require(
+                _string(probe, "previousHref")
+                == f"#/learn/decoder-only-fundamentals/{previous_slug}"
+                and _number(probe, "previousHeight") >= 44
+                and abs(
+                    _number(probe, "previousLeft")
+                    - _number(probe, "navigationLeft")
+                )
+                <= 1,
+                f"Chapter {slug} previous link: {probe}",
+            )
+        if next_slug is None:
+            require(
+                _string(probe, "nextHref") == "",
+                f"Chapter {slug} unexpected next link: {probe}",
+            )
+        else:
+            require(
+                _string(probe, "nextHref")
+                == f"#/learn/decoder-only-fundamentals/{next_slug}"
+                and _number(probe, "nextHeight") >= 44
+                and abs(
+                    _number(probe, "nextRight")
+                    - _number(probe, "navigationRight")
+                )
+                <= 1,
+                f"Chapter {slug} next link: {probe}",
+            )
+        evidence.append({"slug": slug, **probe})
+    return evidence
+
+
 def _capture_navigation(
     browser: ChromeSession,
     screenshots: Path,
     shots: dict[str, str],
 ) -> JsonObject:
     set_viewport(browser, 1440, 900)
+    all_pages = _verify_all_chapter_navigation(browser)
 
     _open_chapter(browser, "0-2")
     _wait_for_figure(browser, "decoder.diagram.tokenization.token")
@@ -1168,9 +1318,9 @@ def _capture_navigation(
     _assert_inline_figure(
         browser,
         "decoder.diagram.tokenization.token",
-        "wide",
+        "full",
     )
-    before_next = _scroll_to_bottom(browser, 1001)
+    before_next = _scroll_to_bottom(browser, 300)
     shots["navigation-0-2-bottom"] = capture(
         browser,
         screenshots / "navigation-0-2-bottom-before-next-1440x900.png",
@@ -1201,19 +1351,11 @@ def _capture_navigation(
         browser,
         screenshots / "navigation-0-3-after-next-1440x900.png",
     )
-
-    before_previous = _scroll_to_bottom(browser)
-    pointer_click(
+    footer_absent = _evaluate(
         browser,
-        'document.querySelector(\'a[aria-label="이전: Token이란?"]\')',
-        condition=(
-            "Boolean(document.querySelector("
-            "'[data-curriculum-chapter-id=\"decoder.chapter.0.2\"]'"
-            "))"
-        ),
-        label="Previous Chapter 0.2",
+        "document.querySelector('.curriculum-chapter-footer') === null",
     )
-    after_previous = _wait_for_chapter_top(browser, "decoder.chapter.0.2")
+    require(footer_absent is True, "Shared Chapter footer remained mounted")
 
     _open_chapter(browser, "0-4")
     _wait_for_figure(browser, "decoder.diagram.tokenization.methods")
@@ -1311,9 +1453,9 @@ def _capture_navigation(
     _assert_inline_figure(
         browser,
         "decoder.diagram.tokenization.token",
-        "wide",
+        "full",
     )
-    before_back = _scroll_to_bottom(browser, 1001)
+    before_back = _scroll_to_bottom(browser, 300)
     pointer_click(
         browser,
         'document.querySelector(\'a[aria-label="다음: Vocabulary와 Token ID"]\')',
@@ -1331,8 +1473,8 @@ def _capture_navigation(
     after_forward = _wait_for_chapter_top(browser, "decoder.chapter.0.3")
 
     _open_chapter(browser, "0-2")
-    _evaluate(browser, "window.scrollTo({ top: 600, left: 0, behavior: 'auto' })")
-    wait_for(browser, "scrollY === 600", "Same Chapter baseline scroll")
+    _evaluate(browser, "window.scrollTo({ top: 300, left: 0, behavior: 'auto' })")
+    wait_for(browser, "scrollY === 300", "Same Chapter baseline scroll")
     _evaluate(
         browser,
         """
@@ -1400,8 +1542,9 @@ def _capture_navigation(
     after_direct = _wait_for_chapter_top(browser, "decoder.chapter.0.3")
 
     return {
+        "allPages": all_pages,
         "next": {"before": before_next, "after": after_next},
-        "previous": {"before": before_previous, "after": after_previous},
+        "footerAbsent": footer_absent,
         "toc": {"before": before_toc, "after": after_toc},
         "figureChapterLink": {
             "before": before_figure_link,

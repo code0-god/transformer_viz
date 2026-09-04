@@ -5,14 +5,12 @@ import { describe, expect, test } from "vitest";
 
 import { App } from "../../../../../App";
 import { model, TestWorker } from "../../../../../test/workerFixtures";
-import { tokenChapterContent } from "../../content/part0/token";
 import { NlpPipelineDiagram } from "./NlpPipelineDiagram";
-import { TokenComparisonDiagram } from "./TokenComparisonDiagram";
 import { VocabularyAddressDiagram } from "./VocabularyAddressDiagram";
 
 const CHAPTERS = [
   ["자연어 처리란?", "자연어 처리 연속 설명"],
-  ["Token이란?", "Token 개념 흐름"],
+  ["Token이란?", "Token 분절 연속 설명"],
   [
     "Vocabulary와 Token ID",
     "Token과 Token ID를 embedding row에 연결하는 vocabulary lookup",
@@ -30,8 +28,8 @@ const INLINE_CHAPTERS = [
   [
     "Token이란?",
     "decoder.diagram.tokenization.token",
-    "Token 개념 흐름",
-    "Token 경계는 tokenizer에 따라 달라질 수 있습니다.",
+    "Token 분절 연속 설명",
+    "문장이 순서 있는 Token 단위로 나뉘고 현재 모델의 byte 단위로 이어집니다.",
   ],
   [
     "Vocabulary와 Token ID",
@@ -105,29 +103,6 @@ describe("Part 0 curriculum Diagrams", () => {
     ).toEqual(NLP_GOLDEN_STAGES);
   });
 
-  test("places the Token Figure before the word distinction", () => {
-    const tokenUnit = tokenChapterContent.page.sections.find(
-      ({ id }) => id === "token-unit",
-    );
-
-    expect(tokenUnit?.blocks.map(({ id }) => id)).toEqual([
-      "narrative.token-boundary",
-      "p.token-not-word",
-    ]);
-    const narrative = tokenUnit?.blocks[0];
-    expect(
-      narrative?.kind === "visual-narrative"
-        ? {
-            beats: narrative.beats.map(({ id }) => id),
-            figureId: narrative.figure.figureId,
-          }
-        : null,
-    ).toEqual({
-      beats: ["source", "boundaries", "split"],
-      figureId: "decoder.diagram.tokenization.token",
-    });
-  });
-
   test("renders Vocabulary as lookup relationships without a board", () => {
     const { container } = render(<VocabularyAddressDiagram />);
 
@@ -196,52 +171,6 @@ describe("Part 0 curriculum Diagrams", () => {
     },
   );
 
-  test("renders the Token concept as direct segmented text", () => {
-    const originalMatchMedia = window.matchMedia;
-    const mobileQuery = {
-      matches: true,
-      media: "(max-width: 44rem)",
-      onchange: null,
-      addEventListener: () => undefined,
-      removeEventListener: () => undefined,
-      addListener: () => undefined,
-      removeListener: () => undefined,
-      dispatchEvent: () => true,
-    } satisfies MediaQueryList;
-    Object.defineProperty(window, "matchMedia", {
-      configurable: true,
-      value: () => mobileQuery,
-    });
-
-    try {
-      const { container } = render(<TokenComparisonDiagram />);
-      expect(
-        screen.getByRole("img", { name: "Token 개념 흐름" }),
-      ).toBeVisible();
-      expect(container.querySelectorAll("[data-token-segment]")).toHaveLength(
-        5,
-      );
-      expect(container.querySelectorAll("[data-token-boundary]")).toHaveLength(
-        4,
-      );
-      expect(
-        new Set(
-          Array.from(container.querySelectorAll("[data-token-row]")).map(
-            (segment) => segment.getAttribute("data-token-row"),
-          ),
-        ),
-      ).toEqual(new Set(["1", "2"]));
-      expect(container.querySelector("[data-token-stage]")).toBeNull();
-      expect(container.querySelector("marker")).toBeNull();
-      expect(container.querySelector("[data-token-lens]")).toBeNull();
-    } finally {
-      Object.defineProperty(window, "matchMedia", {
-        configurable: true,
-        value: originalMatchMedia,
-      });
-    }
-  });
-
   test.each(CHAPTERS)(
     "renders %s as one named SVG with fallback and native focus control",
     async (chapterTitle, imageName) => {
@@ -269,6 +198,8 @@ describe("Part 0 curriculum Diagrams", () => {
         expect(
           pane.querySelector("[data-testid='nlp-golden-visual']"),
         ).not.toBeNull();
+      } else if (chapterTitle === "Token이란?") {
+        expect(pane.querySelector("[data-token-golden-visual]")).not.toBeNull();
       } else {
         expect(
           pane.querySelector(`svg[aria-label='${imageName}']`),

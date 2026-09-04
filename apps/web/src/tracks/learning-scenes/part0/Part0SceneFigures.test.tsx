@@ -1,8 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { nlpChapterContent } from "../../decoder-only-fundamentals/curriculum/content/part0/nlp";
+import { tokenChapterContent } from "../../decoder-only-fundamentals/curriculum/content/part0/token";
 import { curriculumLearningFigures } from "../../decoder-only-fundamentals/curriculum/learningFigureRegistry";
-import type { GuideBlock, GuideVisualNarrativeBlock } from "../../guideTypes";
+import type { GuideBlock } from "../../guideTypes";
 import { VisualNarrative } from "../../VisualNarrative";
 import {
   TokenizationMethodsSceneFigure,
@@ -11,30 +12,15 @@ import {
 } from "./Part0SceneFigures";
 
 describe("Part 0 Learning Scenes", () => {
-  test("lets inline prose drive token segmentation without a replay rail", () => {
-    const narrative = {
-      id: "token-narrative",
-      kind: "visual-narrative",
-      layout: "inline",
-      label: "Token split",
-      beats: [
-        { id: "source", label: "문장", stage: "source", text: "SOURCE_BEAT" },
-        {
-          id: "boundaries",
-          label: "경계",
-          stage: "boundaries",
-          text: "BOUNDARY_BEAT",
-        },
-        { id: "split", label: "Token", stage: "split", text: "SPLIT_BEAT" },
-      ],
-      figure: {
-        id: "token-figure",
-        kind: "figure",
-        figureId: "decoder.diagram.tokenization.token",
-        caption: "TOKEN_CAPTION",
-        alt: "TOKEN_ALT",
-      },
-    } as const satisfies GuideVisualNarrativeBlock;
+  test("lets Golden prose drive static token segmentation", () => {
+    const blocks: readonly GuideBlock<string>[] =
+      tokenChapterContent.page.sections.flatMap(({ blocks: sectionBlocks }) => [
+        ...sectionBlocks,
+      ]);
+    const narrative = blocks.find((block) => block.kind === "visual-narrative");
+    if (narrative?.kind !== "visual-narrative") {
+      throw new Error("Golden Token narrative missing");
+    }
 
     render(
       <VisualNarrative
@@ -42,18 +28,14 @@ describe("Part 0 Learning Scenes", () => {
         registry={curriculumLearningFigures}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Token" }));
+    fireEvent.click(screen.getByRole("button", { name: "2단계: Token" }));
 
-    expect(screen.getByTestId("tokenization-unit-scene-state")).toHaveAttribute(
-      "data-phase",
-      "split",
-    );
-    expect(screen.getByTestId("tokenization-unit-scene-state")).toHaveAttribute(
-      "data-narrative",
-      "true",
-    );
+    expect(
+      screen.getByRole("img", { name: "Token 분절 연속 설명" }),
+    ).toHaveAttribute("data-token-stage", "token-units");
+    expect(screen.queryByTestId("tokenization-unit-scene-state")).toBeNull();
     expect(screen.queryByRole("button", { name: "다시 나누기" })).toBeNull();
-    expect(screen.getByRole("button", { name: "현재 byte" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "현재 byte" })).toBeNull();
   });
 
   test("keeps one NLP object tree through all five narrative states", () => {
@@ -90,9 +72,7 @@ describe("Part 0 Learning Scenes", () => {
       expect(screen.getByTestId("nlp-golden-sentence")).toBe(sentence);
       expect(screen.getByTestId("nlp-golden-numeric-strip")).toBe(numericStrip);
     }
-    expect(
-      screen.getByRole("link", { name: "다음: Token이란?" }),
-    ).toHaveAttribute("data-next-chapter", "decoder.chapter.0.2");
+    expect(screen.queryByRole("link", { name: "다음: Token이란?" })).toBeNull();
     expect(screen.queryByRole("button", { name: "처음부터 보기" })).toBeNull();
   });
 
@@ -143,7 +123,7 @@ describe("Part 0 Learning Scenes", () => {
     ).toHaveAttribute("data-phase", "split");
   });
 
-  test("registers Golden NLP as static and later Part 0 Figures as scenes", () => {
+  test("registers Golden narratives as static and later Figures as scenes", () => {
     const expected = [
       "decoder.diagram.intro.nlp",
       "decoder.diagram.tokenization.token",
@@ -151,11 +131,13 @@ describe("Part 0 Learning Scenes", () => {
       "decoder.diagram.tokenization.methods",
     ] as const;
 
-    expect(curriculumLearningFigures.metadata(expected[0])).toEqual({
-      preferredWidth: 960,
-      renderer: "static",
-    });
-    for (const figureId of expected.slice(1)) {
+    for (const figureId of expected.slice(0, 2)) {
+      expect(curriculumLearningFigures.metadata(figureId)).toEqual({
+        preferredWidth: 960,
+        renderer: "static",
+      });
+    }
+    for (const figureId of expected.slice(2)) {
       expect(curriculumLearningFigures.metadata(figureId)).toMatchObject({
         renderer: "scene",
         loadingStrategy: "visible",
@@ -173,7 +155,7 @@ describe("Part 0 Learning Scenes", () => {
       screen.getByRole("img", { name: "자연어 처리 연속 설명" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("img", { name: "Token 개념 흐름" }),
+      screen.getByRole("img", { name: "Token 분절 연속 설명" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("img", {

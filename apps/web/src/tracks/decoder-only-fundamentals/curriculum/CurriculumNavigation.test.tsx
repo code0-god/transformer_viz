@@ -2,30 +2,14 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test, vi } from "vitest";
 
-import { CurriculumChapterFooter } from "./CurriculumChapterFooter";
 import { CurriculumNavigation } from "./CurriculumNavigation";
 import { CHAPTER_IDS } from "./ids";
-import { chapterNavigation } from "./navigation";
 
 function renderNavigation(index = 6) {
   const onNavigate = vi.fn();
   render(
     <CurriculumNavigation
       currentChapterId={CHAPTER_IDS[index] ?? CHAPTER_IDS[0]}
-      onNavigate={onNavigate}
-    />,
-  );
-  return onNavigate;
-}
-
-function renderFooter(index = 6) {
-  const onNavigate = vi.fn();
-  const navigation = chapterNavigation(CHAPTER_IDS[index] ?? CHAPTER_IDS[0]);
-  render(
-    <CurriculumChapterFooter
-      previous={navigation?.previous}
-      next={navigation?.next}
-      chapterHref={(chapterId) => `#/test/${chapterId}`}
       onNavigate={onNavigate}
     />,
   );
@@ -97,39 +81,6 @@ describe("Curriculum Navigation disclosure", () => {
 
     expect(screen.queryByRole("button", { name: /^이전:/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /^다음:/ })).toBeNull();
-  });
-
-  test("uses destination-named native footer links", async () => {
-    // Given: a middle Chapter is current.
-    const user = userEvent.setup();
-    const onNavigate = renderFooter(6);
-
-    // When: the destination-named next link is clicked.
-    await user.click(
-      screen.getByRole("link", { name: "다음: Autoregressive Generation" }),
-    );
-
-    // Then: ordered navigation emits that destination Chapter.
-    expect(
-      screen.getByRole("link", { name: "이전: 다음 Token 예측" }),
-    ).toHaveAttribute("data-control-tier", "secondary");
-    expect(onNavigate).toHaveBeenCalledWith(CHAPTER_IDS[7]);
-  });
-
-  test("omits footer boundary controls instead of disabled placeholders", () => {
-    // Given/When: the first Chapter is current.
-    renderFooter(0);
-
-    // Then: previous is absent and no disabled placeholder exists.
-    expect(screen.queryByRole("link", { name: /^이전:/ })).toBeNull();
-    const next = screen.getByRole("link", { name: "다음: Token이란?" });
-    expect(
-      next.closest('[data-threeui-surface="chapter-footer"]'),
-    ).toBeInTheDocument();
-    expect(next).toHaveAttribute("href", "#/test/decoder.chapter.0.2");
-    expect(
-      screen.queryByRole("button", { name: "이전 Chapter 없음" }),
-    ).toBeNull();
   });
 
   test("renders no Visualization mode or CTA for the absent capability", () => {

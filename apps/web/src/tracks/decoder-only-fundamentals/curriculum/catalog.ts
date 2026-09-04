@@ -83,7 +83,7 @@ const CHAPTER_SPECS = [
     conceptId: "decoder.tokenization.token",
     conceptTitle: "Token",
     pageId: GUIDE_PAGE_IDS[1],
-    guideSectionIds: ["token-unit", "token-id-bridge"],
+    guideSectionIds: ["token-question"],
     diagramId: "decoder.diagram.tokenization.token",
     nodeId: "decoder.root.input-context",
     references: ["ref.tistory.22", "ref.repo.tokenizer", "ref.rfc3629"],

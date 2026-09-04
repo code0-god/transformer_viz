@@ -64,6 +64,10 @@ def assert_copy(browser: ChromeSession, index: int, stage: str) -> JsonObject:
       const article = document.querySelector(
         '[data-curriculum-chapter-id="decoder.chapter.0.1"]'
       );
+      const content = article?.querySelector('.curriculum-workspace__content');
+      const pageNavigation = article?.querySelector(
+        '.curriculum-workspace__adjacent-navigation'
+      );
       const visual = document.querySelector('[data-testid="nlp-golden-visual"]');
       const described = visual?.getAttribute('aria-describedby') ?? '';
       const description = described === '' ? null : document.getElementById(described);
@@ -90,7 +94,16 @@ def assert_copy(browser: ChromeSession, index: int, stage: str) -> JsonObject:
         caveats: (article?.textContent ?? '').includes('설명을 위한 예시 · 실제 모델 값 아님')
           && (article?.textContent ?? '').includes('개념 예시')
           && (article?.textContent ?? '').includes('실제 경계는 토크나이저에 따라 달라집니다.'),
-        handoffCount: document.querySelectorAll('[data-next-chapter="decoder.chapter.0.2"]').length,
+        pageNextCount: pageNavigation?.querySelectorAll(
+          '[data-next-chapter="decoder.chapter.0.2"]'
+        ).length ?? -1,
+        pageNavigationCount: article?.querySelectorAll(
+          '.curriculum-workspace__adjacent-navigation'
+        ).length ?? -1,
+        pageNavigationLast: content?.lastElementChild === pageNavigation,
+        stageHandoffCount: article?.querySelectorAll(
+          '.nlp-golden__handoff'
+        ).length ?? -1,
         chapterFooterCount: document.querySelectorAll(
           '.curriculum-chapter-footer'
         ).length,
@@ -102,7 +115,13 @@ def assert_copy(browser: ChromeSession, index: int, stage: str) -> JsonObject:
     labels = "|".join(f"{position + 1}단계: {label}" for position, (_, label) in enumerate(golden.STATES))
     require(result["dotLabels"] == labels, f"Golden semantic progress: {result}")
     require(result["forbidden"] is False and result["caveats"] is True, f"Golden copy boundary: {result}")
-    require(result["handoffCount"] == (1 if stage == "token-preview" else 0), f"Golden handoff scope: {result}")
+    require(
+        result["pageNextCount"] == 1
+        and result["pageNavigationCount"] == 1
+        and result["pageNavigationLast"] is True
+        and result["stageHandoffCount"] == 0,
+        f"Golden persistent page navigation: {result}",
+    )
     require(result["chapterFooterCount"] == 0, f"Golden duplicate Chapter footer: {result}")
     return result
 

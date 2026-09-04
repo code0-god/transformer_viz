@@ -38,6 +38,11 @@ export const part0Glossary = [
     definition: "모델이 순서열의 한 칸으로 다루는 텍스트 단위입니다.",
   },
   {
+    id: "tokenizer",
+    term: "토크나이저(tokenizer)",
+    definition: "입력 텍스트를 어떤 Token 단위로 나눌지 정하는 규칙입니다.",
+  },
+  {
     id: "token-boundary",
     term: "token boundary",
     definition: "한 token이 끝나고 다음 token이 시작되는 경계입니다.",

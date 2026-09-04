@@ -1,0 +1,245 @@
+.token-golden[data-token-stage="why-split"] .token-golden__conceptual,
+.token-golden[data-token-stage="token-units"] .token-golden__conceptual,
+.token-golden[data-token-stage="not-word"] .token-golden__resegment,
+.token-golden[data-token-stage="current-byte"] .token-golden__current,
+.token-golden[data-token-stage="next-token-id"] .token-golden__current {
+  animation: none;
+}
+
+.token-golden[data-token-stage="why-split"] .token-golden__conceptual,
+.token-golden[data-token-stage="not-word"] .token-golden__resegment,
+.token-golden[data-token-stage="current-byte"] .token-golden__current {
+  animation: token-scene-in 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.token-golden[data-token-stage="why-split"] .token-golden__conceptual,
+.token-golden[data-token-stage="token-units"] .token-golden__conceptual,
+.token-golden[data-token-stage="not-word"] .token-golden__resegment,
+.token-golden[data-token-stage="current-byte"] .token-golden__current,
+.token-golden[data-token-stage="next-token-id"] .token-golden__current {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.token-golden[data-token-stage="why-split"] .token-golden__chip {
+  border-color: transparent;
+  background: transparent;
+}
+
+.token-golden[data-token-stage="why-split"] .token-golden__boundary {
+  animation: token-boundary-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.token-golden[data-token-stage="why-split"]
+  [data-token-sequence="conceptual"]:nth-child(2)
+  .token-golden__boundary {
+  animation-delay: 120ms;
+}
+
+.token-golden[data-token-stage="why-split"]
+  [data-token-sequence="conceptual"]:nth-child(3)
+  .token-golden__boundary {
+  animation-delay: 240ms;
+}
+
+.token-golden[data-token-stage="why-split"]
+  [data-token-sequence="conceptual"]:nth-child(4)
+  .token-golden__boundary {
+  animation-delay: 360ms;
+}
+
+.token-golden[data-token-stage="token-units"] .token-golden__chip {
+  border-color: var(--boundary-content);
+  background: color-mix(
+    in srgb,
+    var(--figure-representation) 58%,
+    transparent
+  );
+}
+
+.token-golden[data-token-stage="token-units"] .token-golden__boundary {
+  opacity: 0.28;
+}
+
+.token-golden[data-token-stage="token-units"] .token-golden__ordinal {
+  opacity: 0.74;
+  transform: translateX(-50%) translateY(0);
+}
+
+.token-golden[data-token-stage="not-word"]
+  .token-golden__segment-boundary,
+.token-golden[data-token-stage="current-byte"]
+  .token-golden__segment-boundary {
+  animation: token-segment-boundary-in 420ms cubic-bezier(0.22, 1, 0.36, 1)
+    140ms both;
+}
+
+.token-golden[data-token-stage="current-byte"]
+  .token-golden__segmentation-preview
+  > span:nth-child(2)
+  .token-golden__segment-boundary {
+  animation-delay: 240ms;
+}
+
+.token-golden[data-token-stage="not-word"] .token-golden__resegment-rail,
+.token-golden[data-token-stage="current-byte"] .token-golden__byte-rail {
+  animation: token-segments-separate-in 520ms
+    cubic-bezier(0.22, 1, 0.36, 1) 320ms both;
+}
+
+.token-golden[data-token-stage="current-byte"] .token-golden__current {
+  filter: none;
+}
+
+.token-golden[data-token-stage="next-token-id"] .token-golden__current {
+  grid-template-columns: repeat(3, max-content);
+  grid-template-rows: auto 2.75rem auto;
+  align-content: center;
+  justify-content: center;
+  column-gap: var(--s2);
+  row-gap: 0;
+}
+
+.token-golden[data-token-stage="next-token-id"]
+  .token-golden__current-marker,
+.token-golden[data-token-stage="next-token-id"]
+  .token-golden__current-source,
+.token-golden[data-token-stage="next-token-id"]
+  .token-golden__segmentation-preview,
+.token-golden[data-token-stage="next-token-id"] .token-golden__korean-note {
+  position: absolute;
+  opacity: 0;
+  transform: translateY(calc(-1 * var(--s2)));
+  visibility: hidden;
+}
+
+.token-golden[data-token-stage="next-token-id"] .token-golden__byte-rail {
+  display: contents;
+}
+
+.token-golden[data-token-stage="next-token-id"]
+  .token-golden__byte-rail
+  .token-golden__chip {
+  grid-row: 1;
+  place-self: center;
+}
+
+.token-golden[data-token-stage="next-token-id"]
+  .token-golden__byte-rail
+  .token-golden__chip:nth-child(1) {
+  grid-column: 1;
+}
+
+.token-golden[data-token-stage="next-token-id"]
+  .token-golden__byte-rail
+  .token-golden__chip:nth-child(2) {
+  grid-column: 2;
+}
+
+.token-golden[data-token-stage="next-token-id"]
+  .token-golden__byte-rail
+  .token-golden__chip:nth-child(3) {
+  grid-column: 3;
+}
+
+.token-golden[data-token-stage="next-token-id"]
+  .token-golden__current
+  > .token-golden__mapping-arrow {
+  display: block;
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: center;
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.token-golden[data-token-stage="next-token-id"]
+  .token-golden__byte-rail
+  .token-golden__chip {
+  opacity: 0.22;
+  transform: translateY(calc(-1 * var(--s2)));
+}
+
+.token-golden[data-token-stage="next-token-id"]
+  .token-golden__byte-rail
+  .token-golden__chip[data-token-selected="true"] {
+  border-color: var(--ui-accent);
+  background: var(--ui-control-highlight);
+  color: var(--ink);
+  opacity: 1;
+  transform: translateY(calc(-1 * var(--s2)));
+}
+
+.token-golden[data-token-stage="next-token-id"] .token-golden__identity {
+  grid-column: 1;
+  grid-row: 3;
+  justify-self: center;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes token-boundary-in {
+  from {
+    opacity: 0;
+    transform: scaleY(0.2);
+  }
+
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes token-segment-boundary-in {
+  from {
+    opacity: 0;
+    transform: scaleY(0.15);
+  }
+
+  to {
+    opacity: 0.9;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes token-segments-separate-in {
+  from {
+    opacity: 0.18;
+    transform: scaleX(0.72);
+  }
+
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@media (max-width: 48rem) {
+  .token-golden[data-token-stage="next-token-id"] .token-golden__current {
+    grid-template-rows: auto 2.75rem auto;
+    column-gap: var(--s1);
+  }
+
+  .token-golden[data-token-stage="next-token-id"]
+    .token-golden__byte-rail
+    .token-golden__chip,
+  .token-golden[data-token-stage="next-token-id"]
+    .token-golden__byte-rail
+    .token-golden__chip[data-token-selected="true"] {
+    transform: translateY(calc(-1 * var(--s1)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .token-golden *,
+  .token-golden *::before,
+  .token-golden *::after {
+    scroll-behavior: auto;
+    transition: none;
+    transition-delay: 0s;
+    animation: none;
+  }
+}

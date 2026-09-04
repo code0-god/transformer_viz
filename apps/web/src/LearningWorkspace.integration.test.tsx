@@ -163,7 +163,7 @@ describe("Learning Workspace production integration", () => {
     expect(worker.posted).toHaveLength(1);
   });
 
-  test("uses Chapter history instead of viewer return state", async () => {
+  test("uses Chapter navigation instead of viewer return state", async () => {
     const worker = readyWorkspace("#/learn/decoder-only-fundamentals/3-1");
     const user = userEvent.setup();
 
@@ -173,7 +173,12 @@ describe("Learning Workspace production integration", () => {
       }),
     );
     expect(screen.getByRole("region", { name: "Block의 목적" })).toHaveFocus();
-    await user.click(screen.getByRole("link", { name: "이전: GPT" }));
+    await user.click(screen.getByRole("button", { name: "목차 열기" }));
+    await user.click(
+      within(
+        screen.getByRole("navigation", { name: "Chapter 목차" }),
+      ).getByRole("link", { name: "GPT" }),
+    );
     expect(screen.getByTestId("architecture-root")).toBeVisible();
     expect(worker.posted).toHaveLength(1);
   });

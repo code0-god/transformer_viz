@@ -34,7 +34,7 @@ class CandidateEvidence(TypedDict):
     controls: JsonObject
     copyAndGeometry: list[JsonObject]
     errors: dict[str, list[str]]
-    handoff: JsonObject
+    pageNavigation: JsonObject
     motion: list[JsonObject]
     numericRepresentation: JsonObject
     observers: JsonObject
@@ -95,8 +95,7 @@ def run_candidate(url: str, evidence: Path) -> CandidateEvidence:
 
         set_viewport(browser, 390, 844)
         golden.open_chapter(browser, url)
-        golden.select_state(browser, 4, "token-preview")
-        handoff = golden_motion.click_token_handoff(browser)
+        page_navigation = golden_motion.click_token_page_navigation(browser)
         navigate_hash(
             browser,
             "#/",
@@ -112,7 +111,7 @@ def run_candidate(url: str, evidence: Path) -> CandidateEvidence:
         "controls": controls,
         "copyAndGeometry": geometry,
         "errors": errors,
-        "handoff": handoff,
+        "pageNavigation": page_navigation,
         "motion": motion,
         "numericRepresentation": numeric,
         "observers": observers,

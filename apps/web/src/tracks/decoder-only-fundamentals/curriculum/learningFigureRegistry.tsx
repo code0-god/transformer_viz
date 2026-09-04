@@ -2,7 +2,6 @@ import type { ReactElement } from "react";
 import { HiddenStateSceneFigure } from "../../learning-scenes/hidden/HiddenStateSceneFigure";
 import {
   TokenizationMethodsSceneFigure,
-  TokenSegmentationSceneFigure,
   VocabularyAddressSceneFigure,
 } from "../../learning-scenes/part0/Part0SceneFigures";
 import {
@@ -32,12 +31,8 @@ const FIGURE_METADATA = {
     renderer: "static",
   },
   "decoder.diagram.tokenization.token": {
-    fallbackFigureId: "decoder.diagram.tokenization.token.static",
-    loadingStrategy: "visible",
-    preferredAspectRatio: 2.4,
     preferredWidth: 960,
-    reducedMotion: "static-final-state",
-    renderer: "scene",
+    renderer: "static",
   },
   "decoder.diagram.tokenization.vocabulary": {
     fallbackFigureId: "decoder.diagram.tokenization.vocabulary.static",
@@ -125,9 +120,6 @@ class CurriculumFigureRegistryError extends Error {
 
 function renderFigure(figureId: string): ReactElement {
   if (!isDiagramId(figureId)) throw new CurriculumFigureRegistryError(figureId);
-  if (figureId === "decoder.diagram.tokenization.token") {
-    return <TokenSegmentationSceneFigure />;
-  }
   if (figureId === "decoder.diagram.tokenization.vocabulary") {
     return <VocabularyAddressSceneFigure />;
   }
